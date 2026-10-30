@@ -20,7 +20,7 @@ android {
         debug {
             // A separate test package protects the installed 0.1 data when
             // the original ephemeral debug signing key is unavailable.
-            applicationIdSuffix = ".beta"
+            applicationIdSuffix = ".glass"
             versionNameSuffix = "-beta"
         }
         release {
