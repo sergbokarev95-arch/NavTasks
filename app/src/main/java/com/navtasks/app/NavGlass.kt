@@ -29,6 +29,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.border
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 
 /** Local, lightweight light fields make the translucent layers visibly react to their own backdrop. */
 @Composable
@@ -78,11 +81,11 @@ fun Modifier.navGlass(
         GlassRole.TASK -> if (p.dark) Color(0xD31A3049) else Color(0xE9FFFFFF)
         GlassRole.NESTED_TASK -> if (p.dark) Color(0xDB214A67) else Color(0xE1DCEFFB)
         GlassRole.NAVIGATION -> if (p.dark) Color(0xE11C2D43) else Color(0xE7F7FBFF)
-        GlassRole.SELECTED -> if (p.dark) Color(0xBC527FA8) else Color(0xC5BDDDF4)
-        GlassRole.CONTROL -> if (p.dark) Color(0xBA37516C) else Color(0xD6F6FBFF)
+        GlassRole.SELECTED -> if (p.dark) Color(0x7B4D789C) else Color(0x475CA9D8)
+        GlassRole.CONTROL -> if (p.dark) Color(0xB037516C) else Color(0x9AF6FBFF)
     }
     val tint = if (p.dark) Color(0xFFB3DEFF) else Color(0xFF558CB2)
-    val highlight = if (p.dark) Color.White.copy(alpha = 0.19f) else Color.White.copy(alpha = 0.90f)
+    val highlight = if (p.dark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.44f)
     val lower = if (p.dark) Color(0xFF070F1B).copy(alpha = 0.16f) else Color(0xFF80A9C8).copy(alpha = 0.08f)
     return this
         .shadow(elevation, shape, clip = false,
@@ -91,13 +94,13 @@ fun Modifier.navGlass(
         .clip(shape)
         .background(fill, shape)
         .background(
-            Brush.linearGradient(listOf(highlight, tint.copy(alpha = 0.035f), lower)), shape
+            Brush.linearGradient(listOf(highlight, tint.copy(alpha = 0.025f), lower)), shape
         )
         .border(
             1.dp,
             Brush.linearGradient(
                 listOf(
-                    if (p.dark) Color.White.copy(alpha = 0.42f) else Color.White,
+                    if (p.dark) Color.White.copy(alpha = 0.33f) else Color.White.copy(alpha = 0.68f),
                     tint.copy(alpha = if (p.dark) 0.25f else 0.30f),
                     tint.copy(alpha = if (p.dark) 0.15f else 0.23f),
                 )
@@ -110,12 +113,12 @@ fun Modifier.navGlass(
 fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: (Int) -> Unit) {
     Box(
         Modifier.fillMaxWidth().navigationBarsPadding()
-            .padding(start = 15.dp, end = 15.dp, top = 7.dp, bottom = 9.dp),
+            .padding(start = 15.dp, end = 15.dp, top = 3.dp, bottom = 5.dp),
     ) {
         BoxWithConstraints(
-            Modifier.fillMaxWidth().height(76.dp)
+            Modifier.fillMaxWidth().height(56.dp)
                 .navGlass(p, radius = 30.dp, role = GlassRole.NAVIGATION, elevation = 10.dp)
-                .padding(6.dp),
+                .padding(4.dp),
         ) {
             val segment = maxWidth / 3
             val slide by animateDpAsState(
@@ -125,7 +128,7 @@ fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: 
             )
             Box(
                 Modifier.offset(x = slide).width(segment).fillMaxHeight()
-                    .navGlass(p, radius = 25.dp, role = GlassRole.SELECTED, elevation = 0.dp),
+                    .navGlass(p, radius = 23.dp, role = GlassRole.SELECTED, elevation = 0.dp),
             )
             Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                 val names = listOf(
@@ -137,7 +140,7 @@ fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: 
                     val active = selected == index
                     Column(
                         Modifier.weight(1f).fillMaxHeight()
-                            .clip(RoundedCornerShape(24.dp))
+                            .clip(RoundedCornerShape(21.dp))
                             .clickable { onSelect(index) },
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
@@ -145,10 +148,10 @@ fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: 
                         NavGlassGlyph(
                             kind = when (index) { 0 -> "today"; 1 -> "calendar"; else -> "tasks" },
                             color = if (active) p.blue else p.text.copy(alpha = 0.89f),
-                            modifier = Modifier.size(29.dp),
+                            modifier = Modifier.size(24.dp),
                         )
-                        Spacer(Modifier.height(3.dp))
-                        Text(names[index], color = if (active) p.blue else p.muted, fontSize = 12.sp)
+                        Spacer(Modifier.height(1.dp))
+                        Text(names[index], color = if (active) p.blue else p.muted, fontSize = 10.sp)
                     }
                 }
             }
@@ -223,4 +226,31 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+/** Reusable compact glass input: unlike Material OutlinedTextField it does not reserve 56dp. */
+@Composable
+fun NavGlassInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    p: NavPalette,
+    placeholder: String = "",
+    modifier: Modifier = Modifier,
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.height(42.dp)
+            .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL, elevation = 0.dp),
+        singleLine = true,
+        textStyle = TextStyle(color = p.text, fontSize = 14.sp),
+        cursorBrush = SolidColor(p.blue),
+        decorationBox = { input ->
+            Box(Modifier.fillMaxSize().padding(horizontal = 13.dp), contentAlignment = Alignment.CenterStart) {
+                if (value.isBlank() && placeholder.isNotEmpty())
+                    Text(placeholder, color = p.muted, fontSize = 13.sp)
+                input()
+            }
+        },
+    )
 }

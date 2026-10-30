@@ -53,4 +53,9 @@ class TaskScheduleTest {
         assertFalse(incomplete.requiredComplete)
         assertTrue(incomplete.copy(checkedIds = setOf("one", "two")).requiredComplete)
     }
+    @Test fun russianCalendarMonthUsesNominativeButFullDateUsesGenitive() {
+        val month = java.time.Month.OCTOBER.getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, java.util.Locale("ru"))
+        assertEquals("октябрь", month)
+        assertEquals("31 октября 2026", navDate(LocalDate.of(2026, 10, 31), UiLanguage.RU, true))
+    }
 }

@@ -44,7 +44,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLanguage) {
+fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLanguage, onEdit: (TaskTemplate) -> Unit) {
     var level by rememberSaveable { mutableIntStateOf(1) } // 0 year, 1 month, 2 day
     var year by rememberSaveable { mutableIntStateOf(today.year) }
     var month by rememberSaveable { mutableIntStateOf(today.monthValue) }
@@ -56,7 +56,7 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
             TextButton(onClick = { level = 0 }) { Text("$year", color = p.blue) }
             Text("/", color = p.muted)
             TextButton(onClick = { level = 1 }) {
-                Text(YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL, locale).replaceFirstChar { it.uppercase() }, color = p.blue)
+                Text(YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase() }, color = p.blue)
             }
             Spacer(Modifier.weight(1f))
             TextButton(onClick = { year = today.year; month = today.monthValue; selectedDay = today; level = 2 }) {
@@ -84,7 +84,7 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                     role = if (year == today.year && m == today.monthValue) GlassRole.NESTED_TASK else GlassRole.PANEL)
                                     .clickable { month = m; level = 1 }.padding(7.dp),
                             ) {
-                                Text(YearMonth.of(year, m).month.getDisplayName(TextStyle.SHORT, locale),
+                                Text(YearMonth.of(year, m).month.getDisplayName(TextStyle.SHORT_STANDALONE, locale),
                                     color = p.text, fontSize = 12.sp, fontWeight = FontWeight.Medium,
                                     modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                                 Spacer(Modifier.height(5.dp))
@@ -107,7 +107,7 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                         TextButton(onClick = {
                             if (month == 1) { month = 12; year-- } else month--
                         }) { Text("‹", fontSize = 27.sp) }
-                        Text("${YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL, locale).replaceFirstChar { it.uppercase() }} $year",
+                        Text("${YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase() }} $year",
                             modifier = Modifier.weight(1f), color = p.text, fontSize = 19.sp, textAlign = TextAlign.Center)
                         TextButton(onClick = {
                             if (month == 12) { month = 1; year++ } else month++
@@ -160,14 +160,80 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                             NavPanel(p) { Text(localized("Задач на этот день нет", "No tasks for this day", lang), color = p.muted) }
                         }
                         items(rows, key = { it.second.key }) { (task, run) ->
-                            var expanded by remember { mutableStateOf(false) }
-                            RunTileV2(task, run, store, p, lang, expanded, onToggleExpand = { expanded = !expanded })
+                            PlanReadOnlyTile(task, run, store, p, lang, onEdit)
                         }
                     }
                 }
             }
         }
     }
+}
+
+/** Calendar is a planning surface: read statuses, move/remove an occurrence or edit its template.
+ * It never completes an occurrence. */
+@Composable
+private fun PlanReadOnlyTile(
+    task: TaskTemplate, run: TaskRun, store: TaskStore, p: NavPalette,
+    lang: UiLanguage, onEdit: (TaskTemplate) -> Unit,
+) {
+    val context = LocalContext.current
+    var menuOpen by remember(run.key) { mutableStateOf(false) }
+    var deleteDialog by remember(run.key) { mutableStateOf(false) }
+    Row(
+        Modifier.fillMaxWidth().navGlass(p, radius = 15.dp,
+            role = if (run.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Status icon, not a checkbox: the calendar cannot mark any task complete.
+        Text(if (run.completed) "✓" else "·", color = if (run.completed) p.mint else p.muted,
+            fontSize = 19.sp)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(task.title, color = if (run.completed) p.muted else p.text, fontSize = 14.sp,
+                textDecoration = if (run.completed) androidx.compose.ui.text.style.TextDecoration.LineThrough else null)
+            Text(
+                if (run.completed) localized("Выполнено", "Completed", lang)
+                else if (run.transferred) localized("Перенесено", "Moved", lang)
+                else localized("Запланировано", "Scheduled", lang),
+                color = if (run.completed) p.mint else p.muted, fontSize = 11.sp,
+            )
+        }
+        Box {
+            Text("⋯", color = p.blue, fontSize = 22.sp,
+                modifier = Modifier.clickable { menuOpen = true }.padding(horizontal = 9.dp, vertical = 6.dp))
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenuItem(text = { Text(localized("Редактировать", "Edit", lang)) }, onClick = {
+                    menuOpen = false
+                    onEdit(task)
+                })
+                if (!run.completed) DropdownMenuItem(text = { Text(localized("Перенести на дату…", "Move to date…", lang)) },
+                    onClick = {
+                        menuOpen = false
+                        val start = run.displayDate
+                        DatePickerDialog(context, { _, y, m, d ->
+                            store.postpone(run.key, LocalDate.of(y, m + 1, d))
+                        }, start.year, start.monthValue - 1, start.dayOfMonth).show()
+                    })
+                DropdownMenuItem(text = { Text(localized("Удалить из дня", "Remove from day", lang)) }, onClick = {
+                    menuOpen = false
+                    deleteDialog = true
+                })
+            }
+        }
+    }
+    if (deleteDialog) AlertDialog(
+        onDismissRequest = { deleteDialog = false },
+        title = { Text(localized("Убрать задачу из календаря?", "Remove this task from the calendar?", lang)) },
+        text = { Text(localized("Удаляется только это выполнение. Шаблон повторяющейся задачи останется.",
+            "Only this occurrence is removed. The recurring task template remains.", lang)) },
+        confirmButton = { TextButton(onClick = { store.skip(run.key); deleteDialog = false }) {
+            Text(localized("Удалить", "Remove", lang))
+        } },
+        dismissButton = { TextButton(onClick = { deleteDialog = false }) {
+            Text(localized("Отмена", "Cancel", lang))
+        } },
+    )
 }
 
 private fun monthCells(year: Int, month: Int): List<Int> {
@@ -189,18 +255,20 @@ fun TasksScreenV2(
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Frequency.entries.forEachIndexed { i, freq ->
-                Box(Modifier.weight(1f).background(if (filter == freq) p.blue else p.panel, RoundedCornerShape(12.dp))
-                    .clip(RoundedCornerShape(12.dp)).clickable { onFilter(freq) }.padding(vertical = 12.dp),
+                Box(Modifier.weight(1f).navGlass(p, radius = 14.dp,
+                    role = if (filter == freq) GlassRole.SELECTED else GlassRole.CONTROL, elevation = 0.dp)
+                    .clickable { onFilter(freq) }.padding(vertical = 11.dp),
                     contentAlignment = Alignment.Center) {
-                    Text(labels[i], color = if (filter == freq) Color.White else p.muted, fontSize = 11.sp, maxLines = 1)
+                    Text(labels[i], color = if (filter == freq) p.blue else p.text, fontSize = 11.sp, maxLines = 1)
                 }
             }
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 17.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("${store.templates.count { it.frequency == filter }} ${localized("задач", "tasks", lang)}",
                 color = p.muted, fontSize = 13.sp, modifier = Modifier.weight(1f))
-            Button(onClick = onAdd, shape = RoundedCornerShape(13.dp)) {
-                Text("+ ${localized("Новая задача", "New task", lang)}", fontSize = 13.sp)
+            Box(Modifier.size(44.dp).navGlass(p, radius = 22.dp, role = GlassRole.SELECTED)
+                .clickable(onClick = onAdd), contentAlignment = Alignment.Center) {
+                Text("+", color = p.blue, fontSize = 28.sp)
             }
         }
         LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 5.dp),
@@ -212,8 +280,8 @@ fun TasksScreenV2(
                     role = if (task.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
                     .clickable { onEdit(task) }
                     .padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (task.checklist.isNotEmpty()) "▤" else "◯", color = p.blue, fontSize = 24.sp)
-                    Spacer(Modifier.width(12.dp))
+                    // Templates are not executable, so no fake empty checkbox or checkbox icon here.
+                    Spacer(Modifier.width(1.dp))
                     Column(Modifier.weight(1f)) {
                         Text(task.title, color = if (task.enabled) p.text else p.muted, fontSize = 14.sp)
                         Text(
@@ -315,8 +383,8 @@ fun TaskEditorScreen(
             NavPanel(p) {
                 FormLabel("Название задачи", "Task name", lang, p)
                 Spacer(Modifier.height(5.dp))
-                OutlinedTextField(title, { title = it }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                    placeholder = { Text(localized("Название", "Title", lang)) })
+                NavGlassInput(title, { title = it }, p,
+                    placeholder = localized("Название", "Title", lang), modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(12.dp))
                 FormLabel("Категория", "Category", lang, p)
                 OptionLine(Frequency.entries.map { it.name to when (it) {
@@ -383,7 +451,7 @@ fun TaskEditorScreen(
                 Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(localized("Уведомления", "Notifications", lang), color = p.text, modifier = Modifier.weight(1f))
-                    Switch(notified, onCheckedChange = { notified = it })
+                    Switch(notified, onCheckedChange = { notified = it }, colors = navSwitchColors(p))
                 }
                 if (notified) {
                     FormLabel("Напомнить", "Remind me", lang, p)
@@ -403,18 +471,16 @@ fun TaskEditorScreen(
                 Spacer(Modifier.height(8.dp))
                 checklist.forEach { item ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("◯", color = p.blue, fontSize = 23.sp)
-                        Spacer(Modifier.width(7.dp))
-                        OutlinedTextField(item.title, { value ->
+                        NavGlassInput(item.title, { value ->
                             checklist = checklist.map { if (it.id == item.id) it.copy(title = value) else it }
-                        }, modifier = Modifier.weight(1f), singleLine = true)
+                        }, p, modifier = Modifier.weight(1f))
                         TextButton(onClick = { checklist = checklist.filterNot { it.id == item.id } }) { Text("×") }
                     }
                     Spacer(Modifier.height(5.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(newItem, { newItem = it }, modifier = Modifier.weight(1f), singleLine = true,
-                        placeholder = { Text(localized("Добавить пункт", "Add item", lang)) })
+                    NavGlassInput(newItem, { newItem = it }, p,
+                        placeholder = localized("Добавить пункт", "Add item", lang), modifier = Modifier.weight(1f))
                     TextButton(onClick = {
                         if (newItem.isNotBlank()) { checklist = checklist + CheckItem(title = newItem.trim()); newItem = "" }
                     }) { Text("+") }
@@ -425,7 +491,7 @@ fun TaskEditorScreen(
             NavPanel(p) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(localized("Задача активна", "Task enabled", lang), color = p.text, modifier = Modifier.weight(1f))
-                    Switch(enabled, onCheckedChange = { enabled = it })
+                    Switch(enabled, onCheckedChange = { enabled = it }, colors = navSwitchColors(p))
                 }
             }
             Spacer(Modifier.height(28.dp))
@@ -466,13 +532,13 @@ fun SettingsScreen(settings: NavSettings, store: TaskStore, p: NavPalette, onBac
             NavPanel(p) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(localized("Уведомления", "Notifications", lang), color = p.text, modifier = Modifier.weight(1f))
-                    Switch(settings.notificationsEnabled, onCheckedChange = { settings.setNotifications(it); syncSettings() })
+                    Switch(settings.notificationsEnabled, onCheckedChange = { settings.setNotifications(it); syncSettings() }, colors = navSwitchColors(p))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(localized("Ежедневная сводка пропусков", "Daily missed-task digest", lang),
                         color = p.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
                     Switch(settings.dailyDigestEnabled, onCheckedChange = { settings.setDigest(it); syncSettings() },
-                        enabled = settings.notificationsEnabled)
+                        enabled = settings.notificationsEnabled, colors = navSwitchColors(p))
                 }
                 if (settings.notificationsEnabled && settings.dailyDigestEnabled) {
                     OutlinedButton(onClick = {
@@ -500,10 +566,20 @@ fun SettingsScreen(settings: NavSettings, store: TaskStore, p: NavPalette, onBac
                 }
             }
             NavPanel(p) {
-                Text("NavTasks 0.2 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.2.2 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
         }
     }
 }
+
+@Composable
+private fun navSwitchColors(p: NavPalette) = SwitchDefaults.colors(
+    checkedTrackColor = p.blue.copy(alpha = 0.76f),
+    checkedThumbColor = Color.White,
+    checkedBorderColor = p.blue.copy(alpha = 0.60f),
+    uncheckedTrackColor = p.panel,
+    uncheckedThumbColor = p.muted,
+    uncheckedBorderColor = p.border,
+)

@@ -3,6 +3,7 @@ package com.navtasks.app
 import android.app.DatePickerDialog
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -176,7 +177,8 @@ fun NavTasksApp(
                         when (tab) {
                             0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
                                 expandedRun, { expandedRun = it })
-                            1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang)
+                            1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
+                                onEdit = { editorTask = it; editorOpen = true })
                             else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
                                 onAdd = { editorTask = null; editorOpen = true },
                                 onEdit = { editorTask = it; editorOpen = true })
@@ -361,10 +363,32 @@ fun RunTileV2(
     var closeDialog by remember { mutableStateOf(false) }
     var closeReason by remember { mutableStateOf("") }
     var exiting by remember(run.key) { mutableStateOf(false) }
+    var confirming by remember(run.key) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val amount by animateFloatAsState(if (exiting) 1f else 0f, tween(300), label = "taskComplete")
+    val amount by animateFloatAsState(if (exiting) 1f else 0f, tween(330), label = "taskComplete")
+    val flash = remember(run.key) { Animatable(0f) }
+    suspend fun showConfirmation() {
+        // Two distinct mint flashes while the circle displays its tick.
+        flash.animateTo(1f, tween(140))
+        flash.animateTo(0.22f, tween(170))
+        flash.animateTo(0.85f, tween(140))
+        delay(150)
+    }
+    fun completeSimple() {
+        if (confirming || exiting) return
+        confirming = true
+        scope.launch {
+            showConfirmation()
+            exiting = true
+            delay(330)
+            store.setSimpleComplete(run.key, true)
+            confirming = false
+            exiting = false
+            flash.snapTo(0f)
+        }
+    }
     val context = LocalContext.current
-    val shape = RoundedCornerShape(17.dp)
+    val shape = RoundedCornerShape(15.dp)
     Column(
         Modifier.fillMaxWidth().graphicsLayer {
             alpha = 1f - amount * 0.85f
@@ -372,28 +396,27 @@ fun RunTileV2(
                 else -10.dp.toPx() + (amount - 0.32f) / 0.68f * 55.dp.toPx()
             scaleX = 1f + (1f - kotlin.math.abs(amount - 0.4f) / 0.6f).coerceIn(0f, 1f) * 0.045f
             scaleY = scaleX
-        }.navGlass(p, radius = 17.dp,
+        }.navGlass(p, radius = 15.dp,
             role = if (run.checklist.isEmpty()) GlassRole.TASK else GlassRole.NESTED_TASK)
+            .background(p.mint.copy(alpha = flash.value * 0.36f), RoundedCornerShape(15.dp))
             .animateContentSize(),
     ) {
-        Row(Modifier.padding(start = 11.dp, end = 6.dp, top = 11.dp, bottom = 11.dp),
+        Row(Modifier.padding(start = 11.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            RoundCheck(run.completed, p, onClick = {
+            RoundCheck(run.completed || confirming, p, onClick = {
                 if (run.checklist.isNotEmpty()) onToggleExpand()
                 else if (run.completed) store.setSimpleComplete(run.key, false)
-                else {
-                    exiting = true
-                    scope.launch { delay(270); store.setSimpleComplete(run.key, true); exiting = false }
-                }
-            })
+                else completeSimple()
+            }, modifier = Modifier.size(27.dp))
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f).clickable {
                 if (run.checklist.isNotEmpty()) onToggleExpand()
-                else store.setSimpleComplete(run.key, !run.completed)
+                else if (run.completed) store.setSimpleComplete(run.key, false)
+                else completeSimple()
             }) {
                 Text(task.title, color = if (run.completed) p.muted else p.text,
                     fontSize = 14.sp, maxLines = 2,
-                    textDecoration = if (run.completed) TextDecoration.LineThrough else null)
+                    textDecoration = if (run.completed || confirming) TextDecoration.LineThrough else null)
                 Spacer(Modifier.height(2.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (run.checklist.isNotEmpty()) Text("${run.checkedCount}/${run.checklist.size}", color = p.blue, fontSize = 11.sp)
@@ -403,8 +426,8 @@ fun RunTileV2(
                 }
             }
             Box {
-                Text("⋯", color = p.muted, fontSize = 23.sp,
-                    modifier = Modifier.clip(CircleShape).clickable { menuOpen = true }.padding(8.dp))
+                Text("⋯", color = p.muted, fontSize = 20.sp,
+                    modifier = Modifier.clip(CircleShape).clickable { menuOpen = true }.padding(6.dp))
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                     if (!run.completed) {
                     listOf(
@@ -439,12 +462,26 @@ fun RunTileV2(
                     Row(verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth().navGlass(p, radius = 10.dp,
                             role = GlassRole.CONTROL, elevation = 0.dp).padding(8.dp)) {
-                        RoundCheck(item.id in run.checkedIds, p,
-                            onClick = { store.setCheck(run.key, item.id, item.id !in run.checkedIds) },
+                        RoundCheck(item.id in run.checkedIds || (confirming && run.checklist.all { it.id == item.id || it.id in run.checkedIds }), p,
+                            onClick = {
+                                val checking = item.id !in run.checkedIds
+                                if (checking && !confirming && run.checklist.all { it.id == item.id || it.id in run.checkedIds }) {
+                                    confirming = true
+                                    scope.launch {
+                                        showConfirmation()
+                                        exiting = true
+                                        delay(330)
+                                        store.setCheck(run.key, item.id, true)
+                                        confirming = false
+                                        exiting = false
+                                        flash.snapTo(0f)
+                                    }
+                                } else if (!confirming) store.setCheck(run.key, item.id, checking)
+                            },
                             modifier = Modifier.size(27.dp))
                         Spacer(Modifier.width(10.dp))
                         Text(item.title, color = p.text, fontSize = 13.sp, modifier = Modifier.weight(1f),
-                            textDecoration = if (item.id in run.checkedIds) TextDecoration.LineThrough else null)
+                            textDecoration = if (item.id in run.checkedIds || confirming) TextDecoration.LineThrough else null)
                     }
                 }
             }
