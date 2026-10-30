@@ -1,3 +1,6 @@
+val betaKeystorePath = System.getenv("NAVTASKS_BETA_KEYSTORE_PATH")
+val betaSigningPassword = System.getenv("NAVTASKS_BETA_SIGN_PASSWORD")
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -16,8 +19,21 @@ android {
         versionName = "0.2.2"
     }
 
+    signingConfigs {
+        if (!betaKeystorePath.isNullOrBlank() && !betaSigningPassword.isNullOrBlank()) {
+            create("betaStable") {
+                storeFile = file(betaKeystorePath)
+                storePassword = betaSigningPassword
+                keyAlias = "navtasks-beta"
+                keyPassword = betaSigningPassword
+                storeType = "pkcs12"
+            }
+        }
+    }
+
     buildTypes {
         debug {
+            signingConfigs.findByName("betaStable")?.let { signingConfig = it }
             // A separate test package protects the installed 0.1 data when
             // the original ephemeral debug signing key is unavailable.
             applicationIdSuffix = ".glass"
