@@ -1,6 +1,7 @@
 package com.navtasks.app
 
 import android.app.DatePickerDialog
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
@@ -86,6 +87,9 @@ fun NavTasksApp(
     onRequestHandled: () -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    // Compact back stack for the three primary tabs (0=Today, 1=Plan, 2=Tasks).
+    // Kept across activity recreation so Android's Back gesture retraces navigation.
+    var tabHistory by rememberSaveable { mutableStateOf("") }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var editorOpen by remember { mutableStateOf(false) }
     var editorTask by remember { mutableStateOf<TaskTemplate?>(null) }
@@ -122,6 +126,7 @@ fun NavTasksApp(
             if (target != null) {
                 selectedDate = target.displayDate
                 tab = 0
+                tabHistory = ""
                 showSettings = false
                 editorOpen = false
                 expandedRun = requestedRunKey
@@ -139,6 +144,20 @@ fun NavTasksApp(
         surface = palette.panel, onSurface = palette.text, onBackground = palette.text,
         surfaceVariant = palette.task, onSurfaceVariant = palette.muted,
     )
+
+    // Android gesture navigation dispatches the system Back action here. At the root
+    // of Today there is intentionally no interception so the user can leave the app.
+    BackHandler(enabled = editorOpen || showSettings || tabHistory.isNotEmpty() || tab != 0) {
+        when {
+            editorOpen -> editorOpen = false
+            showSettings -> showSettings = false
+            tabHistory.isNotEmpty() -> {
+                tab = tabHistory.last().digitToInt()
+                tabHistory = tabHistory.dropLast(1)
+            }
+            tab != 0 -> tab = 0
+        }
+    }
 
     MaterialTheme(colorScheme = scheme) {
         Box(Modifier.fillMaxSize()) {
@@ -197,7 +216,12 @@ fun NavTasksApp(
                         p = palette, selected = tab, lang = lang,
                         modifier = Modifier.align(Alignment.BottomCenter),
                         hazeState = hazeState,
-                        onSelect = { tab = it },
+                        onSelect = { next ->
+                            if (tab != next) {
+                                tabHistory = (tabHistory + tab.toString()).takeLast(12)
+                                tab = next
+                            }
+                        },
                     )
                 }
 
@@ -241,6 +265,14 @@ private fun TodayScreenV2(
 ) {
     var showMissed by rememberSaveable { mutableStateOf(false) }
     var showCompleted by rememberSaveable { mutableStateOf(false) }
+    // Prefer stepping out of open checklists and sections before switching tabs.
+    BackHandler(enabled = expandedRun != null || showMissed || showCompleted) {
+        when {
+            expandedRun != null -> onExpanded(null)
+            showMissed -> showMissed = false
+            showCompleted -> showCompleted = false
+        }
+    }
     val currentDay = now.toLocalDate()
     val rows = store.forDate(selectedDay)
     val incomplete = rows.filterNot { it.second.completed }

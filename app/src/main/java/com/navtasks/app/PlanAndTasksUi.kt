@@ -1,6 +1,7 @@
 package com.navtasks.app
 
 import android.app.DatePickerDialog
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import java.io.IOException
@@ -69,6 +70,9 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
     var year by rememberSaveable { mutableIntStateOf(today.year) }
     var month by rememberSaveable { mutableIntStateOf(today.monthValue) }
     var selectedDay by remember { mutableStateOf(today) }
+    // Day and year are zoomed-in/out subpages of Plan, not separate Android tasks.
+    // Intercept both system edge swipes and the Back button before leaving Plan.
+    BackHandler(enabled = level != 1) { level = 1 }
     val locale = if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
     fun moveBySwipe(step: Int) {
         val next = calendarSwipePosition(level, year, month, selectedDay, step)
