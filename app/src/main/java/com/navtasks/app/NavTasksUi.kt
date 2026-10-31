@@ -347,7 +347,7 @@ fun NavTasksApp(
                             Modifier.align(Alignment.BottomStart).navigationBarsPadding()
                                 .padding(start = 19.dp, bottom = 83.dp),
                         ) {
-                            NavGlassAddButton(palette) {
+                            NavGlassAddButton(palette, hazeState) {
                                 editorTask = null
                                 editorOpen = true
                             }
@@ -357,8 +357,9 @@ fun NavTasksApp(
                                 .padding(end = 20.dp, bottom = 83.dp),
                         ) {
                             Row(
-                                Modifier.navGlass(palette, radius = 25.dp, role = GlassRole.CONTROL)
-                                    .glassClickable { showHandover = true }
+                                Modifier.navFrostedOverlay(
+                                    palette, hazeState, radius = 25.dp, role = GlassRole.CONTROL,
+                                ).glassClickable { showHandover = true }
                                     .padding(horizontal = 15.dp, vertical = 13.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {

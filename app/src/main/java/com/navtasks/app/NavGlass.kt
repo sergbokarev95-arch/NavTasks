@@ -67,9 +67,9 @@ fun NavGlassBackdrop(p: NavPalette) {
 }
 
 /**
- * NavTasks Glass uses a restrained neutral translucent material on every Android device.
- * Individual controls do not have a frosted-white or blue cloudy film. Live wallpaper
- * blurring is intentionally not promised: vendor launchers do not expose it consistently.
+ * Static glass cards stay lightweight. Only three floating bottom controls use
+ * shared real Haze backdrop blur, with the scrolling content as the source.
+ * We never sample other apps or device wallpaper.
  */
 enum class GlassRole { PANEL, TASK, NESTED_TASK, NAVIGATION, SELECTED, CONTROL }
 
@@ -99,6 +99,35 @@ fun Modifier.navGlass(
         .clip(shape)
         .background(fill, shape)
         .border(1.dp, Brush.verticalGradient(listOf(topGlint, edge, bottomEdge)), shape)
+}
+
+/**
+ * True frosted-glass backdrop for the bottom navigation and its two floating
+ * sibling buttons. The lower page is already registered with hazeSource(state).
+ * Keep a single source and reuse it here to avoid extra offscreen captures.
+ * The blur is drawn underneath crisp icons/labels and clipped to the lens.
+ */
+fun Modifier.navFrostedOverlay(
+    p: NavPalette,
+    hazeState: HazeState,
+    radius: Dp,
+    role: GlassRole,
+): Modifier {
+    val shape = RoundedCornerShape(radius)
+    return this
+        .clip(shape)
+        .hazeEffect(
+            state = hazeState,
+            style = HazeStyle(
+                backgroundColor = if (p.dark) Color(0x4C172739) else Color(0x52EDF5FA),
+                blurRadius = 28.dp,
+                tints = listOf(
+                    HazeTint(if (p.dark) Color(0x24141E2B) else Color(0x16FFFFFF))
+                ),
+                noiseFactor = 0.025f,
+            ),
+        )
+        .navGlass(p, radius = radius, role = role, elevation = 0.dp)
 }
 
 /**
@@ -142,21 +171,7 @@ fun NavGlassBottomBar(
     ) {
         BoxWithConstraints(
             Modifier.fillMaxWidth().height(56.dp)
-                .clip(RoundedCornerShape(30.dp))
-                // Real backdrop blur from the scrolling content underneath.
-                // Source capture is a small surface, not the entire app window.
-                .hazeEffect(
-                    state = hazeState,
-                    style = HazeStyle(
-                        backgroundColor = if (p.dark) Color(0x3C18212B) else Color(0x31F5F6F6),
-                        blurRadius = 21.dp,
-                        tints = listOf(HazeTint(
-                            if (p.dark) Color(0x251C2228) else Color(0x1FFFFFFF)
-                        )),
-                        noiseFactor = 0.025f,
-                    ),
-                )
-                .navGlass(p, radius = 30.dp, role = GlassRole.NAVIGATION, elevation = 0.dp)
+                .navFrostedOverlay(p, hazeState, radius = 30.dp, role = GlassRole.NAVIGATION)
                 .padding(4.dp),
         ) {
             // Direct drawing makes one moving lens, without keeping an old composited
@@ -236,10 +251,10 @@ fun NavGlassCircleButton(p: NavPalette, kind: String, onClick: () -> Unit) {
 
 /** Finger-friendly create button, anchored just above the navigation capsule. */
 @Composable
-fun NavGlassAddButton(p: NavPalette, onClick: () -> Unit) {
+fun NavGlassAddButton(p: NavPalette, hazeState: HazeState, onClick: () -> Unit) {
     Box(
         Modifier.size(54.dp)
-            .navGlass(p, radius = 27.dp, role = GlassRole.CONTROL, elevation = 0.dp)
+            .navFrostedOverlay(p, hazeState, radius = 27.dp, role = GlassRole.CONTROL)
             .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
