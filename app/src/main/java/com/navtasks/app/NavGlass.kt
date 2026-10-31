@@ -1,8 +1,8 @@
 package com.navtasks.app
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -62,10 +61,9 @@ fun NavGlassBackdrop(p: NavPalette) {
 }
 
 /**
- * NavTasks Glass is an app-owned, vendor-neutral visual system.
- * It deliberately does NOT depend on private HONOR APIs or on screenshotting the wallpaper.
- * The translucent fill, gradient illumination, edge highlight and shadow all work on
- * stock Android and vendor launchers alike. The translucent effect is not a live backdrop blur.
+ * NavTasks Glass uses a restrained neutral translucent material on every Android device.
+ * Individual controls do not have a frosted-white or blue cloudy film. Live wallpaper
+ * blurring is intentionally not promised: vendor launchers do not expose it consistently.
  */
 enum class GlassRole { PANEL, TASK, NESTED_TASK, NAVIGATION, SELECTED, CONTROL }
 
@@ -73,39 +71,46 @@ fun Modifier.navGlass(
     p: NavPalette,
     radius: Dp = 20.dp,
     role: GlassRole = GlassRole.PANEL,
-    elevation: Dp = 4.dp,
+    elevation: Dp = 0.dp, // Kept for existing call sites; material draws NO shadow.
 ): Modifier {
     val shape = RoundedCornerShape(radius)
     val fill = when (role) {
-        GlassRole.PANEL -> if (p.dark) Color(0xBC1D3652) else Color(0xDFFBFDFF)
-        GlassRole.TASK -> if (p.dark) Color(0xD31A3049) else Color(0xE9FFFFFF)
-        GlassRole.NESTED_TASK -> if (p.dark) Color(0xDB214A67) else Color(0xE1DCEFFB)
-        GlassRole.NAVIGATION -> if (p.dark) Color(0xE11C2D43) else Color(0xE7F7FBFF)
-        GlassRole.SELECTED -> if (p.dark) Color(0x7B4D789C) else Color(0x475CA9D8)
-        GlassRole.CONTROL -> if (p.dark) Color(0xB037516C) else Color(0x9AF6FBFF)
+        GlassRole.PANEL -> if (p.dark) Color(0x651F3143) else Color(0x3AFFFFFF)
+        GlassRole.TASK -> if (p.dark) Color(0x571C2D40) else Color(0x2BFFFFFF)
+        GlassRole.NESTED_TASK -> if (p.dark) Color(0x5C234259) else Color(0x2DDAEAF3)
+        GlassRole.NAVIGATION -> if (p.dark) Color(0xA0152433) else Color(0x77FFFFFF)
+        GlassRole.SELECTED -> if (p.dark) Color(0x394C6478) else Color(0x3AC5D8E4)
+        GlassRole.CONTROL -> if (p.dark) Color(0x442C3D50) else Color(0x24FFFFFF)
     }
-    val tint = if (p.dark) Color(0xFFB3DEFF) else Color(0xFF558CB2)
-    val highlight = if (p.dark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.44f)
-    val lower = if (p.dark) Color(0xFF070F1B).copy(alpha = 0.16f) else Color(0xFF80A9C8).copy(alpha = 0.08f)
+    // The edge, not a white/blue blanket on the surface, communicates the glass.
+    val edge = if (p.dark) Color.White.copy(alpha = 0.34f)
+               else Color(0xFF83AAC2).copy(alpha = 0.44f)
+    val topGlint = if (p.dark) Color.White.copy(alpha = 0.32f)
+                   else Color.White.copy(alpha = 0.79f)
+    val bottomEdge = if (p.dark) Color(0xFF54778D).copy(alpha = 0.35f)
+                     else Color(0xFF92B0C2).copy(alpha = 0.31f)
     return this
-        .shadow(elevation, shape, clip = false,
-            ambientColor = Color.Black.copy(alpha = if (p.dark) 0.23f else 0.09f),
-            spotColor = Color.Black.copy(alpha = if (p.dark) 0.28f else 0.11f))
         .clip(shape)
         .background(fill, shape)
-        .background(
-            Brush.linearGradient(listOf(highlight, tint.copy(alpha = 0.025f), lower)), shape
-        )
+        .border(1.dp, Brush.verticalGradient(listOf(topGlint, edge, bottomEdge)), shape)
+}
+
+/** A single sliding glass lens. No drop shadow, glow or second moving surface. */
+fun Modifier.navGlassSelection(p: NavPalette, radius: Dp = 23.dp): Modifier {
+    val shape = RoundedCornerShape(radius)
+    val fill = if (p.dark) Color(0x4A8798A8) else Color(0x4FC7D8E4)
+    return this
+        .clip(shape)
+        .background(fill, shape)
         .border(
             1.dp,
-            Brush.linearGradient(
+            Brush.verticalGradient(
                 listOf(
-                    if (p.dark) Color.White.copy(alpha = 0.33f) else Color.White.copy(alpha = 0.68f),
-                    tint.copy(alpha = if (p.dark) 0.25f else 0.30f),
-                    tint.copy(alpha = if (p.dark) 0.15f else 0.23f),
-                )
-            ),
-            shape,
+                    Color.White.copy(alpha = if (p.dark) 0.57f else 0.92f),
+                    Color(0xFFB7D2E1).copy(alpha = if (p.dark) 0.23f else 0.45f),
+                    Color(0xFF78A9C5).copy(alpha = if (p.dark) 0.48f else 0.38f),
+                ),
+            ), shape,
         )
 }
 
@@ -117,18 +122,18 @@ fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: 
     ) {
         BoxWithConstraints(
             Modifier.fillMaxWidth().height(56.dp)
-                .navGlass(p, radius = 30.dp, role = GlassRole.NAVIGATION, elevation = 10.dp)
+                .navGlass(p, radius = 30.dp, role = GlassRole.NAVIGATION, elevation = 0.dp)
                 .padding(4.dp),
         ) {
             val segment = maxWidth / 3
             val slide by animateDpAsState(
                 targetValue = segment * selected.coerceIn(0, 2),
-                animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = 0.78f),
-                label = "navGlassSelection",
+                animationSpec = tween(durationMillis = 210, easing = FastOutSlowInEasing),
+                label = "navSingleGlassLens",
             )
             Box(
                 Modifier.offset(x = slide).width(segment).fillMaxHeight()
-                    .navGlass(p, radius = 23.dp, role = GlassRole.SELECTED, elevation = 0.dp),
+                    .navGlassSelection(p, radius = 23.dp),
             )
             Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                 val names = listOf(
@@ -167,6 +172,19 @@ fun NavGlassCircleButton(p: NavPalette, kind: String, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         NavGlassGlyph(kind, p.text, Modifier.size(25.dp))
+    }
+}
+
+/** Finger-friendly create button, anchored just above the navigation capsule. */
+@Composable
+fun NavGlassAddButton(p: NavPalette, onClick: () -> Unit) {
+    Box(
+        Modifier.size(54.dp)
+            .navGlass(p, radius = 27.dp, role = GlassRole.SELECTED, elevation = 0.dp)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        NavGlassGlyph("plus", p.blue, Modifier.size(28.dp))
     }
 }
 
@@ -211,6 +229,10 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                     lineTo(19f*s,25f*s)
                 }
                 drawPath(path,color, style=Stroke(width=3.1f*s,cap=StrokeCap.Round,join=StrokeJoin.Round))
+            }
+            "plus" -> {
+                drawLine(color, pt(15f, 6f), pt(15f, 24f), width * 1.2f, cap = StrokeCap.Round)
+                drawLine(color, pt(6f, 15f), pt(24f, 15f), width * 1.2f, cap = StrokeCap.Round)
             }
             "settings" -> {
                 // Crisp gear silhouette, no 3-D emoji.

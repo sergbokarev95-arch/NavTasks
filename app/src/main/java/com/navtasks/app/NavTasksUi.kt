@@ -61,7 +61,7 @@ data class NavPalette(
 fun navPalette(dark: Boolean) = if (dark) NavPalette(
     true, Color(0xFF0B182A), Color(0xFF142D49), Color(0xE021344F),
     Color(0xE01A304B), Color(0xE021415E), Color(0xFF36536B),
-    Color(0xFFF2F8FF), Color(0xFFAFC4D8), Color(0xFF78C4F2), Color(0xFF69D4BE),
+    Color(0xFFF2F8FF), Color(0xFFAFC4D8), Color(0xFF44C4FF), Color(0xFF69D4BE),
 ) else NavPalette(
     false, Color(0xFFEAF3FA), Color(0xFFF9FBFF), Color(0xF9FFFFFF),
     Color(0xFFF8FCFF), Color(0xFFE1F0FA), Color(0xFFC9DFED),
@@ -179,9 +179,17 @@ fun NavTasksApp(
                                 expandedRun, { expandedRun = it })
                             1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
                                 onEdit = { editorTask = it; editorOpen = true })
-                            else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                onAdd = { editorTask = null; editorOpen = true },
-                                onEdit = { editorTask = it; editorOpen = true })
+                            else -> Box(Modifier.fillMaxSize()) {
+                                TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
+                                    onEdit = { editorTask = it; editorOpen = true })
+                                Box(Modifier.align(Alignment.BottomStart)
+                                    .padding(start = 19.dp, bottom = 16.dp)) {
+                                    NavGlassAddButton(palette) {
+                                        editorTask = null
+                                        editorOpen = true
+                                    }
+                                }
+                            }
                         }
                     }
                 }

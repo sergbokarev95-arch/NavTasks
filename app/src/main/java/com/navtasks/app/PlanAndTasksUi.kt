@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +29,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -42,6 +44,20 @@ import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.math.abs
+
+/** The same swipe gesture changes the visible unit at the current calendar zoom. */
+internal data class CalendarSwipePosition(val year: Int, val month: Int, val day: LocalDate)
+
+internal fun calendarSwipePosition(
+    level: Int, year: Int, month: Int, day: LocalDate, step: Int,
+): CalendarSwipePosition = when (level) {
+    0 -> CalendarSwipePosition(year + step, month, day)
+    1 -> YearMonth.of(year, month).plusMonths(step.toLong()).let {
+        CalendarSwipePosition(it.year, it.monthValue, day)
+    }
+    else -> day.plusDays(step.toLong()).let { CalendarSwipePosition(it.year, it.monthValue, it) }
+}
 
 @Composable
 fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLanguage, onEdit: (TaskTemplate) -> Unit) {
@@ -50,6 +66,12 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
     var month by rememberSaveable { mutableIntStateOf(today.monthValue) }
     var selectedDay by remember { mutableStateOf(today) }
     val locale = if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
+    fun moveBySwipe(step: Int) {
+        val next = calendarSwipePosition(level, year, month, selectedDay, step)
+        year = next.year
+        month = next.month
+        selectedDay = next.day
+    }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically) {
@@ -63,7 +85,27 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                 Text(localized("Сегодня", "Today", lang), color = p.mint)
             }
         }
-        Crossfade(targetState = level, animationSpec = tween(220), label = "calendarZoom") { zoom ->
+        Crossfade(
+            targetState = level,
+            modifier = Modifier.fillMaxSize().pointerInput(level, year, month, selectedDay) {
+                var horizontalDistance = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { horizontalDistance = 0f },
+                    onHorizontalDrag = { change, dragAmount ->
+                        horizontalDistance += dragAmount
+                        change.consume()
+                    },
+                    onDragEnd = {
+                        if (abs(horizontalDistance) >= 58.dp.toPx()) {
+                            moveBySwipe(if (horizontalDistance < 0f) 1 else -1)
+                        }
+                    },
+                    onDragCancel = { horizontalDistance = 0f },
+                )
+            },
+            animationSpec = tween(220),
+            label = "calendarZoom",
+        ) { zoom ->
             when (zoom) {
                 0 -> Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -246,7 +288,7 @@ private fun monthCells(year: Int, month: Int): List<Int> {
 fun TasksScreenV2(
     store: TaskStore, filter: Frequency, onFilter: (Frequency) -> Unit,
     p: NavPalette, lang: UiLanguage,
-    onAdd: () -> Unit, onEdit: (TaskTemplate) -> Unit,
+    onEdit: (TaskTemplate) -> Unit,
 ) {
     val labels = listOf(
         localized("День", "Daily", lang), localized("Неделя", "Weekly", lang),
@@ -263,15 +305,12 @@ fun TasksScreenV2(
                 }
             }
         }
-        Row(Modifier.fillMaxWidth().padding(horizontal = 17.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 17.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically) {
             Text("${store.templates.count { it.frequency == filter }} ${localized("задач", "tasks", lang)}",
-                color = p.muted, fontSize = 13.sp, modifier = Modifier.weight(1f))
-            Box(Modifier.size(44.dp).navGlass(p, radius = 22.dp, role = GlassRole.SELECTED)
-                .clickable(onClick = onAdd), contentAlignment = Alignment.Center) {
-                Text("+", color = p.blue, fontSize = 28.sp)
-            }
+                color = p.muted, fontSize = 13.sp)
         }
-        LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 5.dp),
+        LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 5.dp, bottom = 83.dp),
             verticalArrangement = Arrangement.spacedBy(9.dp)) {
             val filtered = store.templates.filter { it.frequency == filter }
             if (filtered.isEmpty()) item { NavPanel(p) { Text(localized("Задач пока нет", "No tasks yet", lang), color = p.muted) } }
@@ -566,7 +605,7 @@ fun SettingsScreen(settings: NavSettings, store: TaskStore, p: NavPalette, onBac
                 }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.2.2 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.2.3 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

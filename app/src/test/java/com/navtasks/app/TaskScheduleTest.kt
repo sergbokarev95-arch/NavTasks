@@ -58,4 +58,13 @@ class TaskScheduleTest {
         assertEquals("октябрь", month)
         assertEquals("31 октября 2026", navDate(LocalDate.of(2026, 10, 31), UiLanguage.RU, true))
     }
+    @Test fun calendarSwipeMovesAcrossMonthAndYearBoundaries() {
+        val anchor = LocalDate.of(2026, 10, 31)
+        assertEquals(CalendarSwipePosition(2027, 1, anchor),
+            calendarSwipePosition(1, 2026, 12, anchor, +1))
+        assertEquals(CalendarSwipePosition(2026, 11, LocalDate.of(2026, 11, 1)),
+            calendarSwipePosition(2, 2026, 10, anchor, +1))
+        assertEquals(CalendarSwipePosition(2025, 10, anchor),
+            calendarSwipePosition(0, 2026, 10, anchor, -1))
+    }
 }
