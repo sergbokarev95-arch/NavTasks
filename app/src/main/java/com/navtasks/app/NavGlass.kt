@@ -33,11 +33,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
-import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.blur.HazeColorEffect
-import dev.chrisbanes.haze.blur.hazeBlur
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 
 /** Local, lightweight light fields make the translucent layers visibly react to their own backdrop. */
 @Composable
@@ -146,20 +145,16 @@ fun NavGlassBottomBar(
                 .clip(RoundedCornerShape(30.dp))
                 // Real backdrop blur from the scrolling content underneath.
                 // Source capture is a small surface, not the entire app window.
-                .hazeBlur(
-                    input = HazeInput.Sources(hazeState),
-                    style = HazeBlurStyle {
-                        blurRadius(16.dp)
-                        noiseFactor(0.025f)
-                        colorEffects(listOf(
-                            HazeColorEffect.tint(
-                                if (p.dark) Color(0x3215283E) else Color(0x20FFFFFF)
-                            ),
-                        ))
-                        fallbackColorEffect(HazeColorEffect.tint(
-                            if (p.dark) Color(0xA0132336) else Color(0xB0FFFFFF)
-                        ))
-                    },
+                .hazeEffect(
+                    state = hazeState,
+                    style = HazeStyle(
+                        backgroundColor = if (p.dark) p.background else p.background,
+                        blurRadius = 16.dp,
+                        tints = listOf(HazeTint(
+                            if (p.dark) Color(0x3215283E) else Color(0x20FFFFFF)
+                        )),
+                        noiseFactor = 0.025f,
+                    ),
                 )
                 .navGlass(p, radius = 30.dp, role = GlassRole.NAVIGATION, elevation = 0.dp)
                 .padding(4.dp),

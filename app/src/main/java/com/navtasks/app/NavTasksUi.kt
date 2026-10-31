@@ -25,7 +25,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import dev.chrisbanes.haze.rememberHazeState
 import dev.chrisbanes.haze.hazeSource
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -153,7 +152,7 @@ fun NavTasksApp(
             } else if (showSettings) {
                 SettingsScreen(settings, store, palette, onBack = { showSettings = false })
             } else {
-                val hazeState = rememberHazeState()
+                val hazeState = remember { dev.chrisbanes.haze.HazeState() }
                 Box(Modifier.fillMaxSize()) {
                     // Content paints to the bottom edge. Navigation is an overlay,
                     // NOT a Scaffold bottomBar which would reserve an opaque footer.
