@@ -111,7 +111,7 @@ fun Modifier.glassClickable(onClick: () -> Unit): Modifier =
 /** A single sliding glass lens. No drop shadow, glow or second moving surface. */
 fun Modifier.navGlassSelection(p: NavPalette, radius: Dp = 23.dp): Modifier {
     val shape = RoundedCornerShape(radius)
-    val fill = if (p.dark) Color(0x4B2989C5) else Color(0x3B3EA1F2)
+    val fill = if (p.dark) Color(0x2C7193A8) else Color(0x14FFFFFF)
     return this
         .clip(shape)
         .background(fill, shape)
@@ -174,16 +174,16 @@ fun NavGlassBottomBar(
                 val lensTopLeft = Offset(cell * slide + inset, inset)
                 val lensCorner = CornerRadius(lensSize.height / 2f, lensSize.height / 2f)
                 drawRoundRect(
-                    color = if (p.dark) Color(0x4B2989C5) else Color(0x3B3EA1F2),
+                    color = if (p.dark) Color(0x2C7193A8) else Color(0x14FFFFFF),
                     topLeft = lensTopLeft, size = lensSize, cornerRadius = lensCorner,
                 )
                 drawRoundRect(
                     brush = Brush.verticalGradient(
                         listOf(
-                            Color.White.copy(alpha = if (p.dark) 0.60f else 0.92f),
-                            Color(0xFF81C9FF).copy(alpha = if (p.dark) 0.43f else 0.34f),
-                            (if (p.dark) Color(0xFF4DBBFF) else Color(0xFF419BEE))
-                                .copy(alpha = if (p.dark) 0.53f else 0.44f),
+                            Color.White.copy(alpha = if (p.dark) 0.49f else 0.86f),
+                            Color.White.copy(alpha = if (p.dark) 0.20f else 0.29f),
+                            (if (p.dark) Color(0xFFA9DBF2) else p.blue)
+                                .copy(alpha = if (p.dark) 0.31f else 0.22f),
                         ),
                     ),
                     topLeft = lensTopLeft,
@@ -200,6 +200,8 @@ fun NavGlassBottomBar(
                 )
                 repeat(3) { index ->
                     val active = selected == index
+                    // Strong blue belongs to the glyph and caption, not the glass lens.
+                    val activeBlue = if (p.dark) Color(0xFF329CFF) else Color(0xFF087DFA)
                     Column(
                         Modifier.weight(1f).fillMaxHeight()
                             .clip(RoundedCornerShape(21.dp))
@@ -209,11 +211,11 @@ fun NavGlassBottomBar(
                     ) {
                         NavGlassGlyph(
                             kind = when (index) { 0 -> "today"; 1 -> "calendar"; else -> "tasks" },
-                            color = if (active) p.blue else p.text.copy(alpha = 0.89f),
+                            color = if (active) activeBlue else p.text.copy(alpha = 0.89f),
                             modifier = Modifier.size(24.dp),
                         )
                         Spacer(Modifier.height(1.dp))
-                        Text(names[index], color = if (active) p.blue else p.muted, fontSize = 10.sp)
+                        Text(names[index], color = if (active) activeBlue else p.muted, fontSize = 10.sp)
                     }
                 }
             }

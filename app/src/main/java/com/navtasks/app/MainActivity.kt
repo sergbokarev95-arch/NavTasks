@@ -5,6 +5,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowInsetsController
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.SideEffect
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
@@ -20,6 +23,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         requestedRunKey = intent.getStringExtra("runKey")
         setContent {
+            // Sync status/navigation icon foregrounds to the actual selected app
+            // theme, not only to Android's global Day/Night setting.
+            val dark = when (appSettings.theme) {
+                UiTheme.DARK -> true
+                UiTheme.LIGHT -> false
+                UiTheme.SYSTEM -> isSystemInDarkTheme()
+            }
+            SideEffect {
+                val flags = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                window.insetsController?.setSystemBarsAppearance(
+                    if (dark) 0 else flags,
+                    flags,
+                )
+            }
             NavTasksApp(taskStore, appSettings, requestedRunKey) { requestedRunKey = null }
         }
         if (Build.VERSION.SDK_INT >= 33 &&
