@@ -252,6 +252,8 @@ fun NavTasksApp(
                         showProfiles = false
                         tab = 0
                         tabHistory = ""
+                        selectedDate = LocalDate.now()
+                        templateFilter = Frequency.DAILY
                         expandedRun = null
                         showHandover = false
                     },
@@ -312,7 +314,9 @@ fun NavTasksApp(
                             },
                             label = "primaryTabSlide",
                         ) { page ->
-                            tabStateHolder.SaveableStateProvider("main-tab-$page") {
+                            tabStateHolder.SaveableStateProvider(
+                                profiles.activeId + "/main-tab-" + page
+                            ) {
                                 when (page) {
                                     0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
                                         expandedRun, { expandedRun = it })
