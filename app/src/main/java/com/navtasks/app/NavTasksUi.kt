@@ -3,6 +3,10 @@ package com.navtasks.app
 import android.app.DatePickerDialog
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -18,6 +22,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,6 +41,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlin.math.abs
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -78,6 +87,55 @@ fun navDate(date: LocalDate, lang: UiLanguage, includeYear: Boolean = false): St
         if (includeYear) "d MMMM yyyy" else "d MMMM"
     } else if (includeYear) "MMM d, yyyy" else "MMM d"
     return date.format(DateTimeFormatter.ofPattern(pattern, if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH))
+}
+
+
+/**
+ * Select adjacent primary tab on a horizontal swipe. Child widgets (the
+ * calendar pager and the 7-day scroller) own gestures they consume.
+ * A vertical movement, short swipe, or system-edge gesture never changes tabs.
+ */
+internal fun tabAfterHorizontalSwipe(
+    current: Int,
+    deltaX: Float,
+    deltaY: Float,
+    minDistance: Float,
+    consumedByChild: Boolean,
+): Int {
+    if (consumedByChild || abs(deltaX) < minDistance ||
+        abs(deltaX) < abs(deltaY) * 1.35f
+    ) return current
+    return (current + if (deltaX < 0f) 1 else -1).coerceIn(0, 2)
+}
+
+private fun Modifier.primaryTabSwipe(
+    tab: Int,
+    onSelect: (Int) -> Unit,
+): Modifier = pointerInput(tab) {
+    val edgeGuard = 28.dp.toPx()
+    val travel = 78.dp.toPx()
+    awaitEachGesture {
+        // Watch the Final pass instead of claiming the child's swipe.
+        // This preserves the calendar's month/day swipe and the week strip.
+        val first = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
+        val inContent = first.position.x > edgeGuard &&
+            first.position.x < size.width - edgeGuard
+        var dx = 0f
+        var dy = 0f
+        var claimedByChild = false
+        while (true) {
+            val event = awaitPointerEvent(pass = PointerEventPass.Final)
+            val change = event.changes.firstOrNull { it.id == first.id } ?: break
+            if (!change.pressed) break
+            dx += change.position.x - change.previousPosition.x
+            dy += change.position.y - change.previousPosition.y
+            if (change.isConsumed) claimedByChild = true
+        }
+        if (inContent) {
+            val next = tabAfterHorizontalSwipe(tab, dx, dy, travel, claimedByChild)
+            if (next != tab) onSelect(next)
+        }
+    }
 }
 
 @Composable
@@ -149,6 +207,12 @@ fun NavTasksApp(
         surfaceVariant = palette.task, onSurfaceVariant = palette.muted,
     )
 
+    fun openPrimaryTab(next: Int) {
+        if (next == tab) return
+        tabHistory = (tabHistory + tab.toString()).takeLast(12)
+        tab = next
+    }
+
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
     BackHandler(enabled = editorOpen || showSettings || tabHistory.isNotEmpty() || tab != 0) {
@@ -179,7 +243,8 @@ fun NavTasksApp(
                 Box(Modifier.fillMaxSize()) {
                     // Content paints to the bottom edge. Navigation is an overlay,
                     // NOT a Scaffold bottomBar which would reserve an opaque footer.
-                    Column(Modifier.fillMaxSize().statusBarsPadding().hazeSource(hazeState)) {
+                    Column(Modifier.fillMaxSize().statusBarsPadding().hazeSource(hazeState)
+                        .primaryTabSwipe(tab, ::openPrimaryTab)) {
                         Row(
                             Modifier.fillMaxWidth().padding(start = 18.dp, end = 14.dp, top = 14.dp, bottom = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -196,14 +261,31 @@ fun NavTasksApp(
                             }
                             NavGlassCircleButton(palette, "settings") { showSettings = true }
                         }
-                        tabStateHolder.SaveableStateProvider("main-tab-$tab") {
-                            when (tab) {
-                                0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
-                                    expandedRun, { expandedRun = it })
-                                1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
-                                    onEdit = { editorTask = it; editorOpen = true })
-                                else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                    onEdit = { editorTask = it; editorOpen = true })
+                        AnimatedContent(
+                            targetState = tab,
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            transitionSpec = {
+                                val forward = targetState > initialState
+                                (slideInHorizontally(
+                                    initialOffsetX = { if (forward) it else -it },
+                                    animationSpec = tween(230),
+                                ) + fadeIn(tween(170))) togetherWith
+                                    (slideOutHorizontally(
+                                        targetOffsetX = { if (forward) -it / 4 else it / 4 },
+                                        animationSpec = tween(230),
+                                    ) + fadeOut(tween(170)))
+                            },
+                            label = "primaryTabSlide",
+                        ) { page ->
+                            tabStateHolder.SaveableStateProvider("main-tab-$page") {
+                                when (page) {
+                                    0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
+                                        expandedRun, { expandedRun = it })
+                                    1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
+                                        onEdit = { editorTask = it; editorOpen = true })
+                                    else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
+                                        onEdit = { editorTask = it; editorOpen = true })
+                                }
                             }
                         }
                     }
@@ -222,12 +304,7 @@ fun NavTasksApp(
                         p = palette, selected = tab, lang = lang,
                         modifier = Modifier.align(Alignment.BottomCenter),
                         hazeState = hazeState,
-                        onSelect = { next ->
-                            if (tab != next) {
-                                tabHistory = (tabHistory + tab.toString()).takeLast(12)
-                                tab = next
-                            }
-                        },
+                        onSelect = ::openPrimaryTab,
                     )
                 }
 
