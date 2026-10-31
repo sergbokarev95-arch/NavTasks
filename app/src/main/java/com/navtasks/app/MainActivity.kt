@@ -15,7 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 class MainActivity : ComponentActivity() {
-    private val taskStore by lazy { TaskStore(this) }
+    private val profileStore by lazy { ProfileStore(this) }
+    private val taskStore by lazy { TaskStore(this, profileStore) }
     private val appSettings by lazy { NavSettings(this) }
     private var requestedRunKey by mutableStateOf<String?>(null)
 
@@ -38,7 +39,7 @@ class MainActivity : ComponentActivity() {
                     flags,
                 )
             }
-            NavTasksApp(taskStore, appSettings, requestedRunKey) { requestedRunKey = null }
+            NavTasksApp(taskStore, appSettings, profileStore, requestedRunKey) { requestedRunKey = null }
         }
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED

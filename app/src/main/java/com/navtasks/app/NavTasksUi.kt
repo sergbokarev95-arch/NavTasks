@@ -142,6 +142,7 @@ private fun Modifier.primaryTabSwipe(
 fun NavTasksApp(
     store: TaskStore,
     settings: NavSettings,
+    profiles: ProfileStore,
     requestedRunKey: String? = null,
     onRequestHandled: () -> Unit = {},
 ) {
@@ -154,8 +155,9 @@ fun NavTasksApp(
     val tabStateHolder = rememberSaveableStateHolder()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showHandover by rememberSaveable { mutableStateOf(false) }
+    var showProfiles by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
-    val handoverStore = remember(context) { HandoverStore(context) }
+    val handoverStore = remember(context, profiles) { HandoverStore(context, profiles) }
     var editorOpen by remember { mutableStateOf(false) }
     var editorTask by remember { mutableStateOf<TaskTemplate?>(null) }
     var templateFilter by rememberSaveable { mutableStateOf(Frequency.DAILY) }
@@ -219,11 +221,14 @@ fun NavTasksApp(
 
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
-    BackHandler(enabled = editorOpen || showSettings || showHandover || tabHistory.isNotEmpty() || tab != 0) {
+    BackHandler(enabled = editorOpen || showSettings || showProfiles || showHandover ||
+            profiles.active.kind == NavProfileKind.PERSONAL || tabHistory.isNotEmpty() || tab != 0) {
         when {
             editorOpen -> editorOpen = false
+            showProfiles -> showProfiles = false
             showHandover -> showHandover = false
             showSettings -> showSettings = false
+            profiles.active.kind == NavProfileKind.PERSONAL -> showProfiles = true
             tabHistory.isNotEmpty() -> {
                 tab = tabHistory.last().digitToInt()
                 tabHistory = tabHistory.dropLast(1)
@@ -241,8 +246,23 @@ fun NavTasksApp(
                     onBack = { editorOpen = false },
                     onSave = { store.upsert(it); editorOpen = false },
                 )
+            } else if (showProfiles) {
+                ProfilesScreen(profiles, store, handoverStore, palette, lang,
+                    onBack = {
+                        showProfiles = false
+                        tab = 0
+                        tabHistory = ""
+                        expandedRun = null
+                        showHandover = false
+                    },
+                    onSettings = { showProfiles = false; showSettings = true },
+                )
             } else if (showSettings) {
-                SettingsScreen(settings, store, palette, onBack = { showSettings = false })
+                SettingsScreen(settings, store, palette, onBack = { showSettings = false },
+                    profiles = profiles, handover = handoverStore)
+            } else if (profiles.active.kind == NavProfileKind.PERSONAL) {
+                HandoverScreen(handoverStore, store, palette, lang,
+                    onBack = { showProfiles = true }, personalMode = true)
             } else if (showHandover) {
                 HandoverScreen(handoverStore, store, palette, lang, onBack = { showHandover = false })
             } else {
@@ -257,7 +277,15 @@ fun NavTasksApp(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text("NAVTASKS", color = palette.blue, fontSize = 14.sp, letterSpacing = 2.1.sp)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("NAVTASKS", color = palette.blue, fontSize = 14.sp,
+                                        letterSpacing = 2.1.sp)
+                                    Spacer(Modifier.width(10.dp))
+                                    Text(profiles.active.title + "  ⌄", color = palette.muted,
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.glassClickable { showProfiles = true }
+                                            .padding(vertical = 5.dp))
+                                }
                                 Text(
                                     when (tab) {
                                         0 -> localized("Сегодня", "Today", lang)
@@ -291,8 +319,7 @@ fun NavTasksApp(
                                     1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
                                         onEdit = { editorTask = it; editorOpen = true })
                                     else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                        onEdit = { editorTask = it; editorOpen = true },
-                                        onHandover = { showHandover = true })
+                                        onEdit = { editorTask = it; editorOpen = true })
                                 }
                             }
                         }
@@ -305,6 +332,21 @@ fun NavTasksApp(
                             NavGlassAddButton(palette) {
                                 editorTask = null
                                 editorOpen = true
+                            }
+                        }
+                        Box(
+                            Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
+                                .padding(end = 20.dp, bottom = 83.dp),
+                        ) {
+                            Row(
+                                Modifier.navGlass(palette, radius = 25.dp, role = GlassRole.CONTROL)
+                                    .glassClickable { showHandover = true }
+                                    .padding(horizontal = 15.dp, vertical = 13.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                NavGlassGlyph("tasks", palette.blue, Modifier.size(23.dp))
+                                Spacer(Modifier.width(7.dp))
+                                Text("Handover", color = palette.blue, fontSize = 12.sp)
                             }
                         }
                     }

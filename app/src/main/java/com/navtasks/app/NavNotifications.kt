@@ -39,34 +39,40 @@ object NavNotifications {
     }
 
     private fun pending(context: Context, kind: String, key: String): PendingIntent {
+        val profileId = ProfileStore(context).activeId
         val intent = Intent(context, NavAlarmReceiver::class.java).apply {
             action = ACTION_ALARM
-            data = Uri.parse("navtasks://alarm/$kind/${Uri.encode(key)}")
+            data = Uri.parse("navtasks://alarm/" + kind + "/" + Uri.encode(profileId) + "/" + Uri.encode(key))
+            putExtra("profileId", profileId)
             putExtra("kind", kind)
             putExtra("runKey", key)
         }
-        return PendingIntent.getBroadcast(context, ("alarm:$kind:$key").hashCode(), intent,
+        return PendingIntent.getBroadcast(context, ("alarm:" + profileId + ":" + kind + ":" + key).hashCode(), intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
     private fun actionPending(context: Context, runKey: String, actionKind: String): PendingIntent {
+        val profileId = ProfileStore(context).activeId
         val intent = Intent(context, NavAlarmReceiver::class.java).apply {
             action = ACTION_TASK
-            data = Uri.parse("navtasks://action/$actionKind/${Uri.encode(runKey)}")
+            data = Uri.parse("navtasks://action/" + actionKind + "/" + Uri.encode(profileId) + "/" + Uri.encode(runKey))
             putExtra("runKey", runKey)
+            putExtra("profileId", profileId)
             putExtra("taskAction", actionKind)
         }
-        return PendingIntent.getBroadcast(context, ("action:$actionKind:$runKey").hashCode(), intent,
+        return PendingIntent.getBroadcast(context, ("action:" + profileId + ":" + actionKind + ":" + runKey).hashCode(), intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
     fun openTask(context: Context, runKey: String? = null): PendingIntent {
+        val profileId = ProfileStore(context).activeId
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             if (runKey != null) putExtra("runKey", runKey)
-            data = Uri.parse("navtasks://open/${Uri.encode(runKey ?: "today")}")
+            putExtra("profileId", profileId)
+            data = Uri.parse("navtasks://open/" + Uri.encode(profileId) + "/" + Uri.encode(runKey ?: "today"))
         }
-        return PendingIntent.getActivity(context, ("open:$runKey").hashCode(), intent,
+        return PendingIntent.getActivity(context, ("open:" + profileId + ":" + runKey).hashCode(), intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
@@ -161,7 +167,7 @@ object NavNotifications {
         if (kind == REMINDER && !now.isBefore(deadline)) return
         if (kind == MISSED && !store.isOverdue(task, run) && !autoMoved) return
         if (!mayNotify(context)) return
-        if (alreadyNotified(context, "$kind:$runKey:${run.displayDate}")) return
+        if (alreadyNotified(context, ProfileStore(context).activeId + ":" + kind + ":" + runKey + ":" + run.displayDate)) return
 
         val isMissed = kind == MISSED
         val message = if (autoMoved)
@@ -201,6 +207,8 @@ object NavNotifications {
     }
 
     fun handleBroadcast(context: Context, intent: Intent) {
+        // Old alarms from prior versions or another vessel must never modify this profile.
+        if (intent.getStringExtra("profileId") != ProfileStore(context).activeId) return
         val key = intent.getStringExtra("runKey").orEmpty()
         when (intent.action) {
             ACTION_ALARM -> receiveAlarm(context, intent.getStringExtra("kind").orEmpty(), key)

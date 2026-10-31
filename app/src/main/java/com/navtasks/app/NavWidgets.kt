@@ -21,6 +21,7 @@ open class NavBaseWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == WIDGET_TOGGLE) {
+            if (intent.getStringExtra("profileId") != ProfileStore(context).activeId) return
             val key = intent.getStringExtra("runKey") ?: return
             val store = TaskStore(context)
             val run = store.runs[key] ?: return
@@ -36,12 +37,14 @@ class NavWideWidgetProvider : NavBaseWidgetProvider()
 
 object NavWidgetUpdater {
     private fun togglePending(context: Context, runKey: String): PendingIntent {
+        val profileId = ProfileStore(context).activeId
         val intent = Intent(context, NavCompactWidgetProvider::class.java).apply {
             action = WIDGET_TOGGLE
-            data = Uri.parse("navtasks://widget/${Uri.encode(runKey)}")
+            data = Uri.parse("navtasks://widget/" + Uri.encode(profileId) + "/" + Uri.encode(runKey))
+            putExtra("profileId", profileId)
             putExtra("runKey", runKey)
         }
-        return PendingIntent.getBroadcast(context, ("widget:$runKey").hashCode(), intent,
+        return PendingIntent.getBroadcast(context, ("widget:" + profileId + ":" + runKey).hashCode(), intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 

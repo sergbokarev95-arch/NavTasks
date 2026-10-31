@@ -34,6 +34,7 @@ fun HandoverScreen(
     p: NavPalette,
     lang: UiLanguage,
     onBack: () -> Unit,
+    personalMode: Boolean = false,
 ) {
     val context = LocalContext.current
     var collapsed by remember { mutableStateOf(emptySet<String>()) }
@@ -111,12 +112,15 @@ fun HandoverScreen(
             NavGlassCircleButton(p, "back", onClick = onBack)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("HANDOVER", color = p.blue, fontSize = 13.sp, letterSpacing = 1.8.sp)
-                Text(localized("Передача дел", "Handover notes", lang),
+                Text(if (personalMode) localized("ЛИЧНОЕ", "PERSONAL", lang) else "HANDOVER",
+                    color = p.blue, fontSize = 13.sp, letterSpacing = 1.8.sp)
+                Text(if (personalMode) localized("Заметки", "Notes", lang)
+                    else localized("Передача дел", "Handover notes", lang),
                     color = p.text, fontSize = 22.sp)
             }
             NavGlassCircleButton(p, "plus") { openSectionEditor(null) }
         }
+        if (!personalMode) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 17.dp, vertical = 5.dp),
             horizontalArrangement = Arrangement.spacedBy(9.dp),
@@ -138,6 +142,7 @@ fun HandoverScreen(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 3.dp),
             color = p.muted, fontSize = 11.sp,
         )
+        }
         feedback?.let {
             Text(it, modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp),
                 color = p.mint, fontSize = 12.sp)

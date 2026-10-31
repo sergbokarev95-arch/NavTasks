@@ -17,21 +17,30 @@ import java.util.UUID
  * A future migration can replace SharedPreferences with Room without changing
  * the stable template IDs or occurrence keys.
  */
-class TaskStore(context: Context) {
+class TaskStore(context: Context, private val profiles: ProfileStore = ProfileStore(context)) {
     private val appContext = context.applicationContext
-    private val prefs = context.applicationContext.getSharedPreferences("navtasks-v1", Context.MODE_PRIVATE)
+    private var prefs = profiles.data(profiles.activeId)
+    val profileId: String get() = profiles.activeId
 
     var templates: List<TaskTemplate> by mutableStateOf(emptyList())
         private set
     var runs: Map<String, TaskRun> by mutableStateOf(emptyMap())
         private set
 
-    init {
+    init { reloadProfile() }
+
+    fun switchProfile() {
+        prefs = profiles.data(profiles.activeId)
+        reloadProfile()
+        syncOutputs()
+    }
+
+    private fun reloadProfile() {
         templates = if (prefs.contains("templates")) {
             decodeTemplates(prefs.getString("templates", "[]").orEmpty())
-        } else {
+        } else if (profiles.activeId == ProfileStore.DEFAULT_SHIP) {
             sampleTemplates().also { saveTemplates(it) }
-        }
+        } else emptyList()
         runs = decodeRuns(prefs.getString("runs", "[]").orEmpty())
         refresh(LocalDate.now())
     }
@@ -214,6 +223,7 @@ class TaskStore(context: Context) {
     }
 
     fun upsert(task: TaskTemplate) {
+        require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
         templates = if (templates.any { it.id == task.id }) {
             templates.map { if (it.id == task.id) task else it }
         } else templates + task
@@ -226,6 +236,7 @@ class TaskStore(context: Context) {
 
     /** Add only new templates, preserving local tasks and all completion history. */
     fun importTemplates(imported: List<TaskTemplate>): Int {
+        require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
         val additions = NavTaskTransfer.newTemplates(templates, imported)
         if (additions.isEmpty()) return 0
         templates = templates + additions

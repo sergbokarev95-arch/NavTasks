@@ -84,7 +84,7 @@ fun Modifier.navGlass(
         GlassRole.PANEL -> if (p.dark) Color(0x651F3143) else Color(0x3AFFFFFF)
         GlassRole.TASK -> if (p.dark) Color(0x571C2D40) else Color(0x2BFFFFFF)
         GlassRole.NESTED_TASK -> if (p.dark) Color(0x5C234259) else Color(0x2DDAEAF3)
-        GlassRole.NAVIGATION -> if (p.dark) Color(0x24132438) else Color(0x0CFFFFFF)
+        GlassRole.NAVIGATION -> if (p.dark) Color(0x5E18202A) else Color(0x4BFFFFFF)
         GlassRole.SELECTED -> if (p.dark) Color(0x4C2989C5) else Color(0x3B3EA1F2)
         GlassRole.CONTROL -> if (p.dark) Color(0x442C3D50) else Color(0x24FFFFFF)
     }
@@ -148,10 +148,10 @@ fun NavGlassBottomBar(
                 .hazeEffect(
                     state = hazeState,
                     style = HazeStyle(
-                        backgroundColor = if (p.dark) Color(0x28132438) else Color(0x15EAF3FA),
-                        blurRadius = 18.dp,
+                        backgroundColor = if (p.dark) Color(0x3C18212B) else Color(0x31F5F6F6),
+                        blurRadius = 21.dp,
                         tints = listOf(HazeTint(
-                            if (p.dark) Color(0x1215283E) else Color(0x06FFFFFF)
+                            if (p.dark) Color(0x251C2228) else Color(0x1FFFFFFF)
                         )),
                         noiseFactor = 0.025f,
                     ),
@@ -239,7 +239,7 @@ fun NavGlassCircleButton(p: NavPalette, kind: String, onClick: () -> Unit) {
 fun NavGlassAddButton(p: NavPalette, onClick: () -> Unit) {
     Box(
         Modifier.size(54.dp)
-            .navGlass(p, radius = 27.dp, role = GlassRole.SELECTED, elevation = 0.dp)
+            .navGlass(p, radius = 27.dp, role = GlassRole.CONTROL, elevation = 0.dp)
             .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

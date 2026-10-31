@@ -61,16 +61,21 @@ data class HandoverSection(
 }
 
 /** The handover notebook is independent of task occurrences, reminders and settings. */
-class HandoverStore(context: Context) {
-    private val prefs = context.applicationContext
-        .getSharedPreferences("navtasks-handover-v1", Context.MODE_PRIVATE)
+class HandoverStore(context: Context, private val profiles: ProfileStore = ProfileStore(context)) {
+    private var prefs = profiles.data(profiles.activeId)
 
     var sections: List<HandoverSection> by mutableStateOf(load())
         private set
 
+    fun switchProfile() {
+        prefs = profiles.data(profiles.activeId)
+        sections = load()
+    }
+
     private fun load(): List<HandoverSection> {
         if (!prefs.contains("sections")) {
-            return listOf(HandoverSection(title = "Navigation"), HandoverSection(title = "Medicines"))
+            return if (profiles.active.kind == NavProfileKind.PERSONAL) emptyList()
+                else listOf(HandoverSection(title = "Navigation"), HandoverSection(title = "Medicines"))
         }
         return runCatching {
             val arr = JSONArray(prefs.getString("sections", "[]") ?: "[]")
