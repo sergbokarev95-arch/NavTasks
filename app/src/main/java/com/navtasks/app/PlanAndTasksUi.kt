@@ -350,12 +350,29 @@ fun TasksScreenV2(
     store: TaskStore, filter: Frequency, onFilter: (Frequency) -> Unit,
     p: NavPalette, lang: UiLanguage,
     onEdit: (TaskTemplate) -> Unit,
+    onHandover: () -> Unit,
 ) {
     val labels = listOf(
         localized("День", "Daily", lang), localized("Неделя", "Weekly", lang),
         localized("Месяц", "Monthly", lang), localized("Разовые", "Extra", lang),
     )
     Column(Modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                .navGlass(p, radius = 17.dp, role = GlassRole.PANEL)
+                .glassClickable(onClick = onHandover)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            NavGlassGlyph("tasks", p.blue, Modifier.size(23.dp))
+            Spacer(Modifier.width(13.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Handover", color = p.text, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                Text(localized("Передача дел и заметки для сменщика", "Notes and tasks for your relief officer", lang),
+                    color = p.muted, fontSize = 11.sp)
+            }
+            Text("›", color = p.blue, fontSize = 24.sp)
+        }
         Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Frequency.entries.forEachIndexed { i, freq ->
                 Box(Modifier.weight(1f).navGlass(p, radius = 14.dp,
@@ -745,7 +762,7 @@ fun SettingsScreen(settings: NavSettings, store: TaskStore, p: NavPalette, onBac
                 }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.2.6 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.3.0 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

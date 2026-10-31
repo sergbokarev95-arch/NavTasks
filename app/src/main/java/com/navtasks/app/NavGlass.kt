@@ -84,7 +84,7 @@ fun Modifier.navGlass(
         GlassRole.PANEL -> if (p.dark) Color(0x651F3143) else Color(0x3AFFFFFF)
         GlassRole.TASK -> if (p.dark) Color(0x571C2D40) else Color(0x2BFFFFFF)
         GlassRole.NESTED_TASK -> if (p.dark) Color(0x5C234259) else Color(0x2DDAEAF3)
-        GlassRole.NAVIGATION -> if (p.dark) Color(0x54132438) else Color(0x28FFFFFF)
+        GlassRole.NAVIGATION -> if (p.dark) Color(0x24132438) else Color(0x0CFFFFFF)
         GlassRole.SELECTED -> if (p.dark) Color(0x4C2989C5) else Color(0x3B3EA1F2)
         GlassRole.CONTROL -> if (p.dark) Color(0x442C3D50) else Color(0x24FFFFFF)
     }
@@ -148,10 +148,10 @@ fun NavGlassBottomBar(
                 .hazeEffect(
                     state = hazeState,
                     style = HazeStyle(
-                        backgroundColor = if (p.dark) p.background else p.background,
-                        blurRadius = 16.dp,
+                        backgroundColor = if (p.dark) Color(0x28132438) else Color(0x15EAF3FA),
+                        blurRadius = 18.dp,
                         tints = listOf(HazeTint(
-                            if (p.dark) Color(0x2515283E) else Color(0x14FFFFFF)
+                            if (p.dark) Color(0x1215283E) else Color(0x06FFFFFF)
                         )),
                         noiseFactor = 0.025f,
                     ),

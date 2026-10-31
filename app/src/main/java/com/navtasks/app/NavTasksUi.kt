@@ -153,6 +153,9 @@ fun NavTasksApp(
     // when Back closes Settings, the editor, or returns to a previous tab.
     val tabStateHolder = rememberSaveableStateHolder()
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var showHandover by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
+    val handoverStore = remember(context) { HandoverStore(context) }
     var editorOpen by remember { mutableStateOf(false) }
     var editorTask by remember { mutableStateOf<TaskTemplate?>(null) }
     var templateFilter by rememberSaveable { mutableStateOf(Frequency.DAILY) }
@@ -190,6 +193,7 @@ fun NavTasksApp(
                 tab = 0
                 tabHistory = ""
                 showSettings = false
+                showHandover = false
                 editorOpen = false
                 expandedRun = requestedRunKey
             }
@@ -215,9 +219,10 @@ fun NavTasksApp(
 
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
-    BackHandler(enabled = editorOpen || showSettings || tabHistory.isNotEmpty() || tab != 0) {
+    BackHandler(enabled = editorOpen || showSettings || showHandover || tabHistory.isNotEmpty() || tab != 0) {
         when {
             editorOpen -> editorOpen = false
+            showHandover -> showHandover = false
             showSettings -> showSettings = false
             tabHistory.isNotEmpty() -> {
                 tab = tabHistory.last().digitToInt()
@@ -238,6 +243,8 @@ fun NavTasksApp(
                 )
             } else if (showSettings) {
                 SettingsScreen(settings, store, palette, onBack = { showSettings = false })
+            } else if (showHandover) {
+                HandoverScreen(handoverStore, store, palette, lang, onBack = { showHandover = false })
             } else {
                 val hazeState = remember { dev.chrisbanes.haze.HazeState() }
                 Box(Modifier.fillMaxSize()) {
@@ -284,7 +291,8 @@ fun NavTasksApp(
                                     1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
                                         onEdit = { editorTask = it; editorOpen = true })
                                     else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                        onEdit = { editorTask = it; editorOpen = true })
+                                        onEdit = { editorTask = it; editorOpen = true },
+                                        onHandover = { showHandover = true })
                                 }
                             }
                         }
