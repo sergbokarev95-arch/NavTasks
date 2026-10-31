@@ -81,7 +81,7 @@ fun Modifier.navGlass(
         GlassRole.TASK -> if (p.dark) Color(0x571C2D40) else Color(0x2BFFFFFF)
         GlassRole.NESTED_TASK -> if (p.dark) Color(0x5C234259) else Color(0x2DDAEAF3)
         GlassRole.NAVIGATION -> if (p.dark) Color(0xA0152433) else Color(0x77FFFFFF)
-        GlassRole.SELECTED -> if (p.dark) Color(0x394C6478) else Color(0x3AC5D8E4)
+        GlassRole.SELECTED -> if (p.dark) Color(0x304E98BF) else Color(0x18A8DFF8)
         GlassRole.CONTROL -> if (p.dark) Color(0x442C3D50) else Color(0x24FFFFFF)
     }
     // The edge, not a white/blue blanket on the surface, communicates the glass.
@@ -97,10 +97,17 @@ fun Modifier.navGlass(
         .border(1.dp, Brush.verticalGradient(listOf(topGlint, edge, bottomEdge)), shape)
 }
 
+/**
+ * An accessible click target without the platform's transient ripple or grey pressed film.
+ * Necessary for clear glass: the moving lens is the only visible touch feedback.
+ */
+fun Modifier.glassClickable(onClick: () -> Unit): Modifier =
+    this.clickable(interactionSource = null, indication = null, onClick = onClick)
+
 /** A single sliding glass lens. No drop shadow, glow or second moving surface. */
 fun Modifier.navGlassSelection(p: NavPalette, radius: Dp = 23.dp): Modifier {
     val shape = RoundedCornerShape(radius)
-    val fill = if (p.dark) Color(0x4A8798A8) else Color(0x4FC7D8E4)
+    val fill = if (p.dark) Color(0x2C7193A8) else Color(0x14FFFFFF)
     return this
         .clip(shape)
         .background(fill, shape)
@@ -136,21 +143,28 @@ fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: 
             )
             Canvas(Modifier.matchParentSize()) {
                 val cell = size.width / 3f
-                val left = cell * slide
-                val r = CornerRadius(size.height / 2, size.height / 2)
+                val inset = 1.dp.toPx()
+                // One uniformly inset lens; no extra pressed-state or old tab layer.
+                val lensSize = Size(cell - 2f * inset, size.height - 2f * inset)
+                val lensTopLeft = Offset(cell * slide + inset, inset)
+                val lensCorner = CornerRadius(lensSize.height / 2f, lensSize.height / 2f)
                 drawRoundRect(
-                    color = if (p.dark) Color(0x506D8BA1) else Color(0x405EADD4),
-                    topLeft = Offset(left, 0f), size = Size(cell, size.height), cornerRadius = r,
+                    color = if (p.dark) Color(0x2C7193A8) else Color(0x14FFFFFF),
+                    topLeft = lensTopLeft, size = lensSize, cornerRadius = lensCorner,
                 )
                 drawRoundRect(
-                    brush = Brush.verticalGradient(listOf(
-                        Color.White.copy(alpha = if (p.dark) 0.60f else 0.85f),
-                        Color.White.copy(alpha = 0.10f),
-                        p.blue.copy(alpha = if (p.dark) 0.56f else 0.38f),
-                    )),
-                    topLeft = Offset(left + 0.6.dp.toPx(), 0.6.dp.toPx()),
-                    size = Size(cell - 1.2.dp.toPx(), size.height - 1.2.dp.toPx()),
-                    cornerRadius = r, style = Stroke(width = 1.1.dp.toPx()),
+                    brush = Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = if (p.dark) 0.49f else 0.86f),
+                            Color.White.copy(alpha = if (p.dark) 0.20f else 0.29f),
+                            (if (p.dark) Color(0xFFA9DBF2) else p.blue)
+                                .copy(alpha = if (p.dark) 0.31f else 0.22f),
+                        ),
+                    ),
+                    topLeft = lensTopLeft,
+                    size = lensSize,
+                    cornerRadius = lensCorner,
+                    style = Stroke(width = 1.dp.toPx()),
                 )
             }
             Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
@@ -164,7 +178,7 @@ fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: 
                     Column(
                         Modifier.weight(1f).fillMaxHeight()
                             .clip(RoundedCornerShape(21.dp))
-                            .clickable { onSelect(index) },
+                            .glassClickable { onSelect(index) },
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
@@ -186,7 +200,7 @@ fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: 
 fun NavGlassCircleButton(p: NavPalette, kind: String, onClick: () -> Unit) {
     Box(
         Modifier.size(44.dp).navGlass(p, radius = 22.dp, role = GlassRole.CONTROL)
-            .clickable(onClick = onClick),
+            .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         NavGlassGlyph(kind, p.text, Modifier.size(25.dp))
@@ -199,7 +213,7 @@ fun NavGlassAddButton(p: NavPalette, onClick: () -> Unit) {
     Box(
         Modifier.size(54.dp)
             .navGlass(p, radius = 27.dp, role = GlassRole.SELECTED, elevation = 0.dp)
-            .clickable(onClick = onClick),
+            .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         NavGlassGlyph("plus", p.blue, Modifier.size(28.dp))

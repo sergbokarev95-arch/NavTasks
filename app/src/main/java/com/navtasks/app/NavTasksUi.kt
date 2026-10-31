@@ -212,7 +212,7 @@ fun RoundCheck(checked: Boolean, p: NavPalette, onClick: () -> Unit, modifier: M
         modifier.size(29.dp).clip(CircleShape)
             .background(if (checked) p.mint else Color.Transparent)
             .border(2.dp, if (checked) p.mint else p.blue, CircleShape)
-            .clickable(onClick = onClick),
+            .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         if (checked) Text("✓", color = if (p.dark) Color(0xFF103F49) else Color.White,
@@ -304,7 +304,7 @@ private fun TodayScreenV2(
                 if (complete.isNotEmpty()) item {
                     Column(Modifier.fillMaxWidth()) {
                         Column(
-                            Modifier.fillMaxWidth().navGlass(p, radius = 17.dp, role = GlassRole.PANEL).clickable { showCompleted = !showCompleted }
+                            Modifier.fillMaxWidth().navGlass(p, radius = 17.dp, role = GlassRole.PANEL).glassClickable { showCompleted = !showCompleted }
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -347,7 +347,7 @@ private fun TodayScreenV2(
 private fun DayChip(top: String, bottom: String, selected: Boolean, accent: Color, p: NavPalette, action: () -> Unit) {
     Column(
         Modifier.navGlass(p, radius = 13.dp, role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
-            .clickable(onClick = action).padding(horizontal = 12.dp, vertical = 8.dp),
+            .glassClickable(onClick = action).padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(top, color = if (selected) p.blue else p.muted, fontSize = 11.sp, maxLines = 1)
@@ -417,7 +417,7 @@ fun RunTileV2(
                 else completeSimple()
             }, modifier = Modifier.size(27.dp))
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f).clickable {
+            Column(Modifier.weight(1f).glassClickable {
                 if (run.checklist.isNotEmpty()) onToggleExpand()
                 else if (run.completed) store.setSimpleComplete(run.key, false)
                 else completeSimple()
@@ -435,7 +435,7 @@ fun RunTileV2(
             }
             Box {
                 Text("⋯", color = p.muted, fontSize = 20.sp,
-                    modifier = Modifier.clip(CircleShape).clickable { menuOpen = true }.padding(6.dp))
+                    modifier = Modifier.clip(CircleShape).glassClickable { menuOpen = true }.padding(6.dp))
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                     if (!run.completed) {
                     listOf(

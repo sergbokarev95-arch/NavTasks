@@ -128,7 +128,7 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                             Column(
                                 Modifier.fillMaxWidth().navGlass(p, radius = 13.dp,
                                     role = if (year == today.year && m == today.monthValue) GlassRole.NESTED_TASK else GlassRole.PANEL)
-                                    .clickable { month = m; level = 1 }.padding(7.dp),
+                                    .glassClickable { month = m; level = 1 }.padding(7.dp),
                             ) {
                                 Text(YearMonth.of(year, m).month.getDisplayName(TextStyle.SHORT_STANDALONE, locale),
                                     color = p.text, fontSize = 12.sp, fontWeight = FontWeight.Medium,
@@ -194,7 +194,7 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                 }
                                 val shape = RoundedCornerShape(10.dp)
                                 val cellColor = when {
-                                    isToday -> p.blue.copy(alpha = if (p.dark) 0.88f else 0.82f)
+                                    isToday -> p.blue.copy(alpha = if (p.dark) 0.88f else 0.25f)
                                     status == CalendarDayState.COMPLETE -> p.mint.copy(alpha = if (p.dark) 0.13f else 0.09f)
                                     status == CalendarDayState.PARTIAL -> statusColor.copy(alpha = 0.11f)
                                     status == CalendarDayState.INCOMPLETE -> statusColor.copy(alpha = 0.08f)
@@ -210,18 +210,18 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                     Modifier.weight(1f).height(54.dp)
                                         .clip(shape).background(cellColor, shape)
                                         .border(if (isToday) 2.dp else 1.dp, edge, shape)
-                                        .clickable { selectedDay = date; year = date.year; month = date.monthValue; level = 2 },
+                                        .glassClickable { selectedDay = date; year = date.year; month = date.monthValue; level = 2 },
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center,
                                 ) {
                                     Text("${date.dayOfMonth}", color = when {
-                                        isToday -> Color(0xFF092C43)
+                                        isToday -> if (p.dark) Color(0xFF092C43) else p.text
                                         !inMonth -> p.muted.copy(alpha = 0.52f)
                                         else -> p.text
                                     }, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal, fontSize = 14.sp)
                                     if (status != CalendarDayState.EMPTY) {
                                         Box(Modifier.padding(top = 4.dp).size(5.dp)
-                                            .background(if (isToday) Color(0xFF092C43) else statusColor.copy(alpha = if (inMonth) 1f else 0.45f), CircleShape))
+                                            .background(if (isToday) (if (p.dark) Color(0xFF092C43) else p.blue) else statusColor.copy(alpha = if (inMonth) 1f else 0.45f), CircleShape))
                                     }
                                 }
                             }
@@ -299,7 +299,7 @@ private fun PlanReadOnlyTile(
         }
         Box {
             Text("⋯", color = p.blue, fontSize = 22.sp,
-                modifier = Modifier.clickable { menuOpen = true }.padding(horizontal = 9.dp, vertical = 6.dp))
+                modifier = Modifier.glassClickable { menuOpen = true }.padding(horizontal = 9.dp, vertical = 6.dp))
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(text = { Text(localized("Редактировать", "Edit", lang)) }, onClick = {
                     menuOpen = false
@@ -356,7 +356,7 @@ fun TasksScreenV2(
             Frequency.entries.forEachIndexed { i, freq ->
                 Box(Modifier.weight(1f).navGlass(p, radius = 14.dp,
                     role = if (filter == freq) GlassRole.SELECTED else GlassRole.CONTROL, elevation = 0.dp)
-                    .clickable { onFilter(freq) }.padding(vertical = 11.dp),
+                    .glassClickable { onFilter(freq) }.padding(vertical = 11.dp),
                     contentAlignment = Alignment.Center) {
                     Text(labels[i], color = if (filter == freq) p.blue else p.text, fontSize = 11.sp, maxLines = 1)
                 }
@@ -374,7 +374,7 @@ fun TasksScreenV2(
             items(filtered, key = { it.id }) { task ->
                 Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp,
                     role = if (task.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
-                    .clickable { onEdit(task) }
+                    .glassClickable { onEdit(task) }
                     .padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
                     // Templates are not executable, so no fake empty checkbox or checkbox icon here.
                     Spacer(Modifier.width(1.dp))
@@ -419,7 +419,7 @@ private fun OptionLine(options: List<Pair<String, String>>, selected: String, p:
                 Modifier.navGlass(p, radius = 13.dp,
                     role = if (active) GlassRole.SELECTED else GlassRole.CONTROL,
                     elevation = 0.dp)
-                    .clickable { onSelect(key) }
+                    .glassClickable { onSelect(key) }
                     .padding(horizontal = 13.dp, vertical = 11.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -720,13 +720,13 @@ fun SettingsScreen(settings: NavSettings, store: TaskStore, p: NavPalette, onBac
                 Row(horizontalArrangement = Arrangement.spacedBy(9.dp),
                     modifier = Modifier.fillMaxWidth()) {
                     Box(Modifier.weight(1f).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
-                        .clickable {
+                        .glassClickable {
                             exportLauncher.launch("NavTasks_tasks_${LocalDate.now()}.json")
                         }.padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
                         Text(localized("Экспорт", "Export", lang), color = p.blue, fontSize = 13.sp)
                     }
                     Box(Modifier.weight(1f).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
-                        .clickable { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
+                        .glassClickable { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
                         .padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
                         Text(localized("Импорт", "Import", lang), color = p.blue, fontSize = 13.sp)
                     }
@@ -741,7 +741,7 @@ fun SettingsScreen(settings: NavSettings, store: TaskStore, p: NavPalette, onBac
                 }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.2.4 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.2.5 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
