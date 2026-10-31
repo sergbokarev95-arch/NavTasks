@@ -120,7 +120,7 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(11.dp),
+                        contentPadding = PaddingValues(start = 11.dp, end = 11.dp, top = 11.dp, bottom = 125.dp),
                         horizontalArrangement = Arrangement.spacedBy(7.dp),
                         verticalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
@@ -253,7 +253,7 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                         TextButton(onClick = { level = 0 }) { Text("▦", fontSize = 21.sp) }
                     }
                     val rows = store.forDate(selectedDay)
-                    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 125.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (rows.isEmpty()) item {
                             NavPanel(p) { Text(localized("Задач на этот день нет", "No tasks for this day", lang), color = p.muted) }
                         }
@@ -367,7 +367,7 @@ fun TasksScreenV2(
             Text("${store.templates.count { it.frequency == filter }} ${localized("задач", "tasks", lang)}",
                 color = p.muted, fontSize = 13.sp)
         }
-        LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 5.dp, bottom = 83.dp),
+        LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 5.dp, bottom = 180.dp),
             verticalArrangement = Arrangement.spacedBy(9.dp)) {
             val filtered = store.templates.filter { it.frequency == filter }
             if (filtered.isEmpty()) item { NavPanel(p) { Text(localized("Задач пока нет", "No tasks yet", lang), color = p.muted) } }
@@ -741,7 +741,7 @@ fun SettingsScreen(settings: NavSettings, store: TaskStore, p: NavPalette, onBac
                 }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.2.5 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.2.6 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

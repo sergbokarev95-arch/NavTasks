@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import dev.chrisbanes.haze.rememberHazeState
+import dev.chrisbanes.haze.hazeSource
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -151,13 +153,11 @@ fun NavTasksApp(
             } else if (showSettings) {
                 SettingsScreen(settings, store, palette, onBack = { showSettings = false })
             } else {
-                Scaffold(
-                    containerColor = Color.Transparent,
-                    bottomBar = {
-                        NavGlassBottomBar(palette, tab, lang) { tab = it }
-                    },
-                ) { padding ->
-                    Column(Modifier.fillMaxSize().padding(padding)) {
+                val hazeState = rememberHazeState()
+                Box(Modifier.fillMaxSize()) {
+                    // Content paints to the bottom edge. Navigation is an overlay,
+                    // NOT a Scaffold bottomBar which would reserve an opaque footer.
+                    Column(Modifier.fillMaxSize().statusBarsPadding().hazeSource(hazeState)) {
                         Row(
                             Modifier.fillMaxWidth().padding(start = 18.dp, end = 14.dp, top = 14.dp, bottom = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -179,20 +179,29 @@ fun NavTasksApp(
                                 expandedRun, { expandedRun = it })
                             1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
                                 onEdit = { editorTask = it; editorOpen = true })
-                            else -> Box(Modifier.fillMaxSize()) {
-                                TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                    onEdit = { editorTask = it; editorOpen = true })
-                                Box(Modifier.align(Alignment.BottomStart)
-                                    .padding(start = 19.dp, bottom = 16.dp)) {
-                                    NavGlassAddButton(palette) {
-                                        editorTask = null
-                                        editorOpen = true
-                                    }
-                                }
+                            else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
+                                onEdit = { editorTask = it; editorOpen = true })
+                        }
+                    }
+                    if (tab == 2) {
+                        Box(
+                            Modifier.align(Alignment.BottomStart).navigationBarsPadding()
+                                .padding(start = 19.dp, bottom = 83.dp),
+                        ) {
+                            NavGlassAddButton(palette) {
+                                editorTask = null
+                                editorOpen = true
                             }
                         }
                     }
+                    NavGlassBottomBar(
+                        p = palette, selected = tab, lang = lang,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        hazeState = hazeState,
+                        onSelect = { tab = it },
+                    )
                 }
+
             }
         }
     }
@@ -276,7 +285,7 @@ private fun TodayScreenV2(
             }
         }
         LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 26.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 125.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (showMissed) {

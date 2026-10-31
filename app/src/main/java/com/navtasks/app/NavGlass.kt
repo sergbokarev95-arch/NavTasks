@@ -33,6 +33,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.HazeColorEffect
+import dev.chrisbanes.haze.blur.hazeBlur
 
 /** Local, lightweight light fields make the translucent layers visibly react to their own backdrop. */
 @Composable
@@ -80,8 +85,8 @@ fun Modifier.navGlass(
         GlassRole.PANEL -> if (p.dark) Color(0x651F3143) else Color(0x3AFFFFFF)
         GlassRole.TASK -> if (p.dark) Color(0x571C2D40) else Color(0x2BFFFFFF)
         GlassRole.NESTED_TASK -> if (p.dark) Color(0x5C234259) else Color(0x2DDAEAF3)
-        GlassRole.NAVIGATION -> if (p.dark) Color(0xA0152433) else Color(0x77FFFFFF)
-        GlassRole.SELECTED -> if (p.dark) Color(0x304E98BF) else Color(0x18A8DFF8)
+        GlassRole.NAVIGATION -> if (p.dark) Color(0x69132438) else Color(0x3CFFFFFF)
+        GlassRole.SELECTED -> if (p.dark) Color(0x4C2989C5) else Color(0x3B3EA1F2)
         GlassRole.CONTROL -> if (p.dark) Color(0x442C3D50) else Color(0x24FFFFFF)
     }
     // The edge, not a white/blue blanket on the surface, communicates the glass.
@@ -107,7 +112,7 @@ fun Modifier.glassClickable(onClick: () -> Unit): Modifier =
 /** A single sliding glass lens. No drop shadow, glow or second moving surface. */
 fun Modifier.navGlassSelection(p: NavPalette, radius: Dp = 23.dp): Modifier {
     val shape = RoundedCornerShape(radius)
-    val fill = if (p.dark) Color(0x2C7193A8) else Color(0x14FFFFFF)
+    val fill = if (p.dark) Color(0x4B2989C5) else Color(0x3B3EA1F2)
     return this
         .clip(shape)
         .background(fill, shape)
@@ -124,13 +129,38 @@ fun Modifier.navGlassSelection(p: NavPalette, radius: Dp = 23.dp): Modifier {
 }
 
 @Composable
-fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: (Int) -> Unit) {
+fun NavGlassBottomBar(
+    p: NavPalette,
+    selected: Int,
+    lang: UiLanguage,
+    modifier: Modifier = Modifier,
+    hazeState: HazeState,
+    onSelect: (Int) -> Unit,
+) {
     Box(
-        Modifier.fillMaxWidth().navigationBarsPadding()
+        modifier.fillMaxWidth().navigationBarsPadding()
             .padding(start = 15.dp, end = 15.dp, top = 3.dp, bottom = 5.dp),
     ) {
         BoxWithConstraints(
             Modifier.fillMaxWidth().height(56.dp)
+                .clip(RoundedCornerShape(30.dp))
+                // Real backdrop blur from the scrolling content underneath.
+                // Source capture is a small surface, not the entire app window.
+                .hazeBlur(
+                    input = HazeInput.Sources(hazeState),
+                    style = HazeBlurStyle {
+                        blurRadius(16.dp)
+                        noiseFactor(0.025f)
+                        colorEffects(listOf(
+                            HazeColorEffect.tint(
+                                if (p.dark) Color(0x3215283E) else Color(0x20FFFFFF)
+                            ),
+                        ))
+                        fallbackColorEffect(HazeColorEffect.tint(
+                            if (p.dark) Color(0xA0132336) else Color(0xB0FFFFFF)
+                        ))
+                    },
+                )
                 .navGlass(p, radius = 30.dp, role = GlassRole.NAVIGATION, elevation = 0.dp)
                 .padding(4.dp),
         ) {
@@ -149,16 +179,16 @@ fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: 
                 val lensTopLeft = Offset(cell * slide + inset, inset)
                 val lensCorner = CornerRadius(lensSize.height / 2f, lensSize.height / 2f)
                 drawRoundRect(
-                    color = if (p.dark) Color(0x2C7193A8) else Color(0x14FFFFFF),
+                    color = if (p.dark) Color(0x4B2989C5) else Color(0x3B3EA1F2),
                     topLeft = lensTopLeft, size = lensSize, cornerRadius = lensCorner,
                 )
                 drawRoundRect(
                     brush = Brush.verticalGradient(
                         listOf(
-                            Color.White.copy(alpha = if (p.dark) 0.49f else 0.86f),
-                            Color.White.copy(alpha = if (p.dark) 0.20f else 0.29f),
-                            (if (p.dark) Color(0xFFA9DBF2) else p.blue)
-                                .copy(alpha = if (p.dark) 0.31f else 0.22f),
+                            Color.White.copy(alpha = if (p.dark) 0.60f else 0.92f),
+                            Color(0xFF81C9FF).copy(alpha = if (p.dark) 0.43f else 0.34f),
+                            (if (p.dark) Color(0xFF4DBBFF) else Color(0xFF419BEE))
+                                .copy(alpha = if (p.dark) 0.53f else 0.44f),
                         ),
                     ),
                     topLeft = lensTopLeft,
