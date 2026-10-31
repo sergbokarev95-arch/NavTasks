@@ -1,6 +1,9 @@
 package com.navtasks.app
 
 import android.app.DatePickerDialog
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import java.io.IOException
 import android.app.AlarmManager
 import android.app.TimePickerDialog
 import android.content.Intent
@@ -10,6 +13,7 @@ import android.provider.Settings
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -130,12 +134,25 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                     color = p.text, fontSize = 12.sp, fontWeight = FontWeight.Medium,
                                     modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                                 Spacer(Modifier.height(5.dp))
-                                val cells = monthCells(year, m)
-                                cells.chunked(7).forEach { week ->
+                                monthGridDates(year, m).chunked(7).forEach { week ->
                                     Row(Modifier.fillMaxWidth()) {
                                         week.forEach { date ->
-                                            Text(if (date == 0) "" else "$date", color = if (date == today.dayOfMonth && m == today.monthValue && year == today.year) p.blue else p.muted,
-                                                fontSize = 8.sp, lineHeight = 12.sp, textAlign = TextAlign.Center,
+                                            val isInMonth = date.monthValue == m && date.year == year
+                                            val mark = store.dayCounts(date).state(date, today)
+                                            val markColor = when (mark) {
+                                                CalendarDayState.COMPLETE -> p.mint
+                                                CalendarDayState.PARTIAL -> Color(0xFFE9B35A)
+                                                CalendarDayState.INCOMPLETE -> Color(0xFFE88B83)
+                                                CalendarDayState.SCHEDULED -> p.blue
+                                                else -> p.muted
+                                            }
+                                            Text("${date.dayOfMonth}",
+                                                color = when {
+                                                    date == today -> p.blue
+                                                    !isInMonth -> p.muted.copy(alpha = 0.40f)
+                                                    mark == CalendarDayState.EMPTY -> p.muted
+                                                    else -> markColor
+                                                }, fontSize = 8.sp, lineHeight = 12.sp, textAlign = TextAlign.Center,
                                                 modifier = Modifier.weight(1f))
                                         }
                                     }
@@ -162,29 +179,68 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                 modifier = Modifier.weight(1f).padding(vertical = 7.dp))
                         }
                     }
-                    monthCells(year, month).chunked(7).forEach { week ->
+                    monthGridDates(year, month).chunked(7).forEach { week ->
                         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            week.forEach { number ->
-                                val date = if (number > 0) LocalDate.of(year, month, number) else null
-                                val hasTask = date?.let { day -> store.templates.any { task ->
-                                    task.enabled && task.scheduleMode == ScheduleMode.CALENDAR && TaskSchedule.isCalendarDue(task, day)
-                                } } == true
+                            week.forEach { date ->
+                                val isToday = date == today
+                                val inMonth = date.year == year && date.monthValue == month
+                                val status = store.dayCounts(date).state(date, today)
+                                val statusColor = when (status) {
+                                    CalendarDayState.COMPLETE -> p.mint
+                                    CalendarDayState.PARTIAL -> Color(0xFFE7B25B)
+                                    CalendarDayState.INCOMPLETE -> Color(0xFFE98881)
+                                    CalendarDayState.SCHEDULED -> p.blue
+                                    CalendarDayState.EMPTY -> p.border
+                                }
+                                val shape = RoundedCornerShape(10.dp)
+                                val cellColor = when {
+                                    isToday -> p.blue.copy(alpha = if (p.dark) 0.88f else 0.82f)
+                                    status == CalendarDayState.COMPLETE -> p.mint.copy(alpha = if (p.dark) 0.13f else 0.09f)
+                                    status == CalendarDayState.PARTIAL -> statusColor.copy(alpha = 0.11f)
+                                    status == CalendarDayState.INCOMPLETE -> statusColor.copy(alpha = 0.08f)
+                                    else -> if (p.dark) Color.White.copy(alpha = 0.035f) else Color.White.copy(alpha = 0.10f)
+                                }
+                                val edge = when {
+                                    isToday -> p.blue
+                                    !inMonth -> p.border.copy(alpha = 0.20f)
+                                    status == CalendarDayState.EMPTY -> p.border.copy(alpha = 0.48f)
+                                    else -> statusColor.copy(alpha = 0.85f)
+                                }
                                 Column(
                                     Modifier.weight(1f).height(54.dp)
-                                        .navGlass(p, radius = 10.dp,
-                                            role = if (date == today) GlassRole.NESTED_TASK else GlassRole.CONTROL,
-                                            elevation = 0.dp)
-                                        .then(if (date != null) Modifier.clickable { selectedDay = date; level = 2 } else Modifier),
-                                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+                                        .clip(shape).background(cellColor, shape)
+                                        .border(if (isToday) 2.dp else 1.dp, edge, shape)
+                                        .clickable { selectedDay = date; year = date.year; month = date.monthValue; level = 2 },
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
                                 ) {
-                                    if (number != 0) {
-                                        Text("$number", color = if (date == today) p.blue else p.text, fontSize = 14.sp)
-                                        if (hasTask) Box(Modifier.padding(top = 4.dp).size(4.dp).background(p.mint, RoundedCornerShape(4.dp)))
+                                    Text("${date.dayOfMonth}", color = when {
+                                        isToday -> Color(0xFF092C43)
+                                        !inMonth -> p.muted.copy(alpha = 0.52f)
+                                        else -> p.text
+                                    }, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal, fontSize = 14.sp)
+                                    if (status != CalendarDayState.EMPTY) {
+                                        Box(Modifier.padding(top = 4.dp).size(5.dp)
+                                            .background(if (isToday) Color(0xFF092C43) else statusColor.copy(alpha = if (inMonth) 1f else 0.45f), CircleShape))
                                     }
                                 }
                             }
                         }
                         Spacer(Modifier.height(3.dp))
+                    }
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 19.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        listOf(
+                            p.mint to localized("Все выполнено", "All done", lang),
+                            Color(0xFFE7B25B) to localized("Часть", "Partial", lang),
+                            Color(0xFFE98881) to localized("Пропущено", "Missed", lang),
+                        ).forEach { (color, title) ->
+                            Row(verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                                Box(Modifier.size(6.dp).background(color, CircleShape))
+                                Text(title, color = p.muted, fontSize = 10.sp)
+                            }
+                        }
                     }
                 }
                 else -> Column {
@@ -278,10 +334,11 @@ private fun PlanReadOnlyTile(
     )
 }
 
-private fun monthCells(year: Int, month: Int): List<Int> {
-    val first = LocalDate.of(year, month, 1).dayOfWeek.value - 1
-    val days = YearMonth.of(year, month).lengthOfMonth()
-    return (0 until 42).map { index -> (index - first + 1).takeIf { it in 1..days } ?: 0 }
+/** Six complete weeks, including dimmed trailing/leading dates of neighbouring months. */
+internal fun monthGridDates(year: Int, month: Int): List<LocalDate> {
+    val first = LocalDate.of(year, month, 1)
+    val start = first.minusDays((first.dayOfWeek.value - 1).toLong())
+    return (0 until 42).map { start.plusDays(it.toLong()) }
 }
 
 @Composable
@@ -542,6 +599,54 @@ fun TaskEditorScreen(
 fun SettingsScreen(settings: NavSettings, store: TaskStore, p: NavPalette, onBack: () -> Unit) {
     val lang = settings.language
     val context = LocalContext.current
+    var transferMessage by remember { mutableStateOf<String?>(null) }
+    var transferError by remember { mutableStateOf(false) }
+    var pendingImport by remember { mutableStateOf<List<TaskTemplate>?>(null) }
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                val stream = context.contentResolver.openOutputStream(uri)
+                    ?: throw IOException("Cannot create file")
+                stream.bufferedWriter(Charsets.UTF_8).use { it.write(NavTaskTransfer.export(store.templates)) }
+            }.onSuccess {
+                transferError = false
+                transferMessage = localized("Задачи экспортированы в файл.", "Tasks exported to file.", lang)
+            }.onFailure {
+                transferError = true
+                transferMessage = it.localizedMessage ?: localized("Ошибка экспорта", "Export failed", lang)
+            }
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                val stream = context.contentResolver.openInputStream(uri)
+                    ?: throw IOException("Cannot read file")
+                val raw = stream.bufferedReader(Charsets.UTF_8).use { reader ->
+                    val buffer = CharArray(4096)
+                    val result = StringBuilder()
+                    while (true) {
+                        val read = reader.read(buffer)
+                        if (read == -1) break
+                        if (result.length + read > 2_000_000) throw IOException("File exceeds 2 MB")
+                        result.append(buffer, 0, read)
+                    }
+                    result.toString()
+                }
+                NavTaskTransfer.parse(raw)
+            }.onSuccess { templates ->
+                pendingImport = templates
+                transferMessage = null
+            }.onFailure {
+                transferError = true
+                transferMessage = it.localizedMessage ?: localized("Ошибка импорта", "Import failed", lang)
+            }
+        }
+    }
     fun syncSettings() {
         NavNotifications.reschedule(context, store, settings)
         NavWidgetUpdater.updateAll(context, store)
@@ -605,11 +710,67 @@ fun SettingsScreen(settings: NavSettings, store: TaskStore, p: NavPalette, onBac
                 }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.2.3 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text(localized("Обмен задачами", "Share tasks", lang),
+                    color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                Spacer(Modifier.height(3.dp))
+                Text(localized("Можно отправить другу файл с шаблонами задач и вложенными проверками. История выполнения и настройки телефона не передаются.",
+                    "Share task templates and checklists with a friend. Completion history and device settings are not shared.", lang),
+                    color = p.muted, fontSize = 12.sp)
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(9.dp),
+                    modifier = Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
+                        .clickable {
+                            exportLauncher.launch("NavTasks_tasks_${LocalDate.now()}.json")
+                        }.padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
+                        Text(localized("Экспорт", "Export", lang), color = p.blue, fontSize = 13.sp)
+                    }
+                    Box(Modifier.weight(1f).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
+                        .clickable { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
+                        .padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
+                        Text(localized("Импорт", "Import", lang), color = p.blue, fontSize = 13.sp)
+                    }
+                }
+                Text(localized("Импорт добавляет новые задачи. Существующие задачи и отметки о выполнении не заменяются.",
+                    "Import adds new tasks only. Existing tasks and completion records are never replaced.", lang),
+                    color = p.muted, fontSize = 11.sp)
+                if (transferMessage != null) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(transferMessage.orEmpty(), color = if (transferError) Color(0xFFE48E83) else p.mint,
+                        fontSize = 12.sp)
+                }
+            }
+            NavPanel(p) {
+                Text("NavTasks Glass 0.2.4 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
         }
+    }
+    pendingImport?.let { imported ->
+        val newCount = NavTaskTransfer.countNew(store.templates, imported)
+        AlertDialog(
+            onDismissRequest = { pendingImport = null },
+            title = { Text(localized("Импорт задач", "Import tasks", lang)) },
+            text = {
+                Text(localized(
+                    "В файле: ${imported.size}. Новых задач: $newCount. Уже существующих: ${imported.size - newCount}. Добавить новые задачи без изменения истории?",
+                    "In file: ${imported.size}. New tasks: $newCount. Already existing: ${imported.size - newCount}. Add new tasks without changing history?", lang))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val added = store.importTemplates(imported)
+                    pendingImport = null
+                    transferError = false
+                    transferMessage = localized("Добавлено задач: $added", "Tasks added: $added", lang)
+                }) { Text(localized("Добавить", "Add", lang)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingImport = null }) {
+                    Text(localized("Отмена", "Cancel", lang))
+                }
+            },
+        )
     }
 }
 

@@ -163,7 +163,7 @@ fun NavTasksApp(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text("NAVTASKS", color = palette.blue, fontSize = 10.sp, letterSpacing = 2.sp)
+                                Text("NAVTASKS", color = palette.blue, fontSize = 14.sp, letterSpacing = 2.1.sp)
                                 Text(
                                     when (tab) {
                                         0 -> localized("Сегодня", "Today", lang)

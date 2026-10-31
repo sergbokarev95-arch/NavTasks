@@ -67,4 +67,20 @@ class TaskScheduleTest {
         assertEquals(CalendarSwipePosition(2025, 10, anchor),
             calendarSwipePosition(0, 2026, 10, anchor, -1))
     }
+    @Test fun calendarMonthShowsNeighbouringDatesInsteadOfBlanks() {
+        val cells = monthGridDates(2026, 10)
+        assertEquals(42, cells.size)
+        assertEquals(LocalDate.of(2026, 9, 28), cells.first())
+        assertEquals(LocalDate.of(2026, 11, 8), cells.last())
+        assertEquals(1, cells.count { it == LocalDate.of(2026, 10, 31) })
+    }
+
+    @Test fun calendarDayStatesCommunicateProgress() {
+        val today = LocalDate.of(2026, 10, 31)
+        assertEquals(CalendarDayState.EMPTY, DayCounts(0, 0).state(today, today))
+        assertEquals(CalendarDayState.SCHEDULED, DayCounts(4, 0).state(today, today))
+        assertEquals(CalendarDayState.INCOMPLETE, DayCounts(4, 0).state(today.minusDays(1), today))
+        assertEquals(CalendarDayState.PARTIAL, DayCounts(4, 2).state(today, today))
+        assertEquals(CalendarDayState.COMPLETE, DayCounts(4, 4).state(today.minusDays(1), today))
+    }
 }

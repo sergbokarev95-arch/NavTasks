@@ -9,6 +9,18 @@ import java.time.YearMonth
 import java.time.temporal.TemporalAdjusters
 import java.util.UUID
 
+enum class CalendarDayState { EMPTY, SCHEDULED, INCOMPLETE, PARTIAL, COMPLETE }
+
+data class DayCounts(val total: Int, val done: Int) {
+    fun state(date: LocalDate, today: LocalDate): CalendarDayState = when {
+        total == 0 -> CalendarDayState.EMPTY
+        done == total -> CalendarDayState.COMPLETE
+        done > 0 -> CalendarDayState.PARTIAL
+        date.isBefore(today) -> CalendarDayState.INCOMPLETE
+        else -> CalendarDayState.SCHEDULED
+    }
+}
+
 enum class Frequency { DAILY, WEEKLY, MONTHLY, EXTRA }
 enum class ScheduleMode { CALENDAR, AFTER_COMPLETION }
 /** HISTORY = overdue backlog; CARRY = automatically move the current occurrence. */

@@ -1,6 +1,6 @@
 package com.navtasks.app
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -21,6 +21,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -125,16 +127,32 @@ fun NavGlassBottomBar(p: NavPalette, selected: Int, lang: UiLanguage, onSelect: 
                 .navGlass(p, radius = 30.dp, role = GlassRole.NAVIGATION, elevation = 0.dp)
                 .padding(4.dp),
         ) {
-            val segment = maxWidth / 3
-            val slide by animateDpAsState(
-                targetValue = segment * selected.coerceIn(0, 2),
-                animationSpec = tween(durationMillis = 210, easing = FastOutSlowInEasing),
+            // Direct drawing makes one moving lens, without keeping an old composited
+            // layer (the ghost users observed between tabs on some MagicOS devices).
+            val slide by animateFloatAsState(
+                targetValue = selected.coerceIn(0, 2).toFloat(),
+                animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
                 label = "navSingleGlassLens",
             )
-            Box(
-                Modifier.offset(x = slide).width(segment).fillMaxHeight()
-                    .navGlassSelection(p, radius = 23.dp),
-            )
+            Canvas(Modifier.matchParentSize()) {
+                val cell = size.width / 3f
+                val left = cell * slide
+                val r = CornerRadius(size.height / 2, size.height / 2)
+                drawRoundRect(
+                    color = if (p.dark) Color(0x506D8BA1) else Color(0x405EADD4),
+                    topLeft = Offset(left, 0f), size = Size(cell, size.height), cornerRadius = r,
+                )
+                drawRoundRect(
+                    brush = Brush.verticalGradient(listOf(
+                        Color.White.copy(alpha = if (p.dark) 0.60f else 0.85f),
+                        Color.White.copy(alpha = 0.10f),
+                        p.blue.copy(alpha = if (p.dark) 0.56f else 0.38f),
+                    )),
+                    topLeft = Offset(left + 0.6.dp.toPx(), 0.6.dp.toPx()),
+                    size = Size(cell - 1.2.dp.toPx(), size.height - 1.2.dp.toPx()),
+                    cornerRadius = r, style = Stroke(width = 1.1.dp.toPx()),
+                )
+            }
             Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                 val names = listOf(
                     localized("Сегодня", "Today", lang),
@@ -235,16 +253,26 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 drawLine(color, pt(6f, 15f), pt(24f, 15f), width * 1.2f, cap = StrokeCap.Round)
             }
             "settings" -> {
-                // Crisp gear silhouette, no 3-D emoji.
-                drawCircle(color, radius = 7.8f*s, center = pt(15f,15f), style = Stroke(width))
-                drawCircle(color, radius = 2.7f*s, center = pt(15f,15f), style = Stroke(width))
-                for (n in 0 until 8) {
-                    val a = n * Math.PI / 4.0
-                    val dx = kotlin.math.cos(a).toFloat()
-                    val dy = kotlin.math.sin(a).toFloat()
-                    drawLine(color, pt(15f + dx*10f,15f + dy*10f),
-                        pt(15f + dx*13f,15f + dy*13f),width * 1.3f, cap = StrokeCap.Round)
+                // A real toothed cog with a cut-out center (not the former sunburst).
+                val cog = Path().apply {
+                    fillType = PathFillType.EvenOdd
+                    for (tooth in 0 until 8) {
+                        val center = -Math.PI / 2 + tooth * Math.PI / 4
+                        val samples = listOf(
+                            Pair(-0.39, 9.8f), Pair(-0.25, 12.8f),
+                            Pair(0.25, 12.8f), Pair(0.39, 9.8f),
+                        )
+                        for ((index, sample) in samples.withIndex()) {
+                            val angle = center + sample.first
+                            val x = (15f + kotlin.math.cos(angle).toFloat() * sample.second) * s
+                            val y = (15f + kotlin.math.sin(angle).toFloat() * sample.second) * s
+                            if (tooth == 0 && index == 0) moveTo(x, y) else lineTo(x, y)
+                        }
+                    }
+                    close()
+                    addOval(Rect(pt(15f - 3.9f, 15f - 3.9f), pt(15f + 3.9f, 15f + 3.9f)))
                 }
+                drawPath(cog, color)
             }
         }
     }

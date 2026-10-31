@@ -105,6 +105,29 @@ class TaskStore(context: Context) {
         )
     }
 
+    /** Calendar display-only summary: never writes occurrences or mutates progress. */
+    fun dayCounts(day: LocalDate): DayCounts {
+        var total = 0
+        var done = 0
+        val enabled = templates.filter { it.enabled }.associateBy { it.id }
+        // Recorded occurrences include one-off tasks, moved tasks and after-completion tasks.
+        runs.values.forEach { run ->
+            if (!run.skipped && run.displayDate == day && run.taskId in enabled) {
+                total++
+                if (run.completed) done++
+            }
+        }
+        // Future calendar dates may not yet have a materialized TaskRun.
+        // Skip a scheduled occurrence that was already transferred away or removed.
+        enabled.values.forEach { task ->
+            if (task.scheduleMode == ScheduleMode.CALENDAR &&
+                TaskSchedule.isCalendarDue(task, day) &&
+                key(task.id, day) !in runs
+            ) total++
+        }
+        return DayCounts(total, done)
+    }
+
     fun visible(today: LocalDate = LocalDate.now()) = forDate(today)
     fun completionCount(today: LocalDate = LocalDate.now()) = forDate(today).count { it.second.completed }
 
@@ -199,6 +222,17 @@ class TaskStore(context: Context) {
         persistRuns()
         refresh()
         syncOutputs()
+    }
+
+    /** Add only new templates, preserving local tasks and all completion history. */
+    fun importTemplates(imported: List<TaskTemplate>): Int {
+        val additions = NavTaskTransfer.newTemplates(templates, imported)
+        if (additions.isEmpty()) return 0
+        templates = templates + additions
+        saveTemplates(templates)
+        refresh()
+        syncOutputs()
+        return additions.size
     }
 
     fun cloneTask(task: TaskTemplate) {
