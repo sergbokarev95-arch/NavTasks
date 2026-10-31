@@ -28,6 +28,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import dev.chrisbanes.haze.hazeSource
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -90,6 +91,9 @@ fun NavTasksApp(
     // Compact back stack for the three primary tabs (0=Today, 1=Plan, 2=Tasks).
     // Kept across activity recreation so Android's Back gesture retraces navigation.
     var tabHistory by rememberSaveable { mutableStateOf("") }
+    // Keep the selected calendar zoom/day and tab-specific scroll state intact
+    // when Back closes Settings, the editor, or returns to a previous tab.
+    val tabStateHolder = rememberSaveableStateHolder()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var editorOpen by remember { mutableStateOf(false) }
     var editorTask by remember { mutableStateOf<TaskTemplate?>(null) }
@@ -192,13 +196,15 @@ fun NavTasksApp(
                             }
                             NavGlassCircleButton(palette, "settings") { showSettings = true }
                         }
-                        when (tab) {
-                            0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
-                                expandedRun, { expandedRun = it })
-                            1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
-                                onEdit = { editorTask = it; editorOpen = true })
-                            else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                onEdit = { editorTask = it; editorOpen = true })
+                        tabStateHolder.SaveableStateProvider("main-tab-$tab") {
+                            when (tab) {
+                                0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
+                                    expandedRun, { expandedRun = it })
+                                1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
+                                    onEdit = { editorTask = it; editorOpen = true })
+                                else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
+                                    onEdit = { editorTask = it; editorOpen = true })
+                            }
                         }
                     }
                     if (tab == 2) {

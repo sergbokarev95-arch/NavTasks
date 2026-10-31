@@ -69,7 +69,7 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
     var level by rememberSaveable { mutableIntStateOf(1) } // 0 year, 1 month, 2 day
     var year by rememberSaveable { mutableIntStateOf(today.year) }
     var month by rememberSaveable { mutableIntStateOf(today.monthValue) }
-    var selectedDay by remember { mutableStateOf(today) }
+    var selectedDay by rememberSaveable { mutableStateOf(today) }
     // Day and year are zoomed-in/out subpages of Plan, not separate Android tasks.
     // Intercept both system edge swipes and the Back button before leaving Plan.
     BackHandler(enabled = level != 1) { level = 1 }
