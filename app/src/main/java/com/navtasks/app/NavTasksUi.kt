@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -428,13 +429,18 @@ private fun TodayScreenV2(
     val incomplete = rows.filterNot { it.second.completed }
     val complete = rows.filter { it.second.completed }
     val missed = store.missed(now)
+    val browsingOtherDay = !showMissed && selectedDay != currentDay
 
     Column {
         NavPanel(p, Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(navDate(selectedDay, lang, true), color = p.muted, fontSize = 12.sp)
-                    Text(localized("Прогресс дня", "Daily progress", lang), color = p.text, fontSize = 15.sp)
+                    Text(
+                        if (browsingOtherDay) localized("Прогресс выбранного дня", "Selected day's progress", lang)
+                        else localized("Прогресс дня", "Daily progress", lang),
+                        color = p.text, fontSize = 15.sp,
+                    )
                 }
                 Text("${complete.size}/${rows.size}", color = p.blue, fontSize = 23.sp,
                     fontWeight = FontWeight.SemiBold)
@@ -490,6 +496,34 @@ private fun TodayScreenV2(
                 }
             }
         }
+        AnimatedVisibility(
+            visible = browsingOtherDay,
+            enter = fadeIn(animationSpec = tween(180)) + expandVertically(animationSpec = tween(180)),
+            exit = fadeOut(animationSpec = tween(160)) + shrinkVertically(animationSpec = tween(160)),
+        ) {
+            val amber = if (p.dark) Color(0xFFFFC77F) else Color(0xFFAB651D)
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                    .navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
+                    .border(1.dp, amber.copy(alpha = 0.65f), RoundedCornerShape(13.dp))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                NavGlassGlyph("calendar", amber, Modifier.size(21.dp))
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        localized("НЕ СЕГОДНЯ", "NOT TODAY", lang),
+                        color = amber, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(navDate(selectedDay, lang, includeYear = true), color = p.text, fontSize = 13.sp)
+                }
+                Text(
+                    localized("Чеки с подтверждением", "Confirm to check", lang),
+                    color = amber, fontSize = 10.sp,
+                )
+            }
+        }
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 125.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -505,13 +539,15 @@ private fun TodayScreenV2(
                     }
                     items(group, key = { it.second.key }) { (task, run) ->
                         RunTileV2(task, run, store, p, lang, expandedRun == run.key,
-                            onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) }, overdue = true)
+                            onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
+                            overdue = true, viewingDate = run.displayDate, today = currentDay)
                     }
                 }
             } else {
                 items(incomplete, key = { it.second.key }) { (task, run) ->
                     RunTileV2(task, run, store, p, lang, expandedRun == run.key,
-                        onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) })
+                        onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
+                        viewingDate = selectedDay, today = currentDay)
                 }
                 if (incomplete.isEmpty()) item {
                     NavPanel(p) { Text(localized("На этот день всё выполнено ✓", "All done for this day ✓", lang), color = p.mint) }
@@ -547,7 +583,8 @@ private fun TodayScreenV2(
                                         fadeOut(animationSpec = tween(190)),
                                 ) {
                                     RunTileV2(task, run, store, p, lang, expandedRun == run.key,
-                                        onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) })
+                                        onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
+                                        viewingDate = selectedDay, today = currentDay)
                                 }
                             }
                         }
@@ -575,6 +612,11 @@ private fun DayChip(
     }
 }
 
+/** Confirm checkbox changes on another selected day; missed backlog is an explicit mode. */
+internal fun requiresDayConfirmation(
+    viewedDate: LocalDate, today: LocalDate, inMissedBacklog: Boolean,
+): Boolean = viewedDate != today && !inMissedBacklog
+
 @Composable
 fun RunTileV2(
     task: TaskTemplate,
@@ -585,7 +627,14 @@ fun RunTileV2(
     expanded: Boolean,
     onToggleExpand: () -> Unit,
     overdue: Boolean = false,
+    viewingDate: LocalDate = LocalDate.now(),
+    today: LocalDate = LocalDate.now(),
 ) {
+    val isOtherDay = requiresDayConfirmation(viewingDate, today, overdue)
+    val otherDayAccent = if (p.dark) Color(0xFFFFC77F) else Color(0xFFAB651D)
+    var pendingChange by remember(run.key, viewingDate) {
+        mutableStateOf<Pair<String?, Boolean>?>(null)
+    }
     var menuOpen by remember { mutableStateOf(false) }
     var closeDialog by remember { mutableStateOf(false) }
     var closeReason by remember { mutableStateOf("") }
@@ -614,6 +663,33 @@ fun RunTileV2(
             flash.snapTo(0f)
         }
     }
+    fun applyChecklistChange(id: String, checking: Boolean) {
+        if (confirming || exiting) return
+        if (checking && run.checklist.all { it.id == id || it.id in run.checkedIds }) {
+            confirming = true
+            scope.launch {
+                showConfirmation()
+                exiting = true
+                delay(330)
+                store.setCheck(run.key, id, true)
+                confirming = false
+                exiting = false
+                flash.snapTo(0f)
+            }
+        } else store.setCheck(run.key, id, checking)
+    }
+    fun requestSimpleChange() {
+        if (confirming || exiting) return
+        val newComplete = !run.completed
+        if (isOtherDay) pendingChange = null to newComplete
+        else if (newComplete) completeSimple()
+        else store.setSimpleComplete(run.key, false)
+    }
+    fun requestChecklistChange(id: String, checking: Boolean) {
+        if (confirming || exiting) return
+        if (isOtherDay) pendingChange = id to checking
+        else applyChecklistChange(id, checking)
+    }
     val context = LocalContext.current
     val shape = RoundedCornerShape(15.dp)
     Column(
@@ -625,6 +701,11 @@ fun RunTileV2(
             scaleY = scaleX
         }.navGlass(p, radius = 15.dp,
             role = if (run.checklist.isEmpty()) GlassRole.TASK else GlassRole.NESTED_TASK)
+            .then(
+                if (isOtherDay) Modifier.border(
+                    1.dp, otherDayAccent.copy(alpha = 0.58f), RoundedCornerShape(15.dp)
+                ) else Modifier
+            )
             .background(p.mint.copy(alpha = flash.value * 0.36f), RoundedCornerShape(15.dp))
             .animateContentSize(),
     ) {
@@ -632,14 +713,12 @@ fun RunTileV2(
             verticalAlignment = Alignment.CenterVertically) {
             RoundCheck(run.completed || confirming, p, onClick = {
                 if (run.checklist.isNotEmpty()) onToggleExpand()
-                else if (run.completed) store.setSimpleComplete(run.key, false)
-                else completeSimple()
+                else requestSimpleChange()
             }, modifier = Modifier.size(27.dp))
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f).glassClickable {
                 if (run.checklist.isNotEmpty()) onToggleExpand()
-                else if (run.completed) store.setSimpleComplete(run.key, false)
-                else completeSimple()
+                else requestSimpleChange()
             }) {
                 Text(task.title, color = if (run.completed) p.muted else p.text,
                     fontSize = 14.sp, maxLines = 2,
@@ -692,23 +771,74 @@ fun RunTileV2(
                         RoundCheck(item.id in run.checkedIds || (confirming && run.checklist.all { it.id == item.id || it.id in run.checkedIds }), p,
                             onClick = {
                                 val checking = item.id !in run.checkedIds
-                                if (checking && !confirming && run.checklist.all { it.id == item.id || it.id in run.checkedIds }) {
-                                    confirming = true
-                                    scope.launch {
-                                        showConfirmation()
-                                        exiting = true
-                                        delay(330)
-                                        store.setCheck(run.key, item.id, true)
-                                        confirming = false
-                                        exiting = false
-                                        flash.snapTo(0f)
-                                    }
-                                } else if (!confirming) store.setCheck(run.key, item.id, checking)
+                                requestChecklistChange(item.id, checking)
                             },
                             modifier = Modifier.size(27.dp))
                         Spacer(Modifier.width(10.dp))
                         Text(item.title, color = p.text, fontSize = 13.sp, modifier = Modifier.weight(1f),
                             textDecoration = if (item.id in run.checkedIds || confirming) TextDecoration.LineThrough else null)
+                    }
+                }
+            }
+        }
+    }
+    pendingChange?.let { change ->
+        val itemName = change.first?.let { id ->
+            run.checklist.firstOrNull { it.id == id }?.title
+        } ?: task.title
+        Dialog(onDismissRequest = { pendingChange = null }) {
+            Column(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(23.dp))
+                    .background(
+                        if (p.dark) Color(0xF51B2C3F) else Color(0xF6F7FAFD),
+                        RoundedCornerShape(23.dp),
+                    )
+                    .border(
+                        1.dp,
+                        if (p.dark) Color.White.copy(alpha = 0.30f)
+                        else Color(0xFFB8D3E4).copy(alpha = 0.75f),
+                        RoundedCornerShape(23.dp),
+                    )
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(13.dp),
+            ) {
+                Text(localized("Другой день", "Different day", lang),
+                    color = otherDayAccent, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                Text(
+                    if (change.second)
+                        localized("Подтвердить выполнение?", "Confirm completion?", lang)
+                    else localized("Снять отметку выполнения?", "Remove completion check?", lang),
+                    color = p.text, fontSize = 20.sp,
+                )
+                Text(
+                    localized("Выбранная дата: ", "Selected date: ", lang) +
+                        navDate(viewingDate, lang, includeYear = true) +
+                        "\n" + itemName,
+                    color = p.muted, fontSize = 14.sp,
+                )
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
+                        .glassClickable { pendingChange = null }
+                        .padding(horizontal = 15.dp, vertical = 11.dp)) {
+                        Text(localized("Отмена", "Cancel", lang), color = p.muted, fontSize = 13.sp)
+                    }
+                    Spacer(Modifier.width(9.dp))
+                    Box(Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
+                        .glassClickable {
+                            pendingChange = null
+                            if (change.first == null) {
+                                if (change.second) completeSimple()
+                                else store.setSimpleComplete(run.key, false)
+                            } else applyChecklistChange(change.first!!, change.second)
+                        }
+                        .padding(horizontal = 15.dp, vertical = 11.dp)) {
+                        Text(localized("Подтвердить", "Confirm", lang),
+                            color = p.blue, fontSize = 13.sp)
                     }
                 }
             }
