@@ -67,9 +67,16 @@ class HandoverStore(context: Context, private val profiles: ProfileStore = Profi
     var sections: List<HandoverSection> by mutableStateOf(load())
         private set
 
+    init {
+        // Persist empty built-in notebook sections too, so the complete profile
+        // export contains the structure even before the first entry is written.
+        if (!prefs.contains("sections")) commit(sections)
+    }
+
     fun switchProfile() {
         prefs = profiles.data(profiles.activeId)
         sections = load()
+        if (!prefs.contains("sections")) commit(sections)
     }
 
     private fun load(): List<HandoverSection> {
