@@ -48,12 +48,28 @@ data class CheckItem(
     }
 }
 
-/** Active runs show the latest template memo; finished runs retain their historical snapshot. */
+/**
+ * Reusable journal note for a checklist row.
+ *
+ * Today's already-materialized TaskRun can contain the previous checklist snapshot.
+ * If an item was recreated while editing a task, its stable ID may have changed.
+ * Prefer exact ID; otherwise match only a UNIQUE name on both sides. Never
+ * blindly use the row index, since this could attach the wrong journal wording
+ * after a reordered checklist. Completed runs retain their archived wording.
+ */
 internal fun checklistReferenceComment(
     task: TaskTemplate, run: TaskRun, item: CheckItem,
 ): String {
     if (run.completed || run.skipped) return item.comment
-    return task.checklist.firstOrNull { it.id == item.id }?.comment ?: item.comment
+
+    task.checklist.firstOrNull { it.id == item.id }?.let { return it.comment }
+
+    val name = item.title.trim()
+    if (name.isEmpty()) return item.comment
+    val sameInRun = run.checklist.count { it.title.trim().equals(name, ignoreCase = true) }
+    if (sameInRun != 1) return item.comment
+    val sameInTemplate = task.checklist.filter { it.title.trim().equals(name, ignoreCase = true) }
+    return if (sameInTemplate.size == 1) sameInTemplate.single().comment else item.comment
 }
 
 data class TaskTemplate(
