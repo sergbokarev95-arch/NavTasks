@@ -5,6 +5,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -230,13 +238,17 @@ fun HandoverScreen(
     }
 
     if (addSection) {
-        AlertDialog(
+        HandoverGlassDialog(
+            p = p, 
             onDismissRequest = { addSection = false },
             title = { Text(if (editSectionId == null) localized("Новый раздел", "New section", lang)
                 else localized("Редактировать раздел", "Edit section", lang)) },
             text = {
-                OutlinedTextField(sectionName, onValueChange = { sectionName = it.take(120) },
-                    label = { Text(localized("Название", "Title", lang)) }, singleLine = true)
+                HandoverGlassInput(
+                    value = sectionName, onValueChange = { sectionName = it.take(120) },
+                    p = p, placeholder = localized("Название", "Title", lang),
+                    modifier = Modifier.fillMaxWidth()
+                )
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -263,18 +275,24 @@ fun HandoverScreen(
     }
 
     editEntry?.let { (sectionId, entryId) ->
-        AlertDialog(
+        HandoverGlassDialog(
+            p = p, 
             onDismissRequest = { editEntry = null },
             title = { Text(if (entryId == null) localized("Новый пункт", "New item", lang)
                 else localized("Редактировать пункт", "Edit item", lang)) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(entryTitle, onValueChange = { entryTitle = it.take(200) },
-                        label = { Text(localized("Название", "Title", lang)) }, singleLine = true)
-                    OutlinedTextField(entryNotes, onValueChange = { entryNotes = it.take(4000) },
-                        label = { Text(localized("Комментарий", "Notes", lang)) },
-                        minLines = 2, maxLines = 5)
+                    HandoverGlassInput(
+                        value = entryTitle, onValueChange = { entryTitle = it.take(200) },
+                        p = p, placeholder = localized("Название", "Title", lang),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    HandoverGlassInput(
+                        value = entryNotes, onValueChange = { entryNotes = it.take(4000) },
+                        p = p, placeholder = localized("Комментарий", "Notes", lang),
+                        modifier = Modifier.fillMaxWidth(), multiline = true
+                    )
                 }
             },
             confirmButton = {
@@ -302,7 +320,8 @@ fun HandoverScreen(
     selectedEntry?.let { (sectionId, entryId) ->
         val item = handover.sections.firstOrNull { it.id == sectionId }?.entries?.firstOrNull { it.id == entryId }
         if (item != null) {
-            AlertDialog(
+            HandoverGlassDialog(
+            p = p, 
                 onDismissRequest = { selectedEntry = null },
                 title = { Text(item.title) },
                 text = {
@@ -351,7 +370,8 @@ fun HandoverScreen(
     }
 
     confirmDelete?.let { (sectionId, entryId) ->
-        AlertDialog(
+        HandoverGlassDialog(
+            p = p, 
             onDismissRequest = { confirmDelete = null },
             title = { Text(localized("Удалить без возможности восстановления?", "Delete permanently?", lang)) },
             text = { Text(localized("Пункт или раздел будет удалён из передачи дел.",
@@ -372,7 +392,8 @@ fun HandoverScreen(
     }
 
     pendingImport?.let { pack ->
-        AlertDialog(
+        HandoverGlassDialog(
+            p = p, 
             onDismissRequest = { pendingImport = null },
             title = { Text(localized("Импорт передачи дел", "Import Handover", lang)) },
             text = { Text(localized(
@@ -394,4 +415,88 @@ fun HandoverScreen(
             },
         )
     }
+}
+
+/** The same glass language as NavTasks cards. Avoids lavender Material alert surfaces. */
+@Composable
+private fun HandoverGlassDialog(
+    p: NavPalette,
+    onDismissRequest: () -> Unit,
+    title: @Composable () -> Unit,
+    text: @Composable () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    dismissButton: @Composable () -> Unit = {},
+) {
+    Dialog(onDismissRequest = onDismissRequest) {
+        Column(
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(25.dp))
+                .background(
+                    if (p.dark) Color(0xF51B2C3F) else Color(0xF6F7FAFD),
+                    RoundedCornerShape(25.dp),
+                )
+                .border(
+                    1.dp, if (p.dark) Color.White.copy(alpha = 0.30f)
+                    else Color(0xFFB8D3E4).copy(alpha = 0.75f),
+                    RoundedCornerShape(25.dp),
+                )
+                .padding(horizontal = 18.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(13.dp),
+        ) {
+            CompositionLocalProvider(LocalContentColor provides p.text) {
+                Box(Modifier.fillMaxWidth()) {
+                    ProvideTextStyle(TextStyle(color = p.text, fontSize = 21.sp)) { title() }
+                }
+            }
+            CompositionLocalProvider(LocalContentColor provides p.muted) {
+                Box(Modifier.fillMaxWidth().heightIn(max = 440.dp)) { text() }
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(Modifier.navGlass(p, radius = 14.dp, role = GlassRole.CONTROL)) {
+                    dismissButton()
+                }
+                Spacer(Modifier.width(7.dp))
+                Box(Modifier.navGlass(p, radius = 14.dp, role = GlassRole.CONTROL)) {
+                    confirmButton()
+                }
+            }
+        }
+    }
+}
+
+/** Compact glass text field used by both Handover edit dialogs. */
+@Composable
+private fun HandoverGlassInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    p: NavPalette,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    multiline: Boolean = false,
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        singleLine = !multiline,
+        maxLines = if (multiline) 5 else 1,
+        textStyle = TextStyle(color = p.text, fontSize = 14.sp),
+        cursorBrush = SolidColor(p.blue),
+        modifier = modifier.height(if (multiline) 100.dp else 46.dp)
+            .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL),
+        decorationBox = { inner ->
+            Box(
+                Modifier.fillMaxSize().padding(horizontal = 13.dp, vertical = if (multiline) 12.dp else 0.dp),
+                contentAlignment = if (multiline) Alignment.TopStart else Alignment.CenterStart,
+            ) {
+                if (value.isBlank()) {
+                    Text(placeholder, color = p.muted, fontSize = 13.sp)
+                }
+                inner()
+            }
+        },
+    )
 }

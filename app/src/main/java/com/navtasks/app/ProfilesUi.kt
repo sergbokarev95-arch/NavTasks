@@ -177,6 +177,7 @@ fun ProfileExchangePanel(
 ) {
     val context = LocalContext.current
     var selectedId by rememberSaveable { mutableStateOf(profiles.activeId) }
+    var selectorExpanded by remember { mutableStateOf(false) }
     if (profiles.profiles.none { it.id == selectedId }) selectedId = profiles.activeId
     var pending by remember { mutableStateOf<ProfileSnapshot?>(null) }
     var feedback by remember { mutableStateOf<String?>(null) }
@@ -233,15 +234,45 @@ fun ProfileExchangePanel(
             "Выбери профиль для экспорта. Файл содержит расписания, все отметки по датам, пропуски, переносы и Handover.",
             "Choose the profile to export. It contains all schedules, dated completions, missed and moved tasks, plus Handover.",
             lang), color = p.muted, fontSize = 12.sp)
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            profiles.profiles.forEach { item ->
-                Box(Modifier.navGlass(p, radius = 13.dp,
-                    role = if (selectedId == item.id) GlassRole.NESTED_TASK else GlassRole.CONTROL)
-                    .glassClickable { selectedId = item.id }
-                    .padding(horizontal = 12.dp, vertical = 10.dp)) {
-                    Text(item.title, color = if (selectedId == item.id) p.blue else p.text,
-                        fontSize = 13.sp)
+        Text(localized("Профиль для экспорта", "Profile to export", lang),
+            color = p.muted, fontSize = 12.sp)
+        Box(Modifier.fillMaxWidth()) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .navGlass(p, radius = 14.dp, role = GlassRole.CONTROL)
+                    .glassClickable { selectorExpanded = true }
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    profiles.profiles.first { it.id == selectedId }.title,
+                    color = p.text, fontSize = 14.sp,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                )
+                Spacer(Modifier.width(8.dp))
+                NavGlassGlyph("chevron-down", p.blue, Modifier.size(17.dp))
+            }
+            DropdownMenu(
+                expanded = selectorExpanded,
+                onDismissRequest = { selectorExpanded = false },
+                modifier = Modifier.background(
+                    if (p.dark) Color(0xFF203348) else Color(0xFFF3F8FC),
+                ),
+            ) {
+                profiles.profiles.forEach { item ->
+                    DropdownMenuItem(
+                        text = { Text(item.title, color = p.text, fontSize = 14.sp) },
+                        leadingIcon = {
+                            if (item.id == selectedId)
+                                Text("✓", color = p.mint, fontSize = 16.sp)
+                            else Spacer(Modifier.width(14.dp))
+                        },
+                        onClick = {
+                            selectedId = item.id
+                            selectorExpanded = false
+                        },
+                    )
                 }
             }
         }

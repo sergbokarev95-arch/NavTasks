@@ -26,6 +26,8 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -47,6 +49,7 @@ import kotlin.math.abs
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -280,13 +283,23 @@ fun NavTasksApp(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("NAVTASKS", color = palette.blue, fontSize = 14.sp,
-                                        letterSpacing = 2.1.sp)
-                                    Spacer(Modifier.width(10.dp))
-                                    Text(profiles.active.title + "  ⌄", color = palette.muted,
-                                        fontSize = 12.sp,
-                                        modifier = Modifier.glassClickable { showProfiles = true }
-                                            .padding(vertical = 5.dp))
+                                    Text("NAVTASKS", color = palette.blue, fontSize = 17.sp,
+                                        letterSpacing = 1.6.sp)
+                                    Spacer(Modifier.width(9.dp))
+                                    Row(
+                                        Modifier.glassClickable { showProfiles = true }
+                                            .padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            profiles.active.title, color = palette.muted,
+                                            fontSize = 12.sp, maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.widthIn(max = 116.dp),
+                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                        NavGlassGlyph("chevron-down", palette.blue, Modifier.size(14.dp))
+                                    }
                                 }
                                 Text(
                                     when (tab) {
@@ -434,21 +447,46 @@ private fun TodayScreenV2(
             )
         }
         Spacer(Modifier.height(12.dp))
+        // The missed chip is pinned, and only the week scrolls inside card margins.
+        val daysScroll = rememberLazyListState()
+        LaunchedEffect(selectedDay, currentDay) {
+            val index = java.time.temporal.ChronoUnit.DAYS.between(currentDay, selectedDay).toInt()
+            if (index in 0..6) daysScroll.animateScrollToItem(index)
+        }
         Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
-                .padding(start = 16.dp, end = 16.dp, bottom = 9.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            Modifier.fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 9.dp)
+                .height(62.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            DayChip(localized("Пропущенные", "Missed", lang), "${missed.size}", showMissed,
-                if (missed.isEmpty()) p.muted else Color(0xFFF0AE85), p) { showMissed = true }
-            (0..6).forEach { offset ->
-                val day = currentDay.plusDays(offset.toLong())
-                val label = day.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT,
-                    if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH)
-                DayChip(label, "${day.dayOfMonth}", !showMissed && selectedDay == day, p.blue, p) {
-                    showMissed = false
-                    onSelectDay(day)
-                    onExpanded(null)
+            DayChip(
+                localized("Пропущенные", "Missed", lang), "${missed.size}", showMissed,
+                if (missed.isEmpty()) p.muted else Color(0xFFF0AE85), p,
+                modifier = Modifier.width(105.dp).fillMaxHeight(),
+            ) {
+                showMissed = true
+                onExpanded(null)
+            }
+            Spacer(Modifier.width(7.dp))
+            LazyRow(
+                state = daysScroll,
+                modifier = Modifier.weight(1f).fillMaxHeight()
+                    .clip(RoundedCornerShape(13.dp)),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                contentPadding = PaddingValues(end = 2.dp),
+            ) {
+                items(7) { offset ->
+                    val day = currentDay.plusDays(offset.toLong())
+                    val label = day.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT,
+                        if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH)
+                    DayChip(
+                        label, "${day.dayOfMonth}", !showMissed && selectedDay == day,
+                        p.blue, p, modifier = Modifier.width(55.dp).fillMaxHeight(),
+                    ) {
+                        showMissed = false
+                        onSelectDay(day)
+                        onExpanded(null)
+                    }
                 }
             }
         }
@@ -521,11 +559,15 @@ private fun TodayScreenV2(
 }
 
 @Composable
-private fun DayChip(top: String, bottom: String, selected: Boolean, accent: Color, p: NavPalette, action: () -> Unit) {
+private fun DayChip(
+    top: String, bottom: String, selected: Boolean, accent: Color, p: NavPalette,
+    modifier: Modifier = Modifier, action: () -> Unit,
+) {
     Column(
-        Modifier.navGlass(p, radius = 13.dp, role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
-            .glassClickable(onClick = action).padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier.navGlass(p, radius = 13.dp, role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
+            .glassClickable(onClick = action).padding(horizontal = 4.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
         Text(top, color = if (selected) p.blue else p.muted, fontSize = 11.sp, maxLines = 1)
         Text(bottom, color = if (selected) p.blue else p.text, fontSize = 15.sp,

@@ -289,6 +289,15 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 }
                 drawPath(path,color, style=Stroke(width=3.1f*s,cap=StrokeCap.Round,join=StrokeJoin.Round))
             }
+            "chevron-down" -> {
+                val path = Path().apply {
+                    moveTo(7f*s, 12f*s)
+                    lineTo(15f*s, 19f*s)
+                    lineTo(23f*s, 12f*s)
+                }
+                drawPath(path, color, style = Stroke(width = 2.5f*s,
+                    cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
             "plus" -> {
                 drawLine(color, pt(15f, 6f), pt(15f, 24f), width * 1.2f, cap = StrokeCap.Round)
                 drawLine(color, pt(6f, 15f), pt(24f, 15f), width * 1.2f, cap = StrokeCap.Round)
