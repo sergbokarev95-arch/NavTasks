@@ -635,6 +635,7 @@ fun RunTileV2(
     var pendingChange by remember(run.key, viewingDate) {
         mutableStateOf<Pair<String?, Boolean>?>(null)
     }
+    var openedReferenceId by remember(run.key) { mutableStateOf<String?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     var closeDialog by remember { mutableStateOf(false) }
     var closeReason by remember { mutableStateOf("") }
@@ -777,11 +778,31 @@ fun RunTileV2(
                         Spacer(Modifier.width(10.dp))
                         Text(item.title, color = p.text, fontSize = 13.sp, modifier = Modifier.weight(1f),
                             textDecoration = if (item.id in run.checkedIds || confirming) TextDecoration.LineThrough else null)
+                        val reference = checklistReferenceComment(task, run, item)
+                        if (reference.isNotBlank()) {
+                            Spacer(Modifier.width(5.dp))
+                            ChecklistReferenceButton(p, hasNote = true) {
+                                openedReferenceId = item.id
+                            }
+                        }
                     }
                 }
             }
         }
     }
+    openedReferenceId?.let { id ->
+        run.checklist.firstOrNull { it.id == id }?.let { item ->
+            val note = checklistReferenceComment(task, run, item)
+            if (note.isNotBlank()) {
+                ChecklistReferenceDialog(
+                    p = p, lang = lang, title = item.title,
+                    note = note, editable = false,
+                    onDismiss = { openedReferenceId = null },
+                )
+            }
+        }
+    }
+
     pendingChange?.let { change ->
         val itemName = change.first?.let { id ->
             run.checklist.firstOrNull { it.id == id }?.title

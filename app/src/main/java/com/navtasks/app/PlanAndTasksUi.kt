@@ -453,6 +453,7 @@ fun TaskEditorScreen(
     var notified by remember(initial?.id) { mutableStateOf(initial?.notificationsEnabled ?: true) }
     var reminder by remember(initial?.id) { mutableIntStateOf(initial?.remindMinutesBefore ?: 60) }
     var checklist by remember(initial?.id) { mutableStateOf(initial?.checklist ?: emptyList()) }
+    var editingChecklistNote by remember(initial?.id) { mutableStateOf<String?>(null) }
     var newItem by remember(initial?.id) { mutableStateOf("") }
     var enabled by remember(initial?.id) { mutableStateOf(initial?.enabled ?: true) }
     val valid = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 && (interval.toIntOrNull() ?: 0) > 0
@@ -574,7 +575,19 @@ fun TaskEditorScreen(
                         NavGlassInput(item.title, { value ->
                             checklist = checklist.map { if (it.id == item.id) it.copy(title = value) else it }
                         }, p, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { checklist = checklist.filterNot { it.id == item.id } }) { Text("×") }
+                        Spacer(Modifier.width(6.dp))
+                        ChecklistReferenceButton(p, item.comment.isNotBlank()) {
+                            editingChecklistNote = item.id
+                        }
+                        TextButton(
+                            onClick = {
+                                if (editingChecklistNote == item.id) editingChecklistNote = null
+                                checklist = checklist.filterNot { it.id == item.id }
+                            },
+                            modifier = Modifier.width(35.dp),
+                        ) {
+                            Text("×", color = p.muted)
+                        }
                     }
                     Spacer(Modifier.height(5.dp))
                 }
@@ -585,6 +598,12 @@ fun TaskEditorScreen(
                         if (newItem.isNotBlank()) { checklist = checklist + CheckItem(title = newItem.trim()); newItem = "" }
                     }) { Text("+") }
                 }
+                Text(localized(
+                    "Нажми ? у пункта, чтобы сохранить подсказку или текст для журнала. Она останется при каждом повторении задачи.",
+                    "Tap ? beside an item to save its journal wording or reference. The note repeats with the task.",
+                    lang,
+                ), color = p.muted, fontSize = 11.sp)
+                Spacer(Modifier.height(3.dp))
                 Text(localized("Когда все пункты отмечены, задача завершается автоматически.",
                     "All checked items automatically complete the parent task.", lang), color = p.muted, fontSize = 11.sp)
             }
@@ -595,6 +614,22 @@ fun TaskEditorScreen(
                 }
             }
             Spacer(Modifier.height(28.dp))
+        }
+    }
+
+    editingChecklistNote?.let { itemId ->
+        checklist.firstOrNull { it.id == itemId }?.let { item ->
+            ChecklistReferenceDialog(
+                p = p, lang = lang, title = item.title,
+                note = item.comment, editable = true,
+                onDismiss = { editingChecklistNote = null },
+                onSave = { text ->
+                    checklist = checklist.map { existing ->
+                        if (existing.id == itemId) existing.copy(comment = text) else existing
+                    }
+                    editingChecklistNote = null
+                },
+            )
         }
     }
 }

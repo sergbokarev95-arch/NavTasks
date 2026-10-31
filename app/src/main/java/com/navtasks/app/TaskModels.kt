@@ -31,15 +31,29 @@ data class CheckItem(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
     val required: Boolean = true,
+    /** User-authored journal wording or reference, not completion notes. */
+    val comment: String = "",
 ) {
-    fun toJson() = JSONObject().put("id", id).put("title", title).put("required", required)
+    fun toJson() = JSONObject()
+        .put("id", id).put("title", title).put("required", required)
+        .put("comment", comment)
+
     companion object {
         fun fromJson(json: JSONObject) = CheckItem(
             id = json.optString("id", UUID.randomUUID().toString()),
             title = json.optString("title"),
             required = json.optBoolean("required", true),
+            comment = json.optString("comment", ""),
         )
     }
+}
+
+/** Active runs show the latest template memo; finished runs retain their historical snapshot. */
+internal fun checklistReferenceComment(
+    task: TaskTemplate, run: TaskRun, item: CheckItem,
+): String {
+    if (run.completed || run.skipped) return item.comment
+    return task.checklist.firstOrNull { it.id == item.id }?.comment ?: item.comment
 }
 
 data class TaskTemplate(
