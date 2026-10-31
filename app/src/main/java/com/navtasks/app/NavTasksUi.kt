@@ -430,6 +430,7 @@ private fun TodayScreenV2(
     val complete = rows.filter { it.second.completed }
     val missed = store.missed(now)
     val browsingOtherDay = !showMissed && selectedDay != currentDay
+    val extraDue = groupTodayByFrequency(rows).filter { it.first != Frequency.DAILY }
 
     Column {
         NavPanel(p, Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
@@ -496,6 +497,41 @@ private fun TodayScreenV2(
                 }
             }
         }
+        // Special weekly/monthly/one-off duties are visible immediately below the
+        // date selection; badges wrap inside the same margins as the task cards.
+        AnimatedVisibility(
+            visible = !showMissed && extraDue.isNotEmpty(),
+            enter = fadeIn(tween(180)) + expandVertically(tween(180)),
+            exit = fadeOut(tween(150)) + shrinkVertically(tween(150)),
+        ) {
+            FlowRow(
+                Modifier.fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    if (selectedDay == currentDay)
+                        localized("Сегодня также:", "Also today:", lang)
+                    else localized("На выбранный день:", "On selected day:", lang),
+                    color = p.muted, fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp, end = 2.dp),
+                )
+                extraDue.forEach { (frequency, duties) ->
+                    Box(
+                        Modifier.navGlass(p, radius = 12.dp,
+                            role = GlassRole.CONTROL, elevation = 0.dp)
+                            .padding(horizontal = 9.dp, vertical = 7.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            todayFrequencyName(frequency, lang) + " · " + duties.size,
+                            color = todayFrequencyColor(frequency, p), fontSize = 11.sp,
+                        )
+                    }
+                }
+            }
+        }
         AnimatedVisibility(
             visible = browsingOtherDay,
             enter = fadeIn(animationSpec = tween(180)) + expandVertically(animationSpec = tween(180)),
@@ -537,17 +573,27 @@ private fun TodayScreenV2(
                         Text(navDate(originalDate, lang, true), color = p.blue, fontSize = 12.sp,
                             modifier = Modifier.padding(top = 7.dp, bottom = 2.dp))
                     }
-                    items(group, key = { it.second.key }) { (task, run) ->
-                        RunTileV2(task, run, store, p, lang, expandedRun == run.key,
-                            onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
-                            overdue = true, viewingDate = run.displayDate, today = currentDay)
+                    groupTodayByFrequency(group).forEach { (frequency, duties) ->
+                        item(key = "missed-type-" + originalDate + "-" + frequency.name) {
+                            TodayFrequencyHeader(frequency, duties.size, p, lang)
+                        }
+                        items(duties, key = { it.second.key }) { (task, run) ->
+                            RunTileV2(task, run, store, p, lang, expandedRun == run.key,
+                                onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
+                                overdue = true, viewingDate = run.displayDate, today = currentDay)
+                        }
                     }
                 }
             } else {
-                items(incomplete, key = { it.second.key }) { (task, run) ->
-                    RunTileV2(task, run, store, p, lang, expandedRun == run.key,
-                        onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
-                        viewingDate = selectedDay, today = currentDay)
+                groupTodayByFrequency(incomplete).forEach { (frequency, duties) ->
+                    item(key = "today-section-" + frequency.name) {
+                        TodayFrequencyHeader(frequency, duties.size, p, lang)
+                    }
+                    items(duties, key = { it.second.key }) { (task, run) ->
+                        RunTileV2(task, run, store, p, lang, expandedRun == run.key,
+                            onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
+                            viewingDate = selectedDay, today = currentDay)
+                    }
                 }
                 if (incomplete.isEmpty()) item {
                     NavPanel(p) { Text(localized("На этот день всё выполнено ✓", "All done for this day ✓", lang), color = p.mint) }
@@ -573,18 +619,29 @@ private fun TodayScreenV2(
                                 .background(p.border.copy(alpha = 0.45f), RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)))
                         }
                         Column(Modifier.padding(top = 7.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            complete.forEachIndexed { index, (task, run) ->
-                                AnimatedVisibility(showCompleted,
-                                    enter = expandVertically(animationSpec = tween(290, delayMillis = index * 60)) +
-                                        slideInVertically(initialOffsetY = { -(index + 1) * 18 }, animationSpec = tween(290, delayMillis = index * 60)) +
-                                        fadeIn(animationSpec = tween(260, delayMillis = index * 60)),
-                                    exit = shrinkVertically(animationSpec = tween(250)) +
-                                        slideOutVertically(targetOffsetY = { -(index + 1) * 18 }, animationSpec = tween(250)) +
-                                        fadeOut(animationSpec = tween(190)),
+                            var completedRowIndex = 0
+                            groupTodayByFrequency(complete).forEach { (frequency, duties) ->
+                                AnimatedVisibility(
+                                    visible = showCompleted,
+                                    enter = expandVertically(tween(260)) + fadeIn(tween(250)),
+                                    exit = shrinkVertically(tween(220)) + fadeOut(tween(180)),
                                 ) {
-                                    RunTileV2(task, run, store, p, lang, expandedRun == run.key,
-                                        onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
-                                        viewingDate = selectedDay, today = currentDay)
+                                    TodayFrequencyHeader(frequency, duties.size, p, lang)
+                                }
+                                duties.forEach { (task, run) ->
+                                    val index = completedRowIndex++
+                                    AnimatedVisibility(showCompleted,
+                                        enter = expandVertically(animationSpec = tween(290, delayMillis = index * 60)) +
+                                            slideInVertically(initialOffsetY = { -(index + 1) * 18 }, animationSpec = tween(290, delayMillis = index * 60)) +
+                                            fadeIn(animationSpec = tween(260, delayMillis = index * 60)),
+                                        exit = shrinkVertically(animationSpec = tween(250)) +
+                                            slideOutVertically(targetOffsetY = { -(index + 1) * 18 }, animationSpec = tween(250)) +
+                                            fadeOut(animationSpec = tween(190)),
+                                    ) {
+                                        RunTileV2(task, run, store, p, lang, expandedRun == run.key,
+                                            onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
+                                            viewingDate = selectedDay, today = currentDay)
+                                    }
                                 }
                             }
                         }
@@ -592,6 +649,51 @@ private fun TodayScreenV2(
                 }
             }
         }
+    }
+}
+
+/**
+ * Pure presentation-only grouping: does not alter TaskRuns or their original keys.
+ * Keep tasks in calendar frequency order and omit categories with no tasks.
+ */
+internal fun groupTodayByFrequency(
+    rows: List<Pair<TaskTemplate, TaskRun>>,
+): List<Pair<Frequency, List<Pair<TaskTemplate, TaskRun>>>> =
+    Frequency.entries.mapNotNull { frequency ->
+        val duties = rows.filter { it.first.frequency == frequency }
+        if (duties.isEmpty()) null else frequency to duties
+    }
+
+private fun todayFrequencyName(frequency: Frequency, lang: UiLanguage): String = when (frequency) {
+    Frequency.DAILY -> localized("Ежедневные", "Daily", lang)
+    Frequency.WEEKLY -> localized("Недельные", "Weekly", lang)
+    Frequency.MONTHLY -> localized("Месячные", "Monthly", lang)
+    Frequency.EXTRA -> localized("Разовые", "One-off", lang)
+}
+
+private fun todayFrequencyColor(frequency: Frequency, p: NavPalette): Color = when (frequency) {
+    Frequency.DAILY -> p.muted
+    Frequency.WEEKLY -> p.blue
+    Frequency.MONTHLY -> p.mint
+    Frequency.EXTRA -> if (p.dark) Color(0xFFFFC77F) else Color(0xFFAA6D30)
+}
+
+@Composable
+private fun TodayFrequencyHeader(
+    frequency: Frequency, count: Int, p: NavPalette, lang: UiLanguage,
+) {
+    val accent = todayFrequencyColor(frequency, p)
+    Row(
+        Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(6.dp).background(accent, CircleShape))
+        Spacer(Modifier.width(8.dp))
+        Text(todayFrequencyName(frequency, lang), color = accent, fontSize = 13.sp)
+        Spacer(Modifier.width(7.dp))
+        Text(count.toString(), color = p.muted, fontSize = 11.sp)
+        Spacer(Modifier.width(12.dp))
+        Box(Modifier.weight(1f).height(1.dp).background(p.border.copy(alpha = 0.58f)))
     }
 }
 
