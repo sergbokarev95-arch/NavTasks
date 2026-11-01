@@ -282,6 +282,8 @@ fun ProfileExchangePanel(
                 }
             }
         }
+        // Keep the profile dropdown visually independent from the actions.
+        Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(9.dp),
             modifier = Modifier.fillMaxWidth()) {
             Box(Modifier.weight(1f).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
