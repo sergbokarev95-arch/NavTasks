@@ -1,0 +1,360 @@
+package com.navtasks.app
+
+import android.app.DatePickerDialog
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import java.util.UUID
+
+@Composable
+fun ServicesScreen(
+    services: ServiceStore, tasks: TaskStore, settings: NavSettings,
+    p: NavPalette, lang: UiLanguage, onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    val now = LocalDate.now()
+    var showEditor by remember { mutableStateOf(false) }
+    var selected by remember { mutableStateOf<ServiceEntry?>(null) }
+    var confirmingDelete by remember { mutableStateOf<ServiceEntry?>(null) }
+    var confirmingComplete by remember { mutableStateOf<ServiceEntry?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
+    val sorted = services.entries.sortedBy { it.nextDate }
+    val overdue = sorted.count { it.nextDate.isBefore(now) }
+    val soon = sorted.count { !it.nextDate.isBefore(now) && (
+        it.nextDate <= now.plusDays(30) ||
+        (it.remindMonths > 0 && !now.isBefore(serviceWarningStart(it)))
+    ) }
+
+    fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
+
+    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            NavGlassCircleButton(p, "back", onClick = onBack)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
+                Text(localized("Сервисы", "Maintenance", lang), color = p.text, fontSize = 23.sp)
+            }
+            NavGlassCircleButton(p, "plus") { selected = null; showEditor = true }
+        }
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp, 6.dp, 16.dp, 36.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            item {
+                NavPanel(p) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        ServiceCount(localized("Всего", "All", lang), sorted.size, p.blue, p)
+                        ServiceCount(localized("Скоро", "Soon", lang), soon,
+                            if (soon > 0) Color(0xFFE6AD72) else p.muted, p)
+                        ServiceCount(localized("Просрочены", "Overdue", lang), overdue,
+                            if (overdue > 0) Color(0xFFE98B84) else p.muted, p)
+                    }
+                    Text(localized("Оборудование, даты, комментарии. Без вложений.",
+                        "Equipment, dates and notes. No attachments.", lang),
+                        color = p.muted, fontSize = 11.sp)
+                }
+            }
+            message?.let { msg ->
+                item { Text(msg, color = p.muted, fontSize = 12.sp) }
+            }
+            if (sorted.isEmpty()) {
+                item {
+                    NavPanel(p) {
+                        Text(localized("Нет сервисов. Добавь оборудование кнопкой +.",
+                            "No records. Add equipment with +.", lang), color = p.muted)
+                    }
+                }
+            }
+            items(sorted, key = { it.id }) { service ->
+                val late = service.nextDate.isBefore(now)
+                val approaching = !late && (service.nextDate <= now.plusDays(30) ||
+                    (service.remindMonths > 0 && !now.isBefore(serviceWarningStart(service))))
+                val accent = if (late) Color(0xFFE98B84) else if (approaching)
+                    Color(0xFFE6AD72) else p.mint
+                Column(
+                    Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
+                        .glassClickable { selected = service; showEditor = true }
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(7.dp).background(accent, RoundedCornerShape(5.dp)))
+                        Spacer(Modifier.width(10.dp))
+                        Text(service.equipment, color = p.text, fontSize = 16.sp,
+                            modifier = Modifier.weight(1f), maxLines = 2,
+                            overflow = TextOverflow.Ellipsis)
+                        Text("›", color = p.muted, fontSize = 24.sp)
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(localized("Последний", "Last", lang), color = p.muted, fontSize = 11.sp)
+                            Text(navDate(service.lastDate, lang, true), color = p.text, fontSize = 12.sp)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(localized("Следующий", "Next", lang), color = p.muted, fontSize = 11.sp)
+                            Text(navDate(service.nextDate, lang, true), color = accent, fontSize = 12.sp)
+                        }
+                    }
+                    if (service.comment.isNotBlank()) {
+                        Text(service.comment, color = p.muted, fontSize = 12.sp, maxLines = 2,
+                            overflow = TextOverflow.Ellipsis)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            if (late) localized("Просрочено", "Overdue", lang)
+                            else if (approaching)
+                                localized("Осталось " + ChronoUnit.DAYS.between(now, service.nextDate) + " дн.",
+                                    ChronoUnit.DAYS.between(now, service.nextDate).toString() + " days left", lang)
+                            else localized("Запланировано", "Scheduled", lang),
+                            color = accent, fontSize = 11.sp, modifier = Modifier.weight(1f),
+                        )
+                        if (service.periodMonths > 0) {
+                            ServiceOption(localized("Проведено", "Serviced", lang), p, false) {
+                                confirmingComplete = service
+                            }
+                        }
+                        Spacer(Modifier.width(6.dp))
+                        ServiceOption(localized("Удалить", "Delete", lang), p, false) {
+                            confirmingDelete = service
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (showEditor) {
+        ServiceEditorDialog(
+            selected, p, lang,
+            onDismiss = { showEditor = false },
+            onSave = {
+                runCatching { services.upsert(it); reschedule() }
+                    .onSuccess {
+                        showEditor = false
+                        message = localized("Сервис сохранён", "Saved", lang)
+                    }
+                    .onFailure { e -> message = e.localizedMessage }
+            },
+        )
+    }
+    confirmingDelete?.let { entry ->
+        ServiceConfirmDialog(
+            p, localized("Удалить сервис?", "Delete service?", lang),
+            entry.equipment, lang, onDismiss = { confirmingDelete = null },
+        ) {
+            runCatching { services.delete(entry.id); reschedule() }
+                .onFailure { message = it.localizedMessage }
+            confirmingDelete = null
+        }
+    }
+    confirmingComplete?.let { entry ->
+        val finished = LocalDate.now()
+        val next = nextServiceFromCompletion(entry, finished)
+        ServiceConfirmDialog(
+            p, localized("Сервис выполнен?", "Service completed?", lang),
+            entry.equipment + "\n" + localized("Следующий: ", "Next: ", lang) +
+                navDate(next.nextDate, lang, true),
+            lang, onDismiss = { confirmingComplete = null },
+        ) {
+            runCatching { services.complete(entry.id, finished); reschedule() }
+                .onFailure { message = it.localizedMessage }
+            confirmingComplete = null
+        }
+    }
+}
+
+@Composable
+private fun ServiceCount(label: String, number: Int, color: Color, p: NavPalette) {
+    Column {
+        Text(number.toString(), color = color, fontSize = 22.sp)
+        Text(label, color = p.muted, fontSize = 11.sp)
+    }
+}
+
+@Composable
+private fun ServiceEditorDialog(
+    existing: ServiceEntry?, p: NavPalette, lang: UiLanguage,
+    onDismiss: () -> Unit, onSave: (ServiceEntry) -> Unit,
+) {
+    val context = LocalContext.current
+    var equipment by remember(existing?.id) { mutableStateOf(existing?.equipment.orEmpty()) }
+    var last by remember(existing?.id) { mutableStateOf(existing?.lastDate ?: LocalDate.now()) }
+    var next by remember(existing?.id) { mutableStateOf(existing?.nextDate ?: LocalDate.now().plusMonths(12)) }
+    var note by remember(existing?.id) { mutableStateOf(existing?.comment.orEmpty()) }
+    var period by remember(existing?.id) { mutableIntStateOf(existing?.periodMonths ?: 12) }
+    var alert by remember(existing?.id) { mutableIntStateOf(existing?.remindMonths ?: 0) }
+    var error by remember { mutableStateOf<String?>(null) }
+    fun datePicker(value: LocalDate, onPicked: (LocalDate) -> Unit) {
+        DatePickerDialog(context,
+            { _, year, month, day -> onPicked(LocalDate.of(year, month + 1, day)) },
+            value.year, value.monthValue - 1, value.dayOfMonth).show()
+    }
+    val shape = RoundedCornerShape(23.dp)
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            Modifier.fillMaxWidth().clip(shape)
+                .background(if (p.dark) Color(0xF61B2C3F) else Color(0xF9F7FAFD), shape)
+                .border(1.dp, p.border, shape).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp),
+        ) {
+            Text(if (existing == null) localized("Новый сервис", "New service", lang)
+                else localized("Редактировать", "Edit service", lang),
+                color = p.text, fontSize = 21.sp)
+            Column(Modifier.fillMaxWidth().heightIn(max = 430.dp)
+                .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(9.dp),
+            ) {
+                Text(localized("Оборудование", "Equipment", lang), color = p.muted, fontSize = 12.sp)
+                ServiceInput(equipment, { equipment = it.take(200) },
+                    localized("Название", "Name", lang), p, false)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        Text(localized("Последний", "Last", lang), color = p.muted, fontSize = 11.sp)
+                        ServiceOption(navDate(last, lang, true), p, false, Modifier.fillMaxWidth()) {
+                            datePicker(last) {
+                                if (period > 0 && next == last.plusMonths(period.toLong()))
+                                    next = it.plusMonths(period.toLong())
+                                last = it
+                            }
+                        }
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text(localized("Следующий", "Next", lang), color = p.muted, fontSize = 11.sp)
+                        ServiceOption(navDate(next, lang, true), p, false, Modifier.fillMaxWidth()) {
+                            datePicker(next) { next = it }
+                        }
+                    }
+                }
+                Text(localized("Комментарий", "Comment", lang), color = p.muted, fontSize = 12.sp)
+                ServiceInput(note, { note = it.take(6000) },
+                    localized("Работы, расходники, примечания…", "Details and remarks…", lang), p, true)
+                Text(localized("Периодичность", "Interval", lang), color = p.muted, fontSize = 12.sp)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    listOf(0, 6, 12, 18, 36, 60).forEach { months ->
+                        ServiceOption(if (months == 0) localized("Без повтора", "One-off", lang)
+                            else localized(months.toString() + " мес.", months.toString() + " mo", lang),
+                            p, period == months) {
+                            if (period > 0 && months > 0 && next == last.plusMonths(period.toLong()))
+                                next = last.plusMonths(months.toLong())
+                            period = months
+                        }
+                    }
+                }
+                Text(localized("Предупреждение заранее", "Reminder in advance", lang),
+                    color = p.muted, fontSize = 12.sp)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    listOf(0, 1, 2, 3).forEach { months ->
+                        ServiceOption(if (months == 0) localized("Нет", "Off", lang)
+                            else localized(months.toString() + " мес.", months.toString() + " mo", lang),
+                            p, alert == months) { alert = months }
+                    }
+                }
+                if (period > 0) {
+                    Text(localized(
+                        "«Проведено» пересчитает срок от фактической даты выполнения.",
+                        "Serviced will calculate next due from the actual completion date.", lang),
+                        color = p.muted, fontSize = 11.sp)
+                }
+                error?.let { Text(it, color = Color(0xFFE98B84), fontSize = 12.sp) }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                ServiceOption(localized("Отмена", "Cancel", lang), p, false, onClick = onDismiss)
+                Spacer(Modifier.width(8.dp))
+                ServiceOption(localized("Сохранить", "Save", lang), p, true) {
+                    runCatching {
+                        ServiceEntry(existing?.id ?: UUID.randomUUID().toString(),
+                            equipment.trim(), last, next, note.trim(), period, alert)
+                    }.onSuccess { onSave(it) }
+                        .onFailure {
+                            error = localized(
+                                "Проверь название и даты. Следующий срок должен быть позже последнего.",
+                                "Check name and dates. Next due must follow the last date.", lang)
+                        }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ServiceInput(
+    value: String, onChange: (String) -> Unit, hint: String, p: NavPalette, multiline: Boolean,
+) {
+    BasicTextField(
+        value = value, onValueChange = onChange, singleLine = !multiline,
+        maxLines = if (multiline) 5 else 1,
+        textStyle = TextStyle(color = p.text, fontSize = 14.sp),
+        cursorBrush = SolidColor(p.blue),
+        modifier = Modifier.fillMaxWidth().height(if (multiline) 86.dp else 44.dp)
+            .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL),
+        decorationBox = { inner ->
+            Box(Modifier.fillMaxSize().padding(12.dp),
+                contentAlignment = if (multiline) Alignment.TopStart else Alignment.CenterStart) {
+                if (value.isEmpty()) Text(hint, color = p.muted, fontSize = 12.sp)
+                inner()
+            }
+        },
+    )
+}
+
+@Composable
+private fun ServiceOption(
+    label: String, p: NavPalette, selected: Boolean,
+    modifier: Modifier = Modifier, onClick: () -> Unit,
+) {
+    Box(modifier.navGlass(p, radius = 12.dp,
+        role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
+        .glassClickable(onClick = onClick)
+        .padding(horizontal = 11.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+        Text(label, color = if (selected) p.blue else p.text, fontSize = 12.sp, maxLines = 1)
+    }
+}
+
+@Composable
+private fun ServiceConfirmDialog(
+    p: NavPalette, title: String, detail: String, lang: UiLanguage,
+    onDismiss: () -> Unit, onConfirmed: () -> Unit,
+) {
+    val shape = RoundedCornerShape(23.dp)
+    Dialog(onDismissRequest = onDismiss) {
+        Column(Modifier.fillMaxWidth().clip(shape)
+            .background(if (p.dark) Color(0xF61B2C3F) else Color(0xF9F7FAFD), shape)
+            .border(1.dp, p.border, shape).padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Text(title, color = p.text, fontSize = 20.sp)
+            Text(detail, color = p.muted, fontSize = 14.sp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                ServiceOption(localized("Отмена", "Cancel", lang), p, false, onClick = onDismiss)
+                Spacer(Modifier.width(8.dp))
+                ServiceOption(localized("Подтвердить", "Confirm", lang), p, true, onClick = onConfirmed)
+            }
+        }
+    }
+}

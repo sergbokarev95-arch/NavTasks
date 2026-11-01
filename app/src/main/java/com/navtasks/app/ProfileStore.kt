@@ -38,6 +38,7 @@ data class ProfileSnapshot(
     val runs: List<TaskRun>,
     val sections: List<HandoverSection>,
     val lastVisit: String,
+    val services: List<ServiceEntry> = emptyList(),
 )
 
 object ProfileTransfer {
@@ -51,6 +52,7 @@ object ProfileTransfer {
         .put("tasks", JSONArray().apply { snapshot.templates.forEach { put(it.toJson()) } })
         .put("history", JSONArray().apply { snapshot.runs.forEach { put(it.toJson()) } })
         .put("handover", JSONArray().apply { snapshot.sections.forEach { put(it.toJson()) } })
+        .put("services", JSONArray().apply { snapshot.services.forEach { put(it.toJson()) } })
         .put("lastVisit", snapshot.lastVisit)
         .toString(2)
 
@@ -64,7 +66,8 @@ object ProfileTransfer {
         val ts = data.getJSONArray("tasks")
         val hs = data.getJSONArray("history")
         val ss = data.getJSONArray("handover")
-        require(ts.length() <= 2500 && hs.length() <= 100_000 && ss.length() <= 250) {
+        val ms = data.optJSONArray("services") ?: JSONArray()
+        require(ts.length() <= 2500 && hs.length() <= 100_000 && ss.length() <= 250 && ms.length() <= 1000) {
             "Profile has too many records"
         }
         val templates = (0 until ts.length()).map {
@@ -74,17 +77,21 @@ object ProfileTransfer {
         val sections = (0 until ss.length()).map {
             HandoverSection.fromJson(ss.getJSONObject(it))
         }
+        val services = (0 until ms.length()).map { ServiceEntry.fromJson(ms.getJSONObject(it)) }
+        require(services.map { it.id }.toSet().size == services.size) { "Duplicate services" }
         require(sections.sumOf { it.entries.size } <= 25000) { "Too many notes" }
         require(templates.map { it.id }.toSet().size == templates.size) { "Duplicate tasks" }
         require(runs.map { it.key }.toSet().size == runs.size) { "Duplicate history entries" }
         val known = templates.map { it.id }.toSet()
         require(runs.all { it.taskId in known }) { "History has missing task references" }
         if (profile.kind == NavProfileKind.PERSONAL) {
-            require(templates.isEmpty() && runs.isEmpty()) { "Personal profile must contain notes only" }
+            require(templates.isEmpty() && runs.isEmpty() && services.isEmpty()) {
+                "Personal profile must contain notes only"
+            }
         }
         val lastVisit = data.optString("lastVisit", LocalDate.now().toString())
         require(runCatching { LocalDate.parse(lastVisit) }.isSuccess) { "Invalid last visit date" }
-        return ProfileSnapshot(profile, templates, runs, sections, lastVisit)
+        return ProfileSnapshot(profile, templates, runs, sections, lastVisit, services)
     }
 }
 
@@ -203,16 +210,18 @@ class ProfileStore(context: Context) {
         val tasks = JSONArray(prefs.getString("templates", "[]"))
         val runs = JSONArray(prefs.getString("runs", "[]"))
         val notes = JSONArray(prefs.getString("sections", "[]"))
+        val services = JSONArray(prefs.getString("services", "[]"))
         return ProfileSnapshot(
             profile,
             (0 until tasks.length()).map { TaskTemplate.fromJson(tasks.getJSONObject(it)) },
             (0 until runs.length()).map { TaskRun.fromJson(runs.getJSONObject(it)) },
             (0 until notes.length()).map { HandoverSection.fromJson(notes.getJSONObject(it)) },
             prefs.getString("lastVisit", LocalDate.now().toString()) ?: LocalDate.now().toString(),
+            (0 until services.length()).map { ServiceEntry.fromJson(services.getJSONObject(it)) },
         )
     }
 
-    /** Replace ALL tasks, history, and notes as one preference transaction, never merge. */
+    /** Replace ALL tasks, history, notes and services as one preference transaction. */
     fun importReplace(incoming: ProfileSnapshot): NavProfile {
         val matched = findMatch(incoming.profile)
         val target = matched ?: incoming.profile.copy(
@@ -224,6 +233,7 @@ class ProfileStore(context: Context) {
             .putString("templates", JSONArray().apply { incoming.templates.forEach { put(it.toJson()) } }.toString())
             .putString("runs", JSONArray().apply { incoming.runs.forEach { put(it.toJson()) } }.toString())
             .putString("sections", JSONArray().apply { incoming.sections.forEach { put(it.toJson()) } }.toString())
+            .putString("services", JSONArray().apply { incoming.services.forEach { put(it.toJson()) } }.toString())
             .putString("lastVisit", incoming.lastVisit)
         // Do not claim success or change the index if the full profile write failed.
         check(editor.commit()) { "Profile import could not be saved" }

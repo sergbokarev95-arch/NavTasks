@@ -24,6 +24,7 @@ object NavNotifications {
     private const val REMINDER = "reminder"
     private const val MISSED = "missed"
     private const val DIGEST = "digest"
+    private const val SERVICE = "service"
     private const val CHANNEL_TASKS = "navtasks-reminders"
     private const val CHANNEL_MISSED = "navtasks-missed"
 
@@ -109,6 +110,27 @@ object NavNotifications {
                 schedule(context, REMINDER, run.key, reminderAt.toEpochMilli())
             if (deadline.isAfter(Instant.now())) schedule(context, MISSED, run.key, deadline.toEpochMilli())
         }
+        // A single early warning per maintenance due date, scoped to the
+        // currently selected ship. Save no photos or certificate contents.
+        val profiles = ProfileStore(context)
+        if (profiles.active.kind == NavProfileKind.VESSEL) {
+            val notified = context.getSharedPreferences(
+                "navtasks-delivered-notifications", Context.MODE_PRIVATE
+            ).getStringSet("delivered", emptySet()).orEmpty()
+            val current = LocalDateTime.now()
+            for (service in ServiceStore(context, profiles).entries) {
+                if (service.remindMonths == 0 || service.nextDate.isBefore(today)) continue
+                val notificationKey = profiles.activeId + ":service:" +
+                    service.id + ":" + service.nextDate
+                if (notificationKey in notified) continue
+                val start = serviceWarningStart(service)
+                var alarm = (if (start.isBefore(today)) today else start).atTime(9, 0)
+                if (!alarm.isAfter(current)) alarm = current.plusMinutes(2)
+                if (alarm.toLocalDate().isAfter(service.nextDate)) continue
+                schedule(context, SERVICE, service.id + "|" + service.nextDate,
+                    alarm.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+            }
+        }
         if (settings.dailyDigestEnabled) {
             val clock = LocalTime.of(settings.digestHour, settings.digestMinute)
             var next = today.atTime(clock)
@@ -150,6 +172,31 @@ object NavNotifications {
                 }
             }
             reschedule(context, store, settings)
+            return
+        }
+        if (kind == SERVICE) {
+            val serviceId = runKey.substringBefore("|")
+            val expectedDue = runKey.substringAfter("|", "")
+            val profiles = ProfileStore(context)
+            if (profiles.active.kind != NavProfileKind.VESSEL) return
+            val service = ServiceStore(context, profiles).entries
+                .firstOrNull { it.id == serviceId } ?: return
+            if (service.nextDate.toString() != expectedDue ||
+                service.remindMonths == 0 || LocalDate.now().isBefore(serviceWarningStart(service)) ||
+                LocalDate.now().isAfter(service.nextDate)) return
+            if (!mayNotify(context)) return
+            if (!alreadyNotified(context,
+                profiles.activeId + ":service:" + service.id + ":" + service.nextDate)) return
+            val heading = localized("Приближается сервис", "Maintenance due soon", settings.language)
+            val detail = service.equipment + " · " +
+                localized("до ", "due ", settings.language) + service.nextDate
+            val notification = Notification.Builder(context, CHANNEL_TASKS)
+                .setSmallIcon(R.drawable.navtasks_icon_monochrome)
+                .setContentTitle(heading).setContentText(detail)
+                .setStyle(Notification.BigTextStyle().bigText(detail))
+                .setContentIntent(openTask(context)).setAutoCancel(true).build()
+            manager(context).notify(("service:" + service.id + service.nextDate).hashCode(),
+                notification)
             return
         }
         val run = store.runs[runKey] ?: return

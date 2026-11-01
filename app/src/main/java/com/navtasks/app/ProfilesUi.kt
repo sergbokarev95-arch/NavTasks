@@ -26,6 +26,7 @@ fun ProfilesScreen(
     profiles: ProfileStore,
     store: TaskStore,
     handover: HandoverStore,
+    services: ServiceStore,
     p: NavPalette,
     lang: UiLanguage,
     onBack: () -> Unit,
@@ -41,6 +42,7 @@ fun ProfilesScreen(
         profiles.select(id)
         store.switchProfile()
         handover.switchProfile()
+        services.switchProfile()
         onBack()
     }
 
@@ -128,6 +130,7 @@ fun ProfilesScreen(
                             val pNew = profiles.createVessel(name)
                             store.switchProfile()
                             handover.switchProfile()
+                            services.switchProfile()
                             onBack()
                         } else profiles.rename(editingId, name)
                     }.onFailure { error = it.message }
@@ -155,6 +158,7 @@ fun ProfilesScreen(
                     profiles.delete(victim.id)
                     store.switchProfile()
                     handover.switchProfile()
+                    services.switchProfile()
                     deleteTarget = null
                 }) { Text(localized("Удалить", "Delete", lang)) }
             },
@@ -173,6 +177,7 @@ fun ProfileExchangePanel(
     profiles: ProfileStore,
     store: TaskStore,
     handover: HandoverStore,
+    services: ServiceStore,
     p: NavPalette,
     lang: UiLanguage,
 ) {
@@ -232,8 +237,8 @@ fun ProfileExchangePanel(
         Text(localized("Полный обмен профилями", "Full profile transfer", lang),
             color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         Text(localized(
-            "Выбери профиль для экспорта. Файл содержит расписания, все отметки по датам, пропуски, переносы и Handover.",
-            "Choose the profile to export. It contains all schedules, dated completions, missed and moved tasks, plus Handover.",
+            "Выбери профиль для экспорта. Файл содержит расписания, все отметки по датам, пропуски, переносы, Handover и сервисы.",
+            "Choose the profile to export. It contains all schedules, dated completions, missed and moved tasks, Handover and maintenance dates.",
             lang), color = p.muted, fontSize = 12.sp)
         Text(localized("Профиль для экспорта", "Profile to export", lang),
             color = p.muted, fontSize = 12.sp)
@@ -314,7 +319,9 @@ fun ProfileExchangePanel(
                     Text(title + " · " + incoming.templates.size + " " +
                         localized("задач", "tasks", lang) + " · " + incoming.runs.size + " " +
                         localized("отметок", "records", lang) + " · " +
-                        incoming.sections.size + " " + localized("разделов", "sections", lang))
+                        incoming.sections.size + " " + localized("разделов", "sections", lang) +
+                        " · " + incoming.services.size + " " +
+                        localized("сервисов", "services", lang))
                     if (matched != null) {
                         Spacer(Modifier.height(12.dp))
                         Text(localized(
@@ -332,6 +339,7 @@ fun ProfileExchangePanel(
                         val result = profiles.importReplace(incoming)
                         store.switchProfile()
                         handover.switchProfile()
+                        services.switchProfile()
                         selectedId = result.id
                     }.onSuccess {
                         feedback = localized("Профиль импортирован полностью.",

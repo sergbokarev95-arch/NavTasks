@@ -350,12 +350,35 @@ fun TasksScreenV2(
     store: TaskStore, filter: Frequency, onFilter: (Frequency) -> Unit,
     p: NavPalette, lang: UiLanguage,
     onEdit: (TaskTemplate) -> Unit,
+    services: ServiceStore,
+    onServices: () -> Unit,
 ) {
     val labels = listOf(
         localized("День", "Daily", lang), localized("Неделя", "Weekly", lang),
         localized("Месяц", "Monthly", lang), localized("Разовые", "Extra", lang),
     )
     Column(Modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+                .navGlass(p, radius = 17.dp, role = GlassRole.PANEL)
+                .glassClickable(onClick = onServices)
+                .padding(horizontal = 15.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            NavGlassGlyph("settings", p.blue, Modifier.size(24.dp))
+            Spacer(Modifier.width(13.dp))
+            Column(Modifier.weight(1f)) {
+                Text(localized("Сервисы", "Maintenance", lang), color = p.text,
+                    fontSize = 16.sp)
+                Text(
+                    localized("Оборудование · Даты · Комментарии", "Equipment · Dates · Notes", lang),
+                    color = p.muted, fontSize = 11.sp,
+                )
+            }
+            Text(services.entries.size.toString(), color = p.blue, fontSize = 13.sp)
+            Spacer(Modifier.width(7.dp))
+            Text("›", color = p.muted, fontSize = 23.sp)
+        }
         Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Frequency.entries.forEachIndexed { i, freq ->
                 Box(Modifier.weight(1f).navGlass(p, radius = 14.dp,
@@ -637,7 +660,7 @@ fun TaskEditorScreen(
 @Composable
 fun SettingsScreen(
     settings: NavSettings, store: TaskStore, p: NavPalette, onBack: () -> Unit,
-    profiles: ProfileStore, handover: HandoverStore,
+    profiles: ProfileStore, handover: HandoverStore, services: ServiceStore,
 ) {
     val lang = settings.language
     val context = LocalContext.current
@@ -751,7 +774,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            ProfileExchangePanel(profiles, store, handover, p, lang)
+            ProfileExchangePanel(profiles, store, handover, services, p, lang)
             if (profiles.active.kind == NavProfileKind.VESSEL) {
             NavPanel(p) {
                 Text(localized("Обмен только шаблонами", "Task templates only", lang),
@@ -786,7 +809,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.3.9 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.0 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

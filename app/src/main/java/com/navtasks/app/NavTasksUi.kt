@@ -158,9 +158,11 @@ fun NavTasksApp(
     // when Back closes Settings, the editor, or returns to a previous tab.
     val tabStateHolder = rememberSaveableStateHolder()
     var showSettings by rememberSaveable { mutableStateOf(false) }
-     var showProfiles by rememberSaveable { mutableStateOf(false) }
+    var showProfiles by rememberSaveable { mutableStateOf(false) }
+    var showServices by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val handoverStore = remember(context, profiles) { HandoverStore(context, profiles) }
+    val serviceStore = remember(context, profiles) { ServiceStore(context, profiles) }
     var editorOpen by remember { mutableStateOf(false) }
     var editorTask by remember { mutableStateOf<TaskTemplate?>(null) }
     var templateFilter by rememberSaveable { mutableStateOf(Frequency.DAILY) }
@@ -223,12 +225,13 @@ fun NavTasksApp(
 
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
-    BackHandler(enabled = editorOpen || showSettings || showProfiles ||
+    BackHandler(enabled = editorOpen || showSettings || showProfiles || showServices ||
             profiles.active.kind == NavProfileKind.PERSONAL || tabHistory.isNotEmpty() || tab != 0) {
         when {
             editorOpen -> editorOpen = false
             showProfiles -> showProfiles = false
             showSettings -> showSettings = false
+            showServices -> showServices = false
             profiles.active.kind == NavProfileKind.PERSONAL -> showProfiles = true
             tabHistory.isNotEmpty() -> {
                 tab = tabHistory.last().digitToInt()
@@ -248,7 +251,7 @@ fun NavTasksApp(
                     onSave = { store.upsert(it); editorOpen = false },
                 )
             } else if (showProfiles) {
-                ProfilesScreen(profiles, store, handoverStore, palette, lang,
+                ProfilesScreen(profiles, store, handoverStore, serviceStore, palette, lang,
                     onBack = {
                         showProfiles = false
                         tab = 0
@@ -261,10 +264,13 @@ fun NavTasksApp(
                 )
             } else if (showSettings) {
                 SettingsScreen(settings, store, palette, onBack = { showSettings = false },
-                    profiles = profiles, handover = handoverStore)
+                    profiles = profiles, handover = handoverStore, services = serviceStore)
             } else if (profiles.active.kind == NavProfileKind.PERSONAL) {
                 HandoverScreen(handoverStore, store, palette, lang,
                     onBack = { showProfiles = true }, personalMode = true)
+            } else if (showServices) {
+                ServicesScreen(serviceStore, store, settings, palette, lang,
+                    onBack = { showServices = false })
             } else {
                 val hazeState = remember { dev.chrisbanes.haze.HazeState() }
                 Box(Modifier.fillMaxSize()) {
@@ -336,7 +342,8 @@ fun NavTasksApp(
                                         onBack = { openPrimaryTab(1) }, embeddedInTab = true,
                                     )
                                     else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                        onEdit = { editorTask = it; editorOpen = true })
+                                        onEdit = { editorTask = it; editorOpen = true },
+                                        services = serviceStore, onServices = { showServices = true })
                                 }
                             }
                         }
