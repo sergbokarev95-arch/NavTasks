@@ -43,6 +43,7 @@ fun HandoverScreen(
     lang: UiLanguage,
     onBack: () -> Unit,
     personalMode: Boolean = false,
+    embeddedInTab: Boolean = false,
 ) {
     val context = LocalContext.current
     var collapsed by remember { mutableStateOf(emptySet<String>()) }
@@ -112,19 +113,27 @@ fun HandoverScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+    Column(
+        Modifier.fillMaxSize()
+            .then(if (embeddedInTab) Modifier else Modifier.statusBarsPadding().navigationBarsPadding())
+    ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NavGlassCircleButton(p, "back", onClick = onBack)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(if (personalMode) localized("ЛИЧНОЕ", "PERSONAL", lang) else "HANDOVER",
-                    color = p.blue, fontSize = 13.sp, letterSpacing = 1.8.sp)
-                Text(if (personalMode) localized("Заметки", "Notes", lang)
-                    else localized("Передача дел", "Handover notes", lang),
-                    color = p.text, fontSize = 22.sp)
+            if (embeddedInTab) {
+                Text(localized("Разделы передачи дел", "Handover sections", lang),
+                    color = p.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
+            } else {
+                NavGlassCircleButton(p, "back", onClick = onBack)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(if (personalMode) localized("ЛИЧНОЕ", "PERSONAL", lang) else "HANDOVER",
+                        color = p.blue, fontSize = 13.sp, letterSpacing = 1.8.sp)
+                    Text(if (personalMode) localized("Заметки", "Notes", lang)
+                        else localized("Передача дел", "Handover notes", lang),
+                        color = p.text, fontSize = 22.sp)
+                }
             }
             NavGlassCircleButton(p, "plus") { openSectionEditor(null) }
         }
@@ -157,7 +166,10 @@ fun HandoverScreen(
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 32.dp),
+            contentPadding = PaddingValues(
+                start = 16.dp, end = 16.dp, top = 10.dp,
+                bottom = if (embeddedInTab) 126.dp else 32.dp,
+            ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (handover.sections.isEmpty()) {

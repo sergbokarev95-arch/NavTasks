@@ -177,12 +177,12 @@ fun NavGlassBottomBar(
             // Direct drawing makes one moving lens, without keeping an old composited
             // layer (the ghost users observed between tabs on some MagicOS devices).
             val slide by animateFloatAsState(
-                targetValue = selected.coerceIn(0, 2).toFloat(),
+                targetValue = selected.coerceIn(0, 3).toFloat(),
                 animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
                 label = "navSingleGlassLens",
             )
             Canvas(Modifier.matchParentSize()) {
-                val cell = size.width / 3f
+                val cell = size.width / 4f
                 val inset = 1.dp.toPx()
                 // One uniformly inset lens; no extra pressed-state or old tab layer.
                 val lensSize = Size(cell - 2f * inset, size.height - 2f * inset)
@@ -211,9 +211,10 @@ fun NavGlassBottomBar(
                 val names = listOf(
                     localized("Сегодня", "Today", lang),
                     localized("План", "Plan", lang),
+                    "Handover",
                     localized("Задачи", "Tasks", lang),
                 )
-                repeat(3) { index ->
+                repeat(4) { index ->
                     val active = selected == index
                     // Strong blue belongs to the glyph and caption, not the glass lens.
                     val activeBlue = if (p.dark) Color(0xFF329CFF) else Color(0xFF087DFA)
@@ -225,7 +226,12 @@ fun NavGlassBottomBar(
                         verticalArrangement = Arrangement.Center,
                     ) {
                         NavGlassGlyph(
-                            kind = when (index) { 0 -> "today"; 1 -> "calendar"; else -> "tasks" },
+                            kind = when (index) {
+                                0 -> "today"
+                                1 -> "calendar"
+                                2 -> "handover"
+                                else -> "tasks"
+                            },
                             color = if (active) activeBlue else p.text.copy(alpha = 0.89f),
                             modifier = Modifier.size(24.dp),
                         )
@@ -288,6 +294,17 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 for (x in listOf(10f,15f,20f)) for (y in listOf(17f,22f)) {
                     drawCircle(color, radius = 1.1f*s, center = pt(x,y))
                 }
+            }
+            "handover" -> {
+                // Distinct handover notebook icon, not the same glyph as Tasks.
+                drawRoundRect(color, topLeft = pt(5f,4f), size = Size(20f*s,23f*s),
+                    cornerRadius = CornerRadius(3.1f*s), style = Stroke(width))
+                drawLine(color, pt(9f,10f), pt(15f,10f), width, cap = StrokeCap.Round)
+                drawLine(color, pt(9f,15f), pt(16f,15f), width, cap = StrokeCap.Round)
+                drawLine(color, pt(9f,20f), pt(15f,20f), width, cap = StrokeCap.Round)
+                drawLine(color, pt(18f,18f), pt(23f,18f), width, cap = StrokeCap.Round)
+                drawLine(color, pt(20.5f,15.5f), pt(23f,18f), width, cap = StrokeCap.Round)
+                drawLine(color, pt(20.5f,20.5f), pt(23f,18f), width, cap = StrokeCap.Round)
             }
             "tasks" -> {
                 for ((i, y) in listOf(7f,15f,23f).withIndex()) {

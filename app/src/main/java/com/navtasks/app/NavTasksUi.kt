@@ -109,7 +109,7 @@ internal fun tabAfterHorizontalSwipe(
     if (consumedByChild || abs(deltaX) < minDistance ||
         abs(deltaX) < abs(deltaY) * 1.35f
     ) return current
-    return (current + if (deltaX < 0f) 1 else -1).coerceIn(0, 2)
+    return (current + if (deltaX < 0f) 1 else -1).coerceIn(0, 3)
 }
 
 private fun Modifier.primaryTabSwipe(
@@ -151,15 +151,14 @@ fun NavTasksApp(
     onRequestHandled: () -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    // Compact back stack for the three primary tabs (0=Today, 1=Plan, 2=Tasks).
+    // Four tabs: 0=Today, 1=Plan, 2=Handover, 3=Tasks.
     // Kept across activity recreation so Android's Back gesture retraces navigation.
     var tabHistory by rememberSaveable { mutableStateOf("") }
     // Keep the selected calendar zoom/day and tab-specific scroll state intact
     // when Back closes Settings, the editor, or returns to a previous tab.
     val tabStateHolder = rememberSaveableStateHolder()
     var showSettings by rememberSaveable { mutableStateOf(false) }
-    var showHandover by rememberSaveable { mutableStateOf(false) }
-    var showProfiles by rememberSaveable { mutableStateOf(false) }
+     var showProfiles by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val handoverStore = remember(context, profiles) { HandoverStore(context, profiles) }
     var editorOpen by remember { mutableStateOf(false) }
@@ -199,7 +198,6 @@ fun NavTasksApp(
                 tab = 0
                 tabHistory = ""
                 showSettings = false
-                showHandover = false
                 editorOpen = false
                 expandedRun = requestedRunKey
             }
@@ -225,12 +223,11 @@ fun NavTasksApp(
 
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
-    BackHandler(enabled = editorOpen || showSettings || showProfiles || showHandover ||
+    BackHandler(enabled = editorOpen || showSettings || showProfiles ||
             profiles.active.kind == NavProfileKind.PERSONAL || tabHistory.isNotEmpty() || tab != 0) {
         when {
             editorOpen -> editorOpen = false
             showProfiles -> showProfiles = false
-            showHandover -> showHandover = false
             showSettings -> showSettings = false
             profiles.active.kind == NavProfileKind.PERSONAL -> showProfiles = true
             tabHistory.isNotEmpty() -> {
@@ -259,7 +256,6 @@ fun NavTasksApp(
                         selectedDate = LocalDate.now()
                         templateFilter = Frequency.DAILY
                         expandedRun = null
-                        showHandover = false
                     },
                     onSettings = { showProfiles = false; showSettings = true },
                 )
@@ -269,8 +265,6 @@ fun NavTasksApp(
             } else if (profiles.active.kind == NavProfileKind.PERSONAL) {
                 HandoverScreen(handoverStore, store, palette, lang,
                     onBack = { showProfiles = true }, personalMode = true)
-            } else if (showHandover) {
-                HandoverScreen(handoverStore, store, palette, lang, onBack = { showHandover = false })
             } else {
                 val hazeState = remember { dev.chrisbanes.haze.HazeState() }
                 Box(Modifier.fillMaxSize()) {
@@ -306,6 +300,7 @@ fun NavTasksApp(
                                     when (tab) {
                                         0 -> localized("Сегодня", "Today", lang)
                                         1 -> localized("План", "Plan", lang)
+                                        2 -> "Handover"
                                         else -> localized("Задачи", "Tasks", lang)
                                     }, fontSize = 26.sp, color = palette.text, fontWeight = FontWeight.Medium,
                                 )
@@ -336,13 +331,17 @@ fun NavTasksApp(
                                         expandedRun, { expandedRun = it })
                                     1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
                                         onEdit = { editorTask = it; editorOpen = true })
+                                    2 -> HandoverScreen(
+                                        handoverStore, store, palette, lang,
+                                        onBack = { openPrimaryTab(1) }, embeddedInTab = true,
+                                    )
                                     else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
                                         onEdit = { editorTask = it; editorOpen = true })
                                 }
                             }
                         }
                     }
-                    if (tab == 2) {
+                    if (tab == 3) {
                         Box(
                             Modifier.align(Alignment.BottomStart).navigationBarsPadding()
                                 .padding(start = 19.dp, bottom = 83.dp),
@@ -350,22 +349,6 @@ fun NavTasksApp(
                             NavGlassAddButton(palette, hazeState) {
                                 editorTask = null
                                 editorOpen = true
-                            }
-                        }
-                        Box(
-                            Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
-                                .padding(end = 20.dp, bottom = 83.dp),
-                        ) {
-                            Row(
-                                Modifier.navFrostedOverlay(
-                                    palette, hazeState, radius = 25.dp, role = GlassRole.CONTROL,
-                                ).glassClickable { showHandover = true }
-                                    .padding(horizontal = 15.dp, vertical = 13.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                NavGlassGlyph("tasks", palette.blue, Modifier.size(23.dp))
-                                Spacer(Modifier.width(7.dp))
-                                Text("Handover", color = palette.blue, fontSize = 12.sp)
                             }
                         }
                     }
