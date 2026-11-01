@@ -54,6 +54,7 @@ fun HandoverScreen(
     var entryTitle by remember { mutableStateOf("") }
     var entryNotes by remember { mutableStateOf("") }
     var selectedEntry by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var completingWithDate by remember { mutableStateOf<Triple<String, String, LocalDate>?>(null) }
     var confirmDelete by remember { mutableStateOf<Pair<String, String?>?>(null) }
     var pendingImport by remember { mutableStateOf<HandoverPackage?>(null) }
     var feedback by remember { mutableStateOf<String?>(null) }
@@ -329,6 +330,16 @@ fun HandoverScreen(
         )
     }
 
+    completingWithDate?.let { (sectionId, entryId, start) ->
+        NavDateWheelDialog(
+            initial = start, p = p, lang = lang,
+            onDismiss = { completingWithDate = null },
+            onSelected = { day ->
+                handover.setMark(sectionId, entryId, HandoverMark.COMPLETED, day)
+                completingWithDate = null
+            },
+        )
+    }
     selectedEntry?.let { (sectionId, entryId) ->
         val item = handover.sections.firstOrNull { it.id == sectionId }?.entries?.firstOrNull { it.id == entryId }
         if (item != null) {
@@ -345,11 +356,9 @@ fun HandoverScreen(
                                 color = p.mint, fontSize = 13.sp)
                         }
                         TextButton(onClick = {
-                            val day = item.completedDate ?: LocalDate.now()
-                            DatePickerDialog(context, { _, year, month, date ->
-                                handover.setMark(sectionId, entryId, HandoverMark.COMPLETED,
-                                    LocalDate.of(year, month + 1, date))
-                            }, day.year, day.monthValue - 1, day.dayOfMonth).show()
+                            completingWithDate = Triple(
+                                sectionId, entryId, item.completedDate ?: LocalDate.now(),
+                            )
                             selectedEntry = null
                         }) { Text(localized("✓ Завершить с датой", "✓ Complete with date", lang)) }
                         TextButton(onClick = {

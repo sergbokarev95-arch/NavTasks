@@ -281,6 +281,7 @@ private fun PlanReadOnlyTile(
     val context = LocalContext.current
     var menuOpen by remember(run.key) { mutableStateOf(false) }
     var deleteDialog by remember(run.key) { mutableStateOf(false) }
+    var movingToDate by remember(run.key) { mutableStateOf<LocalDate?>(null) }
     Row(
         Modifier.fillMaxWidth().navGlass(p, radius = 15.dp,
             role = if (run.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
@@ -312,10 +313,7 @@ private fun PlanReadOnlyTile(
                 if (!run.completed) DropdownMenuItem(text = { Text(localized("Перенести на дату…", "Move to date…", lang)) },
                     onClick = {
                         menuOpen = false
-                        val start = run.displayDate
-                        DatePickerDialog(context, { _, y, m, d ->
-                            store.postpone(run.key, LocalDate.of(y, m + 1, d))
-                        }, start.year, start.monthValue - 1, start.dayOfMonth).show()
+                        movingToDate = run.displayDate
                     })
                 DropdownMenuItem(text = { Text(localized("Удалить из дня", "Remove from day", lang)) }, onClick = {
                     menuOpen = false
@@ -323,6 +321,16 @@ private fun PlanReadOnlyTile(
                 })
             }
         }
+    }
+    movingToDate?.let { start ->
+        NavDateWheelDialog(
+            initial = start, p = p, lang = lang,
+            onDismiss = { movingToDate = null },
+            onSelected = { selected ->
+                store.postpone(run.key, selected)
+                movingToDate = null
+            },
+        )
     }
     if (deleteDialog) AlertDialog(
         onDismissRequest = { deleteDialog = false },
@@ -473,6 +481,8 @@ fun TaskEditorScreen(
     var interval by remember(initial?.id) { mutableStateOf((initial?.intervalCount ?: 1).toString()) }
     var missedPolicy by remember(initial?.id) { mutableStateOf(initial?.missedPolicy ?: MissedPolicy.HISTORY) }
     var time by remember(initial?.id) { mutableStateOf(initial?.deadlineTime) }
+    var showDateWheel by remember(initial?.id) { mutableStateOf(false) }
+    var showTimeWheel by remember(initial?.id) { mutableStateOf(false) }
     var notified by remember(initial?.id) { mutableStateOf(initial?.notificationsEnabled ?: true) }
     var reminder by remember(initial?.id) { mutableIntStateOf(initial?.remindMinutesBefore ?: 60) }
     var checklist by remember(initial?.id) { mutableStateOf(initial?.checklist ?: emptyList()) }
@@ -545,10 +555,8 @@ fun TaskEditorScreen(
                 }
                 FormLabel(if (frequency == Frequency.EXTRA) "Дата выполнения" else "Дата начала",
                     if (frequency == Frequency.EXTRA) "Due date" else "Start date", lang, p)
-                OutlinedButton(onClick = {
-                    DatePickerDialog(context, { _, y, m, d -> date = LocalDate.of(y, m + 1, d) },
-                        date.year, date.monthValue - 1, date.dayOfMonth).show()
-                }, modifier = Modifier.fillMaxWidth()) { Text(navDate(date, lang, true)) }
+                OutlinedButton(onClick = { showDateWheel = true },
+                    modifier = Modifier.fillMaxWidth()) { Text(navDate(date, lang, true)) }
                 Spacer(Modifier.height(10.dp))
                 FormLabel("Срок выполнения", "Deadline", lang, p)
                 OptionLine(listOf("day" to localized("До конца дня", "End of day", lang),
@@ -557,11 +565,8 @@ fun TaskEditorScreen(
                     time = if (it == "day") null else time ?: LocalTime.of(18, 0)
                 }
                 if (time != null) {
-                    OutlinedButton(onClick = {
-                        val current = time ?: LocalTime.of(18, 0)
-                        TimePickerDialog(context, { _, h, m -> time = LocalTime.of(h, m) },
-                            current.hour, current.minute, true).show()
-                    }, modifier = Modifier.fillMaxWidth()) { Text(time.toString()) }
+                    OutlinedButton(onClick = { showTimeWheel = true },
+                        modifier = Modifier.fillMaxWidth()) { Text(time.toString()) }
                 }
             }
             NavPanel(p) {
@@ -640,6 +645,20 @@ fun TaskEditorScreen(
         }
     }
 
+    if (showDateWheel) {
+        NavDateWheelDialog(
+            initial = date, p = p, lang = lang,
+            onDismiss = { showDateWheel = false },
+            onSelected = { date = it; showDateWheel = false },
+        )
+    }
+    if (showTimeWheel) {
+        NavTimeWheelDialog(
+            initial = time ?: LocalTime.of(18, 0), p = p, lang = lang,
+            onDismiss = { showTimeWheel = false },
+            onSelected = { time = it; showTimeWheel = false },
+        )
+    }
     editingChecklistNote?.let { itemId ->
         checklist.firstOrNull { it.id == itemId }?.let { item ->
             ChecklistReferenceDialog(
@@ -664,6 +683,7 @@ fun SettingsScreen(
 ) {
     val lang = settings.language
     val context = LocalContext.current
+    var showDigestWheel by remember { mutableStateOf(false) }
     var transferMessage by remember { mutableStateOf<String?>(null) }
     var transferError by remember { mutableStateOf(false) }
     var pendingImport by remember { mutableStateOf<List<TaskTemplate>?>(null) }
@@ -716,6 +736,17 @@ fun SettingsScreen(
         NavNotifications.reschedule(context, store, settings)
         NavWidgetUpdater.updateAll(context, store)
     }
+    if (showDigestWheel) {
+        NavTimeWheelDialog(
+            initial = LocalTime.of(settings.digestHour, settings.digestMinute),
+            p = p, lang = lang, onDismiss = { showDigestWheel = false },
+            onSelected = {
+                settings.setDigestTime(it.hour, it.minute)
+                syncSettings()
+                showDigestWheel = false
+            },
+        )
+    }
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             NavGlassCircleButton(p, "back", onClick = onBack)
@@ -750,10 +781,8 @@ fun SettingsScreen(
                         enabled = settings.notificationsEnabled, colors = navSwitchColors(p))
                 }
                 if (settings.notificationsEnabled && settings.dailyDigestEnabled) {
-                    OutlinedButton(onClick = {
-                        TimePickerDialog(context, { _, h, m -> settings.setDigestTime(h, m); syncSettings() },
-                            settings.digestHour, settings.digestMinute, true).show()
-                    }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { showDigestWheel = true },
+                        modifier = Modifier.fillMaxWidth()) {
                         Text(localized("Время сводки", "Digest time", lang) +
                             "  %02d:%02d".format(settings.digestHour, settings.digestMinute))
                     }
@@ -809,7 +838,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.2 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.3 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

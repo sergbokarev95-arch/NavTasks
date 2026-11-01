@@ -730,6 +730,7 @@ fun RunTileV2(
     }
     var openedReferenceId by remember(run.key) { mutableStateOf<String?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
+    var postponingDate by remember(run.key) { mutableStateOf<LocalDate?>(null) }
     var closeDialog by remember { mutableStateOf(false) }
     var closeReason by remember { mutableStateOf("") }
     var exiting by remember(run.key) { mutableStateOf(false) }
@@ -842,10 +843,7 @@ fun RunTileV2(
                     }
                     DropdownMenuItem(text = { Text(localized("Выбрать дату…", "Choose date…", lang)) }, onClick = {
                         menuOpen = false
-                        val start = run.displayDate.plusDays(1)
-                        DatePickerDialog(context, { _, y, m, d ->
-                            store.postpone(run.key, LocalDate.of(y, m + 1, d))
-                        }, start.year, start.monthValue - 1, start.dayOfMonth).show()
+                        postponingDate = run.displayDate.plusDays(1)
                     })
                     DropdownMenuItem(text = { Text(localized("Закрыть с причиной…", "Close with reason…", lang)) },
                         onClick = { menuOpen = false; closeReason = ""; closeDialog = true })
@@ -882,6 +880,16 @@ fun RunTileV2(
                 }
             }
         }
+    }
+    postponingDate?.let { start ->
+        NavDateWheelDialog(
+            initial = start, p = p, lang = lang,
+            onDismiss = { postponingDate = null },
+            onSelected = { day ->
+                store.postpone(run.key, day)
+                postponingDate = null
+            },
+        )
     }
     openedReferenceId?.let { id ->
         run.checklist.firstOrNull { it.id == id }?.let { item ->

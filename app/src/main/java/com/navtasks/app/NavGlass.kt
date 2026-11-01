@@ -6,6 +6,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -134,8 +136,15 @@ fun Modifier.navFrostedOverlay(
  * An accessible click target without the platform's transient ripple or grey pressed film.
  * Necessary for clear glass: the moving lens is the only visible touch feedback.
  */
-fun Modifier.glassClickable(onClick: () -> Unit): Modifier =
-    this.clickable(interactionSource = null, indication = null, onClick = onClick)
+@Composable
+fun Modifier.glassClickable(onClick: () -> Unit): Modifier {
+    val view = LocalView.current
+    return this.clickable(interactionSource = null, indication = null) {
+        // Honours the phone's system haptic-feedback setting (no forced vibration).
+        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        onClick()
+    }
+}
 
 /** A single sliding glass lens. No drop shadow, glow or second moving surface. */
 fun Modifier.navGlassSelection(p: NavPalette, radius: Dp = 23.dp): Modifier {

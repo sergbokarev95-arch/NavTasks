@@ -221,11 +221,7 @@ private fun ServiceEditorDialog(
     }
     var alert by remember(existing?.id) { mutableIntStateOf(existing?.remindMonths ?: 0) }
     var error by remember { mutableStateOf<String?>(null) }
-    fun datePicker(value: LocalDate, onPicked: (LocalDate) -> Unit) {
-        DatePickerDialog(context,
-            { _, year, month, day -> onPicked(LocalDate.of(year, month + 1, day)) },
-            value.year, value.monthValue - 1, value.dayOfMonth).show()
-    }
+    var pickingDate by remember(existing?.id) { mutableStateOf<String?>(null) }
     val shape = RoundedCornerShape(23.dp)
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -248,17 +244,13 @@ private fun ServiceEditorDialog(
                     Column(Modifier.weight(1f)) {
                         Text(localized("Последний", "Last", lang), color = p.muted, fontSize = 11.sp)
                         ServiceOption(navDate(last, lang, true), p, false, Modifier.fillMaxWidth()) {
-                            datePicker(last) {
-                                if (period > 0 && next == last.plusMonths(period.toLong()))
-                                    next = it.plusMonths(period.toLong())
-                                last = it
-                            }
+                            pickingDate = "last"
                         }
                     }
                     Column(Modifier.weight(1f)) {
                         Text(localized("Следующий", "Next", lang), color = p.muted, fontSize = 11.sp)
                         ServiceOption(navDate(next, lang, true), p, false, Modifier.fillMaxWidth()) {
-                            datePicker(next) { next = it }
+                            pickingDate = "next"
                         }
                     }
                 }
@@ -380,6 +372,24 @@ private fun ServiceEditorDialog(
                 }
             }
         }
+    }
+    pickingDate?.let { field ->
+        NavDateWheelDialog(
+            initial = if (field == "last") last else next,
+            p = p, lang = lang,
+            onDismiss = { pickingDate = null },
+            onSelected = { chosen ->
+                if (field == "last") {
+                    if (period > 0 && next == last.plusMonths(period.toLong())) {
+                        next = chosen.plusMonths(period.toLong())
+                    }
+                    last = chosen
+                } else {
+                    next = chosen
+                }
+                pickingDate = null
+            },
+        )
     }
 }
 
