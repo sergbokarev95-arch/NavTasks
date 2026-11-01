@@ -54,13 +54,14 @@ class ServiceScheduleTest {
             nextServiceFromCompletion(twentySeven, LocalDate.of(2026, 11, 30)).nextDate)
     }
 
-    @Test fun customEightYearPeriodHasSameJsonFieldAndIsPreserved() {
+    @Test fun customEightYearPeriodAndReminderSurviveServiceCompletion() {
         val custom = service(period = 96, alert = 3)
-        val archived = custom.toJson()
-        assertEquals(96, archived.getInt("periodMonths"))
-        assertEquals(3, archived.getInt("remindMonths"))
-        assertEquals(LocalDate.of(2034, 11, 1),
-            nextServiceFromCompletion(custom, LocalDate.of(2026, 11, 1)).nextDate)
+        val completed = nextServiceFromCompletion(custom, LocalDate.of(2026, 11, 1))
+        assertEquals(96, completed.periodMonths)
+        assertEquals(3, completed.remindMonths)
+        assertEquals(custom.id, completed.id)
+        assertEquals(custom.comment, completed.comment)
+        assertEquals(LocalDate.of(2034, 11, 1), completed.nextDate)
     }
 
     @Test fun customIntervalValidationRejectsOutOfRangeValues() {
