@@ -96,6 +96,22 @@ object ProfileTransfer {
 }
 
 /**
+ * Choose a valid remaining profile, preferring another vessel and finally
+ * Personal. This works even if the original default ship was deleted.
+ */
+internal fun profileAfterDeletion(
+    existing: List<NavProfile>,
+    deletedId: String,
+    currentActiveId: String,
+): String {
+    val remaining = existing.filterNot { it.id == deletedId }
+    require(remaining.isNotEmpty()) { "At least one profile must remain" }
+    return currentActiveId.takeIf { id -> remaining.any { it.id == id } }
+        ?: remaining.firstOrNull { it.kind == NavProfileKind.VESSEL }?.id
+        ?: remaining.first().id
+}
+
+/**
  * Profile index is separate from individual profile files.
  * v0.3.0 data is copied, not removed, into the default ship profile exactly once.
  */
@@ -191,11 +207,19 @@ class ProfileStore(context: Context) {
     }
 
     fun delete(id: String) {
-        require(id != DEFAULT_SHIP && id != PERSONAL_ID) { "Built-in profiles cannot be deleted" }
-        require(profiles.any { it.id == id })
-        val next = profiles.filterNot { it.id == id }
-        saveIndex(next, if (activeId == id) DEFAULT_SHIP else activeId)
-        app.getSharedPreferences("navtasks-profile-" + id, Context.MODE_PRIVATE).edit().clear().commit()
+        // Personal is our permanent safe fallback. Any vessel, including the
+        // migrated original "ship-default", can be deleted on user confirmation.
+        require(id != PERSONAL_ID) { "Personal profile cannot be deleted" }
+        require(profiles.any { it.id == id && it.kind == NavProfileKind.VESSEL }) {
+            "Unknown vessel profile"
+        }
+        val remaining = profiles.filterNot { it.id == id }
+        val newActive = profileAfterDeletion(profiles, id, activeId)
+        // First remove the profile from the index so it cannot accidentally
+        // become active again after a restart.
+        saveIndex(remaining, newActive)
+        check(app.getSharedPreferences("navtasks-profile-" + id, Context.MODE_PRIVATE)
+            .edit().clear().commit()) { "Unable to clear deleted profile data" }
     }
 
     fun findMatch(incoming: NavProfile): NavProfile? =

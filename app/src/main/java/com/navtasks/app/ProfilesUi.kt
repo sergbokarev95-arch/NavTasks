@@ -78,7 +78,8 @@ fun ProfilesScreen(
                 ) {
                     Column(Modifier.weight(1f).glassClickable { activate(profile.id) }
                         .padding(vertical = 6.dp)) {
-                        Text(profile.title, color = p.text, fontSize = 17.sp)
+                        Text(profile.title, color = p.text, fontSize = 17.sp,
+                            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         Text(
                             if (profile.kind == NavProfileKind.PERSONAL)
                                 localized("Заметки", "Notes", lang)
@@ -92,10 +93,12 @@ fun ProfilesScreen(
                             editing = profile.id
                             name = profile.title
                         }.padding(6.dp))
-                    if (profile.id != ProfileStore.DEFAULT_SHIP && profile.id != ProfileStore.PERSONAL_ID) {
-                        Text("×", color = p.muted, fontSize = 23.sp,
+                    if (profile.kind == NavProfileKind.VESSEL) {
+                        Text(localized("Удалить", "Delete", lang),
+                            color = if (p.dark) Color(0xFFFFB4A7) else Color(0xFFA44B42),
+                            fontSize = 12.sp,
                             modifier = Modifier.glassClickable { deleteTarget = profile }
-                                .padding(7.dp))
+                                .padding(horizontal = 6.dp, vertical = 9.dp))
                     }
                 }
             }
@@ -149,18 +152,24 @@ fun ProfilesScreen(
             onDismissRequest = { deleteTarget = null },
             title = { Text(localized("Удалить профиль?", "Delete profile?", lang)) },
             text = { Text(localized(
-                "Все задачи, история и заметки профиля «" + victim.title +
-                    "» будут удалены с телефона. Перед удалением лучше экспортировать профиль.",
-                "All tasks, history and notes for " + victim.title +
-                    " will be deleted from this phone. Export the profile first.", lang)) },
+                "Все задачи, история, пропуски, Handover и сервисы профиля «" + victim.title +
+                    "» будут безвозвратно удалены. Перед удалением экспортируй профиль.",
+                "All tasks, history, missed checks, Handover and services of " + victim.title +
+                    " will be permanently deleted. Export this profile first.", lang)) },
             confirmButton = {
                 TextButton(onClick = {
-                    profiles.delete(victim.id)
-                    store.switchProfile()
-                    handover.switchProfile()
-                    services.switchProfile()
+                    runCatching {
+                        profiles.delete(victim.id)
+                        store.switchProfile()
+                        handover.switchProfile()
+                        services.switchProfile()
+                    }.onSuccess { error = null }
+                        .onFailure { error = it.localizedMessage }
                     deleteTarget = null
-                }) { Text(localized("Удалить", "Delete", lang)) }
+                }) {
+                    Text(localized("Удалить навсегда", "Delete permanently", lang),
+                        color = if (p.dark) Color(0xFFFFB4A7) else Color(0xFFA44B42))
+                }
             },
             dismissButton = {
                 TextButton(onClick = { deleteTarget = null }) {
@@ -184,6 +193,7 @@ fun ProfileExchangePanel(
     val context = LocalContext.current
     var selectedId by rememberSaveable { mutableStateOf(profiles.activeId) }
     var selectorExpanded by remember { mutableStateOf(false) }
+    var deleteTarget by remember { mutableStateOf<NavProfile?>(null) }
     if (profiles.profiles.none { it.id == selectedId }) selectedId = profiles.activeId
     var pending by remember { mutableStateOf<ProfileSnapshot?>(null) }
     var feedback by remember { mutableStateOf<String?>(null) }
@@ -305,8 +315,66 @@ fun ProfileExchangePanel(
             "При импорте одинаковый профиль ПОЛНОСТЬЮ заменяется, без объединения данных. Перед заменой потребуется подтверждение.",
             "Import completely REPLACES a matching profile, never merges its contents. Confirmation is required.",
             lang), color = p.muted, fontSize = 11.sp)
+        val selectedProfile = profiles.profiles.first { it.id == selectedId }
+        if (selectedProfile.kind == NavProfileKind.VESSEL) {
+            Spacer(Modifier.height(9.dp))
+            Box(
+                Modifier.fillMaxWidth()
+                    .navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
+                    .glassClickable { deleteTarget = selectedProfile }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(localized("Удалить выбранный профиль", "Delete selected profile", lang),
+                    color = if (p.dark) Color(0xFFFFB4A7) else Color(0xFFA44B42),
+                    fontSize = 13.sp)
+            }
+        } else {
+            Text(localized("«Личное» защищено от удаления.",
+                "Personal is protected from deletion.", lang),
+                color = p.muted, fontSize = 11.sp)
+        }
         feedback?.let { Text(it, color = if (error) Color(0xFFE47F76) else p.mint,
             fontSize = 12.sp) }
+    }
+    deleteTarget?.let { victim ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text(localized("Удалить профиль «" + victim.title + "»?",
+                "Delete profile " + victim.title + "?", lang)) },
+            text = {
+                Text(localized(
+                    "Все задачи, история выполнений, пропущенные, Handover и сервисы этого судна будут безвозвратно удалены. Это нельзя отменить. Перед удалением экспортируй профиль.",
+                    "All tasks, completion history, missed entries, Handover and maintenance records for this vessel will be permanently deleted. This cannot be undone. Export the profile first.",
+                    lang))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    runCatching {
+                        profiles.delete(victim.id)
+                        store.switchProfile()
+                        handover.switchProfile()
+                        services.switchProfile()
+                        selectedId = profiles.activeId
+                    }.onSuccess {
+                        feedback = localized("Профиль удалён.", "Profile deleted.", lang)
+                        error = false
+                    }.onFailure {
+                        feedback = it.localizedMessage ?: localized("Ошибка удаления", "Delete failed", lang)
+                        error = true
+                    }
+                    deleteTarget = null
+                }) {
+                    Text(localized("Удалить навсегда", "Delete permanently", lang),
+                        color = if (p.dark) Color(0xFFFFB4A7) else Color(0xFFA44B42))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) {
+                    Text(localized("Отмена", "Cancel", lang))
+                }
+            },
+        )
     }
     pending?.let { incoming ->
         val matched = profiles.findMatch(incoming.profile)
