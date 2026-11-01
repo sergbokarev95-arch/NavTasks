@@ -27,7 +27,7 @@ data class ServiceEntry(
         require(equipment.isNotBlank() && equipment.length <= 200)
         require(comment.length <= 6000)
         require(nextDate.isAfter(lastDate)) { "Next service date must follow the last date" }
-        require(periodMonths in setOf(0, 6, 12, 18, 36, 60)) { "Unsupported service interval" }
+        require(periodMonths in 0..1200) { "Service interval must be 0–1200 months" }
         require(remindMonths in 0..3) { "Lead time exceeds three months" }
     }
 

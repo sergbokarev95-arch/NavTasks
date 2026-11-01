@@ -10,6 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -207,6 +209,16 @@ private fun ServiceEditorDialog(
     var next by remember(existing?.id) { mutableStateOf(existing?.nextDate ?: LocalDate.now().plusMonths(12)) }
     var note by remember(existing?.id) { mutableStateOf(existing?.comment.orEmpty()) }
     var period by remember(existing?.id) { mutableIntStateOf(existing?.periodMonths ?: 12) }
+    val presetIntervals = listOf(0, 6, 12, 18, 36, 60)
+    var customSelected by remember(existing?.id) {
+        mutableStateOf(existing?.periodMonths?.let { it !in presetIntervals } == true)
+    }
+    var customYears by remember(existing?.id) {
+        mutableStateOf((if (customSelected) period / 12 else 0).toString())
+    }
+    var customMonths by remember(existing?.id) {
+        mutableStateOf((if (customSelected) period % 12 else 9).toString())
+    }
     var alert by remember(existing?.id) { mutableIntStateOf(existing?.remindMonths ?: 0) }
     var error by remember { mutableStateOf<String?>(null) }
     fun datePicker(value: LocalDate, onPicked: (LocalDate) -> Unit) {
@@ -256,15 +268,77 @@ private fun ServiceEditorDialog(
                 Text(localized("Периодичность", "Interval", lang), color = p.muted, fontSize = 12.sp)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    listOf(0, 6, 12, 18, 36, 60).forEach { months ->
+                    presetIntervals.forEach { months ->
                         ServiceOption(if (months == 0) localized("Без повтора", "One-off", lang)
                             else localized(months.toString() + " мес.", months.toString() + " mo", lang),
-                            p, period == months) {
+                            p, !customSelected && period == months) {
                             if (period > 0 && months > 0 && next == last.plusMonths(period.toLong()))
                                 next = last.plusMonths(months.toLong())
+                            customSelected = false
                             period = months
                         }
                     }
+                    ServiceOption(
+                        localized("Своя…", "Custom…", lang), p, customSelected,
+                    ) {
+                        if (!customSelected) {
+                            val candidate = (customYears.toIntOrNull() ?: 0) * 12 +
+                                (customMonths.toIntOrNull() ?: 0)
+                            if (candidate in 1..1200) {
+                                if (period > 0 && next == last.plusMonths(period.toLong()))
+                                    next = last.plusMonths(candidate.toLong())
+                                period = candidate
+                            }
+                        }
+                        customSelected = true
+                    }
+                }
+                if (customSelected) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(localized("Лет", "Years", lang), color = p.muted, fontSize = 11.sp)
+                            ServiceNumberInput(customYears, { value ->
+                                customYears = value
+                                val years = value.toIntOrNull()
+                                val months = customMonths.toIntOrNull()
+                                if (years != null && months != null) {
+                                    val total = years * 12 + months
+                                    if (total in 1..1200) {
+                                        if (period > 0 && next == last.plusMonths(period.toLong()))
+                                            next = last.plusMonths(total.toLong())
+                                        period = total
+                                    }
+                                }
+                            }, p)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(localized("Месяцев", "Months", lang), color = p.muted, fontSize = 11.sp)
+                            ServiceNumberInput(customMonths, { value ->
+                                customMonths = value
+                                val years = customYears.toIntOrNull()
+                                val months = value.toIntOrNull()
+                                if (years != null && months != null) {
+                                    val total = years * 12 + months
+                                    if (total in 1..1200) {
+                                        if (period > 0 && next == last.plusMonths(period.toLong()))
+                                            next = last.plusMonths(total.toLong())
+                                        period = total
+                                    }
+                                }
+                            }, p)
+                        }
+                    }
+                    val years = customYears.toIntOrNull()
+                    val months = customMonths.toIntOrNull()
+                    val total = if (years == null || months == null) 0 else years * 12 + months
+                    Text(
+                        if (total in 1..1200)
+                            localized("Интервал: $total мес.", "Interval: $total months", lang)
+                        else localized("Укажи от 1 до 1200 месяцев суммарно.",
+                            "Enter a total between 1 and 1200 months.", lang),
+                        color = if (total in 1..1200) p.muted else Color(0xFFE98B84),
+                        fontSize = 11.sp,
+                    )
                 }
                 Text(localized("Предупреждение заранее", "Reminder in advance", lang),
                     color = p.muted, fontSize = 12.sp)
@@ -289,8 +363,14 @@ private fun ServiceEditorDialog(
                 Spacer(Modifier.width(8.dp))
                 ServiceOption(localized("Сохранить", "Save", lang), p, true) {
                     runCatching {
+                        val total = if (customSelected) {
+                            val years = customYears.toIntOrNull() ?: -1
+                            val months = customMonths.toIntOrNull() ?: -1
+                            require(years >= 0 && months in 0..11 && years * 12 + months in 1..1200)
+                            years * 12 + months
+                        } else period
                         ServiceEntry(existing?.id ?: UUID.randomUUID().toString(),
-                            equipment.trim(), last, next, note.trim(), period, alert)
+                            equipment.trim(), last, next, note.trim(), total, alert)
                     }.onSuccess { onSave(it) }
                         .onFailure {
                             error = localized(
@@ -319,6 +399,32 @@ private fun ServiceInput(
                 contentAlignment = if (multiline) Alignment.TopStart else Alignment.CenterStart) {
                 if (value.isEmpty()) Text(hint, color = p.muted, fontSize = 12.sp)
                 inner()
+            }
+        },
+    )
+}
+
+@Composable
+private fun ServiceNumberInput(
+    value: String,
+    onChange: (String) -> Unit,
+    p: NavPalette,
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = { entered ->
+            if (entered.length <= 3 && entered.all(Char::isDigit)) onChange(entered)
+        },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        textStyle = TextStyle(color = p.text, fontSize = 14.sp),
+        cursorBrush = SolidColor(p.blue),
+        modifier = Modifier.fillMaxWidth().height(43.dp)
+            .navGlass(p, radius = 11.dp, role = GlassRole.CONTROL),
+        decorationBox = { field ->
+            Box(Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                contentAlignment = Alignment.CenterStart) {
+                field()
             }
         },
     )

@@ -2,7 +2,10 @@ package com.navtasks.app
 
 import android.Manifest
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowInsetsController
@@ -22,6 +25,17 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // The native splash is already navy, and the Activity window is given
+        // the actual saved app theme before Compose's first frame.
+        val savedDark = when (appSettings.theme) {
+            UiTheme.DARK -> true
+            UiTheme.LIGHT -> false
+            UiTheme.SYSTEM -> (resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        }
+        window.setBackgroundDrawable(ColorDrawable(
+            Color.parseColor(if (savedDark) "#0B182A" else "#EAF3FA")
+        ))
         requestedRunKey = intent.getStringExtra("runKey")
         setContent {
             // Sync status/navigation icon foregrounds to the actual selected app
@@ -32,6 +46,11 @@ class MainActivity : ComponentActivity() {
                 UiTheme.SYSTEM -> isSystemInDarkTheme()
             }
             SideEffect {
+                // Keep the pre-Compose background in sync when Night/Day is
+                // changed in Settings, so window exposures never flash white.
+                window.setBackgroundDrawable(ColorDrawable(
+                    Color.parseColor(if (dark) "#0B182A" else "#EAF3FA")
+                ))
                 val flags = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
                     WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
                 window.insetsController?.setSystemBarsAppearance(
