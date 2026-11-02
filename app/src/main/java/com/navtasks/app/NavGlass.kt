@@ -201,7 +201,9 @@ fun NavGlassBottomBar(
         BoxWithConstraints(
             Modifier.fillMaxWidth().height(56.dp)
                 .navFrostedOverlay(p, hazeState, radius = 30.dp, role = GlassRole.NAVIGATION)
-                .padding(4.dp),
+                // HONOR screenshot: selected lens height ≈89% of dock height,
+                // not the old 79% produced by 4dp padding + 2dp inset.
+                .padding(horizontal = 1.dp, vertical = 2.dp),
         ) {
             // Direct drawing makes one moving lens, without keeping an old composited
             // layer (the ghost users observed between tabs on some MagicOS devices).
@@ -237,7 +239,7 @@ fun NavGlassBottomBar(
             }
             Canvas(Modifier.matchParentSize()) {
                 val cell = size.width / 4f
-                val inset = 2.dp.toPx()
+                val inset = 1.dp.toPx()
                 val phase = liquidPhase.value.coerceIn(0f, 1f)
                 val stretch = sin(phase.toDouble() * PI).toFloat()
                     .coerceAtLeast(0f) * minOf(10.dp.toPx(), cell * 0.13f)
@@ -247,10 +249,12 @@ fun NavGlassBottomBar(
                 // silhouette during movement, especially in Day mode.
                 val pillHeight = size.height - inset * 2f
                 val pillTop = (size.height - pillHeight) / 2f
-                val pillWidth = cell - inset * 2f + stretch
-                val nominalLeft = cell * slide + inset
-                val pillLeft = (nominalLeft - stretch / 2f)
-                    .coerceIn(inset, (size.width - inset - pillWidth).coerceAtLeast(inset))
+                // Reference selection is 25.7% of the entire outer dock:
+                // a little wider than a 4-tab cell, centered on its glyph.
+                val pillWidth = cell + 3.dp.toPx() + stretch
+                val nominalCenter = cell * (slide + 0.5f)
+                val pillLeft = (nominalCenter - pillWidth / 2f)
+                    .coerceIn(0f, (size.width - pillWidth).coerceAtLeast(0f))
                 val pillTopLeft = Offset(pillLeft, pillTop)
                 val pillSize = Size(pillWidth, pillHeight)
                 val pillRadius = CornerRadius(pillHeight / 2f, pillHeight / 2f)
