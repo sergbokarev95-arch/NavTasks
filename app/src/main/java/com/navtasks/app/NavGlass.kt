@@ -46,6 +46,9 @@ import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.sin
+import kotlin.math.PI
 
 /** Local, lightweight light fields make the translucent layers visibly react to their own backdrop. */
 @Composable
@@ -201,39 +204,57 @@ fun NavGlassBottomBar(
             // into a quiet neutral-grey selected pill, as in MagicOS.
             // No grey flash BEFORE the lens moves.
             val matte = remember { Animatable(1f) }
+            val droplet = remember { Animatable(0f) }
             var lastSelection by remember { mutableStateOf<Int?>(null) }
             LaunchedEffect(selected) {
-                if (lastSelection == null) {
+                val wasSelected = lastSelection
+                lastSelection = selected
+                if (wasSelected == null || wasSelected == selected) {
                     matte.snapTo(1f)
+                    droplet.snapTo(0f)
                 } else {
+                    // This is a light refraction falling onto the destination.
+                    // It starts with the tap, while the ONE lens travels.
+                    // The grey rest state only appears after the 240ms travel.
                     matte.snapTo(0f)
-                    delay(245L) // slide duration is 240 ms
+                    droplet.snapTo(0f)
+                    launch {
+                        droplet.animateTo(1f, tween(durationMillis = 335,
+                            easing = FastOutSlowInEasing))
+                        droplet.snapTo(0f)
+                    }
+                    delay(245L)
                     matte.animateTo(1f, tween(durationMillis = 245))
                 }
-                lastSelection = selected
             }
             Canvas(Modifier.matchParentSize()) {
                 val cell = size.width / 4f
-                val inset = 1.dp.toPx()
+                // Same centered inset in Day/Night; no asymmetric lower shadow.
+                val inset = 2.dp.toPx()
                 // One uniformly inset lens; no extra pressed-state or old tab layer.
                 val lensSize = Size(cell - 2f * inset, size.height - 2f * inset)
                 val lensTopLeft = Offset(cell * slide + inset, inset)
                 val lensCorner = CornerRadius(lensSize.height / 2f, lensSize.height / 2f)
                 val settle = matte.value
                 val movingFill = if (p.dark) Color(0x367193A8) else Color(0x24FFFFFF)
-                val restingFill = if (p.dark) Color(0x56616A74) else Color(0x79D2D5D9)
+                val restingFill = if (p.dark) Color(0x56616A74) else Color(0x74D5D9DE)
                 drawRoundRect(
                     color = lerp(movingFill, restingFill, settle),
                     topLeft = lensTopLeft, size = lensSize, cornerRadius = lensCorner,
                 )
-                val edgeOpacity = 1f - 0.79f * settle
+                val restingEdge = if (p.dark) Color(0xFF70808D).copy(alpha = 0.30f)
+                    else Color(0xFFB5C1CB).copy(alpha = 0.33f)
+                // A symmetric vertical edge removes Day-mode optical bottom
+                // heaviness while retaining a bright edge during travel.
                 drawRoundRect(
                     brush = Brush.verticalGradient(
                         listOf(
-                            Color.White.copy(alpha = (if (p.dark) 0.55f else 0.88f) * edgeOpacity),
-                            Color.White.copy(alpha = (if (p.dark) 0.22f else 0.35f) * edgeOpacity),
-                            (if (p.dark) Color(0xFFA9DBF2) else p.blue)
-                                .copy(alpha = (if (p.dark) 0.35f else 0.25f) * edgeOpacity),
+                            lerp(Color.White.copy(alpha = if (p.dark) 0.57f else 0.79f),
+                                restingEdge, settle),
+                            lerp(Color.White.copy(alpha = if (p.dark) 0.23f else 0.37f),
+                                restingEdge, settle),
+                            lerp(Color.White.copy(alpha = if (p.dark) 0.57f else 0.79f),
+                                restingEdge, settle),
                         ),
                     ),
                     topLeft = lensTopLeft,
@@ -241,6 +262,44 @@ fun NavGlassBottomBar(
                     cornerRadius = lensCorner,
                     style = Stroke(width = 1.dp.toPx()),
                 )
+
+                // One soft falling bead and a circular impact ripple, clipped
+                // by the dock. Pure light, never an extra moving grey pill.
+                val phase = droplet.value
+                if (phase > 0f && phase < 1f) {
+                    val x = cell * (selected.coerceIn(0, 3) + 0.5f)
+                    val centerY = size.height / 2f
+                    val glint = if (p.dark) Color(0xFFA7DAFF) else Color(0xFFFAFFFF)
+                    if (phase < 0.49f) {
+                        val descent = phase / 0.49f
+                        val y = size.height * (0.13f + 0.37f * descent)
+                        val opacity = 0.25f + 0.35f * descent
+                        drawOval(
+                            color = glint.copy(alpha = opacity),
+                            topLeft = Offset(x - 3.4.dp.toPx(), y - 5.2.dp.toPx()),
+                            size = Size(6.8.dp.toPx(), 10.4.dp.toPx()),
+                        )
+                    } else {
+                        val impact = (phase - 0.49f) / 0.51f
+                        val fade = (1f - impact).coerceIn(0f, 1f)
+                        val radius = (6f + impact * 23f).dp.toPx()
+                        drawCircle(
+                            color = glint.copy(alpha = fade * (if (p.dark) 0.33f else 0.62f)),
+                            center = Offset(x, centerY),
+                            radius = radius,
+                            style = Stroke(width = (1.7f - 0.8f * impact).dp.toPx()),
+                        )
+                        val glow = sin(impact.toDouble() * PI).toFloat().coerceAtLeast(0f) * fade
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                listOf(glint.copy(alpha = glow * 0.18f), Color.Transparent),
+                                center = Offset(x, centerY),
+                                radius = radius * 1.3f,
+                            ),
+                            center = Offset(x, centerY), radius = radius * 1.3f,
+                        )
+                    }
+                }
             }
             Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                 val names = listOf(

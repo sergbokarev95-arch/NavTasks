@@ -17,6 +17,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
@@ -27,6 +29,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -55,6 +58,7 @@ import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 /** The same swipe gesture changes the visible unit at the current calendar zoom. */
@@ -374,7 +378,24 @@ fun TasksScreenV2(
     // Reset to a closed stack whenever this tab or frequency is opened.
     // Templates and their saved state stay untouched until the user edits them.
     var listExpanded by remember(filter) { mutableStateOf(false) }
+    var rowsMounted by remember(filter) { mutableStateOf(false) }
+    var rowsVisible by remember(filter) { mutableStateOf(false) }
     val filtered = store.templates.filter { it.frequency == filter }
+    LaunchedEffect(filter, listExpanded) {
+        if (listExpanded) {
+            // Compose the rows initially hidden, then reveal them in sequence.
+            rowsMounted = true
+            delay(32L)
+            rowsVisible = true
+        } else {
+            rowsVisible = false
+            if (rowsMounted) {
+                // Allow each tile its own shrink/slide/fade exit first.
+                delay(455L)
+                rowsMounted = false
+            }
+        }
+    }
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
@@ -443,12 +464,7 @@ fun TasksScreenV2(
             }
         }
         Column(Modifier.weight(1f)) {
-            AnimatedVisibility(
-                visible = listExpanded,
-                modifier = Modifier.fillMaxSize(),
-                enter = expandVertically(tween(230)) + fadeIn(tween(190)),
-                exit = shrinkVertically(tween(190)) + fadeOut(tween(160)),
-            ) {
+            if (rowsMounted) {
                 LazyColumn(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
@@ -456,8 +472,22 @@ fun TasksScreenV2(
                     verticalArrangement = Arrangement.spacedBy(9.dp),
                 ) {
                     if (filtered.isEmpty()) item { NavPanel(p) { Text(localized("Задач пока нет", "No tasks yet", lang), color = p.muted) } }
-                    items(filtered, key = { it.id }) { task ->
-                        Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp,
+                    itemsIndexed(filtered, key = { _, item -> item.id }) { index, task ->
+                        Column {
+                        val enterDelay = index.coerceAtMost(7) * 42
+                        val exitDelay = (filtered.lastIndex - index).coerceIn(0, 7) * 26
+                        AnimatedVisibility(
+                            visible = rowsVisible,
+                            enter = expandVertically(tween(300, delayMillis = enterDelay)) +
+                                slideInVertically(initialOffsetY = { -(it / 3) },
+                                    animationSpec = tween(300, delayMillis = enterDelay)) +
+                                fadeIn(tween(240, delayMillis = enterDelay)),
+                            exit = shrinkVertically(tween(235, delayMillis = exitDelay)) +
+                                slideOutVertically(targetOffsetY = { -(it / 4) },
+                                    animationSpec = tween(235, delayMillis = exitDelay)) +
+                                fadeOut(tween(180, delayMillis = exitDelay)),
+                        ) {
+                            Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp,
                             role = if (task.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
                             .glassClickable { onEdit(task) }
                             .padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -479,6 +509,8 @@ fun TasksScreenV2(
                             if (task.checklist.isNotEmpty()) Text("${task.checklist.size}", color = p.blue, fontSize = 12.sp)
                             Spacer(Modifier.width(5.dp))
                             NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
+                            }
+                        }
                         }
                     }
                 }
@@ -890,7 +922,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.5 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.6 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
