@@ -442,7 +442,7 @@ fun TasksScreenV2(
                 )
             }
         }
-        Box(Modifier.weight(1f)) {
+        Column(Modifier.weight(1f)) {
             AnimatedVisibility(
                 visible = listExpanded,
                 modifier = Modifier.fillMaxSize(),
