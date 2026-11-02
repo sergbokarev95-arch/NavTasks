@@ -107,12 +107,24 @@ fun Modifier.navGlass(
         GlassRole.CONTROL -> if (p.dark) Color(0x792C3D50) else Color(0x80FFFFFF)
     }
     // The edge, not a white/blue blanket on the surface, communicates the glass.
-    val edge = if (p.dark) Color.White.copy(alpha = 0.34f)
-               else Color(0xFF83AAC2).copy(alpha = 0.44f)
-    val topGlint = if (p.dark) Color.White.copy(alpha = 0.32f)
-                   else Color.White.copy(alpha = 0.79f)
-    val bottomEdge = if (p.dark) Color(0xFF54778D).copy(alpha = 0.35f)
-                     else Color(0xFF92B0C2).copy(alpha = 0.31f)
+    // Day dock's top border was almost white on white, while the bottom
+    // remained grey. Use a single perceptually uniform neutral border.
+    val dockDayEdge = Color(0xFF9DA9B5).copy(alpha = 0.48f)
+    val edge = when {
+        p.dark -> Color.White.copy(alpha = 0.34f)
+        role == GlassRole.NAVIGATION -> dockDayEdge
+        else -> Color(0xFF83AAC2).copy(alpha = 0.44f)
+    }
+    val topGlint = when {
+        p.dark -> Color.White.copy(alpha = 0.32f)
+        role == GlassRole.NAVIGATION -> dockDayEdge
+        else -> Color.White.copy(alpha = 0.79f)
+    }
+    val bottomEdge = when {
+        p.dark -> Color(0xFF54778D).copy(alpha = 0.35f)
+        role == GlassRole.NAVIGATION -> dockDayEdge
+        else -> Color(0xFF92B0C2).copy(alpha = 0.31f)
+    }
     return this
         .clip(shape)
         .background(fill, shape)
@@ -249,12 +261,20 @@ fun NavGlassBottomBar(
                 // silhouette during movement, especially in Day mode.
                 val pillHeight = size.height - inset * 2f
                 val pillTop = (size.height - pillHeight) / 2f
-                // Reference selection is 25.7% of the entire outer dock:
-                // a little wider than a 4-tab cell, centered on its glyph.
-                val pillWidth = cell + 3.dp.toPx() + stretch
+                // Symmetric clearance, including when the first/last tab is
+                // selected: 1dp parent horizontal padding + 2dp inset = 3dp,
+                // matching 2dp parent vertical padding + 1dp inset = 3dp.
+                // The selection must be narrower than a tab cell to remain
+                // centered at both rounded ends without touching the dock.
+                val horizontalInset = 2.dp.toPx()
+                val pillWidth = cell - 2f * horizontalInset + stretch
                 val nominalCenter = cell * (slide + 0.5f)
                 val pillLeft = (nominalCenter - pillWidth / 2f)
-                    .coerceIn(0f, (size.width - pillWidth).coerceAtLeast(0f))
+                    .coerceIn(
+                        horizontalInset,
+                        (size.width - horizontalInset - pillWidth)
+                            .coerceAtLeast(horizontalInset),
+                    )
                 val pillTopLeft = Offset(pillLeft, pillTop)
                 val pillSize = Size(pillWidth, pillHeight)
                 val pillRadius = CornerRadius(pillHeight / 2f, pillHeight / 2f)
