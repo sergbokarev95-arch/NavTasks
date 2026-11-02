@@ -204,20 +204,16 @@ fun NavGlassBottomBar(
             // into a quiet neutral-grey selected pill, as in MagicOS.
             // No grey flash BEFORE the lens moves.
             val matte = remember { Animatable(1f) }
-            // The HONOR-like effect is deformation of the moving lens ITSELF,
-            // not a separate bead dropped from the top of the screen.
+            // A subtle temporary stretch in the same rounded capsule.
             val liquidPhase = remember { Animatable(1f) }
-            var travelDirection by remember { mutableStateOf(0) }
             var lastSelection by remember { mutableStateOf<Int?>(null) }
             LaunchedEffect(selected) {
                 val fromTab = lastSelection
                 lastSelection = selected
                 if (fromTab == null || fromTab == selected) {
-                    travelDirection = 0
                     matte.snapTo(1f)
                     liquidPhase.snapTo(1f)
                 } else {
-                    travelDirection = if (selected > fromTab) 1 else -1
                     matte.snapTo(0f)
                     liquidPhase.snapTo(0f)
                     launch {
@@ -232,90 +228,84 @@ fun NavGlassBottomBar(
             Canvas(Modifier.matchParentSize()) {
                 val cell = size.width / 4f
                 val inset = 2.dp.toPx()
-                val liquid = sin(liquidPhase.value.toDouble() * PI).toFloat()
-                    .coerceIn(0f, 1f)
-                val direction = travelDirection.toFloat()
+                val phase = liquidPhase.value.coerceIn(0f, 1f)
+                val stretch = sin(phase.toDouble() * PI).toFloat()
+                    .coerceAtLeast(0f) * minOf(10.dp.toPx(), cell * 0.13f)
 
-                // A single elastic capsule, with a soft bulging leading end
-                // and a briefly contracted trailing edge (liquid/gel motion).
-                val baseWidth = cell - 2f * inset
-                val width = baseWidth + liquid * minOf(cell * 0.26f, 22.dp.toPx())
-                val centerX = (slide + 0.5f) * cell + direction * liquid * 1.4.dp.toPx()
-                val height = size.height - 2f * inset - liquid * 2.dp.toPx()
-                val centerY = size.height / 2f
-                val top = centerY - height / 2f
-                val bottom = centerY + height / 2f
-                val nose = liquid * 5.dp.toPx()
-                val left = (centerX - width / 2f -
-                    if (travelDirection < 0) nose else 0f).coerceAtLeast(inset)
-                val right = (centerX + width / 2f +
-                    if (travelDirection > 0) nose else 0f)
-                    .coerceAtMost(size.width - inset)
-                val radius = height * 0.5f
-                val wave = liquid * 2.dp.toPx()
+                // Always use a true round rectangle. The previous hand-drawn
+                // cubic path distorted the top/bottom edges and lost the pill
+                // silhouette during movement, especially in Day mode.
+                val pillHeight = size.height - inset * 2f
+                val pillWidth = cell - inset * 2f + stretch
+                val nominalLeft = cell * slide + inset
+                val pillLeft = (nominalLeft - stretch / 2f)
+                    .coerceIn(inset, (size.width - inset - pillWidth).coerceAtLeast(inset))
+                val pillTopLeft = Offset(pillLeft, inset)
+                val pillSize = Size(pillWidth, pillHeight)
+                val pillRadius = CornerRadius(pillHeight / 2f, pillHeight / 2f)
 
-                // Cubic silhouette is deliberately one connected path.
-                // No ghost at the previous tab and no detached falling dot.
-                val leftWave = if (travelDirection < 0) wave else -wave * 0.4f
-                val rightWave = if (travelDirection > 0) wave else -wave * 0.4f
-                val pill = Path().apply {
-                    moveTo(left + radius, top)
-                    cubicTo(centerX - radius * 0.45f, top - wave * 0.25f,
-                        centerX + radius * 0.45f, top - wave * 0.2f,
-                        right - radius, top)
-                    cubicTo(right - radius * 0.25f, top,
-                        right + rightWave, top + radius * 0.25f,
-                        right, centerY)
-                    cubicTo(right + rightWave, bottom - radius * 0.25f,
-                        right - radius * 0.25f, bottom,
-                        right - radius, bottom)
-                    cubicTo(centerX + radius * 0.45f, bottom + wave * 0.2f,
-                        centerX - radius * 0.45f, bottom + wave * 0.25f,
-                        left + radius, bottom)
-                    cubicTo(left + radius * 0.25f, bottom,
-                        left + leftWave, bottom - radius * 0.25f,
-                        left, centerY)
-                    cubicTo(left + leftWave, top + radius * 0.25f,
-                        left + radius * 0.25f, top,
-                        left + radius, top)
-                    close()
-                }
-
-                val settle = matte.value
-                val movingFill = if (p.dark) Color(0x367193A8) else Color(0x24FFFFFF)
-                val restingFill = if (p.dark) Color(0x56616A74) else Color(0x74D5D9DE)
-                drawPath(pill, color = lerp(movingFill, restingFill, settle))
-
-                val restingEdge = if (p.dark) Color(0xFF70808D).copy(alpha = 0.30f)
-                    else Color(0xFFB5C1CB).copy(alpha = 0.33f)
-                drawPath(
-                    path = pill,
+                // During travel the single lens is unmistakably GLASS:
+                // cool translucent material, stronger specular edges, and a
+                // thin internal highlight. Only AFTER travel does it fade to
+                // a symmetrical matte-grey resting selection.
+                val settled = matte.value.coerceIn(0f, 1f)
+                val moveTop = if (p.dark) Color(0xA35A8CA9) else Color(0xA9D5EDFA)
+                val moveMid = if (p.dark) Color(0x84507696) else Color(0x93B8D8EA)
+                val moveBottom = if (p.dark) Color(0xA33E647D) else Color(0xA9CAE7F6)
+                val restingFill = if (p.dark) Color(0x89616B77) else Color(0xA4C9D1D9)
+                drawRoundRect(
                     brush = Brush.verticalGradient(
                         listOf(
-                            lerp(Color.White.copy(alpha = if (p.dark) 0.57f else 0.79f),
-                                restingEdge, settle),
-                            lerp(Color.White.copy(alpha = if (p.dark) 0.23f else 0.37f),
-                                restingEdge, settle),
-                            lerp(Color.White.copy(alpha = if (p.dark) 0.57f else 0.79f),
-                                restingEdge, settle),
+                            lerp(moveTop, restingFill, settled),
+                            lerp(moveMid, restingFill, settled),
+                            lerp(moveBottom, restingFill, settled),
                         ),
                     ),
-                    style = Stroke(width = 1.dp.toPx()),
+                    topLeft = pillTopLeft,
+                    size = pillSize,
+                    cornerRadius = pillRadius,
                 )
 
-                // Brief refraction under the chosen icon, as seen in the HONOR
-                // recording. The selected background itself is not duplicated.
-                val progress = liquidPhase.value
-                if (travelDirection != 0 && progress in 0.22f..0.84f) {
-                    val phase = (progress - 0.22f) / 0.62f
-                    val alpha = sin(phase.toDouble() * PI).toFloat().coerceAtLeast(0f)
-                    val center = Offset(cell * (selected.coerceIn(0, 3) + 0.5f), centerY)
-                    val glint = if (p.dark) Color(0xFFB2DDF2) else Color(0xFFFBFFFF)
-                    drawCircle(
-                        color = glint.copy(alpha = alpha * (if (p.dark) 0.31f else 0.52f)),
-                        radius = (5f + phase * 16f).dp.toPx(),
-                        center = center,
-                        style = Stroke(width = 1.2.dp.toPx()),
+                val movingEdgeTop = if (p.dark) Color(0xC7E3F8FF)
+                    else Color(0xF9F7FFFF)
+                val movingEdgeMid = if (p.dark) Color(0x896AAED0)
+                    else Color(0xD584ABC4)
+                val restingEdge = if (p.dark) Color(0x547B8998)
+                    else Color(0x8EB0BAC3)
+                drawRoundRect(
+                    brush = Brush.verticalGradient(
+                        listOf(
+                            lerp(movingEdgeTop, restingEdge, settled),
+                            lerp(movingEdgeMid, restingEdge, settled),
+                            lerp(movingEdgeTop, restingEdge, settled),
+                        ),
+                    ),
+                    topLeft = pillTopLeft,
+                    size = pillSize,
+                    cornerRadius = pillRadius,
+                    style = Stroke(width = (1.2f - settled * 0.2f).dp.toPx()),
+                )
+
+                // This is a highlight ON the moving capsule, not an isolated
+                // circle or droplet over the icon.
+                if (settled < 0.99f) {
+                    val inner = 2.dp.toPx()
+                    val innerHeight = pillHeight - inner * 2f
+                    val innerWidth = pillWidth - inner * 2f
+                    drawRoundRect(
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                Color.White.copy(alpha = (1f - settled) *
+                                    (if (p.dark) 0.34f else 0.44f)),
+                                Color.Transparent,
+                                Color.White.copy(alpha = (1f - settled) *
+                                    (if (p.dark) 0.15f else 0.24f)),
+                            ),
+                        ),
+                        topLeft = Offset(pillLeft + inner, inset + inner),
+                        size = Size(innerWidth, innerHeight),
+                        cornerRadius = CornerRadius(innerHeight / 2f, innerHeight / 2f),
+                        style = Stroke(width = 0.65.dp.toPx()),
                     )
                 }
             }
