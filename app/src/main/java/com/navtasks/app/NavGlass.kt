@@ -204,49 +204,92 @@ fun NavGlassBottomBar(
             // into a quiet neutral-grey selected pill, as in MagicOS.
             // No grey flash BEFORE the lens moves.
             val matte = remember { Animatable(1f) }
-            val droplet = remember { Animatable(0f) }
+            // The HONOR-like effect is deformation of the moving lens ITSELF,
+            // not a separate bead dropped from the top of the screen.
+            val liquidPhase = remember { Animatable(1f) }
+            var travelDirection by remember { mutableStateOf(0) }
             var lastSelection by remember { mutableStateOf<Int?>(null) }
             LaunchedEffect(selected) {
-                val wasSelected = lastSelection
+                val fromTab = lastSelection
                 lastSelection = selected
-                if (wasSelected == null || wasSelected == selected) {
+                if (fromTab == null || fromTab == selected) {
+                    travelDirection = 0
                     matte.snapTo(1f)
-                    droplet.snapTo(0f)
+                    liquidPhase.snapTo(1f)
                 } else {
-                    // This is a light refraction falling onto the destination.
-                    // It starts with the tap, while the ONE lens travels.
-                    // The grey rest state only appears after the 240ms travel.
+                    travelDirection = if (selected > fromTab) 1 else -1
                     matte.snapTo(0f)
-                    droplet.snapTo(0f)
+                    liquidPhase.snapTo(0f)
                     launch {
-                        droplet.animateTo(1f, tween(durationMillis = 335,
-                            easing = FastOutSlowInEasing))
-                        droplet.snapTo(0f)
+                        liquidPhase.animateTo(1f, tween(
+                            durationMillis = 325, easing = FastOutSlowInEasing))
                     }
+                    // The grey selection must never jump ahead of the lens.
                     delay(245L)
-                    matte.animateTo(1f, tween(durationMillis = 245))
+                    matte.animateTo(1f, tween(durationMillis = 225))
                 }
             }
             Canvas(Modifier.matchParentSize()) {
                 val cell = size.width / 4f
-                // Same centered inset in Day/Night; no asymmetric lower shadow.
                 val inset = 2.dp.toPx()
-                // One uniformly inset lens; no extra pressed-state or old tab layer.
-                val lensSize = Size(cell - 2f * inset, size.height - 2f * inset)
-                val lensTopLeft = Offset(cell * slide + inset, inset)
-                val lensCorner = CornerRadius(lensSize.height / 2f, lensSize.height / 2f)
+                val liquid = sin(liquidPhase.value.toDouble() * PI).toFloat()
+                    .coerceIn(0f, 1f)
+                val direction = travelDirection.toFloat()
+
+                // A single elastic capsule, with a soft bulging leading end
+                // and a briefly contracted trailing edge (liquid/gel motion).
+                val baseWidth = cell - 2f * inset
+                val width = baseWidth + liquid * minOf(cell * 0.26f, 22.dp.toPx())
+                val centerX = (slide + 0.5f) * cell + direction * liquid * 1.4.dp.toPx()
+                val height = size.height - 2f * inset - liquid * 2.dp.toPx()
+                val centerY = size.height / 2f
+                val top = centerY - height / 2f
+                val bottom = centerY + height / 2f
+                val nose = liquid * 5.dp.toPx()
+                val left = (centerX - width / 2f -
+                    if (travelDirection < 0) nose else 0f).coerceAtLeast(inset)
+                val right = (centerX + width / 2f +
+                    if (travelDirection > 0) nose else 0f)
+                    .coerceAtMost(size.width - inset)
+                val radius = height * 0.5f
+                val wave = liquid * 2.dp.toPx()
+
+                // Cubic silhouette is deliberately one connected path.
+                // No ghost at the previous tab and no detached falling dot.
+                val leftWave = if (travelDirection < 0) wave else -wave * 0.4f
+                val rightWave = if (travelDirection > 0) wave else -wave * 0.4f
+                val pill = Path().apply {
+                    moveTo(left + radius, top)
+                    cubicTo(centerX - radius * 0.45f, top - wave * 0.25f,
+                        centerX + radius * 0.45f, top - wave * 0.2f,
+                        right - radius, top)
+                    cubicTo(right - radius * 0.25f, top,
+                        right + rightWave, top + radius * 0.25f,
+                        right, centerY)
+                    cubicTo(right + rightWave, bottom - radius * 0.25f,
+                        right - radius * 0.25f, bottom,
+                        right - radius, bottom)
+                    cubicTo(centerX + radius * 0.45f, bottom + wave * 0.2f,
+                        centerX - radius * 0.45f, bottom + wave * 0.25f,
+                        left + radius, bottom)
+                    cubicTo(left + radius * 0.25f, bottom,
+                        left + leftWave, bottom - radius * 0.25f,
+                        left, centerY)
+                    cubicTo(left + leftWave, top + radius * 0.25f,
+                        left + radius * 0.25f, top,
+                        left + radius, top)
+                    close()
+                }
+
                 val settle = matte.value
                 val movingFill = if (p.dark) Color(0x367193A8) else Color(0x24FFFFFF)
                 val restingFill = if (p.dark) Color(0x56616A74) else Color(0x74D5D9DE)
-                drawRoundRect(
-                    color = lerp(movingFill, restingFill, settle),
-                    topLeft = lensTopLeft, size = lensSize, cornerRadius = lensCorner,
-                )
+                drawPath(pill, color = lerp(movingFill, restingFill, settle))
+
                 val restingEdge = if (p.dark) Color(0xFF70808D).copy(alpha = 0.30f)
                     else Color(0xFFB5C1CB).copy(alpha = 0.33f)
-                // A symmetric vertical edge removes Day-mode optical bottom
-                // heaviness while retaining a bright edge during travel.
-                drawRoundRect(
+                drawPath(
+                    path = pill,
                     brush = Brush.verticalGradient(
                         listOf(
                             lerp(Color.White.copy(alpha = if (p.dark) 0.57f else 0.79f),
@@ -257,48 +300,23 @@ fun NavGlassBottomBar(
                                 restingEdge, settle),
                         ),
                     ),
-                    topLeft = lensTopLeft,
-                    size = lensSize,
-                    cornerRadius = lensCorner,
                     style = Stroke(width = 1.dp.toPx()),
                 )
 
-                // One soft falling bead and a circular impact ripple, clipped
-                // by the dock. Pure light, never an extra moving grey pill.
-                val phase = droplet.value
-                if (phase > 0f && phase < 1f) {
-                    val x = cell * (selected.coerceIn(0, 3) + 0.5f)
-                    val centerY = size.height / 2f
-                    val glint = if (p.dark) Color(0xFFA7DAFF) else Color(0xFFFAFFFF)
-                    if (phase < 0.49f) {
-                        val descent = phase / 0.49f
-                        val y = size.height * (0.13f + 0.37f * descent)
-                        val opacity = 0.25f + 0.35f * descent
-                        drawOval(
-                            color = glint.copy(alpha = opacity),
-                            topLeft = Offset(x - 3.4.dp.toPx(), y - 5.2.dp.toPx()),
-                            size = Size(6.8.dp.toPx(), 10.4.dp.toPx()),
-                        )
-                    } else {
-                        val impact = (phase - 0.49f) / 0.51f
-                        val fade = (1f - impact).coerceIn(0f, 1f)
-                        val radius = (6f + impact * 23f).dp.toPx()
-                        drawCircle(
-                            color = glint.copy(alpha = fade * (if (p.dark) 0.33f else 0.62f)),
-                            center = Offset(x, centerY),
-                            radius = radius,
-                            style = Stroke(width = (1.7f - 0.8f * impact).dp.toPx()),
-                        )
-                        val glow = sin(impact.toDouble() * PI).toFloat().coerceAtLeast(0f) * fade
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                listOf(glint.copy(alpha = glow * 0.18f), Color.Transparent),
-                                center = Offset(x, centerY),
-                                radius = radius * 1.3f,
-                            ),
-                            center = Offset(x, centerY), radius = radius * 1.3f,
-                        )
-                    }
+                // Brief refraction under the chosen icon, as seen in the HONOR
+                // recording. The selected background itself is not duplicated.
+                val progress = liquidPhase.value
+                if (travelDirection != 0 && progress in 0.22f..0.84f) {
+                    val phase = (progress - 0.22f) / 0.62f
+                    val alpha = sin(phase.toDouble() * PI).toFloat().coerceAtLeast(0f)
+                    val center = Offset(cell * (selected.coerceIn(0, 3) + 0.5f), centerY)
+                    val glint = if (p.dark) Color(0xFFB2DDF2) else Color(0xFFFBFFFF)
+                    drawCircle(
+                        color = glint.copy(alpha = alpha * (if (p.dark) 0.31f else 0.52f)),
+                        radius = (5f + phase * 16f).dp.toPx(),
+                        center = center,
+                        style = Stroke(width = 1.2.dp.toPx()),
+                    )
                 }
             }
             Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
