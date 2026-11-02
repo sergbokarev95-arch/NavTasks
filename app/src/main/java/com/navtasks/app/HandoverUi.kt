@@ -163,7 +163,7 @@ fun HandoverScreen(
         }
         feedback?.let {
             Text(it, modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp),
-                color = p.mint, fontSize = 12.sp)
+                color = p.successText, fontSize = 12.sp)
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -221,7 +221,7 @@ fun HandoverScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(if (entry.mark == HandoverMark.COMPLETED) "✓" else if (finished) "–" else "○",
-                                    color = if (finished) p.mint else p.blue, fontSize = 22.sp)
+                                    color = if (finished) p.successText else p.blue, fontSize = 22.sp)
                                 Spacer(Modifier.width(11.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text(entry.title, color = if (finished) p.muted else p.text,
@@ -235,7 +235,7 @@ fun HandoverScreen(
                                         Text(entry.completedDate?.let {
                                             localized("Завершено: $it", "Completed: $it", lang)
                                         } ?: localized("Завершено без даты", "Completed without date", lang),
-                                            color = p.mint, fontSize = 10.sp)
+                                            color = p.successText, fontSize = 10.sp)
                                     } else if (entry.mark == HandoverMark.STRUCK) {
                                         Text(localized("Вычеркнуто", "Struck out", lang),
                                             color = p.muted, fontSize = 10.sp)
@@ -353,7 +353,7 @@ fun HandoverScreen(
                         if (item.notes.isNotBlank()) Text(item.notes, color = p.muted, fontSize = 13.sp)
                         if (item.mark == HandoverMark.COMPLETED) {
                             Text(item.completedDate?.toString() ?: localized("Дата не указана", "No date", lang),
-                                color = p.mint, fontSize = 13.sp)
+                                color = p.successText, fontSize = 13.sp)
                         }
                         TextButton(onClick = {
                             completingWithDate = Triple(

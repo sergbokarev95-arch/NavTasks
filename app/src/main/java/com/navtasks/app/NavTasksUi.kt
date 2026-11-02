@@ -40,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -77,12 +78,16 @@ data class NavPalette(
 fun navPalette(dark: Boolean) = if (dark) NavPalette(
     true, Color(0xFF0B182A), Color(0xFF142D49), Color(0xE021344F),
     Color(0xE01A304B), Color(0xE021415E), Color(0xFF36536B),
-    Color(0xFFF2F8FF), Color(0xFFAFC4D8), Color(0xFF44C4FF), Color(0xFF69D4BE),
+    Color(0xFFF2F8FF), Color(0xFFAFC4D8), Color(0xFF44C4FF), Color(0xFF68CE77),
 ) else NavPalette(
     false, Color(0xFFEAF3FA), Color(0xFFF9FBFF), Color(0xF9FFFFFF),
     Color(0xFFF8FCFF), Color(0xFFE1F0FA), Color(0xFFC9DFED),
-    Color(0xFF172B42), Color(0xFF60788F), Color(0xFF267BAF), Color(0xFF228E80),
+    Color(0xFF172B42), Color(0xFF60788F), Color(0xFF267BAF), Color(0xFF60C569),
 )
+
+/** HONOR-style success green, with readable contrast for text in Day mode. */
+val NavPalette.successText: Color
+    get() = if (dark) mint else Color(0xFF2B8951)
 
 fun localized(ru: String, en: String, lang: UiLanguage) = if (lang == UiLanguage.RU) ru else en
 
@@ -558,7 +563,7 @@ private fun TodayScreenV2(
             if (showMissed) {
                 item { Text(localized("Незакрытые пропуски", "Unfinished overdue tasks", lang),
                     color = p.muted, fontSize = 13.sp, modifier = Modifier.padding(vertical = 6.dp)) }
-                if (missed.isEmpty()) item { NavPanel(p) { Text(localized("Пропущенных задач нет", "No missed tasks", lang), color = p.mint) } }
+                if (missed.isEmpty()) item { NavPanel(p) { Text(localized("Пропущенных задач нет", "No missed tasks", lang), color = p.successText) } }
                 missed.groupBy { it.second.dueDate }.forEach { (originalDate, group) ->
                     item(key = "missed-date-$originalDate") {
                         Text(navDate(originalDate, lang, true), color = p.blue, fontSize = 12.sp,
@@ -587,7 +592,7 @@ private fun TodayScreenV2(
                     }
                 }
                 if (incomplete.isEmpty()) item {
-                    NavPanel(p) { Text(localized("На этот день всё выполнено ✓", "All done for this day ✓", lang), color = p.mint) }
+                    NavPanel(p) { Text(localized("На этот день всё выполнено ✓", "All done for this day ✓", lang), color = p.successText) }
                 }
                 if (complete.isNotEmpty()) item {
                     Column(Modifier.fillMaxWidth()) {
@@ -596,11 +601,16 @@ private fun TodayScreenV2(
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("✓", color = p.mint, fontSize = 19.sp)
+                                Text("✓", color = p.successText, fontSize = 19.sp)
                                 Spacer(Modifier.width(9.dp))
                                 Text(localized("Выполнено", "Completed", lang), color = p.text,
                                     modifier = Modifier.weight(1f), fontSize = 15.sp)
-                                Text("${complete.size}  ${if (showCompleted) "⌃" else "▱"}", color = p.muted)
+                                Text(complete.size.toString(), color = p.muted, fontSize = 14.sp)
+                                Spacer(Modifier.width(9.dp))
+                                NavGlassGlyph(
+                                    "chevron-down", p.muted,
+                                    Modifier.size(17.dp).rotate(if (showCompleted) 180f else 0f),
+                                )
                             }
                         }
                         if (!showCompleted) {
@@ -821,7 +831,7 @@ fun RunTileV2(
                 Spacer(Modifier.height(2.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (run.checklist.isNotEmpty()) Text("${run.checkedCount}/${run.checklist.size}", color = p.blue, fontSize = 11.sp)
-                    if (run.transferred) Text(localized("Перенесено", "Moved", lang), color = p.mint, fontSize = 11.sp)
+                    if (run.transferred) Text(localized("Перенесено", "Moved", lang), color = p.successText, fontSize = 11.sp)
                     if (overdue) Text(navDate(run.dueDate, lang), color = Color(0xFFF0AC8F), fontSize = 11.sp)
                     if (task.deadlineTime != null) Text(task.deadlineTime.toString(), color = p.muted, fontSize = 11.sp)
                 }

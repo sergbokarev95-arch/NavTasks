@@ -111,7 +111,7 @@ fun ServicesScreen(
                         Text(service.equipment, color = p.text, fontSize = 16.sp,
                             modifier = Modifier.weight(1f), maxLines = 2,
                             overflow = TextOverflow.Ellipsis)
-                        Text("›", color = p.muted, fontSize = 24.sp)
+                        NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Column(Modifier.weight(1f)) {

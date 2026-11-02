@@ -1,5 +1,6 @@
 package com.navtasks.app
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -13,7 +14,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.geometry.Rect
@@ -39,6 +45,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
+import kotlinx.coroutines.delay
 
 /** Local, lightweight light fields make the translucent layers visibly react to their own backdrop. */
 @Composable
@@ -83,12 +90,12 @@ fun Modifier.navGlass(
 ): Modifier {
     val shape = RoundedCornerShape(radius)
     val fill = when (role) {
-        GlassRole.PANEL -> if (p.dark) Color(0x651F3143) else Color(0x3AFFFFFF)
-        GlassRole.TASK -> if (p.dark) Color(0x571C2D40) else Color(0x2BFFFFFF)
-        GlassRole.NESTED_TASK -> if (p.dark) Color(0x5C234259) else Color(0x2DDAEAF3)
-        GlassRole.NAVIGATION -> if (p.dark) Color(0x5E18202A) else Color(0x4BFFFFFF)
-        GlassRole.SELECTED -> if (p.dark) Color(0x4C2989C5) else Color(0x3B3EA1F2)
-        GlassRole.CONTROL -> if (p.dark) Color(0x442C3D50) else Color(0x24FFFFFF)
+        GlassRole.PANEL -> if (p.dark) Color(0x851F3143) else Color(0x85FFFFFF)
+        GlassRole.TASK -> if (p.dark) Color(0x781C2D40) else Color(0x79FFFFFF)
+        GlassRole.NESTED_TASK -> if (p.dark) Color(0x80234259) else Color(0x7BDDECF7)
+        GlassRole.NAVIGATION -> if (p.dark) Color(0x7918202A) else Color(0x7AFFFFFF)
+        GlassRole.SELECTED -> if (p.dark) Color(0x582989C5) else Color(0x493EA1F2)
+        GlassRole.CONTROL -> if (p.dark) Color(0x792C3D50) else Color(0x80FFFFFF)
     }
     // The edge, not a white/blue blanket on the surface, communicates the glass.
     val edge = if (p.dark) Color.White.copy(alpha = 0.34f)
@@ -121,8 +128,8 @@ fun Modifier.navFrostedOverlay(
         .hazeEffect(
             state = hazeState,
             style = HazeStyle(
-                backgroundColor = if (p.dark) Color(0x4C172739) else Color(0x52EDF5FA),
-                blurRadius = 28.dp,
+                backgroundColor = if (p.dark) Color(0x68172739) else Color(0x74EDF5FA),
+                blurRadius = 34.dp,
                 tints = listOf(
                     HazeTint(if (p.dark) Color(0x24141E2B) else Color(0x16FFFFFF))
                 ),
@@ -190,6 +197,21 @@ fun NavGlassBottomBar(
                 animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
                 label = "navSingleGlassLens",
             )
+            // Lens travels as clear glass first, then its crisp edge dissolves
+            // into a quiet neutral-grey selected pill, as in MagicOS.
+            // No grey flash BEFORE the lens moves.
+            val matte = remember { Animatable(1f) }
+            var lastSelection by remember { mutableStateOf<Int?>(null) }
+            LaunchedEffect(selected) {
+                if (lastSelection == null) {
+                    matte.snapTo(1f)
+                } else {
+                    matte.snapTo(0f)
+                    delay(245L) // slide duration is 240 ms
+                    matte.animateTo(1f, tween(durationMillis = 245))
+                }
+                lastSelection = selected
+            }
             Canvas(Modifier.matchParentSize()) {
                 val cell = size.width / 4f
                 val inset = 1.dp.toPx()
@@ -197,17 +219,21 @@ fun NavGlassBottomBar(
                 val lensSize = Size(cell - 2f * inset, size.height - 2f * inset)
                 val lensTopLeft = Offset(cell * slide + inset, inset)
                 val lensCorner = CornerRadius(lensSize.height / 2f, lensSize.height / 2f)
+                val settle = matte.value
+                val movingFill = if (p.dark) Color(0x367193A8) else Color(0x24FFFFFF)
+                val restingFill = if (p.dark) Color(0x56616A74) else Color(0x79D2D5D9)
                 drawRoundRect(
-                    color = if (p.dark) Color(0x2C7193A8) else Color(0x14FFFFFF),
+                    color = lerp(movingFill, restingFill, settle),
                     topLeft = lensTopLeft, size = lensSize, cornerRadius = lensCorner,
                 )
+                val edgeOpacity = 1f - 0.79f * settle
                 drawRoundRect(
                     brush = Brush.verticalGradient(
                         listOf(
-                            Color.White.copy(alpha = if (p.dark) 0.49f else 0.86f),
-                            Color.White.copy(alpha = if (p.dark) 0.20f else 0.29f),
+                            Color.White.copy(alpha = (if (p.dark) 0.55f else 0.88f) * edgeOpacity),
+                            Color.White.copy(alpha = (if (p.dark) 0.22f else 0.35f) * edgeOpacity),
                             (if (p.dark) Color(0xFFA9DBF2) else p.blue)
-                                .copy(alpha = if (p.dark) 0.31f else 0.22f),
+                                .copy(alpha = (if (p.dark) 0.35f else 0.25f) * edgeOpacity),
                         ),
                     ),
                     topLeft = lensTopLeft,
@@ -330,11 +356,17 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 }
                 drawPath(path,color, style=Stroke(width=3.1f*s,cap=StrokeCap.Round,join=StrokeJoin.Round))
             }
-            "chevron-down" -> {
+            "chevron-down", "chevron-right" -> {
                 val path = Path().apply {
-                    moveTo(7f*s, 12f*s)
-                    lineTo(15f*s, 19f*s)
-                    lineTo(23f*s, 12f*s)
+                    if (kind == "chevron-down") {
+                        moveTo(7f*s, 12f*s)
+                        lineTo(15f*s, 19f*s)
+                        lineTo(23f*s, 12f*s)
+                    } else {
+                        moveTo(11f*s, 6f*s)
+                        lineTo(19f*s, 15f*s)
+                        lineTo(11f*s, 24f*s)
+                    }
                 }
                 drawPath(path, color, style = Stroke(width = 2.5f*s,
                     cap = StrokeCap.Round, join = StrokeJoin.Round))

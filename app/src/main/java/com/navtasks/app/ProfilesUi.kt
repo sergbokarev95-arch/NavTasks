@@ -86,7 +86,7 @@ fun ProfilesScreen(
                             else localized("Задачи · История · Handover", "Tasks · History · Handover", lang),
                             color = p.muted, fontSize = 12.sp)
                     }
-                    if (current) Text("✓", color = p.mint, fontSize = 20.sp)
+                    if (current) Text("✓", color = p.successText, fontSize = 20.sp)
                     Spacer(Modifier.width(13.dp))
                     Text("✎", color = p.blue, fontSize = 23.sp,
                         modifier = Modifier.glassClickable {
@@ -281,7 +281,7 @@ fun ProfileExchangePanel(
                         text = { Text(item.title, color = p.text, fontSize = 14.sp) },
                         leadingIcon = {
                             if (item.id == selectedId)
-                                Text("✓", color = p.mint, fontSize = 16.sp)
+                                Text("✓", color = p.successText, fontSize = 16.sp)
                             else Spacer(Modifier.width(14.dp))
                         },
                         onClick = {
