@@ -54,8 +54,14 @@ import kotlin.math.PI
 @Composable
 fun NavGlassBackdrop(p: NavPalette) {
     Canvas(Modifier.fillMaxSize()) {
+        // OLED night mode: the backdrop is EXACTLY black everywhere outside
+        // panels. No gradients, glows, or blended blue pixels.
+        if (p.dark) {
+            drawRect(Color.Black)
+            return@Canvas
+        }
         drawRect(Brush.verticalGradient(listOf(p.backgroundEnd, p.background)))
-        val glow = if (p.dark) 0.12f else 0.075f
+        val glow = 0.075f
         val cx = size.width * 0.92f
         val cy = size.height * 0.17f
         val radius = size.width * 0.95f

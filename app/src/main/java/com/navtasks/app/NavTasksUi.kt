@@ -76,7 +76,7 @@ data class NavPalette(
 )
 
 fun navPalette(dark: Boolean) = if (dark) NavPalette(
-    true, Color(0xFF0B182A), Color(0xFF142D49), Color(0xE021344F),
+    true, Color.Black, Color.Black, Color(0xE021344F),
     Color(0xE01A304B), Color(0xE021415E), Color(0xFF36536B),
     Color(0xFFF2F8FF), Color(0xFFAFC4D8), Color(0xFF44C4FF), Color(0xFF68CE77),
 ) else NavPalette(

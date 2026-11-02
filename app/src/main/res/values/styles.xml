@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Android paints this native launch surface BEFORE Compose can read the
-         chosen appearance. Use the dark navy brand background to prevent the
-         previous white flash for users who selected the app's Night mode. -->
+    <!-- A neutral black pre-Compose splash ensures an OLED-black first frame
+         whenever the user selects in-app Night (even if Android is in Day). -->
     <style name="NavTasksLaunchTheme" parent="@android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">#142D49</item>
-        <item name="android:windowSplashScreenBackground">#142D49</item>
-        <item name="android:statusBarColor">#142D49</item>
-        <item name="android:navigationBarColor">#0B182A</item>
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:windowSplashScreenBackground">#000000</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
     </style>
