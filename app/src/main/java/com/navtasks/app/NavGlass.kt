@@ -137,7 +137,11 @@ fun Modifier.navFrostedOverlay(
         .hazeEffect(
             state = hazeState,
             style = HazeStyle(
-                backgroundColor = if (p.dark) Color(0x68172739) else Color(0x74EDF5FA),
+                // Dock glass is neutral in Day mode; the previous icy blue
+                // source tint was showing through the selected capsule.
+                backgroundColor = if (p.dark) Color(0x68172739)
+                    else if (role == GlassRole.NAVIGATION) Color(0x88F3F3F3)
+                    else Color(0x74EDF5FA),
                 blurRadius = 34.dp,
                 tints = listOf(
                     HazeTint(if (p.dark) Color(0x24141E2B) else Color(0x16FFFFFF))
@@ -242,11 +246,12 @@ fun NavGlassBottomBar(
                 // cubic path distorted the top/bottom edges and lost the pill
                 // silhouette during movement, especially in Day mode.
                 val pillHeight = size.height - inset * 2f
+                val pillTop = (size.height - pillHeight) / 2f
                 val pillWidth = cell - inset * 2f + stretch
                 val nominalLeft = cell * slide + inset
                 val pillLeft = (nominalLeft - stretch / 2f)
                     .coerceIn(inset, (size.width - inset - pillWidth).coerceAtLeast(inset))
-                val pillTopLeft = Offset(pillLeft, inset)
+                val pillTopLeft = Offset(pillLeft, pillTop)
                 val pillSize = Size(pillWidth, pillHeight)
                 val pillRadius = CornerRadius(pillHeight / 2f, pillHeight / 2f)
 
@@ -255,10 +260,13 @@ fun NavGlassBottomBar(
                 // thin internal highlight. Only AFTER travel does it fade to
                 // a symmetrical matte-grey resting selection.
                 val settled = matte.value.coerceIn(0f, 1f)
-                val moveTop = if (p.dark) Color(0xA35A8CA9) else Color(0xA9D5EDFA)
-                val moveMid = if (p.dark) Color(0x84507696) else Color(0x93B8D8EA)
-                val moveBottom = if (p.dark) Color(0xA33E647D) else Color(0xA9CAE7F6)
-                val restingFill = if (p.dark) Color(0x89616B77) else Color(0xA4C9D1D9)
+                // Night material stays unchanged. Day uses neutral WHITE/GRAPHITE,
+                // not blue; same translucent lens animation and draw geometry.
+                // Identical top/bottom shades eliminate the weighted lower rim.
+                val moveTop = if (p.dark) Color(0xA35A8CA9) else Color(0xC4FAFAFB)
+                val moveMid = if (p.dark) Color(0x84507696) else Color(0xA9E2E3E5)
+                val moveBottom = if (p.dark) Color(0xA33E647D) else Color(0xC4FAFAFB)
+                val restingFill = if (p.dark) Color(0x89616B77) else Color(0xB2D7D8DA)
                 drawRoundRect(
                     brush = Brush.verticalGradient(
                         listOf(
@@ -273,11 +281,11 @@ fun NavGlassBottomBar(
                 )
 
                 val movingEdgeTop = if (p.dark) Color(0xC7E3F8FF)
-                    else Color(0xF9F7FFFF)
+                    else Color(0xEFFFFFFF)
                 val movingEdgeMid = if (p.dark) Color(0x896AAED0)
-                    else Color(0xD584ABC4)
+                    else Color(0xAC818A94)
                 val restingEdge = if (p.dark) Color(0x547B8998)
-                    else Color(0x8EB0BAC3)
+                    else Color(0x8AA8ACB1)
                 drawRoundRect(
                     brush = Brush.verticalGradient(
                         listOf(
@@ -305,10 +313,10 @@ fun NavGlassBottomBar(
                                     (if (p.dark) 0.34f else 0.44f)),
                                 Color.Transparent,
                                 Color.White.copy(alpha = (1f - settled) *
-                                    (if (p.dark) 0.15f else 0.24f)),
+                                    (if (p.dark) 0.15f else 0.44f)),
                             ),
                         ),
-                        topLeft = Offset(pillLeft + inner, inset + inner),
+                        topLeft = Offset(pillLeft + inner, pillTop + inner),
                         size = Size(innerWidth, innerHeight),
                         cornerRadius = CornerRadius(innerHeight / 2f, innerHeight / 2f),
                         style = Stroke(width = 0.65.dp.toPx()),
