@@ -22,6 +22,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -391,12 +393,16 @@ fun NavPanel(p: NavPalette, modifier: Modifier = Modifier, content: @Composable 
 }
 
 @Composable
-fun RoundCheck(checked: Boolean, p: NavPalette, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun RoundCheck(
+    checked: Boolean, p: NavPalette, onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    interactionSource: MutableInteractionSource? = null,
+) {
     Box(
         modifier.size(29.dp).clip(CircleShape)
             .background(if (checked) p.mint else Color.Transparent)
             .border(2.dp, if (checked) p.mint else p.blue, CircleShape)
-            .glassClickable(onClick = onClick),
+            .glassClickable(interactionSource = interactionSource, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         if (checked) Text("✓", color = if (p.dark) Color(0xFF103F49) else Color.White,
@@ -753,6 +759,15 @@ fun RunTileV2(
     val scope = rememberCoroutineScope()
     val amount by animateFloatAsState(if (exiting) 1f else 0f, tween(330), label = "taskComplete")
     val flash = remember(run.key) { Animatable(0f) }
+    // Only the header's existing action targets drive the card press.
+    // Menu/checklist controls keep their own independent gestures.
+    val headerInteraction = remember(run.key) { MutableInteractionSource() }
+    val headerPressed by headerInteraction.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (headerPressed && !confirming && !exiting) 0.985f else 1f,
+        animationSpec = spring(dampingRatio = 1f, stiffness = 1600f),
+        label = "taskHeaderPress",
+    )
     suspend fun showConfirmation() {
         // Two distinct mint flashes while the circle displays its tick.
         flash.animateTo(1f, tween(140))
@@ -808,6 +823,7 @@ fun RunTileV2(
             translationY = if (amount < 0.32f) -amount / 0.32f * 10.dp.toPx()
                 else -10.dp.toPx() + (amount - 0.32f) / 0.68f * 55.dp.toPx()
             scaleX = 1f + (1f - kotlin.math.abs(amount - 0.4f) / 0.6f).coerceIn(0f, 1f) * 0.045f
+            scaleX *= pressScale
             scaleY = scaleX
         }.navGlass(p, radius = 15.dp,
             role = if (run.checklist.isEmpty()) GlassRole.TASK else GlassRole.NESTED_TASK)
@@ -824,9 +840,9 @@ fun RunTileV2(
             RoundCheck(run.completed || confirming, p, onClick = {
                 if (run.checklist.isNotEmpty()) onToggleExpand()
                 else requestSimpleChange()
-            }, modifier = Modifier.size(27.dp))
+            }, modifier = Modifier.size(27.dp), interactionSource = headerInteraction)
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f).glassClickable {
+            Column(Modifier.weight(1f).glassClickable(interactionSource = headerInteraction) {
                 if (run.checklist.isNotEmpty()) onToggleExpand()
                 else requestSimpleChange()
             }) {

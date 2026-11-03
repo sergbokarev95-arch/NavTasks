@@ -167,9 +167,17 @@ fun Modifier.navFrostedOverlay(
  * Necessary for clear glass: the moving lens is the only visible touch feedback.
  */
 @Composable
-fun Modifier.glassClickable(onClick: () -> Unit): Modifier {
+fun Modifier.glassClickable(onClick: () -> Unit): Modifier =
+    glassClickable(interactionSource = null, onClick = onClick)
+
+/** Optional press observation; click cancellation is still owned by Compose. */
+@Composable
+fun Modifier.glassClickable(
+    interactionSource: MutableInteractionSource?,
+    onClick: () -> Unit,
+): Modifier {
     val view = LocalView.current
-    return this.clickable(interactionSource = null, indication = null) {
+    return this.clickable(interactionSource = interactionSource, indication = null) {
         // Honours the phone's system haptic-feedback setting (no forced vibration).
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
         onClick()
