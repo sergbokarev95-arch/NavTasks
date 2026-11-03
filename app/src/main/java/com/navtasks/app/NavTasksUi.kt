@@ -11,6 +11,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,6 +41,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
@@ -320,17 +322,20 @@ fun NavTasksApp(
                         }
                         AnimatedContent(
                             targetState = tab,
-                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            modifier = Modifier.fillMaxWidth().weight(1f).clipToBounds(),
                             transitionSpec = {
                                 val forward = targetState > initialState
+                                // A short, symmetric move keeps dense task text readable.
+                                // Match the dock's critically damped spring; interrupted
+                                // transitions continue from their current animated values.
                                 (slideInHorizontally(
-                                    initialOffsetX = { if (forward) it else -it },
-                                    animationSpec = tween(230),
-                                ) + fadeIn(tween(170))) togetherWith
+                                    initialOffsetX = { if (forward) it / 5 else -it / 5 },
+                                    animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
+                                ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f))) togetherWith
                                     (slideOutHorizontally(
-                                        targetOffsetX = { if (forward) -it / 4 else it / 4 },
-                                        animationSpec = tween(230),
-                                    ) + fadeOut(tween(170)))
+                                        targetOffsetX = { if (forward) -it / 5 else it / 5 },
+                                        animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
+                                    ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)))
                             },
                             label = "primaryTabSlide",
                         ) { page ->
