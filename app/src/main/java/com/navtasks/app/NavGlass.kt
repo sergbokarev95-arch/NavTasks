@@ -1,12 +1,16 @@
 package com.navtasks.app
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.graphics.graphicsLayer
 import android.view.HapticFeedbackConstants
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.layout.*
@@ -14,11 +18,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,10 +46,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.math.sin
-import kotlin.math.PI
+import kotlin.math.abs
 
 /** Local, lightweight light fields make the translucent layers visibly react to their own backdrop. */
 @Composable
@@ -217,44 +215,33 @@ fun NavGlassBottomBar(
                 // not the old 79% produced by 4dp padding + 2dp inset.
                 .padding(horizontal = 1.dp, vertical = 2.dp),
         ) {
-            // Direct drawing makes one moving lens, without keeping an old composited
-            // layer (the ghost users observed between tabs on some MagicOS devices).
+            // Retarget the live spring, retaining position and velocity on rapid taps.
+            // Draw one lens directly so no stale composited selection is left behind.
+            val target = selected.coerceIn(0, 3).toFloat()
             val slide by animateFloatAsState(
-                targetValue = selected.coerceIn(0, 3).toFloat(),
-                animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
+                targetValue = target,
+                animationSpec = spring(dampingRatio = 1f, stiffness = 550f,
+                    visibilityThreshold = 0.001f),
                 label = "navSingleGlassLens",
             )
-            // Lens travels as clear glass first, then its crisp edge dissolves
-            // into a quiet neutral-grey selected pill, as in MagicOS.
-            // No grey flash BEFORE the lens moves.
-            val matte = remember { Animatable(1f) }
-            // A subtle temporary stretch in the same rounded capsule.
-            val liquidPhase = remember { Animatable(1f) }
-            var lastSelection by remember { mutableStateOf<Int?>(null) }
-            LaunchedEffect(selected) {
-                val fromTab = lastSelection
-                lastSelection = selected
-                if (fromTab == null || fromTab == selected) {
-                    matte.snapTo(1f)
-                    liquidPhase.snapTo(1f)
-                } else {
-                    matte.snapTo(0f)
-                    liquidPhase.snapTo(0f)
-                    launch {
-                        liquidPhase.animateTo(1f, tween(
-                            durationMillis = 325, easing = FastOutSlowInEasing))
-                    }
-                    // The grey selection must never jump ahead of the lens.
-                    delay(245L)
-                    matte.animateTo(1f, tween(durationMillis = 225))
-                }
-            }
+            val moving = abs(slide - target) > 0.015f
+            // Material follows actual travel rather than a timer. Both effects
+            // retarget from their current values instead of flashing back to zero.
+            val matte by animateFloatAsState(
+                targetValue = if (moving) 0f else 1f,
+                animationSpec = spring(dampingRatio = 1f, stiffness = 700f),
+                label = "navLensMatte",
+            )
+            val liquidStretch by animateFloatAsState(
+                targetValue = if (moving) 1f else 0f,
+                animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
+                label = "navLensStretch",
+            )
             Canvas(Modifier.matchParentSize()) {
                 val cell = size.width / 4f
                 val inset = 1.dp.toPx()
-                val phase = liquidPhase.value.coerceIn(0f, 1f)
-                val stretch = sin(phase.toDouble() * PI).toFloat()
-                    .coerceAtLeast(0f) * minOf(10.dp.toPx(), cell * 0.13f)
+                val stretch = liquidStretch.coerceIn(0f, 1f) *
+                    minOf(10.dp.toPx(), cell * 0.13f)
 
                 // Always use a true round rectangle. The previous hand-drawn
                 // cubic path distorted the top/bottom edges and lost the pill
@@ -283,7 +270,7 @@ fun NavGlassBottomBar(
                 // cool translucent material, stronger specular edges, and a
                 // thin internal highlight. Only AFTER travel does it fade to
                 // a symmetrical matte-grey resting selection.
-                val settled = matte.value.coerceIn(0f, 1f)
+                val settled = matte.coerceIn(0f, 1f)
                 // Night material stays unchanged. Day uses neutral WHITE/GRAPHITE,
                 // not blue; same translucent lens animation and draw geometry.
                 // Identical top/bottom shades eliminate the weighted lower rim.
@@ -347,7 +334,7 @@ fun NavGlassBottomBar(
                     )
                 }
             }
-            Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxSize().selectableGroup(), verticalAlignment = Alignment.CenterVertically) {
                 val names = listOf(
                     localized("Сегодня", "Today", lang),
                     localized("План", "Plan", lang),
@@ -356,12 +343,30 @@ fun NavGlassBottomBar(
                 )
                 repeat(4) { index ->
                     val active = selected == index
+                    val interaction = remember { MutableInteractionSource() }
+                    val pressed by interaction.collectIsPressedAsState()
+                    val pressScale by animateFloatAsState(
+                        targetValue = if (pressed) 0.94f else 1f,
+                        animationSpec = spring(dampingRatio = 1f, stiffness = 1600f),
+                        label = "navTabPress",
+                    )
+                    val view = LocalView.current
                     // Strong blue belongs to the glyph and caption, not the glass lens.
                     val activeBlue = if (p.dark) Color(0xFF329CFF) else Color(0xFF087DFA)
                     Column(
                         Modifier.weight(1f).fillMaxHeight()
                             .clip(RoundedCornerShape(21.dp))
-                            .glassClickable { onSelect(index) },
+                            .selectable(
+                                selected = active,
+                                role = Role.Tab,
+                                interactionSource = interaction,
+                                indication = null,
+                            ) {
+                                if (!active) {
+                                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                                    onSelect(index)
+                                }
+                            },
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
@@ -373,7 +378,10 @@ fun NavGlassBottomBar(
                                 else -> "tasks"
                             },
                             color = if (active) activeBlue else p.text.copy(alpha = 0.89f),
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(24.dp).graphicsLayer {
+                                scaleX = pressScale
+                                scaleY = pressScale
+                            },
                         )
                         Spacer(Modifier.height(1.dp))
                         Text(names[index], color = if (active) activeBlue else p.muted, fontSize = 10.sp)
