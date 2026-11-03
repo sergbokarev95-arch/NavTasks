@@ -606,6 +606,11 @@ private fun TodayScreenV2(
                     NavPanel(p) { Text(localized("На этот день всё выполнено ✓", "All done for this day ✓", lang), color = p.successText) }
                 }
                 if (complete.isNotEmpty()) item {
+                    val completedArrow by animateFloatAsState(
+                        targetValue = if (showCompleted) 180f else 0f,
+                        animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
+                        label = "completedArrow",
+                    )
                     Column(Modifier.fillMaxWidth()) {
                         Column(
                             Modifier.fillMaxWidth().navGlass(p, radius = 17.dp, role = GlassRole.PANEL).glassClickable { showCompleted = !showCompleted }
@@ -620,39 +625,50 @@ private fun TodayScreenV2(
                                 Spacer(Modifier.width(9.dp))
                                 NavGlassGlyph(
                                     "chevron-down", p.muted,
-                                    Modifier.size(17.dp).rotate(if (showCompleted) 180f else 0f),
+                                    Modifier.size(17.dp).rotate(completedArrow),
                                 )
                             }
                         }
-                        if (!showCompleted) {
-                            Box(Modifier.fillMaxWidth(0.94f).align(Alignment.CenterHorizontally).height(5.dp)
-                                .background(p.border.copy(alpha = 0.7f), RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)))
-                            Box(Modifier.fillMaxWidth(0.86f).align(Alignment.CenterHorizontally).height(4.dp)
-                                .background(p.border.copy(alpha = 0.45f), RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)))
+                        AnimatedVisibility(
+                            visible = !showCompleted,
+                            enter = expandVertically(
+                                spring(dampingRatio = 1f, stiffness = 550f),
+                                expandFrom = Alignment.Top,
+                            ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
+                            exit = shrinkVertically(
+                                spring(dampingRatio = 1f, stiffness = 550f),
+                                shrinkTowards = Alignment.Top,
+                            ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
+                        ) {
+                            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(Modifier.fillMaxWidth(0.94f).height(5.dp)
+                                    .background(p.border.copy(alpha = 0.7f), RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)))
+                                Box(Modifier.fillMaxWidth(0.86f).height(4.dp)
+                                    .background(p.border.copy(alpha = 0.45f), RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)))
+                            }
                         }
-                        Column(Modifier.padding(top = 7.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            var completedRowIndex = 0
-                            groupTodayByFrequency(complete).forEach { (frequency, duties) ->
-                                AnimatedVisibility(
-                                    visible = showCompleted,
-                                    enter = expandVertically(tween(260)) + fadeIn(tween(250)),
-                                    exit = shrinkVertically(tween(220)) + fadeOut(tween(180)),
-                                ) {
+                        // One height transition for the whole group: no per-row
+                        // delay or empty spacing left by individually hidden rows.
+                        AnimatedVisibility(
+                            visible = showCompleted,
+                            enter = expandVertically(
+                                spring(dampingRatio = 1f, stiffness = 550f),
+                                expandFrom = Alignment.Top,
+                            ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
+                            exit = shrinkVertically(
+                                spring(dampingRatio = 1f, stiffness = 550f),
+                                shrinkTowards = Alignment.Top,
+                            ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
+                        ) {
+                            Column(Modifier.padding(top = 7.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                groupTodayByFrequency(complete).forEach { (frequency, duties) ->
                                     TodayFrequencyHeader(frequency, duties.size, p, lang)
-                                }
-                                duties.forEach { (task, run) ->
-                                    val index = completedRowIndex++
-                                    AnimatedVisibility(showCompleted,
-                                        enter = expandVertically(animationSpec = tween(290, delayMillis = index * 60)) +
-                                            slideInVertically(initialOffsetY = { -(index + 1) * 18 }, animationSpec = tween(290, delayMillis = index * 60)) +
-                                            fadeIn(animationSpec = tween(260, delayMillis = index * 60)),
-                                        exit = shrinkVertically(animationSpec = tween(250)) +
-                                            slideOutVertically(targetOffsetY = { -(index + 1) * 18 }, animationSpec = tween(250)) +
-                                            fadeOut(animationSpec = tween(190)),
-                                    ) {
-                                        RunTileV2(task, run, store, p, lang, expandedRun == run.key,
-                                            onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
-                                            viewingDate = selectedDay, today = currentDay)
+                                    duties.forEach { (task, run) ->
+                                        key(run.key) {
+                                            RunTileV2(task, run, store, p, lang, expandedRun == run.key,
+                                                onToggleExpand = { onExpanded(if (expandedRun == run.key) null else run.key) },
+                                                viewingDate = selectedDay, today = currentDay)
+                                        }
                                     }
                                 }
                             }
@@ -832,8 +848,7 @@ fun RunTileV2(
                     1.dp, otherDayAccent.copy(alpha = 0.58f), RoundedCornerShape(15.dp)
                 ) else Modifier
             )
-            .background(p.mint.copy(alpha = flash.value * 0.36f), RoundedCornerShape(15.dp))
-            .animateContentSize(),
+            .background(p.mint.copy(alpha = flash.value * 0.36f), RoundedCornerShape(15.dp)),
     ) {
         Row(Modifier.padding(start = 11.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically) {
@@ -882,8 +897,18 @@ fun RunTileV2(
                 }
             }
         }
-        AnimatedVisibility(visible = expanded && run.checklist.isNotEmpty(),
-            enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+        // Let this transition alone drive the card height and neighbouring rows.
+        AnimatedVisibility(
+            visible = expanded && run.checklist.isNotEmpty(),
+            enter = expandVertically(
+                spring(dampingRatio = 1f, stiffness = 550f),
+                expandFrom = Alignment.Top,
+            ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
+            exit = shrinkVertically(
+                spring(dampingRatio = 1f, stiffness = 550f),
+                shrinkTowards = Alignment.Top,
+            ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
+        ) {
             Column(Modifier.padding(start = 51.dp, end = 13.dp, bottom = 13.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 HorizontalDivider(color = p.border)
