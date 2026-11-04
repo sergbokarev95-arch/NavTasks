@@ -20,6 +20,8 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
@@ -378,24 +380,12 @@ fun TasksScreenV2(
     // Reset to a closed stack whenever this tab or frequency is opened.
     // Templates and their saved state stay untouched until the user edits them.
     var listExpanded by remember(filter) { mutableStateOf(false) }
-    var rowsMounted by remember(filter) { mutableStateOf(false) }
-    var rowsVisible by remember(filter) { mutableStateOf(false) }
+    val listArrow by animateFloatAsState(
+        targetValue = if (listExpanded) 180f else 0f,
+        animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
+        label = "taskListArrow",
+    )
     val filtered = store.templates.filter { it.frequency == filter }
-    LaunchedEffect(filter, listExpanded) {
-        if (listExpanded) {
-            // Compose the rows initially hidden, then reveal them in sequence.
-            rowsMounted = true
-            delay(32L)
-            rowsVisible = true
-        } else {
-            rowsVisible = false
-            if (rowsMounted) {
-                // Allow each tile its own shrink/slide/fade exit first.
-                delay(455L)
-                rowsMounted = false
-            }
-        }
-    }
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
@@ -445,26 +435,47 @@ fun TasksScreenV2(
                 Spacer(Modifier.width(9.dp))
                 NavGlassGlyph(
                     "chevron-down", p.muted,
-                    Modifier.size(17.dp).rotate(if (listExpanded) 180f else 0f),
+                    Modifier.size(17.dp).rotate(listArrow),
                 )
             }
-            if (!listExpanded && filtered.isNotEmpty()) {
-                Box(
-                    Modifier.fillMaxWidth(0.94f).align(Alignment.CenterHorizontally)
-                        .height(5.dp)
-                        .background(p.border.copy(alpha = 0.50f),
-                            RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)),
-                )
-                Box(
-                    Modifier.fillMaxWidth(0.87f).align(Alignment.CenterHorizontally)
-                        .height(4.dp)
-                        .background(p.border.copy(alpha = 0.32f),
-                            RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)),
-                )
+            AnimatedVisibility(
+                visible = !listExpanded && filtered.isNotEmpty(),
+                enter = expandVertically(
+                    spring(dampingRatio = 1f, stiffness = 550f),
+                    expandFrom = Alignment.Top,
+                ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
+                exit = shrinkVertically(
+                    spring(dampingRatio = 1f, stiffness = 550f),
+                    shrinkTowards = Alignment.Top,
+                ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
+            ) {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        Modifier.fillMaxWidth(0.94f).height(5.dp)
+                            .background(p.border.copy(alpha = 0.50f),
+                                RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)),
+                    )
+                    Box(
+                        Modifier.fillMaxWidth(0.87f).height(4.dp)
+                            .background(p.border.copy(alpha = 0.32f),
+                                RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)),
+                    )
+                }
             }
         }
         Column(Modifier.weight(1f)) {
-            if (rowsMounted) {
+            // Reveal the full list as one group while retaining LazyColumn and item keys.
+            AnimatedVisibility(
+                visible = listExpanded,
+                enter = expandVertically(
+                    spring(dampingRatio = 1f, stiffness = 550f),
+                    expandFrom = Alignment.Top,
+                ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
+                exit = shrinkVertically(
+                    spring(dampingRatio = 1f, stiffness = 550f),
+                    shrinkTowards = Alignment.Top,
+                ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
+            ) {
                 LazyColumn(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
@@ -472,21 +483,7 @@ fun TasksScreenV2(
                     verticalArrangement = Arrangement.spacedBy(9.dp),
                 ) {
                     if (filtered.isEmpty()) item { NavPanel(p) { Text(localized("Задач пока нет", "No tasks yet", lang), color = p.muted) } }
-                    itemsIndexed(filtered, key = { _, item -> item.id }) { index, task ->
-                        Column {
-                        val enterDelay = index.coerceAtMost(7) * 42
-                        val exitDelay = (filtered.lastIndex - index).coerceIn(0, 7) * 26
-                        AnimatedVisibility(
-                            visible = rowsVisible,
-                            enter = expandVertically(tween(300, delayMillis = enterDelay)) +
-                                slideInVertically(initialOffsetY = { -(it / 3) },
-                                    animationSpec = tween(300, delayMillis = enterDelay)) +
-                                fadeIn(tween(240, delayMillis = enterDelay)),
-                            exit = shrinkVertically(tween(235, delayMillis = exitDelay)) +
-                                slideOutVertically(targetOffsetY = { -(it / 4) },
-                                    animationSpec = tween(235, delayMillis = exitDelay)) +
-                                fadeOut(tween(180, delayMillis = exitDelay)),
-                        ) {
+                    itemsIndexed(filtered, key = { _, item -> item.id }) { _, task ->
                             Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp,
                             role = if (task.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
                             .glassClickable { onEdit(task) }
@@ -510,8 +507,6 @@ fun TasksScreenV2(
                             Spacer(Modifier.width(5.dp))
                             NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                             }
-                        }
-                        }
                     }
                 }
             }
@@ -922,7 +917,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.16 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.17 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
