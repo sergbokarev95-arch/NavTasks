@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.border
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import dev.chrisbanes.haze.HazeState
@@ -530,6 +532,8 @@ fun NavGlassInput(
     p: NavPalette,
     placeholder: String = "",
     modifier: Modifier = Modifier,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     BasicTextField(
         value = value,
@@ -537,6 +541,8 @@ fun NavGlassInput(
         modifier = modifier.height(42.dp)
             .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL, elevation = 0.dp),
         singleLine = true,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         textStyle = TextStyle(color = p.text, fontSize = 14.sp),
         cursorBrush = SolidColor(p.blue),
         decorationBox = { input ->

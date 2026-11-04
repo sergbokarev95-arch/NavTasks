@@ -568,7 +568,6 @@ fun TaskEditorScreen(
     var reminder by remember(initial?.id) { mutableIntStateOf(initial?.remindMinutesBefore ?: 60) }
     var checklist by remember(initial?.id) { mutableStateOf(initial?.checklist ?: emptyList()) }
     var editingChecklistNote by remember(initial?.id) { mutableStateOf<String?>(null) }
-    var newItem by remember(initial?.id) { mutableStateOf("") }
     var enabled by remember(initial?.id) { mutableStateOf(initial?.enabled ?: true) }
     val valid = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 && (interval.toIntOrNull() ?: 0) > 0
 
@@ -673,48 +672,19 @@ fun TaskEditorScreen(
                 }
             }
             NavPanel(p) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(localized("Вложенный чек-лист", "Nested checklist", lang), color = p.text,
-                        modifier = Modifier.weight(1f), fontSize = 16.sp)
-                    Text("${checklist.size}", color = p.blue)
-                }
-                Spacer(Modifier.height(8.dp))
-                checklist.forEach { item ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        NavGlassInput(item.title, { value ->
-                            checklist = checklist.map { if (it.id == item.id) it.copy(title = value) else it }
-                        }, p, modifier = Modifier.weight(1f))
-                        Spacer(Modifier.width(6.dp))
-                        ChecklistReferenceButton(p, item.comment.isNotBlank()) {
-                            editingChecklistNote = item.id
+                ChecklistEditorPanel(
+                    items = checklist,
+                    onItemsChange = { updated ->
+                        checklist = updated
+                        if (editingChecklistNote != null &&
+                            updated.none { it.id == editingChecklistNote }) {
+                            editingChecklistNote = null
                         }
-                        TextButton(
-                            onClick = {
-                                if (editingChecklistNote == item.id) editingChecklistNote = null
-                                checklist = checklist.filterNot { it.id == item.id }
-                            },
-                            modifier = Modifier.width(35.dp),
-                        ) {
-                            Text("×", color = p.muted)
-                        }
-                    }
-                    Spacer(Modifier.height(5.dp))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    NavGlassInput(newItem, { newItem = it }, p,
-                        placeholder = localized("Добавить пункт", "Add item", lang), modifier = Modifier.weight(1f))
-                    TextButton(onClick = {
-                        if (newItem.isNotBlank()) { checklist = checklist + CheckItem(title = newItem.trim()); newItem = "" }
-                    }) { Text("+") }
-                }
-                Text(localized(
-                    "Нажми ? у пункта, чтобы сохранить подсказку или текст для журнала. Она останется при каждом повторении задачи.",
-                    "Tap ? beside an item to save its journal wording or reference. The note repeats with the task.",
-                    lang,
-                ), color = p.muted, fontSize = 11.sp)
-                Spacer(Modifier.height(3.dp))
-                Text(localized("Когда все пункты отмечены, задача завершается автоматически.",
-                    "All checked items automatically complete the parent task.", lang), color = p.muted, fontSize = 11.sp)
+                    },
+                    onEditNote = { editingChecklistNote = it },
+                    p = p,
+                    lang = lang,
+                )
             }
             NavPanel(p) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -919,7 +889,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.22 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.23 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
