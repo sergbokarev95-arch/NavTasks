@@ -296,6 +296,12 @@ private fun PlanReadOnlyTile(
     var menuOpen by remember(run.key) { mutableStateOf(false) }
     var deleteDialog by remember(run.key) { mutableStateOf(false) }
     var movingToDate by remember(run.key) { mutableStateOf<LocalDate?>(null) }
+    var pendingScopedMove by remember(run.key) { mutableStateOf<LocalDate?>(null) }
+    fun requestMoveDate(day: LocalDate) {
+        if (day == run.displayDate) return
+        if (canMoveSeries(task, run, day)) pendingScopedMove = day
+        else store.postpone(run.key, day)
+    }
     Row(
         Modifier.fillMaxWidth().navGlass(p, radius = 15.dp,
             role = if (run.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
@@ -336,13 +342,28 @@ private fun PlanReadOnlyTile(
             }
         }
     }
+    pendingScopedMove?.let { newDate ->
+        MoveScopeDialog(
+            p = p, lang = lang, title = task.title,
+            oldDate = run.displayDate, newDate = newDate,
+            onOnlyThis = {
+                pendingScopedMove = null
+                store.postpone(run.key, newDate)
+            },
+            onThisAndFuture = {
+                pendingScopedMove = null
+                store.postponeSeriesFrom(run.key, newDate)
+            },
+            onDismiss = { pendingScopedMove = null },
+        )
+    }
     movingToDate?.let { start ->
         NavDateWheelDialog(
             initial = start, p = p, lang = lang,
             onDismiss = { movingToDate = null },
             onSelected = { selected ->
-                store.postpone(run.key, selected)
                 movingToDate = null
+                requestMoveDate(selected)
             },
         )
     }
@@ -889,7 +910,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.23 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.24 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

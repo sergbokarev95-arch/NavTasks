@@ -768,6 +768,7 @@ fun RunTileV2(
     var openedReferenceId by remember(run.key) { mutableStateOf<String?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     var postponingDate by remember(run.key) { mutableStateOf<LocalDate?>(null) }
+    var pendingScopedMove by remember(run.key) { mutableStateOf<LocalDate?>(null) }
     var closeDialog by remember { mutableStateOf(false) }
     var closeReason by remember { mutableStateOf("") }
     var exiting by remember(run.key) { mutableStateOf(false) }
@@ -838,6 +839,14 @@ fun RunTileV2(
         else applyChecklistChange(id, checking)
     }
     val context = LocalContext.current
+    fun requestMoveDate(target: LocalDate) {
+        if (target == run.displayDate) return
+        if (canMoveSeries(task, run, target)) {
+            pendingScopedMove = target
+        } else {
+            store.postpone(run.key, target)
+        }
+    }
     val shape = RoundedCornerShape(15.dp)
     Column(
         Modifier.fillMaxWidth().graphicsLayer {
@@ -898,7 +907,7 @@ fun RunTileV2(
                     p = p, lang = lang, expanded = menuOpen, available = !run.completed,
                     onDismiss = { menuOpen = false },
                     onPostponeDays = { days ->
-                        store.postpone(run.key, LocalDate.now().plusDays(days))
+                        requestMoveDate(LocalDate.now().plusDays(days))
                     },
                     onChooseDate = { postponingDate = run.displayDate.plusDays(1) },
                     onCloseWithReason = { closeReason = ""; closeDialog = true },
@@ -945,13 +954,28 @@ fun RunTileV2(
             }
         }
     }
+    pendingScopedMove?.let { newDate ->
+        MoveScopeDialog(
+            p = p, lang = lang, title = task.title,
+            oldDate = run.displayDate, newDate = newDate,
+            onOnlyThis = {
+                pendingScopedMove = null
+                store.postpone(run.key, newDate)
+            },
+            onThisAndFuture = {
+                pendingScopedMove = null
+                store.postponeSeriesFrom(run.key, newDate)
+            },
+            onDismiss = { pendingScopedMove = null },
+        )
+    }
     postponingDate?.let { start ->
         NavDateWheelDialog(
             initial = start, p = p, lang = lang,
             onDismiss = { postponingDate = null },
             onSelected = { day ->
-                store.postpone(run.key, day)
                 postponingDate = null
+                requestMoveDate(day)
             },
         )
     }

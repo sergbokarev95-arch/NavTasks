@@ -72,6 +72,34 @@ internal fun checklistReferenceComment(
     return if (sameInTemplate.size == 1) sameInTemplate.single().comment else item.comment
 }
 
+/**
+ * A future calendar rule begins on effectiveFrom but never schedules a new
+ * occurrence before firstDate. Earlier completed dates retain the old rule.
+ */
+data class CalendarScheduleRevision(
+    val effectiveFrom: LocalDate,
+    val firstDate: LocalDate,
+    val dayOfWeek: Int,
+    val dayOfMonth: Int,
+) {
+    fun toJson(): JSONObject = JSONObject()
+        .put("effectiveFrom", effectiveFrom.toString())
+        .put("firstDate", firstDate.toString())
+        .put("dayOfWeek", dayOfWeek)
+        .put("dayOfMonth", dayOfMonth)
+
+    companion object {
+        fun fromJson(json: JSONObject): CalendarScheduleRevision? = runCatching {
+            CalendarScheduleRevision(
+                effectiveFrom = LocalDate.parse(json.getString("effectiveFrom")),
+                firstDate = LocalDate.parse(json.getString("firstDate")),
+                dayOfWeek = json.optInt("dayOfWeek", 1).coerceIn(1, 7),
+                dayOfMonth = json.optInt("dayOfMonth", 1).coerceIn(1, 31),
+            )
+        }.getOrNull()
+    }
+}
+
 data class TaskTemplate(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
@@ -88,6 +116,7 @@ data class TaskTemplate(
     val remindMinutesBefore: Int = 60,
     val checklist: List<CheckItem> = emptyList(),
     val enabled: Boolean = true,
+    val calendarRevisions: List<CalendarScheduleRevision> = emptyList(),
 ) {
     fun toJson() = JSONObject()
         .put("id", id)
@@ -105,6 +134,9 @@ data class TaskTemplate(
         .put("remindMinutesBefore", remindMinutesBefore)
         .put("enabled", enabled)
         .put("checklist", JSONArray().apply { checklist.forEach { put(it.toJson()) } })
+        .put("calendarRevisions", JSONArray().apply {
+            calendarRevisions.forEach { put(it.toJson()) }
+        })
 
     companion object {
         inline fun <reified T : Enum<T>> enumOrDefault(value: String, fallback: T): T =
@@ -112,6 +144,7 @@ data class TaskTemplate(
 
         fun fromJson(json: JSONObject): TaskTemplate {
             val list = json.optJSONArray("checklist") ?: JSONArray()
+            val revisions = json.optJSONArray("calendarRevisions") ?: JSONArray()
             return TaskTemplate(
                 id = json.optString("id", UUID.randomUUID().toString()),
                 title = json.optString("title"),
@@ -128,6 +161,9 @@ data class TaskTemplate(
                 remindMinutesBefore = json.optInt("remindMinutesBefore", 60).coerceAtLeast(0),
                 enabled = json.optBoolean("enabled", true),
                 checklist = (0 until list.length()).mapNotNull { list.optJSONObject(it)?.let(CheckItem::fromJson) },
+                calendarRevisions = (0 until revisions.length())
+                    .mapNotNull { revisions.optJSONObject(it)?.let(CalendarScheduleRevision::fromJson) }
+                    .sortedBy { it.effectiveFrom },
             )
         }
     }
@@ -185,31 +221,65 @@ data class TaskRun(
 
 /** Pure calendar calculations. Local dates use the phone's system time zone. */
 object TaskSchedule {
+    private fun activeRevision(task: TaskTemplate, date: LocalDate): CalendarScheduleRevision? =
+        task.calendarRevisions.filter { !it.effectiveFrom.isAfter(date) }
+            .maxByOrNull { it.effectiveFrom }
+
     fun isCalendarDue(task: TaskTemplate, date: LocalDate): Boolean {
         if (!task.enabled || date.isBefore(task.startDate)) return false
+        val revision = activeRevision(task, date)
+        if (revision != null && date.isBefore(revision.firstDate)) return false
+        val first = revision?.firstDate ?: task.startDate
+        if (date.isBefore(first)) return false
+        val weekday = revision?.dayOfWeek ?: task.dayOfWeek
+        val monthDay = revision?.dayOfMonth ?: task.dayOfMonth
         return when (task.frequency) {
             Frequency.DAILY -> true
-            Frequency.WEEKLY -> date.dayOfWeek.value == task.dayOfWeek
-            Frequency.MONTHLY -> date.dayOfMonth == minOf(task.dayOfMonth, date.lengthOfMonth())
+            Frequency.WEEKLY -> date.dayOfWeek.value == weekday
+            Frequency.MONTHLY -> date.dayOfMonth == minOf(monthDay, date.lengthOfMonth())
             Frequency.EXTRA -> date == task.startDate
         }
     }
 
-    fun nextCalendarDate(task: TaskTemplate, from: LocalDate): LocalDate? {
-        val date = maxOf(from, task.startDate)
+    private fun nextOnRule(
+        task: TaskTemplate,
+        start: LocalDate,
+        rule: CalendarScheduleRevision?,
+    ): LocalDate? {
+        val first = rule?.firstDate ?: task.startDate
+        val cursor = maxOf(start, first)
+        val weekday = rule?.dayOfWeek ?: task.dayOfWeek
+        val monthDay = rule?.dayOfMonth ?: task.dayOfMonth
         return when (task.frequency) {
-            Frequency.DAILY -> date
-            Frequency.WEEKLY -> date.with(TemporalAdjusters.nextOrSame(DayOfWeek.of(task.dayOfWeek)))
+            Frequency.DAILY -> cursor
+            Frequency.WEEKLY -> cursor.with(TemporalAdjusters.nextOrSame(DayOfWeek.of(weekday)))
             Frequency.MONTHLY -> {
-                val thisMonth = YearMonth.from(date)
-                val candidate = thisMonth.atDay(minOf(task.dayOfMonth, thisMonth.lengthOfMonth()))
-                if (!candidate.isBefore(date)) candidate else {
-                    val next = thisMonth.plusMonths(1)
-                    next.atDay(minOf(task.dayOfMonth, next.lengthOfMonth()))
+                val ym = YearMonth.from(cursor)
+                val candidate = ym.atDay(minOf(monthDay, ym.lengthOfMonth()))
+                if (!candidate.isBefore(cursor)) candidate else {
+                    val next = ym.plusMonths(1)
+                    next.atDay(minOf(monthDay, next.lengthOfMonth()))
                 }
             }
-            Frequency.EXTRA -> task.startDate.takeUnless { it.isBefore(from) }
+            Frequency.EXTRA -> task.startDate.takeUnless { it.isBefore(start) }
         }
+    }
+
+    fun nextCalendarDate(task: TaskTemplate, from: LocalDate): LocalDate? {
+        // Walk the finite schedule segments instead of scanning individual days.
+        val revisions = task.calendarRevisions.sortedBy { it.effectiveFrom }
+        var cursor = maxOf(from, task.startDate)
+        for (segment in 0..revisions.size) {
+            val rule = activeRevision(task, cursor)
+            val candidate = nextOnRule(task, cursor, rule)
+            val boundary = revisions.firstOrNull { it.effectiveFrom.isAfter(cursor) }?.effectiveFrom
+            if (candidate != null && (boundary == null || candidate.isBefore(boundary))) {
+                return candidate
+            }
+            if (boundary == null) return null
+            cursor = boundary
+        }
+        return null
     }
 
     fun nextAfterCompletion(task: TaskTemplate, completedOn: LocalDate?): LocalDate {

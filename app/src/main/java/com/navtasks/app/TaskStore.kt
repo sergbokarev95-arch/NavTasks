@@ -202,6 +202,24 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
         syncOutputs()
     }
 
+    /**
+     * Reschedule this occurrence and the remaining calendar series.
+     * Completed history and unrelated templates are preserved.
+     */
+    fun postponeSeriesFrom(runKey: String, newDate: LocalDate): Boolean {
+        val selected = runs[runKey] ?: return false
+        val task = templates.firstOrNull { it.id == selected.taskId } ?: return false
+        val result = scopedCalendarMove(task, runs, selected, newDate) ?: return false
+
+        templates = templates.map { if (it.id == task.id) result.template else it }
+        saveTemplates(templates)
+        runs = result.runs
+        persistRuns()
+        refresh()
+        syncOutputs()
+        return true
+    }
+
     private fun materializeSingleDay(day: LocalDate) {
         val updated = runs.toMutableMap()
         for (task in templates.filter { it.scheduleMode == ScheduleMode.CALENDAR }) {
