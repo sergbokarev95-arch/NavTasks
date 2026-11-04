@@ -2,7 +2,9 @@ package com.navtasks.app
 
 import java.time.LocalDate
 
-/** Only calendar-based Daily / Weekly / Monthly series are handled here. */
+/** Only calendar-based Daily / Weekly / Monthly series are handled here.
+ * One-off and after-completion schedules must not be converted by this path.
+ */
 internal data class FrequencyChangePreview(
     val referenceDate: LocalDate,
     val selectedRun: TaskRun,
