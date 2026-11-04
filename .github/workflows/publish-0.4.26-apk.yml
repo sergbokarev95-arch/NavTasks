@@ -1,0 +1,41 @@
+name: Publish NavTasks Glass 0.4.26 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.26-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download successfully tested APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          gh run download 41883299866 --repo "${{ github.repository }}" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          echo "3e45bbabed20a052af4954c7b0b89ce86eeffe73676c192e285d029369e62c56  upload/app-debug.apk" | sha256sum -c -
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.26_Beta.apk
+
+      - name: Publish direct APK GitHub Release link
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.26-glass-beta \
+            upload/NavTasks_Glass_0.4.26_Beta.apk \
+            --repo "${{ github.repository }}" \
+            --target 7fe97886d0ccb629c1b785b51684d8278751bafa \
+            --prerelease \
+            --title "NavTasks Glass 0.4.26 Beta" \
+            --notes "APK 0.4.26, compiled and unit-tested in GitHub Actions run 41883299866. Calendar frequency edits can apply to just one occurrence or to this and all future occurrences. Install over the previous beta without deleting app data."
