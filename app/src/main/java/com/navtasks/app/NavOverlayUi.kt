@@ -50,10 +50,10 @@ fun NavPopoverMenu(
 fun NavPopoverAction(
     label: String,
     p: NavPalette,
-    onClick: () -> Unit,
     destructive: Boolean = false,
     selected: Boolean = false,
     enabled: Boolean = true,
+    onClick: () -> Unit,
 ) {
     DropdownMenuItem(
         text = {
