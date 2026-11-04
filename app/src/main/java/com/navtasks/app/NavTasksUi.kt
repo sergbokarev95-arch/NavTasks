@@ -784,6 +784,12 @@ fun RunTileV2(
         animationSpec = spring(dampingRatio = 1f, stiffness = 1600f),
         label = "taskHeaderPress",
     )
+    // Checklist headers disclose child items; completion stays on the child checks.
+    val disclosureRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
+        label = "checklistDisclosure",
+    )
     suspend fun showConfirmation() {
         // Two distinct mint flashes while the circle displays its tick.
         flash.animateTo(1f, tween(140))
@@ -852,10 +858,23 @@ fun RunTileV2(
     ) {
         Row(Modifier.padding(start = 11.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            RoundCheck(run.completed || confirming, p, onClick = {
-                if (run.checklist.isNotEmpty()) onToggleExpand()
-                else requestSimpleChange()
-            }, modifier = Modifier.size(27.dp), interactionSource = headerInteraction)
+            if (run.checklist.isNotEmpty()) {
+                Box(
+                    Modifier.size(29.dp).clip(CircleShape)
+                        .glassClickable(interactionSource = headerInteraction, onClick = onToggleExpand),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    NavGlassGlyph(
+                        "chevron-down",
+                        if (run.completed) p.muted else p.blue,
+                        Modifier.size(22.dp).rotate(disclosureRotation),
+                    )
+                }
+            } else {
+                RoundCheck(run.completed || confirming, p,
+                    onClick = ::requestSimpleChange,
+                    modifier = Modifier.size(27.dp), interactionSource = headerInteraction)
+            }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f).glassClickable(interactionSource = headerInteraction) {
                 if (run.checklist.isNotEmpty()) onToggleExpand()
