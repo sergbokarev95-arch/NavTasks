@@ -220,6 +220,27 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
         return true
     }
 
+    /**
+     * Atomic edit of calendar weekday / month day with an explicit scope.
+     * The original template and run keys remain available for historical dates.
+     */
+    fun applyCalendarDayEdit(
+        edited: TaskTemplate,
+        scope: CalendarEditScope,
+        today: LocalDate = LocalDate.now(),
+    ): Boolean {
+        require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
+        val original = templates.firstOrNull { it.id == edited.id } ?: return false
+        val result = editCalendarDayScoped(original, edited, runs, scope, today) ?: return false
+        templates = templates.map { if (it.id == edited.id) result.template else it }
+        runs = result.runs
+        saveTemplates(templates)
+        persistRuns()
+        refresh(today)
+        syncOutputs()
+        return true
+    }
+
     private fun materializeSingleDay(day: LocalDate) {
         val updated = runs.toMutableMap()
         for (task in templates.filter { it.scheduleMode == ScheduleMode.CALENDAR }) {

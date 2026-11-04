@@ -256,6 +256,7 @@ fun NavTasksApp(
             if (editorOpen) {
                 TaskEditorScreen(
                     initial = editorTask, defaultFrequency = templateFilter, lang = lang, palette = palette,
+                    store = store,
                     onBack = { editorOpen = false },
                     onSave = { store.upsert(it); editorOpen = false },
                 )
