@@ -116,12 +116,9 @@ private fun WheelDialogShell(
     onConfirm: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val shape = RoundedCornerShape(23.dp)
     Dialog(onDismissRequest = onDismiss) {
         Column(
-            Modifier.fillMaxWidth().clip(shape)
-                .background(if (p.dark) Color(0xF71B2C3F) else Color(0xF9F7FAFD), shape)
-                .border(1.dp, p.border.copy(alpha = 0.85f), shape)
+            Modifier.fillMaxWidth().navDialogSurface(p)
                 .padding(15.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

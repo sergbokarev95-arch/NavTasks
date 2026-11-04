@@ -222,12 +222,10 @@ private fun ServiceEditorDialog(
     var alert by remember(existing?.id) { mutableIntStateOf(existing?.remindMonths ?: 0) }
     var error by remember { mutableStateOf<String?>(null) }
     var pickingDate by remember(existing?.id) { mutableStateOf<String?>(null) }
-    val shape = RoundedCornerShape(23.dp)
     Dialog(onDismissRequest = onDismiss) {
         Column(
-            Modifier.fillMaxWidth().clip(shape)
-                .background(if (p.dark) Color(0xF61B2C3F) else Color(0xF9F7FAFD), shape)
-                .border(1.dp, p.border, shape).padding(16.dp),
+            Modifier.fillMaxWidth().navDialogSurface(p)
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
             Text(if (existing == null) localized("Новый сервис", "New service", lang)
@@ -458,11 +456,9 @@ private fun ServiceConfirmDialog(
     p: NavPalette, title: String, detail: String, lang: UiLanguage,
     onDismiss: () -> Unit, onConfirmed: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(23.dp)
     Dialog(onDismissRequest = onDismiss) {
-        Column(Modifier.fillMaxWidth().clip(shape)
-            .background(if (p.dark) Color(0xF61B2C3F) else Color(0xF9F7FAFD), shape)
-            .border(1.dp, p.border, shape).padding(18.dp),
+        Column(Modifier.fillMaxWidth().navDialogSurface(p)
+            .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(title, color = p.text, fontSize = 20.sp)
             Text(detail, color = p.muted, fontSize = 14.sp)

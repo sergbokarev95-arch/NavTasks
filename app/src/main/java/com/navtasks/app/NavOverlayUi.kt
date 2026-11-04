@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -83,6 +84,17 @@ fun NavPopoverDivider(p: NavPalette) {
     )
 }
 
+/** Consistent neutral glass surface for all modal dialogs. Content/layout stays in each caller. */
+fun Modifier.navDialogSurface(p: NavPalette, radius: Dp = 24.dp): Modifier {
+    val shape = RoundedCornerShape(radius)
+    return clip(shape)
+        .background(if (p.dark) Color(0xF42A2D32) else Color(0xFAF8FAFD), shape)
+        .border(1.dp,
+            if (p.dark) Color.White.copy(alpha = 0.19f)
+            else Color(0xFFB8C6D2).copy(alpha = 0.68f),
+            shape)
+}
+
 /** Neutral glass confirmation dialog; callbacks and validation remain in callers. */
 @Composable
 fun NavGlassAlertDialog(
@@ -93,21 +105,10 @@ fun NavGlassAlertDialog(
     confirmButton: @Composable () -> Unit,
     dismissButton: @Composable () -> Unit = {},
 ) {
-    val shape = RoundedCornerShape(25.dp)
     Dialog(onDismissRequest = onDismissRequest) {
         Column(
             Modifier.fillMaxWidth().widthIn(max = 420.dp)
-                .clip(shape)
-                .background(
-                    if (p.dark) Color(0xF42A2D32) else Color(0xFAF8FAFD),
-                    shape,
-                )
-                .border(
-                    1.dp,
-                    if (p.dark) Color.White.copy(alpha = 0.19f)
-                    else Color(0xFFB8C6D2).copy(alpha = 0.68f),
-                    shape,
-                )
+                .navDialogSurface(p)
                 .padding(horizontal = 20.dp, vertical = 19.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {

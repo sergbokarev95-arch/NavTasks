@@ -975,17 +975,7 @@ fun RunTileV2(
         Dialog(onDismissRequest = { pendingChange = null }) {
             Column(
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(23.dp))
-                    .background(
-                        if (p.dark) Color(0xF51B2C3F) else Color(0xF6F7FAFD),
-                        RoundedCornerShape(23.dp),
-                    )
-                    .border(
-                        1.dp,
-                        if (p.dark) Color.White.copy(alpha = 0.30f)
-                        else Color(0xFFB8D3E4).copy(alpha = 0.75f),
-                        RoundedCornerShape(23.dp),
-                    )
+                    .navDialogSurface(p)
                     .padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(13.dp),
             ) {

@@ -58,19 +58,10 @@ fun ChecklistReferenceDialog(
     var draft by remember(title, note) { mutableStateOf(note) }
     var copied by remember(title, note) { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
-    val shape = RoundedCornerShape(24.dp)
-
     Dialog(onDismissRequest = onDismiss) {
         Column(
             Modifier.fillMaxWidth()
-                .clip(shape)
-                .background(if (p.dark) Color(0xF51B2C3F) else Color(0xF7F8FBFE), shape)
-                .border(
-                    1.dp,
-                    if (p.dark) Color.White.copy(alpha = 0.28f)
-                    else Color(0xFFB8D3E4).copy(alpha = 0.72f),
-                    shape,
-                )
+                .navDialogSurface(p)
                 .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
