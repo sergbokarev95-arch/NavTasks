@@ -894,26 +894,6 @@ fun RunTileV2(
             Box {
                 Text("⋯", color = p.muted, fontSize = 20.sp,
                     modifier = Modifier.clip(CircleShape).glassClickable { menuOpen = true }.padding(6.dp))
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    if (!run.completed) {
-                    listOf(
-                        1L to localized("Завтра", "Tomorrow", lang),
-                        3L to localized("Через 3 дня", "+3 days", lang),
-                        7L to localized("Через неделю", "Next week", lang),
-                    ).forEach { (days, label) ->
-                        DropdownMenuItem(text = { Text(label) }, onClick = {
-                            menuOpen = false
-                            store.postpone(run.key, LocalDate.now().plusDays(days))
-                        })
-                    }
-                    DropdownMenuItem(text = { Text(localized("Выбрать дату…", "Choose date…", lang)) }, onClick = {
-                        menuOpen = false
-                        postponingDate = run.displayDate.plusDays(1)
-                    })
-                    DropdownMenuItem(text = { Text(localized("Закрыть с причиной…", "Close with reason…", lang)) },
-                        onClick = { menuOpen = false; closeReason = ""; closeDialog = true })
-                    }
-                }
             }
         }
         // Let this transition alone drive the card height and neighbouring rows.
@@ -955,6 +935,15 @@ fun RunTileV2(
                 }
             }
         }
+    }
+    if (menuOpen) {
+        RunTaskActionSheet(
+            p = p, lang = lang, taskTitle = task.title, available = !run.completed,
+            onDismiss = { menuOpen = false },
+            onPostponeDays = { days -> store.postpone(run.key, LocalDate.now().plusDays(days)) },
+            onChooseDate = { postponingDate = run.displayDate.plusDays(1) },
+            onCloseWithReason = { closeReason = ""; closeDialog = true },
+        )
     }
     postponingDate?.let { start ->
         NavDateWheelDialog(

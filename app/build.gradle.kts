@@ -15,8 +15,8 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 41
-        versionName = "0.4.19"
+        versionCode = 42
+        versionName = "0.4.20"
     }
 
     signingConfigs {
