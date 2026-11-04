@@ -224,7 +224,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
      * Atomic edit of calendar weekday / month day with an explicit scope.
      * The original template and run keys remain available for historical dates.
      */
-    fun applyCalendarDayEdit(
+    internal fun applyCalendarDayEdit(
         edited: TaskTemplate,
         scope: CalendarEditScope,
         today: LocalDate = LocalDate.now(),
