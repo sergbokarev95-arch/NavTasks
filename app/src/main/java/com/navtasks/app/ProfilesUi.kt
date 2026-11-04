@@ -117,7 +117,7 @@ fun ProfilesScreen(
 
     if (createOpen || editing != null) {
         val editingId = editing
-        AlertDialog(
+        NavGlassAlertDialog(p = p, 
             onDismissRequest = { createOpen = false; editing = null },
             title = { Text(if (editingId == null)
                 localized("Новое судно", "New vessel", lang)
@@ -148,7 +148,7 @@ fun ProfilesScreen(
         )
     }
     deleteTarget?.let { victim ->
-        AlertDialog(
+        NavGlassAlertDialog(p = p, 
             onDismissRequest = { deleteTarget = null },
             title = { Text(localized("Удалить профиль?", "Delete profile?", lang)) },
             text = { Text(localized(
@@ -269,12 +269,9 @@ fun ProfileExchangePanel(
                 Spacer(Modifier.width(8.dp))
                 NavGlassGlyph("chevron-down", p.blue, Modifier.size(17.dp))
             }
-            DropdownMenu(
+            NavPopoverMenu(p = p, 
                 expanded = selectorExpanded,
                 onDismissRequest = { selectorExpanded = false },
-                modifier = Modifier.background(
-                    if (p.dark) Color(0xFF203348) else Color(0xFFF3F8FC),
-                ),
             ) {
                 profiles.profiles.forEach { item ->
                     DropdownMenuItem(
@@ -338,7 +335,7 @@ fun ProfileExchangePanel(
             fontSize = 12.sp) }
     }
     deleteTarget?.let { victim ->
-        AlertDialog(
+        NavGlassAlertDialog(p = p, 
             onDismissRequest = { deleteTarget = null },
             title = { Text(localized("Удалить профиль «" + victim.title + "»?",
                 "Delete profile " + victim.title + "?", lang)) },
@@ -379,7 +376,7 @@ fun ProfileExchangePanel(
     pending?.let { incoming ->
         val matched = profiles.findMatch(incoming.profile)
         val title = incoming.profile.title
-        AlertDialog(
+        NavGlassAlertDialog(p = p, 
             onDismissRequest = { pending = null },
             title = { Text(if (matched == null)
                 localized("Импортировать профиль?", "Import profile?", lang)

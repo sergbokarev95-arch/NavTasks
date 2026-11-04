@@ -319,7 +319,7 @@ private fun PlanReadOnlyTile(
         Box {
             Text("⋯", color = p.blue, fontSize = 22.sp,
                 modifier = Modifier.glassClickable { menuOpen = true }.padding(horizontal = 9.dp, vertical = 6.dp))
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            NavPopoverMenu(p = p, expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(text = { Text(localized("Редактировать", "Edit", lang)) }, onClick = {
                     menuOpen = false
                     onEdit(task)
@@ -346,7 +346,7 @@ private fun PlanReadOnlyTile(
             },
         )
     }
-    if (deleteDialog) AlertDialog(
+    if (deleteDialog) NavGlassAlertDialog(p = p, 
         onDismissRequest = { deleteDialog = false },
         title = { Text(localized("Убрать задачу из календаря?", "Remove this task from the calendar?", lang)) },
         text = { Text(localized("Удаляется только это выполнение. Шаблон повторяющейся задачи останется.",
@@ -919,7 +919,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.20 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.21 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
@@ -927,7 +927,7 @@ fun SettingsScreen(
     }
     pendingImport?.let { imported ->
         val newCount = NavTaskTransfer.countNew(store.templates, imported)
-        AlertDialog(
+        NavGlassAlertDialog(p = p, 
             onDismissRequest = { pendingImport = null },
             title = { Text(localized("Импорт задач", "Import tasks", lang)) },
             text = {

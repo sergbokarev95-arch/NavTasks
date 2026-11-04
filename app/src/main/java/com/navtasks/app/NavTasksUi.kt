@@ -894,6 +894,15 @@ fun RunTileV2(
             Box {
                 Text("⋯", color = p.muted, fontSize = 20.sp,
                     modifier = Modifier.clip(CircleShape).glassClickable { menuOpen = true }.padding(6.dp))
+                RunTaskPopover(
+                    p = p, lang = lang, expanded = menuOpen, available = !run.completed,
+                    onDismiss = { menuOpen = false },
+                    onPostponeDays = { days ->
+                        store.postpone(run.key, LocalDate.now().plusDays(days))
+                    },
+                    onChooseDate = { postponingDate = run.displayDate.plusDays(1) },
+                    onCloseWithReason = { closeReason = ""; closeDialog = true },
+                )
             }
         }
         // Let this transition alone drive the card height and neighbouring rows.
@@ -935,15 +944,6 @@ fun RunTileV2(
                 }
             }
         }
-    }
-    if (menuOpen) {
-        RunTaskActionSheet(
-            p = p, lang = lang, taskTitle = task.title, available = !run.completed,
-            onDismiss = { menuOpen = false },
-            onPostponeDays = { days -> store.postpone(run.key, LocalDate.now().plusDays(days)) },
-            onChooseDate = { postponingDate = run.displayDate.plusDays(1) },
-            onCloseWithReason = { closeReason = ""; closeDialog = true },
-        )
     }
     postponingDate?.let { start ->
         NavDateWheelDialog(
@@ -1031,7 +1031,8 @@ fun RunTileV2(
         }
     }
     if (closeDialog) {
-        AlertDialog(
+        NavGlassAlertDialog(
+            p = p,
             onDismissRequest = { closeDialog = false },
             title = { Text(localized("Закрыть задачу", "Close task", lang)) },
             text = {
