@@ -70,15 +70,28 @@ internal fun calendarDayEditPreview(
     val onToday = eligible.filter { it.displayDate == today }
         .minWithOrNull(compareBy<TaskRun> { if (it.dueDate == today) 0 else 1 }
             .thenBy { it.dueDate })
-    val nextScheduledDate = TaskSchedule.nextCalendarDate(original, today)
-    val scheduled = nextScheduledDate?.let { due ->
+    // Today may already be completed or explicitly removed. Find the NEXT
+    // unfinished scheduled occurrence instead of editing the completed one.
+    var nextDue = TaskSchedule.nextCalendarDate(original, today)
+    var scheduled: TaskRun? = null
+    var attempts = 0
+    while (scheduled == null && nextDue != null && attempts < 120) {
+        attempts++
+        val due = nextDue ?: break
         val key = original.id + "@" + due
-        existing[key]?.takeIf { !it.completed && !it.skipped }
-            ?: if (key !in existing) TaskRun(original.id, due, original.checklist)
-                else null
+        val saved = existing[key]
+        if (saved == null) {
+            scheduled = TaskRun(original.id, due, original.checklist)
+        } else if (!saved.completed && !saved.skipped &&
+            !saved.displayDate.isBefore(today)) {
+            scheduled = saved
+        }
+        if (scheduled == null) {
+            nextDue = TaskSchedule.nextCalendarDate(original, due.plusDays(1))
+        }
     }
-    val selected = onToday ?: scheduled ?: eligible.minByOrNull { it.displayDate }
-        ?: return null
+    val selected = onToday ?: listOfNotNull(scheduled, eligible.minByOrNull { it.displayDate })
+        .minByOrNull { it.displayDate } ?: return null
 
     return CalendarDayEditPreview(today, selected, targetDate)
 }

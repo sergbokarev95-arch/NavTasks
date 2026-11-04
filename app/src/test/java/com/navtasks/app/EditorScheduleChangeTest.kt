@@ -157,4 +157,28 @@ class EditorScheduleChangeTest {
         assertTrue(TaskSchedule.isCalendarDue(change.template, day("2026-11-06")))
     }
 
+    @Test fun completedTodayWithoutMaterializedNextWeekKeepsTodayAndMovesNextWeek() {
+        val old = weeklyTask()
+        val today = day("2026-11-02")
+        val complete = TaskRun(old.id, today, emptyList(), completed = true)
+        val runs = mapOf(complete.key to complete)
+        val edited = old.copy(dayOfWeek = 4)
+        val preview = calendarDayEditPreview(old, edited, runs, today)!!
+        assertEquals(day("2026-11-09"), preview.selectedRun.dueDate)
+        assertEquals(day("2026-11-05"), preview.newDate)
+        val result = editCalendarDayScoped(old, edited, runs,
+            CalendarEditScope.THIS_AND_FUTURE, today)!!
+        assertSame(complete, result.runs[complete.key])
+        assertEquals(day("2026-11-05"), result.runs["gmdss@2026-11-05"]?.dueDate)
+    }
+
+    @Test fun skippedCurrentOccurrenceIsNotResurrectedByEdit() {
+        val old = weeklyTask()
+        val today = day("2026-11-02")
+        val skipped = TaskRun(old.id, today, emptyList(), skipped = true)
+        val preview = calendarDayEditPreview(old, old.copy(dayOfWeek = 4),
+            mapOf(skipped.key to skipped), today)!!
+        assertEquals(day("2026-11-09"), preview.selectedRun.dueDate)
+    }
+
 }
