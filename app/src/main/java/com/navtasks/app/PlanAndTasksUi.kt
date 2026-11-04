@@ -235,9 +235,11 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                         !inMonth -> p.muted.copy(alpha = 0.52f)
                                         else -> p.text
                                     }, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal, fontSize = 14.sp)
-                                    if (status != CalendarDayState.EMPTY) {
+                                    // Calendar markers show outcomes only, not ordinary scheduled days.
+                                    // This removes distracting blue dots without changing day status logic.
+                                    if (status != CalendarDayState.EMPTY && status != CalendarDayState.SCHEDULED) {
                                         Box(Modifier.padding(top = 4.dp).size(5.dp)
-                                            .background(if (isToday) (if (p.dark) Color(0xFF092C43) else p.blue) else statusColor.copy(alpha = if (inMonth) 1f else 0.45f), CircleShape))
+                                            .background(statusColor.copy(alpha = if (inMonth) 1f else 0.45f), CircleShape))
                                     }
                                 }
                             }
@@ -917,7 +919,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.17 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.18 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
