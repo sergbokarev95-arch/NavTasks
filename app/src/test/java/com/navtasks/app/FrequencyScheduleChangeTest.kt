@@ -163,7 +163,9 @@ class FrequencyScheduleChangeTest {
         assertEquals(Frequency.MONTHLY,
             TaskSchedule.effectiveFrequency(second.template, date("2026-11-13")))
         assertTrue(TaskSchedule.isCalendarDue(second.template, date("2026-11-13")))
-        assertFalse(TaskSchedule.isCalendarDue(second.template, date("2026-11-09")))
+        // November 9 predates the later edit and must remain under the old rule.
+        assertTrue(TaskSchedule.isCalendarDue(second.template, date("2026-11-09")))
+        assertFalse(TaskSchedule.isCalendarDue(second.template, date("2026-11-12")))
     }
 
     @Test fun todayGroupingUsesSingleOccurrenceCategoryOverride() {
