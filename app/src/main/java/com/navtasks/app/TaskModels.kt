@@ -81,12 +81,15 @@ data class CalendarScheduleRevision(
     val firstDate: LocalDate,
     val dayOfWeek: Int,
     val dayOfMonth: Int,
+    /** Null for historical revisions written before frequency-change support. */
+    val frequency: Frequency? = null,
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("effectiveFrom", effectiveFrom.toString())
         .put("firstDate", firstDate.toString())
         .put("dayOfWeek", dayOfWeek)
         .put("dayOfMonth", dayOfMonth)
+        .put("frequency", frequency?.name ?: "")
 
     companion object {
         fun fromJson(json: JSONObject): CalendarScheduleRevision? = runCatching {
@@ -95,6 +98,9 @@ data class CalendarScheduleRevision(
                 firstDate = LocalDate.parse(json.getString("firstDate")),
                 dayOfWeek = json.optInt("dayOfWeek", 1).coerceIn(1, 7),
                 dayOfMonth = json.optInt("dayOfMonth", 1).coerceIn(1, 31),
+                frequency = Frequency.entries.firstOrNull {
+                    it.name == json.optString("frequency")
+                },
             )
         }.getOrNull()
     }
@@ -182,6 +188,8 @@ data class TaskRun(
     val postponedTo: LocalDate? = null,
     val autoTransferred: Boolean = false,
     val closedReason: String? = null,
+    /** A one-time category change does not alter the recurring template. */
+    val frequencyOverride: Frequency? = null,
 ) {
     val key: String get() = "${taskId}@${dueDate}"
     val displayDate: LocalDate get() = postponedTo ?: dueDate
@@ -198,6 +206,7 @@ data class TaskRun(
         .put("postponedTo", postponedTo?.toString() ?: "")
         .put("autoTransferred", autoTransferred)
         .put("closedReason", closedReason ?: "")
+        .put("frequencyOverride", frequencyOverride?.name ?: "")
 
     companion object {
         fun fromJson(json: JSONObject): TaskRun {
@@ -214,6 +223,9 @@ data class TaskRun(
                 postponedTo = runCatching { LocalDate.parse(json.optString("postponedTo")) }.getOrNull(),
                 autoTransferred = json.optBoolean("autoTransferred", false),
                 closedReason = json.optString("closedReason").takeIf { it.isNotBlank() },
+                frequencyOverride = Frequency.entries.firstOrNull {
+                    it.name == json.optString("frequencyOverride")
+                },
             )
         }
     }
@@ -225,6 +237,13 @@ object TaskSchedule {
         task.calendarRevisions.filter { !it.effectiveFrom.isAfter(date) }
             .maxByOrNull { it.effectiveFrom }
 
+    /** Historical dates use the original frequency; later dates use dated revisions. */
+    fun effectiveFrequency(task: TaskTemplate, date: LocalDate): Frequency =
+        activeRevision(task, date)?.frequency ?: task.frequency
+
+    fun occurrenceFrequency(task: TaskTemplate, run: TaskRun): Frequency =
+        run.frequencyOverride ?: effectiveFrequency(task, run.displayDate)
+
     fun isCalendarDue(task: TaskTemplate, date: LocalDate): Boolean {
         if (!task.enabled || date.isBefore(task.startDate)) return false
         val revision = activeRevision(task, date)
@@ -233,7 +252,7 @@ object TaskSchedule {
         if (date.isBefore(first)) return false
         val weekday = revision?.dayOfWeek ?: task.dayOfWeek
         val monthDay = revision?.dayOfMonth ?: task.dayOfMonth
-        return when (task.frequency) {
+        return when (effectiveFrequency(task, date)) {
             Frequency.DAILY -> true
             Frequency.WEEKLY -> date.dayOfWeek.value == weekday
             Frequency.MONTHLY -> date.dayOfMonth == minOf(monthDay, date.lengthOfMonth())
@@ -250,7 +269,8 @@ object TaskSchedule {
         val cursor = maxOf(start, first)
         val weekday = rule?.dayOfWeek ?: task.dayOfWeek
         val monthDay = rule?.dayOfMonth ?: task.dayOfMonth
-        return when (task.frequency) {
+        val frequency = rule?.frequency ?: task.frequency
+        return when (frequency) {
             Frequency.DAILY -> cursor
             Frequency.WEEKLY -> cursor.with(TemporalAdjusters.nextOrSame(DayOfWeek.of(weekday)))
             Frequency.MONTHLY -> {

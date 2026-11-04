@@ -689,7 +689,9 @@ internal fun groupTodayByFrequency(
     rows: List<Pair<TaskTemplate, TaskRun>>,
 ): List<Pair<Frequency, List<Pair<TaskTemplate, TaskRun>>>> =
     Frequency.entries.mapNotNull { frequency ->
-        val duties = rows.filter { it.first.frequency == frequency }
+        val duties = rows.filter {
+            TaskSchedule.occurrenceFrequency(it.first, it.second) == frequency
+        }
         if (duties.isEmpty()) null else frequency to duties
     }
 

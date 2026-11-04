@@ -408,7 +408,9 @@ fun TasksScreenV2(
         animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
         label = "taskListArrow",
     )
-    val filtered = store.templates.filter { it.frequency == filter }
+    val filtered = store.templates.filter {
+        TaskSchedule.effectiveFrequency(it, LocalDate.now()) == filter
+    }
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
@@ -517,11 +519,11 @@ fun TasksScreenV2(
                                 Text(task.title, color = if (task.enabled) p.text else p.muted, fontSize = 14.sp)
                                 Text(
                                     when {
-                                        task.frequency == Frequency.EXTRA -> navDate(task.startDate, lang)
+                                        TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.EXTRA -> navDate(task.startDate, lang)
                                         task.scheduleMode == ScheduleMode.AFTER_COMPLETION -> localized("От выполнения", "After completion", lang)
-                                        task.frequency == Frequency.WEEKLY -> DayOfWeek.of(effectiveCalendarWeekday(task, LocalDate.now())).getDisplayName(
+                                        TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.WEEKLY -> DayOfWeek.of(effectiveCalendarWeekday(task, LocalDate.now())).getDisplayName(
                                             TextStyle.FULL, if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH)
-                                        task.frequency == Frequency.MONTHLY -> "${effectiveCalendarMonthDay(task, LocalDate.now())}"
+                                        TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.MONTHLY -> "${effectiveCalendarMonthDay(task, LocalDate.now())}"
                                         else -> localized("Каждый день", "Every day", lang)
                                     }, color = p.muted, fontSize = 11.sp,
                                 )
@@ -576,7 +578,11 @@ fun TaskEditorScreen(
     val p = palette
     val context = LocalContext.current
     var title by remember(initial?.id) { mutableStateOf(initial?.title.orEmpty()) }
-    var frequency by remember(initial?.id) { mutableStateOf(initial?.frequency ?: defaultFrequency) }
+    var frequency by remember(initial?.id) {
+        mutableStateOf(initial?.let {
+            TaskSchedule.effectiveFrequency(it, LocalDate.now())
+        } ?: defaultFrequency)
+    }
     var mode by remember(initial?.id) { mutableStateOf(initial?.scheduleMode ?: ScheduleMode.CALENDAR) }
     var date by remember(initial?.id) { mutableStateOf(initial?.startDate ?: LocalDate.now()) }
     // A previous scoped move may have superseded the original template weekday.
@@ -602,6 +608,10 @@ fun TaskEditorScreen(
     var pendingCalendarDayEdit by remember(initial?.id) {
         mutableStateOf<Pair<TaskTemplate, CalendarDayEditPreview>?>(null)
     }
+    var pendingFrequencyEdit by remember(initial?.id) {
+        mutableStateOf<Pair<TaskTemplate, FrequencyChangePreview>?>(null)
+    }
+    var unsupportedFrequencyEdit by remember(initial?.id) { mutableStateOf(false) }
     val valid = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 && (interval.toIntOrNull() ?: 0) > 0
 
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
@@ -623,17 +633,28 @@ fun TaskEditorScreen(
                     checklist = checklist.filter { it.title.isNotBlank() }.map { it.copy(required = true) },
                     enabled = enabled,
                 )
-                val preview = initial?.let {
-                    calendarDayEditPreview(it, edited, store.runs, LocalDate.now())
+                val effectiveOldFrequency = initial?.let {
+                    TaskSchedule.effectiveFrequency(it, LocalDate.now())
                 }
-                if (preview != null) {
-                    pendingCalendarDayEdit = edited to preview
+                if (initial != null && effectiveOldFrequency != edited.frequency) {
+                    val preview = calendarFrequencyChangePreview(
+                        initial, edited, store.runs, LocalDate.now(),
+                    )
+                    if (preview != null) pendingFrequencyEdit = edited to preview
+                    else unsupportedFrequencyEdit = true
                 } else {
-                    // Saving a title, note or notification must not replace
-                    // the historical base after a scoped recurrence change.
-                    onSave(initial?.let {
-                        preserveHistoricalCalendarBase(it, edited, LocalDate.now())
-                    } ?: edited)
+                    val preview = initial?.let {
+                        calendarDayEditPreview(it, edited, store.runs, LocalDate.now())
+                    }
+                    if (preview != null) {
+                        pendingCalendarDayEdit = edited to preview
+                    } else {
+                        // Metadata changes must retain the historical frequency
+                        // and the effective-dated calendar revisions.
+                        onSave(initial?.let {
+                            preserveHistoricalCalendarBase(it, edited, LocalDate.now())
+                        } ?: edited)
+                    }
                 }
             }) { Text(localized("Сохранить", "Save", lang)) }
         }
@@ -741,6 +762,58 @@ fun TaskEditorScreen(
         }
     }
 
+    pendingFrequencyEdit?.let { (edited, preview) ->
+        val oldLabel = when (preview.oldFrequency) {
+            Frequency.DAILY -> localized("Ежедневно", "Daily", lang)
+            Frequency.WEEKLY -> localized("Еженедельно", "Weekly", lang)
+            Frequency.MONTHLY -> localized("Ежемесячно", "Monthly", lang)
+            Frequency.EXTRA -> localized("Разово", "One-off", lang)
+        }
+        val newLabel = when (preview.newFrequency) {
+            Frequency.DAILY -> localized("Ежедневно", "Daily", lang)
+            Frequency.WEEKLY -> localized("Еженедельно", "Weekly", lang)
+            Frequency.MONTHLY -> localized("Ежемесячно", "Monthly", lang)
+            Frequency.EXTRA -> localized("Разово", "One-off", lang)
+        }
+        MoveScopeDialog(
+            p = p, lang = lang, title = edited.title,
+            oldDate = preview.selectedRun.displayDate,
+            newDate = preview.newDate,
+            summary = "$oldLabel → $newLabel",
+            onOnlyThis = {
+                pendingFrequencyEdit = null
+                if (store.applyCalendarFrequencyEdit(
+                    edited, CalendarEditScope.ONLY_THIS, preview.referenceDate)) onBack()
+            },
+            onThisAndFuture = {
+                pendingFrequencyEdit = null
+                if (store.applyCalendarFrequencyEdit(
+                    edited, CalendarEditScope.THIS_AND_FUTURE, preview.referenceDate)) onBack()
+            },
+            onDismiss = { pendingFrequencyEdit = null },
+        )
+    }
+    if (unsupportedFrequencyEdit) {
+        NavGlassAlertDialog(
+            p = p,
+            onDismissRequest = { unsupportedFrequencyEdit = false },
+            title = { Text(localized("Нужна отдельная настройка",
+                "Separate scheduling required", lang)) },
+            text = { Text(localized(
+                "Выбор области действия пока поддерживается для повторений по календарю: " +
+                    "День, Неделя и Месяц. Разовые и интервалы «От выполнения» " +
+                    "нельзя безопасно изменить этим способом.",
+                "Scope selection currently supports calendar-based Daily, Weekly, and Monthly " +
+                    "recurrences. One-off tasks and after-completion intervals need a separate change.",
+                lang,
+            )) },
+            confirmButton = {
+                TextButton(onClick = { unsupportedFrequencyEdit = false }) {
+                    Text(localized("Понятно", "OK", lang))
+                }
+            },
+        )
+    }
     pendingCalendarDayEdit?.let { (edited, preview) ->
         MoveScopeDialog(
             p = p, lang = lang, title = edited.title,
@@ -953,7 +1026,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.25 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.26 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

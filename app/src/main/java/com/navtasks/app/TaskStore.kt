@@ -109,7 +109,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
             if (run.skipped || run.displayDate != day) null else task to run
         }.sortedWith(
             compareBy<Pair<TaskTemplate, TaskRun>> { if (it.second.completed) 1 else 0 }
-                .thenBy { it.first.frequency.ordinal }
+                .thenBy { TaskSchedule.occurrenceFrequency(it.first, it.second).ordinal }
                 .thenBy { it.first.title.lowercase() }
         )
     }
@@ -241,6 +241,27 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
         return true
     }
 
+    /**
+     * Apply the chosen scope to a calendar frequency change, saving the
+     * template and occurrence history in the same local transaction.
+     */
+    internal fun applyCalendarFrequencyEdit(
+        edited: TaskTemplate,
+        scope: CalendarEditScope,
+        today: LocalDate = LocalDate.now(),
+    ): Boolean {
+        require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
+        val original = templates.firstOrNull { it.id == edited.id } ?: return false
+        val change = editCalendarFrequencyScoped(original, edited, runs, scope, today) ?: return false
+        templates = templates.map { if (it.id == edited.id) change.template else it }
+        runs = change.runs
+        saveTemplates(templates)
+        persistRuns()
+        refresh(today)
+        syncOutputs()
+        return true
+    }
+
     private fun materializeSingleDay(day: LocalDate) {
         val updated = runs.toMutableMap()
         for (task in templates.filter { it.scheduleMode == ScheduleMode.CALENDAR }) {
@@ -267,7 +288,12 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
             templates.map { if (it.id == task.id) task else it }
         } else templates + task
         saveTemplates(templates)
-        runs = runs.filterValues { it.taskId != task.id || it.completed || !it.dueDate.isAfter(LocalDate.now()) }
+        runs = runs.filterValues {
+            it.taskId != task.id || it.completed ||
+                !it.dueDate.isAfter(LocalDate.now()) ||
+                it.skipped || it.transferred || it.frequencyOverride != null ||
+                it.checkedIds.isNotEmpty()
+        }
         persistRuns()
         refresh()
         syncOutputs()

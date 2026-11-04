@@ -20,7 +20,7 @@ internal fun scopedCalendarMove(
     newDate: LocalDate,
 ): ScopedCalendarMoveResult? {
     if (task.scheduleMode != ScheduleMode.CALENDAR ||
-        task.frequency == Frequency.EXTRA ||
+        TaskSchedule.effectiveFrequency(task, selected.displayDate) == Frequency.EXTRA ||
         !task.enabled || selected.taskId != task.id ||
         selected.completed || selected.skipped ||
         newDate.isBefore(selected.displayDate) ||
@@ -33,6 +33,7 @@ internal fun scopedCalendarMove(
         firstDate = newDate,
         dayOfWeek = newDate.dayOfWeek.value,
         dayOfMonth = newDate.dayOfMonth,
+        frequency = TaskSchedule.effectiveFrequency(task, effectiveFrom),
     )
     val changed = task.copy(
         calendarRevisions = task.calendarRevisions
@@ -79,7 +80,7 @@ internal fun scopedCalendarMove(
 
 internal fun canMoveSeries(task: TaskTemplate, run: TaskRun, newDate: LocalDate): Boolean =
     task.scheduleMode == ScheduleMode.CALENDAR &&
-        task.frequency != Frequency.EXTRA &&
+        TaskSchedule.effectiveFrequency(task, run.displayDate) != Frequency.EXTRA &&
         task.enabled &&
         !run.completed && !run.skipped &&
         newDate.isAfter(run.displayDate)

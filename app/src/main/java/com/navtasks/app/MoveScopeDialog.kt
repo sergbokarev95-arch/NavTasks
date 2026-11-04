@@ -20,6 +20,7 @@ internal fun MoveScopeDialog(
     onOnlyThis: () -> Unit,
     onThisAndFuture: () -> Unit,
     onDismiss: () -> Unit,
+    summary: String? = null,
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -29,6 +30,9 @@ internal fun MoveScopeDialog(
             Text(localized("Изменить расписание?", "Change schedule?", lang),
                 color = p.text, fontSize = 20.sp)
             Text(title, color = p.text, fontSize = 15.sp)
+            if (summary != null) {
+                Text(summary, color = p.blue, fontSize = 14.sp)
+            }
             Text(navDate(oldDate, lang, true) + "  →  " + navDate(newDate, lang, true),
                 color = p.muted, fontSize = 13.sp)
             Spacer(Modifier.height(2.dp))

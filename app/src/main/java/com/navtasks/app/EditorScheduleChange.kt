@@ -37,14 +37,14 @@ internal fun calendarDayEditPreview(
     today: LocalDate,
 ): CalendarDayEditPreview? {
     if (original.id != edited.id ||
-        original.frequency != edited.frequency ||
+        TaskSchedule.effectiveFrequency(original, today) != edited.frequency ||
         original.scheduleMode != ScheduleMode.CALENDAR ||
         edited.scheduleMode != ScheduleMode.CALENDAR ||
         original.startDate != edited.startDate ||
         !original.enabled || !edited.enabled
     ) return null
 
-    val changed = when (original.frequency) {
+    val changed = when (TaskSchedule.effectiveFrequency(original, today)) {
         Frequency.WEEKLY ->
             effectiveCalendarWeekday(original, today) != edited.dayOfWeek
         Frequency.MONTHLY ->
@@ -55,6 +55,7 @@ internal fun calendarDayEditPreview(
 
     // Compute the first date of the new rule without applying any old revisions.
     val candidate = original.copy(
+        frequency = edited.frequency,
         dayOfWeek = edited.dayOfWeek,
         dayOfMonth = edited.dayOfMonth,
         calendarRevisions = emptyList(),
@@ -106,13 +107,13 @@ internal fun preserveHistoricalCalendarBase(
     today: LocalDate,
 ): TaskTemplate {
     if (original.id != edited.id ||
-        original.frequency != edited.frequency ||
+        TaskSchedule.effectiveFrequency(original, today) != edited.frequency ||
         original.scheduleMode != ScheduleMode.CALENDAR ||
         edited.scheduleMode != ScheduleMode.CALENDAR ||
         original.startDate != edited.startDate
     ) return edited
 
-    val unchanged = when (original.frequency) {
+    val unchanged = when (TaskSchedule.effectiveFrequency(original, today)) {
         Frequency.WEEKLY -> edited.dayOfWeek == effectiveCalendarWeekday(original, today)
         Frequency.MONTHLY -> edited.dayOfMonth == effectiveCalendarMonthDay(original, today)
         else -> true
@@ -140,6 +141,7 @@ internal fun editCalendarDayScoped(
     val selected = preview.selectedRun
     val target = preview.newDate
     val newTemplateBase = edited.copy(
+        frequency = original.frequency,
         dayOfWeek = original.dayOfWeek,
         dayOfMonth = original.dayOfMonth,
         calendarRevisions = original.calendarRevisions,
@@ -163,6 +165,7 @@ internal fun editCalendarDayScoped(
         firstDate = target,
         dayOfWeek = edited.dayOfWeek,
         dayOfMonth = edited.dayOfMonth,
+        frequency = edited.frequency,
     )
     val template = newTemplateBase.copy(
         calendarRevisions = original.calendarRevisions
