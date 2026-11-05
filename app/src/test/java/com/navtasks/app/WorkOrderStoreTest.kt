@@ -78,6 +78,40 @@ class WorkOrderStoreTest {
         }.isFailure)
     }
 
+    @Test fun incompleteRequiredChecklistCannotBeClosed() {
+        val row = CheckItem(id = "a", title = "Verify engine")
+        val wo = work().copy(checklist = listOf(row))
+        assertFalse(workOrderCanComplete(wo))
+        assertTrue(runCatching { workOrderComplete(wo, today) }.isFailure)
+        val checked = workOrderCheck(wo, "a", true)
+        assertEquals(1 to 1, workOrderMandatoryProgress(checked))
+        assertTrue(workOrderCanComplete(checked))
+        assertTrue(workOrderComplete(checked, today).completed)
+    }
+
+    @Test fun optionalItemsDoNotBlockCompletion() {
+        val optional = CheckItem(id = "optional", title = "Remark", required = false)
+        val wo = work().copy(checklist = listOf(optional))
+        assertTrue(workOrderCanComplete(wo))
+        val closed = workOrderComplete(wo, today)
+        assertTrue(runCatching { workOrderCheck(closed, "optional", true) }.isFailure)
+    }
+
+    @Test fun uncheckingRestoresIncompleteStatusAndNotes() {
+        val item = CheckItem(id = "check", title = "PPE", comment = "Ref note")
+        val wo = work().copy(checklist = listOf(item))
+        val checked = workOrderCheck(wo, "check", true)
+        assertFalse(workOrderCanComplete(workOrderCheck(checked, "check", false)))
+        assertEquals("Ref note", checked.checklist.single().comment)
+        assertTrue(runCatching { workOrderCheck(wo, "missing", true) }.isFailure)
+    }
+
+    @Test fun reminderLeadTimeUsesCalendarDaysAndIsValidated() {
+        val wo = work(dueDate = today.plusDays(30)).copy(remindDaysBefore = 7)
+        assertEquals(today.plusDays(23), workOrderWarningStart(wo))
+        assertTrue(runCatching { wo.copy(remindDaysBefore = 91) }.isFailure)
+    }
+
     @Test fun backdatedCompletionIsKeptForManualAmosHistory() {
         val historical = workOrderComplete(work(), today.minusDays(10))
         assertEquals(today.minusDays(10), historical.completedAt)
