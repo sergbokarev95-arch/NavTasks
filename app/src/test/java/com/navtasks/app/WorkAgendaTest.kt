@@ -64,7 +64,10 @@ class WorkAgendaTest {
         assertTrue(servicePlannedOnDay(entry, due.plusYears(1)))
         assertFalse(servicePlannedOnDay(entry, due.minusDays(1)))
         assertEquals("REQ-2026-91", entry.requestNumber)
-        assertEquals("REQ-2026-91", nextServiceFromCompletion(entry, due).requestNumber)
+        val nextCycle = nextServiceFromCompletion(entry, due)
+        assertEquals("", nextCycle.requestNumber)
+        assertEquals("REQ-2026-91", nextCycle.serviceHistory.single().requestNumber)
+        assertEquals(due, nextCycle.serviceHistory.single().scheduledDate)
     }
 
     @Test fun maintenanceRequestHidesOnlyTodayReminderNotCalendarOrRecord() {
