@@ -420,6 +420,9 @@ private fun WorkOrderEditorDialog(
                         onItemsChange = { checklist = it },
                         onEditNote = { noteItemId = it },
                         p = p, lang = lang,
+                        completionHint = localized(
+                            "Для AMOS отметь обязательные пункты, затем нажми «Готово» в работе.",
+                            "For AMOS, check required items, then tap Done on the work order.", lang),
                     )
                 } else if (checklist.isNotEmpty()) {
                     Text(localized("Чек-лист завершённой работы доступен только для просмотра.",
