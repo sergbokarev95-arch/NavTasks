@@ -88,19 +88,24 @@ fun ProfilesScreen(
                             else localized("Задачи · История · Handover", "Tasks · History · Handover", lang),
                             color = p.muted, fontSize = 12.sp)
                     }
-                    if (current) Text("✓", color = p.successText, fontSize = 20.sp)
-                    Spacer(Modifier.width(13.dp))
-                    Text("✎", color = p.blue, fontSize = 23.sp,
-                        modifier = Modifier.glassClickable {
-                            editing = profile.id
-                            name = profile.title
-                        }.padding(6.dp))
+                    if (current) NavGlassGlyph("check", p.successText, Modifier.size(19.dp))
+                    Spacer(Modifier.width(8.dp))
+                    NavGlassIconAction(
+                        "edit", p.blue, localized("Изменить профиль", "Edit profile", lang),
+                    ) {
+                        editing = profile.id
+                        name = profile.title
+                    }
                     if (profile.kind == NavProfileKind.VESSEL) {
-                        Text(localized("Удалить", "Delete", lang),
-                            color = if (p.dark) Color(0xFFFFB4A7) else Color(0xFFA44B42),
-                            fontSize = 12.sp,
-                            modifier = Modifier.glassClickable { deleteTarget = profile }
-                                .padding(horizontal = 6.dp, vertical = 9.dp))
+                        Box(
+                            Modifier.heightIn(min = 44.dp)
+                                .glassClickable { deleteTarget = profile }
+                                .padding(horizontal = 5.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(localized("Удалить", "Delete", lang),
+                                color = p.dangerText, fontSize = 12.sp)
+                        }
                     }
                 }
             }
@@ -112,7 +117,7 @@ fun ProfilesScreen(
                 Text(localized("+ Добавить судно", "+ Add vessel", lang),
                     color = p.blue, fontSize = 15.sp)
             }
-            if (error != null) Text(error.orEmpty(), color = Color(0xFFE47F76), fontSize = 12.sp)
+            if (error != null) Text(error.orEmpty(), color = p.dangerText, fontSize = 12.sp)
             Spacer(Modifier.height(32.dp))
         }
     }
@@ -172,7 +177,7 @@ fun ProfilesScreen(
                     deleteTarget = null
                 }) {
                     Text(localized("Удалить навсегда", "Delete permanently", lang),
-                        color = if (p.dark) Color(0xFFFFB4A7) else Color(0xFFA44B42))
+                        color = p.dangerText)
                 }
             },
             dismissButton = {
@@ -328,7 +333,7 @@ fun ProfileExchangePanel(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(localized("Удалить выбранный профиль", "Delete selected profile", lang),
-                    color = if (p.dark) Color(0xFFFFB4A7) else Color(0xFFA44B42),
+                    color = p.dangerText,
                     fontSize = 13.sp)
             }
         } else {
@@ -336,7 +341,7 @@ fun ProfileExchangePanel(
                 "Personal is protected from deletion.", lang),
                 color = p.muted, fontSize = 11.sp)
         }
-        feedback?.let { Text(it, color = if (error) Color(0xFFE47F76) else p.mint,
+        feedback?.let { Text(it, color = if (error) p.dangerText else p.mint,
             fontSize = 12.sp) }
     }
     deleteTarget?.let { victim ->
@@ -369,7 +374,7 @@ fun ProfileExchangePanel(
                     deleteTarget = null
                 }) {
                     Text(localized("Удалить навсегда", "Delete permanently", lang),
-                        color = if (p.dark) Color(0xFFFFB4A7) else Color(0xFFA44B42))
+                        color = p.dangerText)
                 }
             },
             dismissButton = {
