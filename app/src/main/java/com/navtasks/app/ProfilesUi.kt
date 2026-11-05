@@ -130,8 +130,12 @@ fun ProfilesScreen(
                 localized("Новое судно", "New vessel", lang)
                 else localized("Название профиля", "Profile name", lang)) },
             text = {
-                OutlinedTextField(value = name, onValueChange = { name = it.take(100) },
-                    singleLine = true, label = { Text(localized("Название", "Name", lang)) })
+                NavGlassInput(
+                    value = name,
+                    onValueChange = { name = it.take(100) },
+                    p = p, modifier = Modifier.fillMaxWidth(),
+                    placeholder = localized("Название", "Name", lang),
+                )
             },
             confirmButton = {
                 TextButton(enabled = name.isNotBlank(), onClick = {
