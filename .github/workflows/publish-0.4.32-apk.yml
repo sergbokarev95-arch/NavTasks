@@ -1,0 +1,41 @@
+name: Publish NavTasks Glass 0.4.32 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.32-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download tested APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          gh run download 42036271555 --repo "${{ github.repository }}" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          echo "f1c53096613450d9521b51ddce9c09e820e2ae8ad2f7ef9c476f228029ca9b8d  upload/app-debug.apk" | sha256sum -c -
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.32_Beta.apk
+
+      - name: Publish release for compact Today reminders
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.32-glass-beta \
+            upload/NavTasks_Glass_0.4.32_Beta.apk \
+            --repo "${{ github.repository }}" \
+            --target eee6d649f1fc7de5f12ad30553cbfefe7aa397be \
+            --prerelease \
+            --title "NavTasks Glass 0.4.32 Beta · Compact Today Work Reminders" \
+            --notes "Today AMOS: compact read-only card with AMOS, job name and one Go to button; Today Maintenance: compact card with equipment, next service date and one Go to button. Go to enters the full AMOS / Maintenance module and scrolls directly to the specific item, without opening editors on Today. Once a service AMOS request number is saved, the service no longer appears in Today; the underlying service, calendar entry, and request data are preserved. No task recurrence, Handover, service storage or bottom dock changes. Unit tests and APK build passed in GitHub Actions run 42036271555."
