@@ -15,8 +15,8 @@ import java.time.LocalDate
 
 /**
  * The entry point for ship work. AMOS uses an independent WorkOrderStore.
- * Maintenance continues to use ServiceStore/ServicesScreen unchanged. Other
- * work remains upcoming. Nothing here mutates task recurrence or its history.
+ * Maintenance continues to use ServiceStore/ServicesScreen unchanged.
+ * Inspections remain upcoming. Nothing here mutates task recurrence or its history.
  */
 @Composable
 fun WorksHubScreen(
@@ -64,8 +64,8 @@ fun WorksHubScreen(
                     Spacer(Modifier.height(5.dp))
                     Text(
                         localized(
-                            "Единый раздел для работ AMOS, обслуживания оборудования и прочих задач.",
-                            "One place for AMOS work orders, equipment maintenance and other work.",
+                            "Единый раздел для работ AMOS, обслуживания оборудования и инспекций.",
+                            "One place for AMOS work orders, equipment maintenance and inspections.",
                             lang,
                         ),
                         color = p.muted, fontSize = 12.sp,
@@ -109,10 +109,10 @@ fun WorksHubScreen(
             item {
                 WorkHubTile(
                     p = p,
-                    title = localized("Прочие работы", "Other work", lang),
+                    title = localized("Инспекции", "Inspections", lang),
                     description = localized(
-                        "Разовые работы вне AMOS и графика обслуживания.",
-                        "One-off jobs outside AMOS and equipment servicing.",
+                        "VIQ7 и SIRE 2.0 — справочник и чек-листы (позже).",
+                        "VIQ7 and SIRE 2.0 reference and checklists (planned).",
                         lang,
                     ),
                     secondary = localized("В разработке", "Coming next", lang),
