@@ -1,0 +1,41 @@
+name: Publish NavTasks Glass 0.4.27 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.27-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download validated APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          gh run download 41954517973 --repo "${{ github.repository }}" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          echo "895144f3fa737cfe425839bf9be99dd23fa5fe73bc2894558647b5a5d00d3d89  upload/app-debug.apk" | sha256sum -c -
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.27_Beta.apk
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.27-glass-beta \
+            upload/NavTasks_Glass_0.4.27_Beta.apk \
+            --repo "${{ github.repository }}" \
+            --target 7b5fdecc7fd5a5cc5ba85b913bbf2179e45e12f1 \
+            --prerelease \
+            --title "NavTasks Glass 0.4.27 Beta · Works Hub" \
+            --notes "First incremental Works hub (AMOS / Equipment Maintenance / Other work). The existing ServiceStore and maintenance editor remain unchanged; AMOS and Other are marked as upcoming stages. Existing Tasks, Calendar, Handover and dock are preserved. Built and unit-tested in Actions run 41954517973."
