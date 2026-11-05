@@ -12,7 +12,8 @@ import java.util.UUID
 /** Manually entered AMOS reference, not a live connection to the vessel AMOS system. */
 data class WorkOrderEntry(
     val id: String = UUID.randomUUID().toString(),
-    val reference: String,
+    /** Legacy AMOS reference is retained for older data, but no longer required in the editor. */
+    val reference: String = "",
     val title: String,
     val dueDate: LocalDate,
     val createdAt: LocalDate = LocalDate.now(),
@@ -24,10 +25,12 @@ data class WorkOrderEntry(
     val repeatDays: Int = 0,
     val repeatMonths: Int = 0,
     val executionHistory: List<WorkOrderCompletion> = emptyList(),
+    /** First scheduled work date; fixed anchor for all repeated occurrences. */
+    val startDate: LocalDate? = null,
 ) {
     init {
         require(id.isNotBlank() && id.length <= 100)
-        require(reference.isNotBlank() && reference.length <= 80)
+        require(reference.length <= 80)
         require(title.isNotBlank() && title.length <= 200)
         require(comment.length <= 6000)
         require(remindDaysBefore in 0..90)
@@ -48,6 +51,7 @@ data class WorkOrderEntry(
     fun toJson(): JSONObject = JSONObject()
         .put("id", id)
         .put("reference", reference)
+        .put("startDate", (startDate ?: dueDate).toString())
         .put("title", title)
         .put("dueDate", dueDate.toString())
         .put("createdAt", createdAt.toString())
@@ -67,7 +71,7 @@ data class WorkOrderEntry(
             val rawCompleted = json.optString("completedAt", "")
             return WorkOrderEntry(
                 id = json.getString("id"),
-                reference = json.getString("reference"),
+                reference = json.optString("reference", ""),
                 title = json.getString("title"),
                 dueDate = LocalDate.parse(json.getString("dueDate")),
                 createdAt = LocalDate.parse(json.getString("createdAt")),
@@ -81,6 +85,8 @@ data class WorkOrderEntry(
                     (0 until a.length()).map { a.getString(it) }.toSet()
                 },
                 remindDaysBefore = json.optInt("remindDaysBefore", 0),
+                startDate = json.optString("startDate").takeUnless { it.isBlank() }
+                    ?.let(LocalDate::parse),
                 repeatDays = json.optInt("repeatDays", 0),
                 repeatMonths = json.optInt("repeatMonths", 0),
                 executionHistory = (json.optJSONArray("executionHistory") ?: JSONArray()).let { a ->
@@ -123,7 +129,8 @@ internal fun workOrderWarningStart(order: WorkOrderEntry): LocalDate =
 
 internal fun workOrderComplete(order: WorkOrderEntry, day: LocalDate): WorkOrderEntry {
     require(!order.completed) { "Work order already completed" }
-    require(workOrderCanComplete(order)) { "Required AMOS checklist items are not complete" }
+    // AMOS work is completed manually. Legacy checklists remain safely archived,
+    // but do not block work that no longer requires a checklist.
     return workOrderFinishCycle(order, day)
 }
 
@@ -133,8 +140,9 @@ internal fun workOrderReopen(order: WorkOrderEntry): WorkOrderEntry =
 internal fun validateWorkOrders(items: List<WorkOrderEntry>) {
     require(items.size <= 1500) { "Too many AMOS work orders" }
     require(items.map { it.id }.toSet().size == items.size) { "Duplicate work order IDs" }
-    require(items.map { it.reference.trim().uppercase() }.toSet().size == items.size) {
-        "Duplicate AMOS work order number"
+    val legacyNumbers = items.map { it.reference.trim().uppercase() }.filter { it.isNotBlank() }
+    require(legacyNumbers.toSet().size == legacyNumbers.size) {
+        "Duplicate legacy AMOS work order number"
     }
 }
 

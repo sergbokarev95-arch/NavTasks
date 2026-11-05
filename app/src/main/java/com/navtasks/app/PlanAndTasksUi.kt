@@ -77,7 +77,11 @@ internal fun calendarSwipePosition(
 }
 
 @Composable
-fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLanguage, onEdit: (TaskTemplate) -> Unit) {
+fun PlanScreenV2(
+    store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLanguage,
+    onEdit: (TaskTemplate) -> Unit,
+    workOrders: WorkOrderStore, services: ServiceStore,
+) {
     var level by rememberSaveable { mutableIntStateOf(1) } // 0 year, 1 month, 2 day
     var year by rememberSaveable { mutableIntStateOf(today.year) }
     var month by rememberSaveable { mutableIntStateOf(today.monthValue) }
@@ -155,7 +159,9 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                         week.forEach { date ->
                                             val isInMonth = date.monthValue == m && date.year == year
                                             val mark = store.dayCounts(date).state(date, today)
-                                            val markColor = when (mark) {
+                                            val workPlanned = workAgendaExistsOnDay(
+                                                date, workOrders.entries, services.entries)
+                                            val markColor = if (mark == CalendarDayState.EMPTY && workPlanned) p.blue else when (mark) {
                                                 CalendarDayState.COMPLETE -> p.mint
                                                 CalendarDayState.PARTIAL -> Color(0xFFE9B35A)
                                                 CalendarDayState.INCOMPLETE -> Color(0xFFE88B83)
@@ -166,7 +172,7 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                                 color = when {
                                                     date == today -> p.blue
                                                     !isInMonth -> p.muted.copy(alpha = 0.40f)
-                                                    mark == CalendarDayState.EMPTY -> p.muted
+                                                    mark == CalendarDayState.EMPTY && !workPlanned -> p.muted
                                                     else -> markColor
                                                 }, fontSize = 8.sp, lineHeight = 12.sp, textAlign = TextAlign.Center,
                                                 modifier = Modifier.weight(1f))
@@ -201,7 +207,9 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                 val isToday = date == today
                                 val inMonth = date.year == year && date.monthValue == month
                                 val status = store.dayCounts(date).state(date, today)
-                                val statusColor = when (status) {
+                                val hasWork = workAgendaExistsOnDay(
+                                    date, workOrders.entries, services.entries)
+                                val statusColor = if (status == CalendarDayState.EMPTY && hasWork) p.blue else when (status) {
                                     CalendarDayState.COMPLETE -> p.mint
                                     CalendarDayState.PARTIAL -> Color(0xFFE7B25B)
                                     CalendarDayState.INCOMPLETE -> Color(0xFFE98881)
@@ -219,7 +227,8 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                 val edge = when {
                                     isToday -> p.blue
                                     !inMonth -> p.border.copy(alpha = 0.20f)
-                                    status == CalendarDayState.EMPTY -> p.border.copy(alpha = 0.48f)
+                                    status == CalendarDayState.EMPTY && !hasWork ->
+                                        p.border.copy(alpha = 0.48f)
                                     else -> statusColor.copy(alpha = 0.85f)
                                 }
                                 Column(
@@ -237,7 +246,9 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                                     }, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal, fontSize = 14.sp)
                                     // Calendar markers show outcomes only, not ordinary scheduled days.
                                     // This removes distracting blue dots without changing day status logic.
-                                    if (status != CalendarDayState.EMPTY && status != CalendarDayState.SCHEDULED) {
+                                    if (hasWork ||
+                                        (status != CalendarDayState.EMPTY &&
+                                            status != CalendarDayState.SCHEDULED)) {
                                         Box(Modifier.padding(top = 4.dp).size(5.dp)
                                             .background(statusColor.copy(alpha = if (inMonth) 1f else 0.45f), CircleShape))
                                     }
@@ -271,12 +282,18 @@ fun PlanScreenV2(store: TaskStore, today: LocalDate, p: NavPalette, lang: UiLang
                         TextButton(onClick = { level = 0 }) { Text("▦", fontSize = 21.sp) }
                     }
                     val rows = store.forDate(selectedDay)
+                    val plannedWorks = workAgendaExistsOnDay(
+                        selectedDay, workOrders.entries, services.entries)
                     LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 125.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (rows.isEmpty()) item {
+                        if (rows.isEmpty() && !plannedWorks) item {
                             NavPanel(p) { Text(localized("Задач на этот день нет", "No tasks for this day", lang), color = p.muted) }
                         }
                         items(rows, key = { it.second.key }) { (task, run) ->
                             PlanReadOnlyTile(task, run, store, p, lang, onEdit)
+                        }
+                        if (plannedWorks) item(key = "planned-work") {
+                            WorkAgendaCalendarRows(
+                                selectedDay, workOrders.entries, services.entries, p, lang)
                         }
                     }
                 }
@@ -1029,7 +1046,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.30 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.31 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

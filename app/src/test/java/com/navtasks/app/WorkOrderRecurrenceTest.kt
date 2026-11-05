@@ -30,11 +30,11 @@ class WorkOrderRecurrenceTest {
         assertEquals(old, workOrderReopen(new))
     }
 
-    @Test fun weekRepeatCreatesNextDueFromActualCompletionDate() {
+    @Test fun weekRepeatStaysAnchoredToOriginalStartDate() {
         val work = order(repeatDays = 7)
         val finished = workOrderComplete(work, LocalDate.of(2026, 11, 26))
         assertFalse(finished.completed)
-        assertEquals(LocalDate.of(2026, 12, 3), finished.dueDate)
+        assertEquals(LocalDate.of(2026, 12, 7), finished.dueDate)
         assertEquals(1, finished.executionHistory.size)
         assertEquals(due, finished.executionHistory.single().dueDate)
         assertEquals(LocalDate.of(2026, 11, 26),
@@ -58,6 +58,17 @@ class WorkOrderRecurrenceTest {
         assertEquals("Journal note", revised.executionHistory.single().checklist.single().comment)
     }
 
+    @Test fun monthlyCyclesStayOnTheOriginalDayAfterFebruary() {
+        val jan = order(repeatMonths = 1).copy(
+            dueDate = LocalDate.of(2026, 1, 31),
+            startDate = LocalDate.of(2026, 1, 31),
+        )
+        val first = workOrderComplete(jan, LocalDate.of(2026, 1, 31))
+        assertEquals(LocalDate.of(2026, 2, 28), first.dueDate)
+        val second = workOrderComplete(first, LocalDate.of(2026, 2, 28))
+        assertEquals(LocalDate.of(2026, 3, 31), second.dueDate)
+    }
+
     @Test fun calendarMonthRepeatRespectsLeapDay() {
         val leap = order(repeatMonths = 12).copy(dueDate = LocalDate.of(2024, 2, 29))
         val next = workOrderComplete(leap, LocalDate.of(2024, 2, 29))
@@ -69,7 +80,7 @@ class WorkOrderRecurrenceTest {
         val one = workOrderComplete(work, due)
         val two = workOrderComplete(one, LocalDate.of(2026, 12, 31))
         assertEquals(2, two.executionHistory.size)
-        assertEquals(LocalDate.of(2027, 1, 31), two.dueDate)
+        assertEquals(LocalDate.of(2027, 1, 30), two.dueDate)
         val archives = workOrderHistoryRecords(listOf(two))
         assertEquals(2, archives.size)
         assertTrue(archives[0].canUndo)

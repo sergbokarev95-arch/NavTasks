@@ -21,6 +21,8 @@ data class ServiceEntry(
     val comment: String = "",
     val periodMonths: Int = 0,
     val remindMonths: Int = 0,
+    /** AMOS requisition created for this service; empty means not requested. */
+    val requestNumber: String = "",
 ) {
     init {
         require(id.isNotBlank() && id.length <= 100)
@@ -29,6 +31,7 @@ data class ServiceEntry(
         require(nextDate.isAfter(lastDate)) { "Next service date must follow the last date" }
         require(periodMonths in 0..1200) { "Service interval must be 0–1200 months" }
         require(remindMonths in 0..3) { "Lead time exceeds three months" }
+        require(requestNumber.length <= 100) { "Request number too long" }
     }
 
     fun toJson(): JSONObject = JSONObject()
@@ -39,6 +42,7 @@ data class ServiceEntry(
         .put("comment", comment)
         .put("periodMonths", periodMonths)
         .put("remindMonths", remindMonths)
+        .put("requestNumber", requestNumber)
 
     companion object {
         fun fromJson(json: JSONObject): ServiceEntry = ServiceEntry(
@@ -49,6 +53,7 @@ data class ServiceEntry(
             comment = json.optString("comment", ""),
             periodMonths = json.optInt("periodMonths", 0),
             remindMonths = json.optInt("remindMonths", 0),
+            requestNumber = json.optString("requestNumber", ""),
         )
     }
 }
@@ -94,6 +99,11 @@ class ServiceStore(context: Context, private val profiles: ProfileStore) {
         val current = entries.indexOfFirst { it.id == item.id }
         write(if (current >= 0) entries.toMutableList().apply { set(current, item) }
             else entries + item)
+    }
+
+    fun setRequestNumber(id: String, number: String) {
+        val item = entries.firstOrNull { it.id == id } ?: error("Service not found")
+        upsert(item.copy(requestNumber = number.trim()))
     }
 
     fun delete(id: String) = write(entries.filterNot { it.id == id })

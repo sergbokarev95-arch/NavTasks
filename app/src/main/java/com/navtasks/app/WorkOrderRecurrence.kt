@@ -48,15 +48,23 @@ data class WorkOrderCompletion(
 }
 
 internal fun workOrderNextDue(entry: WorkOrderEntry, completedAt: LocalDate): LocalDate {
-    require(entry.repeatDays > 0 || entry.repeatMonths > 0) { "No recurrence interval" }
-    return if (entry.repeatMonths > 0) completedAt.plusMonths(entry.repeatMonths.toLong())
-    else completedAt.plusDays(entry.repeatDays.toLong())
+    require(entry.recurring) { "No recurrence interval" }
+    // Fixed schedule: the repeat runs from the chosen start date, never from
+    // the day the crew happened to mark the Work Order completed.
+    val anchor = entry.startDate ?: entry.dueDate
+    for (index in 0L..6000L) {
+        // Always project from the original anchor: Jan 31 -> Feb 28 -> Mar 31.
+        val due = if (entry.repeatMonths > 0)
+            anchor.plusMonths(entry.repeatMonths.toLong() * index)
+        else anchor.plusDays(entry.repeatDays.toLong() * index)
+        if (due.isAfter(completedAt) && due.isAfter(entry.dueDate)) return due
+    }
+    error("AMOS recurrence exceeds supported range")
 }
 
 /** Complete one cycle without changing older dated records or checklist references. */
 internal fun workOrderFinishCycle(order: WorkOrderEntry, completedAt: LocalDate): WorkOrderEntry {
     require(!order.completed)
-    require(workOrderCanComplete(order)) { "Required checklist items are unfinished" }
     if (!order.recurring) return order.copy(completedAt = completedAt)
     require(order.executionHistory.size < 300) { "AMOS history limit reached" }
     val snapshot = WorkOrderCompletion(

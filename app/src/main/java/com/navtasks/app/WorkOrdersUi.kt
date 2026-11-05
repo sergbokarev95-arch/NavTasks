@@ -140,15 +140,8 @@ fun WorkOrdersScreen(
                         order, today, p, lang,
                         onEdit = { editing = order; editorOpen = true },
                         onComplete = {
-                            if (workOrderCanComplete(order)) {
-                                completeTarget = order
-                                completionDate = LocalDate.now()
-                            } else {
-                                val (done, total) = workOrderMandatoryProgress(order)
-                                feedback = localized(
-                                    "Отметь обязательные пункты: $done/$total.",
-                                    "Complete required checklist items first: $done/$total.", lang)
-                            }
+                            completeTarget = order
+                            completionDate = LocalDate.now()
                         },
                         onToggleCheck = { id, checked ->
                             runCatching { workOrders.setCheck(order.id, id, checked) }
@@ -180,11 +173,11 @@ fun WorkOrdersScreen(
             title = { Text(localized("Завершить работу?", "Complete work order?", lang)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(order.reference + " · " + order.title, color = p.text, fontSize = 14.sp)
+                    Text(order.title, color = p.text, fontSize = 14.sp)
                     if (order.recurring) {
                         Text(localized(
-                            "Текущий чек-лист сохранится в истории. Следующий срок рассчитывается от фактической даты.",
-                            "Current checklist is archived. Next due is calculated from completion date.",
+                            "Выполнение сохранится в истории. Повторения идут от даты начала работы.",
+                            "Completion is saved to history. Recurrence follows the original start date.",
                             lang,
                         ), color = p.muted, fontSize = 12.sp)
                     }
@@ -223,7 +216,7 @@ fun WorkOrdersScreen(
         WorkOrderConfirm(
             p = p, lang = lang,
             title = localized("Вернуть в открытые?", "Reopen work order?", lang),
-            description = order.reference + " · " + order.title,
+            description = order.title,
             onCancel = { reopenTarget = null },
             onConfirm = {
                 runCatching { workOrders.reopen(order.id); reschedule() }
@@ -236,7 +229,7 @@ fun WorkOrdersScreen(
         WorkOrderConfirm(
             p = p, lang = lang,
             title = localized("Удалить запись AMOS?", "Delete AMOS record?", lang),
-            description = order.reference + " · " + order.title +
+            description = order.title +
                 "\n" + localized("Это удалит и сохранённую дату завершения.",
                     "The saved completion date will also be deleted.", lang),
             onCancel = { deleteTarget = null },
@@ -282,7 +275,7 @@ private fun WorkOrderCard(
                 Modifier.weight(1f).glassClickable(onClick = onEdit),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(order.reference, color = p.blue, fontSize = 12.sp)
+                Text("AMOS", color = p.blue, fontSize = 12.sp)
                 Text(order.title, color = p.text, fontSize = 15.sp,
                     maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
@@ -290,7 +283,8 @@ private fun WorkOrderCard(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                localized("Срок: ", "Due: ", lang) + navDate(order.dueDate, lang, true),
+                localized("Следующее выполнение: ", "Next occurrence: ", lang) +
+                    navDate(order.dueDate, lang, true),
                 color = if (order.completed) p.muted else accent,
                 fontSize = 12.sp,
             )
@@ -301,35 +295,13 @@ private fun WorkOrderCard(
                 color = p.successText, fontSize = 12.sp)
         }
         if (order.recurring) {
-            Text(localized("Повторяется после выполнения", "Repeats after completion", lang),
+            Text(localized("Начало: ", "Started: ", lang) +
+                navDate(order.startDate ?: order.dueDate, lang, true),
                 color = p.muted, fontSize = 11.sp)
         }
         if (order.comment.isNotBlank()) {
             Text(order.comment, color = p.muted, fontSize = 12.sp,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
-        }
-        if (order.checklist.isNotEmpty()) {
-            val (done, total) = workOrderMandatoryProgress(order)
-            Text(localized("Чек-лист $done/$total", "Checklist $done/$total", lang),
-                color = p.blue, fontSize = 12.sp)
-            order.checklist.forEach { item ->
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                    val checked = item.id in order.checkedItemIds
-                    if (order.completed) {
-                        Text(if (checked) "✓" else "○", color = if (checked) p.successText else p.muted,
-                            fontSize = 18.sp, modifier = Modifier.width(29.dp))
-                    } else {
-                        RoundCheck(checked, p, { onToggleCheck(item.id, !checked) })
-                    }
-                    Text(item.title, color = if (checked) p.muted else p.text,
-                        fontSize = 12.sp, modifier = Modifier.weight(1f),
-                        maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    if (item.comment.isNotBlank()) {
-                        ChecklistReferenceButton(p, true) { selectedNote = item }
-                    }
-                }
-            }
         }
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -383,10 +355,9 @@ private fun WorkOrderEditorDialog(
     onDismiss: () -> Unit,
     onSave: (WorkOrderEntry) -> String?,
 ) {
-    var reference by remember(existing?.id) { mutableStateOf(existing?.reference.orEmpty()) }
     var title by remember(existing?.id) { mutableStateOf(existing?.title.orEmpty()) }
     var dueDate by remember(existing?.id) {
-        mutableStateOf(existing?.dueDate ?: LocalDate.now().plusDays(7))
+        mutableStateOf(existing?.startDate ?: existing?.dueDate ?: LocalDate.now())
     }
     var comment by remember(existing?.id) { mutableStateOf(existing?.comment.orEmpty()) }
     var checklist by remember(existing?.id) { mutableStateOf(existing?.checklist.orEmpty()) }
@@ -419,16 +390,12 @@ private fun WorkOrderEditorDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(localized("Номер Work Order", "Work order number", lang),
-                    color = p.muted, fontSize = 12.sp)
-                NavGlassInput(reference, { reference = it.take(80) }, p,
-                    placeholder = "WO-0001", modifier = Modifier.fillMaxWidth())
                 Text(localized("Название работы", "Job title", lang),
                     color = p.muted, fontSize = 12.sp)
                 NavGlassInput(title, { title = it.take(200) }, p,
                     placeholder = localized("Описание задания", "Work description", lang),
                     modifier = Modifier.fillMaxWidth())
-                Text(localized("Срок выполнения", "Due date", lang),
+                Text(localized("Дата начала работы", "Work start date", lang),
                     color = p.muted, fontSize = 12.sp)
                 WorkOrderChip(navDate(dueDate, lang, true), false, p,
                     Modifier.fillMaxWidth()) { pickingDate = true }
@@ -482,8 +449,8 @@ private fun WorkOrderEditorDialog(
                     )
                 }
                 Text(localized(
-                    "Для повторяющейся работы следующий срок считается от даты выполнения. История остаётся.",
-                    "The next cycle is due after the actual completion date. History is retained.",
+                    "Повторения отсчитываются от выбранной даты начала, независимо от даты выполнения.",
+                    "Repeats follow the selected start date, not the completion date.",
                     lang,
                 ), color = p.muted, fontSize = 11.sp)
                 Text(localized("Предупредить заранее", "Remind before due", lang),
@@ -498,21 +465,6 @@ private fun WorkOrderEditorDialog(
                             remindDays == days, p,
                         ) { remindDays = days }
                     }
-                }
-                if (existing?.completedAt == null) {
-                    ChecklistEditorPanel(
-                        items = checklist,
-                        onItemsChange = { checklist = it },
-                        onEditNote = { noteItemId = it },
-                        p = p, lang = lang,
-                        completionHint = localized(
-                            "Для AMOS отметь обязательные пункты, затем нажми «Готово» в работе.",
-                            "For AMOS, check required items, then tap Done on the work order.", lang),
-                    )
-                } else if (checklist.isNotEmpty()) {
-                    Text(localized("Чек-лист завершённой работы доступен только для просмотра.",
-                            "Archived checklist is read-only. Reopen to edit.", lang),
-                        color = p.muted, fontSize = 12.sp)
                 }
                 Text(localized("Комментарий", "Notes", lang),
                     color = p.muted, fontSize = 12.sp)
@@ -557,9 +509,14 @@ private fun WorkOrderEditorDialog(
                         }
                         WorkOrderEntry(
                             id = existing?.id ?: UUID.randomUUID().toString(),
-                            reference = reference.trim(),
+                            reference = existing?.reference.orEmpty(),
                             title = title.trim(),
-                            dueDate = dueDate,
+                            dueDate = if (existing != null &&
+                                    dueDate == (existing.startDate ?: existing.dueDate) &&
+                                    existing.repeatDays == repeatDays &&
+                                    existing.repeatMonths == repeatMonths) existing.dueDate
+                                else dueDate,
+                            startDate = dueDate,
                             createdAt = existing?.createdAt ?: LocalDate.now(),
                             completedAt = existing?.completedAt,
                             comment = comment.trim(),
@@ -574,8 +531,8 @@ private fun WorkOrderEditorDialog(
                         )
                     }.getOrElse {
                         error = localized(
-                            "Проверь номер, название работы и интервал повторения.",
-                            "Check AMOS number, title and recurrence interval.", lang)
+                            "Проверь название работы, дату начала и периодичность.",
+                            "Check work title, start date and recurrence.", lang)
                         return@WorkOrderChip
                     }
                     val issue = onSave(candidate)
@@ -643,7 +600,7 @@ private fun WorkOrderHistoryCard(
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(archive.order.reference, color = p.blue, fontSize = 12.sp)
+        Text("AMOS", color = p.blue, fontSize = 12.sp)
         Text(archive.order.title, color = p.text, fontSize = 15.sp)
         Text(localized("Срок: ", "Due: ", lang) +
             navDate(completion.dueDate, lang, true),
@@ -651,11 +608,6 @@ private fun WorkOrderHistoryCard(
         Text(localized("Выполнено: ", "Completed: ", lang) +
             navDate(completion.completedAt, lang, true),
             color = p.successText, fontSize = 12.sp)
-        if (completion.checklist.isNotEmpty()) {
-            Text(localized("Чек-лист: ", "Checklist: ", lang) +
-                completion.checkedItemIds.size + "/" + completion.checklist.size,
-                color = p.muted, fontSize = 12.sp)
-        }
         if (archive.canUndo) {
             WorkOrderChip(
                 localized("Отменить выполнение", "Undo completion", lang), false, p,

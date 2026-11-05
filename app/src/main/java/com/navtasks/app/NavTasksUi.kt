@@ -177,6 +177,7 @@ fun NavTasksApp(
     val handoverStore = remember(context, profiles) { HandoverStore(context, profiles) }
     val serviceStore = remember(context, profiles) { ServiceStore(context, profiles) }
     val workOrderStore = remember(context, profiles) { WorkOrderStore(context, profiles) }
+    var todayServiceRequest by remember { mutableStateOf<ServiceEntry?>(null) }
     var editorOpen by remember { mutableStateOf(false) }
     var editorTask by remember { mutableStateOf<TaskTemplate?>(null) }
     var templateFilter by rememberSaveable { mutableStateOf(Frequency.DAILY) }
@@ -376,9 +377,14 @@ fun NavTasksApp(
                             ) {
                                 when (page) {
                                     0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
-                                        expandedRun, { expandedRun = it })
+                                        expandedRun, { expandedRun = it },
+                                        workOrders = workOrderStore, services = serviceStore,
+                                        onAmos = { showWorks = true; showWorkOrders = true },
+                                        onServices = { showWorks = true; showServices = true },
+                                        onRequestNumber = { todayServiceRequest = it })
                                     1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
-                                        onEdit = { editorTask = it; editorOpen = true })
+                                        onEdit = { editorTask = it; editorOpen = true },
+                                        workOrders = workOrderStore, services = serviceStore)
                                     2 -> HandoverScreen(
                                         handoverStore, store, palette, lang,
                                         onBack = { openPrimaryTab(1) }, embeddedInTab = true,
@@ -410,6 +416,18 @@ fun NavTasksApp(
                 }
 
             }
+        }
+        todayServiceRequest?.let { service ->
+            ServiceRequestDialog(
+                service, palette, lang,
+                onDismiss = { todayServiceRequest = null },
+                onSave = { number ->
+                    runCatching {
+                        serviceStore.setRequestNumber(service.id, number)
+                        NavNotifications.reschedule(context, store, settings)
+                    }.onSuccess { todayServiceRequest = null }
+                },
+            )
         }
     }
 }
@@ -450,6 +468,11 @@ private fun TodayScreenV2(
     lang: UiLanguage,
     expandedRun: String?,
     onExpanded: (String?) -> Unit,
+    workOrders: WorkOrderStore,
+    services: ServiceStore,
+    onAmos: () -> Unit,
+    onServices: () -> Unit,
+    onRequestNumber: (ServiceEntry) -> Unit,
 ) {
     var showMissed by rememberSaveable { mutableStateOf(false) }
     var showCompleted by rememberSaveable { mutableStateOf(false) }
@@ -468,6 +491,10 @@ private fun TodayScreenV2(
     val missed = store.missed(now)
     val browsingOtherDay = !showMissed && selectedDay != currentDay
     val extraDue = groupTodayByFrequency(rows).filter { it.first != Frequency.DAILY }
+    val dayWorkOrders = workOrders.entries
+    val dayServices = services.entries
+    val hasWork = dayWorkOrders.any { amosVisibleOnDay(it, selectedDay) } ||
+        dayServices.any { serviceVisibleOnDay(it, selectedDay) }
 
     Column {
         NavPanel(p, Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
@@ -622,6 +649,17 @@ private fun TodayScreenV2(
                     }
                 }
             } else {
+                if (hasWork) {
+                    item(key = "today-work-agenda") {
+                        WorkAgendaTodaySection(
+                            day = selectedDay, today = currentDay,
+                            orders = dayWorkOrders, services = dayServices,
+                            p = p, lang = lang,
+                            onAmos = onAmos, onServices = onServices,
+                            onRequestNumber = onRequestNumber,
+                        )
+                    }
+                }
                 groupTodayByFrequency(incomplete).forEach { (frequency, duties) ->
                     item(key = "today-section-" + frequency.name) {
                         TodayFrequencyHeader(frequency, duties.size, p, lang)
@@ -632,7 +670,7 @@ private fun TodayScreenV2(
                             viewingDate = selectedDay, today = currentDay)
                     }
                 }
-                if (incomplete.isEmpty()) item {
+                if (incomplete.isEmpty() && !hasWork) item {
                     NavPanel(p) { Text(localized("На этот день всё выполнено ✓", "All done for this day ✓", lang), color = p.successText) }
                 }
                 if (complete.isNotEmpty()) item {

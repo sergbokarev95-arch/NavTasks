@@ -71,18 +71,20 @@ class WorkOrderStoreTest {
         validateWorkOrders(listOf(work(), work(id = "two", number = "AMOS-9999")))
     }
 
-    @Test fun invalidEmptyNumbersAndTitlesAreRejected() {
-        assertTrue(runCatching { work(number = "   ") }.isFailure)
-        assertTrue(runCatching {
-            work().copy(title = "")
-        }.isFailure)
+    @Test fun amosNumberIsOptionalWhileTitleRemainsRequired() {
+        val first = work(number = "")
+        val second = work(id = "two", number = "")
+        validateWorkOrders(listOf(first, second))
+        assertFalse(first.completed)
+        assertTrue(runCatching { work().copy(title = "") }.isFailure)
     }
 
     @Test fun incompleteRequiredChecklistCannotBeClosed() {
         val row = CheckItem(id = "a", title = "Verify engine")
         val wo = work().copy(checklist = listOf(row))
         assertFalse(workOrderCanComplete(wo))
-        assertTrue(runCatching { workOrderComplete(wo, today) }.isFailure)
+        // Legacy checklist is retained but AMOS completion no longer requires it.
+        assertTrue(workOrderComplete(wo, today).completed)
         val checked = workOrderCheck(wo, "a", true)
         assertEquals(1 to 1, workOrderMandatoryProgress(checked))
         assertTrue(workOrderCanComplete(checked))

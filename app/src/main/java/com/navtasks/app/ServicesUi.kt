@@ -39,6 +39,7 @@ fun ServicesScreen(
     var showEditor by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<ServiceEntry?>(null) }
     var confirmingDelete by remember { mutableStateOf<ServiceEntry?>(null) }
+    var requestTarget by remember { mutableStateOf<ServiceEntry?>(null) }
     var confirmingComplete by remember { mutableStateOf<ServiceEntry?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     val sorted = services.entries.sortedBy { it.nextDate }
@@ -113,16 +114,14 @@ fun ServicesScreen(
                             overflow = TextOverflow.Ellipsis)
                         NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                     }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Column(Modifier.weight(1f)) {
-                            Text(localized("Последний", "Last", lang), color = p.muted, fontSize = 11.sp)
-                            Text(navDate(service.lastDate, lang, true), color = p.text, fontSize = 12.sp)
-                        }
-                        Column(Modifier.weight(1f)) {
-                            Text(localized("Следующий", "Next", lang), color = p.muted, fontSize = 11.sp)
-                            Text(navDate(service.nextDate, lang, true), color = accent, fontSize = 12.sp)
-                        }
-                    }
+                    Text(localized("Следующее обслуживание: ", "Next service: ", lang) +
+                        navDate(service.nextDate, lang, true), color = accent, fontSize = 12.sp)
+                    ServiceOption(
+                        if (service.requestNumber.isBlank())
+                            localized("Заявка создана", "Request created", lang)
+                        else localized("Заявка AMOS: ", "AMOS request: ", lang) + service.requestNumber,
+                        p, service.requestNumber.isNotBlank(), Modifier.fillMaxWidth(),
+                    ) { requestTarget = service }
                     if (service.comment.isNotBlank()) {
                         Text(service.comment, color = p.muted, fontSize = 12.sp, maxLines = 2,
                             overflow = TextOverflow.Ellipsis)
@@ -161,6 +160,16 @@ fun ServicesScreen(
                         message = localized("Сервис сохранён", "Saved", lang)
                     }
                     .onFailure { e -> message = e.localizedMessage }
+            },
+        )
+    }
+    requestTarget?.let { entry ->
+        ServiceRequestDialog(
+            entry, p, lang, onDismiss = { requestTarget = null },
+            onSave = { number ->
+                runCatching { services.setRequestNumber(entry.id, number) }
+                    .onSuccess { requestTarget = null; message = null }
+                    .onFailure { message = it.localizedMessage }
             },
         )
     }
@@ -238,19 +247,10 @@ private fun ServiceEditorDialog(
                 Text(localized("Оборудование", "Equipment", lang), color = p.muted, fontSize = 12.sp)
                 ServiceInput(equipment, { equipment = it.take(200) },
                     localized("Название", "Name", lang), p, false)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Column(Modifier.weight(1f)) {
-                        Text(localized("Последний", "Last", lang), color = p.muted, fontSize = 11.sp)
-                        ServiceOption(navDate(last, lang, true), p, false, Modifier.fillMaxWidth()) {
-                            pickingDate = "last"
-                        }
-                    }
-                    Column(Modifier.weight(1f)) {
-                        Text(localized("Следующий", "Next", lang), color = p.muted, fontSize = 11.sp)
-                        ServiceOption(navDate(next, lang, true), p, false, Modifier.fillMaxWidth()) {
-                            pickingDate = "next"
-                        }
-                    }
+                Text(localized("Следующее обслуживание", "Next service date", lang),
+                    color = p.muted, fontSize = 12.sp)
+                ServiceOption(navDate(next, lang, true), p, false, Modifier.fillMaxWidth()) {
+                    pickingDate = "next"
                 }
                 Text(localized("Комментарий", "Comment", lang), color = p.muted, fontSize = 12.sp)
                 ServiceInput(note, { note = it.take(6000) },
@@ -262,8 +262,7 @@ private fun ServiceEditorDialog(
                         ServiceOption(if (months == 0) localized("Без повтора", "One-off", lang)
                             else localized(months.toString() + " мес.", months.toString() + " mo", lang),
                             p, !customSelected && period == months) {
-                            if (period > 0 && months > 0 && next == last.plusMonths(period.toLong()))
-                                next = last.plusMonths(months.toLong())
+
                             customSelected = false
                             period = months
                         }
@@ -275,8 +274,7 @@ private fun ServiceEditorDialog(
                             val candidate = (customYears.toIntOrNull() ?: 0) * 12 +
                                 (customMonths.toIntOrNull() ?: 0)
                             if (candidate in 1..1200) {
-                                if (period > 0 && next == last.plusMonths(period.toLong()))
-                                    next = last.plusMonths(candidate.toLong())
+
                                 period = candidate
                             }
                         }
@@ -294,8 +292,7 @@ private fun ServiceEditorDialog(
                                 if (years != null && months != null) {
                                     val total = years * 12 + months
                                     if (total in 1..1200) {
-                                        if (period > 0 && next == last.plusMonths(period.toLong()))
-                                            next = last.plusMonths(total.toLong())
+
                                         period = total
                                     }
                                 }
@@ -310,8 +307,7 @@ private fun ServiceEditorDialog(
                                 if (years != null && months != null) {
                                     val total = years * 12 + months
                                     if (total in 1..1200) {
-                                        if (period > 0 && next == last.plusMonths(period.toLong()))
-                                            next = last.plusMonths(total.toLong())
+
                                         period = total
                                     }
                                 }
@@ -359,8 +355,17 @@ private fun ServiceEditorDialog(
                             require(years >= 0 && months in 0..11 && years * 12 + months in 1..1200)
                             years * 12 + months
                         } else period
-                        ServiceEntry(existing?.id ?: UUID.randomUUID().toString(),
-                            equipment.trim(), last, next, note.trim(), total, alert)
+                        ServiceEntry(
+                            id = existing?.id ?: UUID.randomUUID().toString(),
+                            equipment = equipment.trim(),
+                            lastDate = existing?.lastDate?.takeIf { it.isBefore(next) }
+                                ?: next.minusDays(1),
+                            nextDate = next,
+                            comment = note.trim(),
+                            periodMonths = total,
+                            remindMonths = alert,
+                            requestNumber = existing?.requestNumber.orEmpty(),
+                        )
                     }.onSuccess { onSave(it) }
                         .onFailure {
                             error = localized(
@@ -371,22 +376,11 @@ private fun ServiceEditorDialog(
             }
         }
     }
-    pickingDate?.let { field ->
+    if (pickingDate != null) {
         NavDateWheelDialog(
-            initial = if (field == "last") last else next,
-            p = p, lang = lang,
+            initial = next, p = p, lang = lang,
             onDismiss = { pickingDate = null },
-            onSelected = { chosen ->
-                if (field == "last") {
-                    if (period > 0 && next == last.plusMonths(period.toLong())) {
-                        next = chosen.plusMonths(period.toLong())
-                    }
-                    last = chosen
-                } else {
-                    next = chosen
-                }
-                pickingDate = null
-            },
+            onSelected = { chosen -> next = chosen; pickingDate = null },
         )
     }
 }
