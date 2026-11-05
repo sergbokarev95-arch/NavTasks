@@ -67,6 +67,25 @@ class WorkAgendaTest {
         assertEquals("REQ-2026-91", nextServiceFromCompletion(entry, due).requestNumber)
     }
 
+    @Test fun maintenanceRequestHidesOnlyTodayReminderNotCalendarOrRecord() {
+        val due = now.plusDays(12)
+        val service = service(due)
+        assertTrue(serviceVisibleOnDay(service, now))
+        assertFalse(serviceReminderVisibleOnDay(service, now))
+        assertTrue(servicePlannedOnDay(service, due))
+        assertTrue(workAgendaExistsOnDay(due, emptyList(), listOf(service)))
+
+        val withoutRequest = service.copy(requestNumber = "")
+        assertTrue(serviceReminderVisibleOnDay(withoutRequest, now))
+        assertEquals("REQ-2026-91", service.requestNumber)
+    }
+
+    @Test fun serviceRequestMatchingIsWhitespacedSafe() {
+        val entry = service(now.plusDays(15)).copy(requestNumber = " ")
+        assertTrue(serviceReminderVisibleOnDay(entry, now))
+        assertFalse(serviceReminderVisibleOnDay(entry.copy(requestNumber = "AMOS-123"), now))
+    }
+
     @Test fun calendarDetectsScheduledWorkEvenWithoutOrdinaryTasks() {
         val entry = amos(start = now.plusDays(2))
         assertTrue(workAgendaExistsOnDay(now.plusDays(2), listOf(entry), emptyList()))

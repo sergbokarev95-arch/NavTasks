@@ -3,6 +3,7 @@ package com.navtasks.app
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -34,6 +35,7 @@ fun WorkOrdersScreen(
     p: NavPalette,
     lang: UiLanguage,
     onBack: () -> Unit,
+    focusWorkOrderId: String? = null,
 ) {
     val context = LocalContext.current
     fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
@@ -51,6 +53,18 @@ fun WorkOrdersScreen(
     val openOrders = workOrders.entries.filterNot { it.completed }.sortedWith(
         compareBy<WorkOrderEntry> { it.dueDate }.thenBy { it.reference })
     val history = workOrderHistoryRecords(workOrders.entries)
+    val listState = rememberLazyListState()
+    LaunchedEffect(focusWorkOrderId, showHistory) {
+        if (focusWorkOrderId != null) {
+            // Wait until the Open list is composed before scrolling to the work.
+            if (showHistory) {
+                showHistory = false
+            } else {
+                val index = openOrders.indexOfFirst { it.id == focusWorkOrderId }
+                if (index >= 0) listState.scrollToItem(2 + index)
+            }
+        }
+    }
     val overdue = openOrders.count { it.dueDate.isBefore(today) }
     val soon = openOrders.count { workOrderState(it, today) == WorkOrderState.SOON }
 
@@ -72,6 +86,7 @@ fun WorkOrdersScreen(
         }
         LazyColumn(
             Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp, bottom = 42.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {

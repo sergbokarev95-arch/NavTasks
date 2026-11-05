@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -33,6 +34,7 @@ import java.util.UUID
 fun ServicesScreen(
     services: ServiceStore, tasks: TaskStore, settings: NavSettings,
     p: NavPalette, lang: UiLanguage, onBack: () -> Unit,
+    focusServiceId: String? = null,
 ) {
     val context = LocalContext.current
     val now = LocalDate.now()
@@ -43,6 +45,13 @@ fun ServicesScreen(
     var confirmingComplete by remember { mutableStateOf<ServiceEntry?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     val sorted = services.entries.sortedBy { it.nextDate }
+    val listState = rememberLazyListState()
+    LaunchedEffect(focusServiceId) {
+        if (focusServiceId != null) {
+            val index = sorted.indexOfFirst { it.id == focusServiceId }
+            if (index >= 0) listState.scrollToItem(1 + index)
+        }
+    }
     val overdue = sorted.count { it.nextDate.isBefore(now) }
     val soon = sorted.count { !it.nextDate.isBefore(now) && (
         it.nextDate <= now.plusDays(30) ||
@@ -66,6 +75,7 @@ fun ServicesScreen(
         }
         LazyColumn(
             Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = PaddingValues(16.dp, 6.dp, 16.dp, 36.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

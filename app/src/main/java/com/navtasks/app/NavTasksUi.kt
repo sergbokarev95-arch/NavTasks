@@ -177,7 +177,9 @@ fun NavTasksApp(
     val handoverStore = remember(context, profiles) { HandoverStore(context, profiles) }
     val serviceStore = remember(context, profiles) { ServiceStore(context, profiles) }
     val workOrderStore = remember(context, profiles) { WorkOrderStore(context, profiles) }
-    var todayServiceRequest by remember { mutableStateOf<ServiceEntry?>(null) }
+    // A Today reminder navigates to the exact entry in its owning module.
+    var focusWorkOrderId by rememberSaveable { mutableStateOf<String?>(null) }
+    var focusServiceId by rememberSaveable { mutableStateOf<String?>(null) }
     var editorOpen by remember { mutableStateOf(false) }
     var editorTask by remember { mutableStateOf<TaskTemplate?>(null) }
     var templateFilter by rememberSaveable { mutableStateOf(Frequency.DAILY) }
@@ -215,6 +217,7 @@ fun NavTasksApp(
                 showProfiles = false
                 showServices = false
                 showWorks = true
+                focusWorkOrderId = requestedWorkOrderId
                 showWorkOrders = true
             }
             onWorkOrderRequestHandled()
@@ -259,8 +262,8 @@ fun NavTasksApp(
             editorOpen -> editorOpen = false
             showProfiles -> showProfiles = false
             showSettings -> showSettings = false
-            showServices -> showServices = false
-            showWorkOrders -> showWorkOrders = false
+            showServices -> { showServices = false; focusServiceId = null }
+            showWorkOrders -> { showWorkOrders = false; focusWorkOrderId = null }
             showWorks -> showWorks = false
             profiles.active.kind == NavProfileKind.PERSONAL -> showProfiles = true
             tabHistory.isNotEmpty() -> {
@@ -302,15 +305,17 @@ fun NavTasksApp(
                     onBack = { showProfiles = true }, personalMode = true)
             } else if (showServices) {
                 ServicesScreen(serviceStore, store, settings, palette, lang,
-                    onBack = { showServices = false })
+                    onBack = { showServices = false; focusServiceId = null },
+                    focusServiceId = focusServiceId)
             } else if (showWorkOrders) {
                 WorkOrdersScreen(workOrderStore, store, settings, palette, lang,
-                    onBack = { showWorkOrders = false })
+                    onBack = { showWorkOrders = false; focusWorkOrderId = null },
+                    focusWorkOrderId = focusWorkOrderId)
             } else if (showWorks) {
                 WorksHubScreen(serviceStore, workOrderStore, palette, lang,
                     onBack = { showWorks = false },
-                    onServices = { showServices = true },
-                    onAmos = { showWorkOrders = true })
+                    onServices = { focusServiceId = null; showServices = true },
+                    onAmos = { focusWorkOrderId = null; showWorkOrders = true })
             } else {
                 val hazeState = remember { dev.chrisbanes.haze.HazeState() }
                 Box(Modifier.fillMaxSize()) {
@@ -379,9 +384,16 @@ fun NavTasksApp(
                                     0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
                                         expandedRun, { expandedRun = it },
                                         workOrders = workOrderStore, services = serviceStore,
-                                        onAmos = { showWorks = true; showWorkOrders = true },
-                                        onServices = { showWorks = true; showServices = true },
-                                        onRequestNumber = { todayServiceRequest = it })
+                                        onAmos = { id ->
+                                            focusWorkOrderId = id
+                                            showWorks = true
+                                            showWorkOrders = true
+                                        },
+                                        onServices = { id ->
+                                            focusServiceId = id
+                                            showWorks = true
+                                            showServices = true
+                                        })
                                     1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
                                         onEdit = { editorTask = it; editorOpen = true },
                                         workOrders = workOrderStore, services = serviceStore)
@@ -416,18 +428,6 @@ fun NavTasksApp(
                 }
 
             }
-        }
-        todayServiceRequest?.let { service ->
-            ServiceRequestDialog(
-                service, palette, lang,
-                onDismiss = { todayServiceRequest = null },
-                onSave = { number ->
-                    runCatching {
-                        serviceStore.setRequestNumber(service.id, number)
-                        NavNotifications.reschedule(context, store, settings)
-                    }.onSuccess { todayServiceRequest = null }
-                },
-            )
         }
     }
 }
@@ -470,9 +470,8 @@ private fun TodayScreenV2(
     onExpanded: (String?) -> Unit,
     workOrders: WorkOrderStore,
     services: ServiceStore,
-    onAmos: () -> Unit,
-    onServices: () -> Unit,
-    onRequestNumber: (ServiceEntry) -> Unit,
+    onAmos: (String) -> Unit,
+    onServices: (String) -> Unit,
 ) {
     var showMissed by rememberSaveable { mutableStateOf(false) }
     var showCompleted by rememberSaveable { mutableStateOf(false) }
@@ -494,7 +493,7 @@ private fun TodayScreenV2(
     val dayWorkOrders = workOrders.entries
     val dayServices = services.entries
     val hasWork = dayWorkOrders.any { amosVisibleOnDay(it, selectedDay) } ||
-        dayServices.any { serviceVisibleOnDay(it, selectedDay) }
+        dayServices.any { serviceReminderVisibleOnDay(it, selectedDay) }
 
     Column {
         NavPanel(p, Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
@@ -653,11 +652,10 @@ private fun TodayScreenV2(
                 if (hasWork) {
                     item(key = "today-work-agenda") {
                         WorkAgendaTodaySection(
-                            day = selectedDay, today = currentDay,
+                            day = selectedDay,
                             orders = dayWorkOrders, services = dayServices,
                             p = p, lang = lang,
                             onAmos = onAmos, onServices = onServices,
-                            onRequestNumber = onRequestNumber,
                         )
                     }
                 }

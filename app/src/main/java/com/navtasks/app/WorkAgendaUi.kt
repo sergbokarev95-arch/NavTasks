@@ -20,18 +20,16 @@ import java.time.LocalDate
 @Composable
 internal fun WorkAgendaTodaySection(
     day: LocalDate,
-    today: LocalDate,
     orders: List<WorkOrderEntry>,
     services: List<ServiceEntry>,
     p: NavPalette,
     lang: UiLanguage,
-    onAmos: () -> Unit,
-    onServices: () -> Unit,
-    onRequestNumber: (ServiceEntry) -> Unit,
+    onAmos: (String) -> Unit,
+    onServices: (String) -> Unit,
 ) {
     val ordersVisible = orders.filter { amosVisibleOnDay(it, day) }
         .sortedBy { it.dueDate }
-    val servicesVisible = services.filter { serviceVisibleOnDay(it, day) }
+    val servicesVisible = services.filter { serviceReminderVisibleOnDay(it, day) }
         .sortedBy { it.nextDate }
     if (ordersVisible.isEmpty() && servicesVisible.isEmpty()) return
 
@@ -41,10 +39,11 @@ internal fun WorkAgendaTodaySection(
     ordersVisible.forEach { order ->
         key("amos-" + order.id) {
             WorkAgendaTodayCard(
-                title = order.title, category = "AMOS",
-                dueDate = order.dueDate, currentDay = day,
-                p = p, lang = lang, onOpen = onAmos,
-                repeat = order.recurring,
+                title = order.title,
+                category = "AMOS",
+                nextServiceDate = null,
+                p = p, lang = lang,
+                onNavigate = { onAmos(order.id) },
             )
         }
         Spacer(Modifier.height(8.dp))
@@ -54,91 +53,55 @@ internal fun WorkAgendaTodaySection(
             WorkAgendaTodayCard(
                 title = service.equipment,
                 category = localized("Сервис", "Maintenance", lang),
-                dueDate = service.nextDate, currentDay = day,
-                p = p, lang = lang, onOpen = onServices,
-                repeat = service.periodMonths > 0,
-                requestNumber = service.requestNumber,
-                onRequest = { onRequestNumber(service) },
+                nextServiceDate = service.nextDate,
+                p = p, lang = lang,
+                onNavigate = { onServices(service.id) },
             )
         }
         Spacer(Modifier.height(8.dp))
     }
 }
 
+/**
+ * Read-only reminder: only the explicit navigation button is interactive.
+ * Work completion, requests and editing live in the appropriate Works module.
+ */
 @Composable
 private fun WorkAgendaTodayCard(
     title: String,
     category: String,
-    dueDate: LocalDate,
-    currentDay: LocalDate,
+    nextServiceDate: LocalDate?,
     p: NavPalette,
     lang: UiLanguage,
-    onOpen: () -> Unit,
-    repeat: Boolean,
-    requestNumber: String? = null,
-    onRequest: (() -> Unit)? = null,
+    onNavigate: () -> Unit,
 ) {
-    val late = dueDate.isBefore(currentDay)
-    val statusColor = if (late) Color(0xFFE98B84) else p.blue
-    Column(
-        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(9.dp),
+    Row(
+        Modifier.fillMaxWidth().navGlass(p, radius = 17.dp, role = GlassRole.TASK)
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(
-            Modifier.fillMaxWidth().glassClickable(onClick = onOpen),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
-            Column(Modifier.weight(1f)) {
-                Text(category, color = p.blue, fontSize = 11.sp)
-                Spacer(Modifier.height(4.dp))
-                Text(title, color = p.text, fontSize = 15.sp, maxLines = 2,
-                    overflow = TextOverflow.Ellipsis)
+            Text(category, color = p.blue, fontSize = 11.sp)
+            Text(title, color = p.text, fontSize = 14.sp,
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
+            nextServiceDate?.let { due ->
+                Text(localized("Следующий сервис: ", "Next service: ", lang) +
+                    navDate(due, lang, true),
+                    color = p.muted, fontSize = 11.sp)
             }
-            NavGlassGlyph("chevron-right", p.muted, Modifier.size(18.dp))
         }
-        Text(
-            (if (onRequest != null)
-                localized("Следующий сервис: ", "Next maintenance: ", lang)
-            else if (repeat)
-                localized("Следующее повторение: ", "Next recurrence: ", lang)
-            else localized("Начало работы: ", "Work starts: ", lang)) +
-                navDate(dueDate, lang, true),
-            color = statusColor, fontSize = 12.sp,
-        )
-        if (repeat) {
-            Text(localized("Повторяющаяся работа", "Recurring work", lang),
-                color = p.muted, fontSize = 11.sp)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                if (late) localized("Просрочено", "Overdue", lang)
-                else localized("Запланировано", "Scheduled", lang),
-                color = statusColor, fontSize = 11.sp,
-                modifier = Modifier.weight(1f),
-            )
-            if (onRequest != null) {
-                Box(
-                    Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
-                        .glassClickable(onClick = onRequest)
-                        .padding(horizontal = 10.dp, vertical = 9.dp),
-                ) {
-                    Text(
-                        if (requestNumber.isNullOrBlank())
-                            localized("Заявка создана", "Request created", lang)
-                        else localized("Заявка: ", "Request: ", lang) + requestNumber,
-                        color = p.blue, fontSize = 11.sp, maxLines = 1,
-                    )
-                }
-                Spacer(Modifier.width(7.dp))
-            }
-            Box(
-                Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
-                    .glassClickable(onClick = onOpen)
-                    .padding(horizontal = 11.dp, vertical = 9.dp),
-            ) {
-                Text(localized("Открыть", "Open", lang), color = p.text, fontSize = 11.sp)
-            }
+        Box(
+            Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
+                .glassClickable(onClick = onNavigate)
+                .padding(horizontal = 12.dp, vertical = 11.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(localized("Перейти", "Go to", lang),
+                color = p.blue, fontSize = 12.sp)
         }
     }
 }

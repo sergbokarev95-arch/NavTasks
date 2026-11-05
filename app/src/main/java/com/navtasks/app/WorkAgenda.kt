@@ -18,6 +18,10 @@ internal fun amosVisibleOnDay(work: WorkOrderEntry, day: LocalDate): Boolean {
 internal fun serviceVisibleOnDay(service: ServiceEntry, day: LocalDate): Boolean =
     !day.isBefore(minOf(serviceWarningStart(service), service.nextDate.minusDays(30)))
 
+/** Once the AMOS requisition is recorded, remove the reminder from Today only. */
+internal fun serviceReminderVisibleOnDay(service: ServiceEntry, day: LocalDate): Boolean =
+    service.requestNumber.isBlank() && serviceVisibleOnDay(service, day)
+
 /** Fixed calendar cycle anchored at the manually selected AMOS start date. */
 internal fun amosPlannedOnDay(work: WorkOrderEntry, date: LocalDate): Boolean {
     val start = work.startDate ?: work.dueDate
