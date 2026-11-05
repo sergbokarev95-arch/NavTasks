@@ -25,6 +25,7 @@ object NavNotifications {
     private const val MISSED = "missed"
     private const val DIGEST = "digest"
     private const val SERVICE = "service"
+    private const val AMOS = "amos"
     private const val CHANNEL_TASKS = "navtasks-reminders"
     private const val CHANNEL_MISSED = "navtasks-missed"
 
@@ -75,6 +76,19 @@ object NavNotifications {
         }
         return PendingIntent.getActivity(context, ("open:" + profileId + ":" + runKey).hashCode(), intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    }
+
+    private fun openWorkOrder(context: Context, id: String): PendingIntent {
+        val profileId = ProfileStore(context).activeId
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("workOrderId", id)
+            putExtra("profileId", profileId)
+            data = Uri.parse("navtasks://open-amos/" + Uri.encode(profileId) + "/" + Uri.encode(id))
+        }
+        return PendingIntent.getActivity(context,
+            ("open-amos:" + profileId + ":" + id).hashCode(),
+            intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
     private fun schedule(context: Context, kind: String, key: String, whenMillis: Long) {
@@ -128,6 +142,22 @@ object NavNotifications {
                 if (!alarm.isAfter(current)) alarm = current.plusMinutes(2)
                 if (alarm.toLocalDate().isAfter(service.nextDate)) continue
                 schedule(context, SERVICE, service.id + "|" + service.nextDate,
+                    alarm.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+            }
+            // One configurable early warning per open AMOS work order and due date.
+            // Stale alarms from edited due dates or completed work are ignored at delivery.
+            for (order in WorkOrderStore(context, profiles).entries) {
+                if (order.completed || order.remindDaysBefore == 0 ||
+                    order.dueDate.isBefore(today)) continue
+                val key = profiles.activeId + ":amos:" + order.id + ":" +
+                    order.dueDate + ":" + order.remindDaysBefore
+                if (key in notified) continue
+                val start = workOrderWarningStart(order)
+                var alarm = (if (start.isBefore(today)) today else start).atTime(9, 0)
+                if (!alarm.isAfter(current)) alarm = current.plusMinutes(2)
+                if (alarm.toLocalDate().isAfter(order.dueDate)) continue
+                schedule(context, AMOS,
+                    order.id + "|" + order.dueDate + "|" + order.remindDaysBefore,
                     alarm.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
             }
         }
@@ -196,6 +226,34 @@ object NavNotifications {
                 .setStyle(Notification.BigTextStyle().bigText(detail))
                 .setContentIntent(openTask(context)).setAutoCancel(true).build()
             manager(context).notify(("service:" + service.id + service.nextDate).hashCode(),
+                notification)
+            return
+        }
+        if (kind == AMOS) {
+            val parts = runKey.split("|")
+            if (parts.size != 3) return
+            val profiles = ProfileStore(context)
+            if (profiles.active.kind != NavProfileKind.VESSEL) return
+            val order = WorkOrderStore(context, profiles).entries
+                .firstOrNull { it.id == parts[0] } ?: return
+            if (order.completed || order.remindDaysBefore == 0 ||
+                order.dueDate.toString() != parts[1] ||
+                order.remindDaysBefore.toString() != parts[2] ||
+                LocalDate.now().isBefore(workOrderWarningStart(order)) ||
+                LocalDate.now().isAfter(order.dueDate)) return
+            if (!mayNotify(context)) return
+            if (!alreadyNotified(context, profiles.activeId + ":amos:" +
+                    order.id + ":" + order.dueDate + ":" + order.remindDaysBefore)) return
+            val detail = order.reference + " · " + order.title + " · " +
+                localized("до ", "due ", settings.language) + order.dueDate
+            val notification = Notification.Builder(context, CHANNEL_TASKS)
+                .setSmallIcon(R.drawable.navtasks_icon_monochrome)
+                .setContentTitle(localized("AMOS: срок работы", "AMOS: work due", settings.language))
+                .setContentText(detail)
+                .setStyle(Notification.BigTextStyle().bigText(detail))
+                .setContentIntent(openWorkOrder(context, order.id))
+                .setAutoCancel(true).build()
+            manager(context).notify(("amos:" + order.id + order.dueDate).hashCode(),
                 notification)
             return
         }
