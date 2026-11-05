@@ -101,6 +101,58 @@ class WorkOrderRecurrenceTest {
         assertEquals(setOf("a"), rolledBack.checkedItemIds)
     }
 
+    @Test fun delayedCompletionCanKeepOriginalMonthlySchedule() {
+        val work = order(repeatMonths = 1).copy(
+            dueDate = LocalDate.of(2026, 11, 6),
+            startDate = LocalDate.of(2026, 11, 6),
+        )
+        val done = workOrderComplete(work, LocalDate.of(2026, 11, 8), shiftFuture = false)
+        assertEquals(LocalDate.of(2026, 12, 6), done.dueDate)
+        assertEquals(LocalDate.of(2026, 11, 6), done.startDate)
+        assertEquals(LocalDate.of(2026, 11, 6), done.executionHistory.single().dueDate)
+        assertEquals(LocalDate.of(2026, 11, 8), done.executionHistory.single().completedAt)
+    }
+
+    @Test fun delayedCompletionCanShiftFutureRepetitionsOnly() {
+        val work = order(repeatMonths = 1).copy(
+            dueDate = LocalDate.of(2026, 11, 6),
+            startDate = LocalDate.of(2026, 11, 6),
+        )
+        val done = workOrderComplete(work, LocalDate.of(2026, 11, 8), shiftFuture = true)
+        assertEquals(LocalDate.of(2026, 12, 8), done.dueDate)
+        assertEquals(LocalDate.of(2026, 11, 8), done.startDate)
+        assertEquals(LocalDate.of(2026, 11, 6), done.executionHistory.single().dueDate)
+        assertEquals(LocalDate.of(2026, 11, 8), done.executionHistory.single().completedAt)
+        val rolledBack = workOrderReopen(done)
+        assertEquals(work.dueDate, rolledBack.dueDate)
+        assertEquals(work.startDate, rolledBack.startDate)
+        assertTrue(rolledBack.executionHistory.isEmpty())
+    }
+
+    @Test fun shiftedScheduleRestoresPreviousAnchorAfterTwoCycles() {
+        val original = order(repeatDays = 7).copy(
+            dueDate = LocalDate.of(2026, 11, 6),
+            startDate = LocalDate.of(2026, 11, 6),
+        )
+        val first = workOrderComplete(original, LocalDate.of(2026, 11, 8), true)
+        val second = workOrderComplete(first, LocalDate.of(2026, 11, 15), false)
+        assertEquals(LocalDate.of(2026, 11, 22), second.dueDate)
+        val undone = workOrderReopen(second)
+        assertEquals(LocalDate.of(2026, 11, 15), undone.dueDate)
+        assertEquals(LocalDate.of(2026, 11, 8), undone.startDate)
+        val undoneAgain = workOrderReopen(undone)
+        assertEquals(original.dueDate, undoneAgain.dueDate)
+        assertEquals(original.startDate, undoneAgain.startDate)
+    }
+
+    @Test fun oneOffCompletionRemainsOneOffEvenWhenDifferentDay() {
+        val source = order()
+        val closed = workOrderComplete(source, due.plusDays(2))
+        assertTrue(closed.completed)
+        assertEquals(due, closed.dueDate)
+        assertEquals(due.plusDays(2), closed.completedAt)
+    }
+
     @Test fun invalidDoubleRecurrenceAndExcessHistoryAreRejected() {
         assertTrue(runCatching { order(7, 1) }.isFailure)
         assertTrue(runCatching { order(repeatMonths = 1201) }.isFailure)

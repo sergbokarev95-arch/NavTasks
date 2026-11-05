@@ -77,6 +77,60 @@ class ServiceScheduleTest {
         assertEquals(LocalDate.of(2027, 1, 31), manual.nextDate)
     }
 
+    @Test fun actualServiceDateControlsNextDueAndArchivesAmosRequest() {
+        val item = service(next = LocalDate.of(2027, 1, 16), period = 12).copy(
+            requestNumber = "252-03524",
+        )
+        val done = completeServiceCycle(item, LocalDate.of(2026, 11, 8))
+        assertEquals(LocalDate.of(2027, 11, 8), done.nextDate)
+        assertEquals(LocalDate.of(2026, 11, 8), done.lastDate)
+        assertEquals("", done.requestNumber)
+        assertEquals(1, done.serviceHistory.size)
+        val archived = done.serviceHistory.single()
+        assertEquals(LocalDate.of(2027, 1, 16), archived.scheduledDate)
+        assertEquals(LocalDate.of(2026, 11, 8), archived.completedAt)
+        assertEquals("252-03524", archived.requestNumber)
+        assertEquals(item.equipment, archived.equipment)
+    }
+
+    @Test fun eachServiceCyclePreservesPreviousRequisitionHistory() {
+        val original = service(next = LocalDate.of(2026, 11, 6)).copy(
+            requestNumber = "REQ-1",
+        )
+        val once = completeServiceCycle(original, LocalDate.of(2026, 11, 8))
+        val twice = completeServiceCycle(
+            once.copy(requestNumber = "REQ-2"),
+            LocalDate.of(2027, 11, 9),
+        )
+        assertEquals(2, twice.serviceHistory.size)
+        assertEquals(listOf("REQ-1", "REQ-2"),
+            twice.serviceHistory.map { it.requestNumber })
+        assertEquals("", twice.requestNumber)
+        assertEquals(LocalDate.of(2028, 11, 9), twice.nextDate)
+        assertEquals("REQ-1", original.requestNumber)
+    }
+
+    @Test fun oneOffServiceCompletesWithoutFakeNewDueDate() {
+        val once = service(period = 0).copy(requestNumber = "AMOS-57")
+        val result = completeServiceCycle(once, LocalDate.of(2026, 12, 25))
+        assertEquals(LocalDate.of(2026, 12, 25), result.completedAt)
+        assertEquals(once.nextDate, result.nextDate)
+        assertEquals("AMOS-57", result.serviceHistory.single().requestNumber)
+        assertEquals("", result.requestNumber)
+        assertFalse(serviceVisibleOnDay(result, result.nextDate))
+        assertFalse(servicePlannedOnDay(result, result.nextDate))
+        assertTrue(runCatching {
+            completeServiceCycle(result, LocalDate.of(2026, 12, 26))
+        }.isFailure)
+    }
+
+    @Test fun oldServiceRecordsHaveEmptyCompletionHistoryByDefault() {
+        val item = service()
+        assertTrue(item.serviceHistory.isEmpty())
+        assertEquals(null, item.completedAt)
+        assertEquals("", item.requestNumber)
+    }
+
     @Test fun invalidDatesOrExcessiveReminderAreRejected() {
         assertTrue(runCatching { service(
             last = LocalDate.of(2027, 1, 31),

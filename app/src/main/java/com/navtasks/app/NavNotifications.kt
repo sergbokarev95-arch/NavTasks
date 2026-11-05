@@ -133,7 +133,8 @@ object NavNotifications {
             ).getStringSet("delivered", emptySet()).orEmpty()
             val current = LocalDateTime.now()
             for (service in ServiceStore(context, profiles).entries) {
-                if (service.remindMonths == 0 || service.nextDate.isBefore(today)) continue
+                if (service.completedAt != null || service.remindMonths == 0 ||
+                    service.nextDate.isBefore(today)) continue
                 val notificationKey = profiles.activeId + ":service:" +
                     service.id + ":" + service.nextDate
                 if (notificationKey in notified) continue
@@ -211,7 +212,8 @@ object NavNotifications {
             if (profiles.active.kind != NavProfileKind.VESSEL) return
             val service = ServiceStore(context, profiles).entries
                 .firstOrNull { it.id == serviceId } ?: return
-            if (service.nextDate.toString() != expectedDue ||
+            if (service.completedAt != null ||
+                service.nextDate.toString() != expectedDue ||
                 service.remindMonths == 0 || LocalDate.now().isBefore(serviceWarningStart(service)) ||
                 LocalDate.now().isAfter(service.nextDate)) return
             if (!mayNotify(context)) return

@@ -86,6 +86,17 @@ class WorkAgendaTest {
         assertFalse(serviceReminderVisibleOnDay(entry.copy(requestNumber = "AMOS-123"), now))
     }
 
+    @Test fun completedOneOffServiceIsHiddenFromAgenda() {
+        val finished = completeServiceCycle(
+            service(now.plusDays(1)).copy(periodMonths = 0),
+            now,
+        )
+        assertFalse(serviceReminderVisibleOnDay(finished, now.plusDays(1)))
+        assertFalse(servicePlannedOnDay(finished, now.plusDays(1)))
+        assertFalse(workAgendaExistsOnDay(
+            now.plusDays(1), emptyList(), listOf(finished)))
+    }
+
     @Test fun calendarDetectsScheduledWorkEvenWithoutOrdinaryTasks() {
         val entry = amos(start = now.plusDays(2))
         assertTrue(workAgendaExistsOnDay(now.plusDays(2), listOf(entry), emptyList()))

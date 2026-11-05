@@ -31,9 +31,11 @@ fun WorksHubScreen(
     val today = LocalDate.now()
     val activeAmos = workOrders.entries.filterNot { it.completed }
     val overdueAmos = activeAmos.count { it.dueDate.isBefore(today) }
-    val overdue = services.entries.count { it.nextDate.isBefore(today) }
+    val overdue = services.entries.count {
+        it.completedAt == null && it.nextDate.isBefore(today)
+    }
     val approaching = services.entries.count {
-        !it.nextDate.isBefore(today) &&
+        it.completedAt == null && !it.nextDate.isBefore(today) &&
             (it.nextDate <= today.plusDays(30) ||
                 (it.remindMonths > 0 && !today.isBefore(serviceWarningStart(it))))
     }

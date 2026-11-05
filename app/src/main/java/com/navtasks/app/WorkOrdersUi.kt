@@ -45,6 +45,7 @@ fun WorkOrdersScreen(
     var completeTarget by remember { mutableStateOf<WorkOrderEntry?>(null) }
     var completionDate by remember { mutableStateOf(LocalDate.now()) }
     var completionDatePicker by remember { mutableStateOf(false) }
+    var chooseShiftAfterCompletion by remember { mutableStateOf(false) }
     var reopenTarget by remember { mutableStateOf<WorkOrderEntry?>(null) }
     var deleteTarget by remember { mutableStateOf<WorkOrderEntry?>(null) }
     var feedback by remember { mutableStateOf<String?>(null) }
@@ -67,6 +68,24 @@ fun WorkOrdersScreen(
     }
     val overdue = openOrders.count { it.dueDate.isBefore(today) }
     val soon = openOrders.count { workOrderState(it, today) == WorkOrderState.SOON }
+
+    fun finalizeCompletion(shiftFuture: Boolean) {
+        val order = completeTarget ?: return
+        runCatching {
+            workOrders.complete(order.id, completionDate, shiftFuture)
+            reschedule()
+        }.onSuccess {
+            completeTarget = null
+            chooseShiftAfterCompletion = false
+            completionDatePicker = false
+            feedback = null
+        }.onFailure {
+            completeTarget = null
+            chooseShiftAfterCompletion = false
+            completionDatePicker = false
+            feedback = it.localizedMessage
+        }
+    }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
         Row(
@@ -157,6 +176,7 @@ fun WorkOrdersScreen(
                         onComplete = {
                             completeTarget = order
                             completionDate = LocalDate.now()
+                            chooseShiftAfterCompletion = false
                         },
                         onToggleCheck = { id, checked ->
                             runCatching { workOrders.setCheck(order.id, id, checked) }
@@ -181,10 +201,14 @@ fun WorkOrdersScreen(
         )
     }
 
-    completeTarget?.let { order ->
+    completeTarget?.takeUnless { chooseShiftAfterCompletion }?.let { order ->
         NavGlassAlertDialog(
             p = p,
-            onDismissRequest = { completeTarget = null; completionDatePicker = false },
+            onDismissRequest = {
+                completeTarget = null
+                completionDatePicker = false
+                chooseShiftAfterCompletion = false
+            },
             title = { Text(localized("Завершить работу?", "Complete work order?", lang)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -205,9 +229,12 @@ fun WorkOrdersScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    runCatching { workOrders.complete(order.id, completionDate); reschedule() }
-                        .onSuccess { completeTarget = null; feedback = null }
-                        .onFailure { feedback = it.localizedMessage; completeTarget = null }
+                    if (order.recurring && completionDate != order.dueDate) {
+                        completionDatePicker = false
+                        chooseShiftAfterCompletion = true
+                    } else {
+                        finalizeCompletion(false)
+                    }
                 }) {
                     Text(localized("Завершить", "Complete", lang))
                 }
@@ -223,6 +250,59 @@ fun WorkOrdersScreen(
                 initial = completionDate, p = p, lang = lang,
                 onDismiss = { completionDatePicker = false },
                 onSelected = { completionDate = it; completionDatePicker = false },
+            )
+        }
+    }
+
+    if (chooseShiftAfterCompletion) {
+        completeTarget?.let { order ->
+            NavGlassAlertDialog(
+                p = p,
+                onDismissRequest = { chooseShiftAfterCompletion = false },
+                title = {
+                    Text(localized("Сместить график AMOS?", "Shift AMOS schedule?", lang))
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                        Text(order.title, color = p.text, fontSize = 14.sp)
+                        Text(
+                            localized("По графику: ", "Scheduled: ", lang) +
+                                navDate(order.dueDate, lang, true),
+                            color = p.muted, fontSize = 12.sp,
+                        )
+                        Text(
+                            localized("Выполнено: ", "Completed: ", lang) +
+                                navDate(completionDate, lang, true),
+                            color = p.text, fontSize = 12.sp,
+                        )
+                        Text(
+                            localized(
+                                "Сместить — будущие повторения пойдут от выбранной даты. " +
+                                    "Оставить — прежние дни останутся без изменений. " +
+                                    "Фактическая дата выполнения сохранится в истории в обоих случаях.",
+                                "Shift moves future repetitions to the selected date. " +
+                                    "Keep preserves the original schedule. " +
+                                    "The actual completion date is archived either way.",
+                                lang,
+                            ), color = p.muted, fontSize = 12.sp,
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { finalizeCompletion(true) }) {
+                        Text(localized("Сместить график", "Shift schedule", lang))
+                    }
+                },
+                dismissButton = {
+                    Column(horizontalAlignment = Alignment.End) {
+                        TextButton(onClick = { finalizeCompletion(false) }) {
+                            Text(localized("Оставить график", "Keep schedule", lang))
+                        }
+                        TextButton(onClick = { chooseShiftAfterCompletion = false }) {
+                            Text(localized("Назад", "Back", lang))
+                        }
+                    }
+                },
             )
         }
     }

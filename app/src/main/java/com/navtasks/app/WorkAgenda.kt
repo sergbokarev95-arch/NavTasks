@@ -16,7 +16,8 @@ internal fun amosVisibleOnDay(work: WorkOrderEntry, day: LocalDate): Boolean {
 }
 
 internal fun serviceVisibleOnDay(service: ServiceEntry, day: LocalDate): Boolean =
-    !day.isBefore(minOf(serviceWarningStart(service), service.nextDate.minusDays(30)))
+    service.completedAt == null &&
+        !day.isBefore(minOf(serviceWarningStart(service), service.nextDate.minusDays(30)))
 
 /** Once the AMOS requisition is recorded, remove the reminder from Today only. */
 internal fun serviceReminderVisibleOnDay(service: ServiceEntry, day: LocalDate): Boolean =
@@ -38,7 +39,7 @@ internal fun amosPlannedOnDay(work: WorkOrderEntry, date: LocalDate): Boolean {
 
 /** Service calendar markers are informative, including projected future servicing. */
 internal fun servicePlannedOnDay(service: ServiceEntry, date: LocalDate): Boolean {
-    if (date.isBefore(service.nextDate)) return false
+    if (service.completedAt != null || date.isBefore(service.nextDate)) return false
     if (date == service.nextDate) return true
     if (service.periodMonths == 0) return false
     val months = ChronoUnit.MONTHS.between(service.nextDate.withDayOfMonth(1),

@@ -127,11 +127,12 @@ internal fun workOrderCheck(order: WorkOrderEntry, checkId: String, checked: Boo
 internal fun workOrderWarningStart(order: WorkOrderEntry): LocalDate =
     order.dueDate.minusDays(order.remindDaysBefore.toLong())
 
-internal fun workOrderComplete(order: WorkOrderEntry, day: LocalDate): WorkOrderEntry {
+internal fun workOrderComplete(
+    order: WorkOrderEntry, day: LocalDate, shiftFuture: Boolean = false,
+): WorkOrderEntry {
     require(!order.completed) { "Work order already completed" }
-    // AMOS work is completed manually. Legacy checklists remain safely archived,
-    // but do not block work that no longer requires a checklist.
-    return workOrderFinishCycle(order, day)
+    // AMOS work is completed manually; legacy checklist data remains archived.
+    return workOrderFinishCycle(order, day, shiftFuture)
 }
 
 internal fun workOrderReopen(order: WorkOrderEntry): WorkOrderEntry =
@@ -193,9 +194,10 @@ class WorkOrderStore(context: Context, private val profiles: ProfileStore) {
         upsert(workOrderCheck(entry, checkId, checked))
     }
 
-    fun complete(id: String, on: LocalDate) {
+    fun complete(id: String, on: LocalDate, shiftFuture: Boolean = false) {
         val entry = entries.firstOrNull { it.id == id } ?: error("Work order not found")
-        upsert(workOrderComplete(entry, on))
+        require(!shiftFuture || entry.recurring) { "Cannot shift a one-off schedule" }
+        upsert(workOrderComplete(entry, on, shiftFuture))
     }
 
     fun reopen(id: String) {

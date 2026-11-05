@@ -12,6 +12,8 @@ data class WorkOrderCompletion(
     val completedAt: LocalDate,
     val checklist: List<CheckItem>,
     val checkedItemIds: Set<String>,
+    /** Anchor used before this completion, needed when undoing a shifted cycle. */
+    val scheduleAnchorBefore: LocalDate? = null,
 ) {
     init {
         require(id.isNotBlank())
@@ -27,6 +29,7 @@ data class WorkOrderCompletion(
         .put("checkedItemIds", JSONArray().apply {
             checkedItemIds.sorted().forEach { put(it) }
         })
+        .put("scheduleAnchorBefore", scheduleAnchorBefore?.toString() ?: JSONObject.NULL)
 
     companion object {
         fun fromJson(json: JSONObject): WorkOrderCompletion {
@@ -42,6 +45,9 @@ data class WorkOrderCompletion(
                     CheckItem.fromJson(list.getJSONObject(it))
                 },
                 checkedItemIds = (0 until checked.length()).map { checked.getString(it) }.toSet(),
+                scheduleAnchorBefore = json.optString("scheduleAnchorBefore", "").takeUnless {
+                    it.isBlank() || it == "null"
+                }?.let(LocalDate::parse),
             )
         }
     }
@@ -63,18 +69,34 @@ internal fun workOrderNextDue(entry: WorkOrderEntry, completedAt: LocalDate): Lo
 }
 
 /** Complete one cycle without changing older dated records or checklist references. */
-internal fun workOrderFinishCycle(order: WorkOrderEntry, completedAt: LocalDate): WorkOrderEntry {
+/**
+ * Shift=true resets the repeating day/month to the selected completion date.
+ * Otherwise the original schedule anchor is preserved. Either way the dated
+ * occurrence is archived at its originally scheduled date.
+ */
+internal fun workOrderFinishCycle(
+    order: WorkOrderEntry,
+    completedAt: LocalDate,
+    shiftFuture: Boolean = false,
+): WorkOrderEntry {
     require(!order.completed)
     if (!order.recurring) return order.copy(completedAt = completedAt)
     require(order.executionHistory.size < 300) { "AMOS history limit reached" }
+    val oldAnchor = order.startDate ?: order.dueDate
+    val planned = if (shiftFuture) order.copy(
+        startDate = completedAt, dueDate = completedAt,
+    ) else order
+    val nextDue = workOrderNextDue(planned, completedAt)
     val snapshot = WorkOrderCompletion(
         dueDate = order.dueDate,
         completedAt = completedAt,
         checklist = order.checklist,
         checkedItemIds = order.checkedItemIds,
+        scheduleAnchorBefore = oldAnchor,
     )
     return order.copy(
-        dueDate = workOrderNextDue(order, completedAt),
+        dueDate = nextDue,
+        startDate = if (shiftFuture) completedAt else order.startDate,
         completedAt = null,
         checkedItemIds = emptySet(),
         executionHistory = order.executionHistory + snapshot,
@@ -96,6 +118,7 @@ internal fun workOrderUndoCycle(order: WorkOrderEntry): WorkOrderEntry {
     val last = order.executionHistory.last()
     return order.copy(
         dueDate = last.dueDate,
+        startDate = last.scheduleAnchorBefore ?: order.startDate,
         checkedItemIds = last.checkedItemIds.intersect(order.checklist.map { it.id }.toSet()),
         executionHistory = order.executionHistory.dropLast(1),
     )
