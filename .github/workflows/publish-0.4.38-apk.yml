@@ -7,35 +7,63 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
   contents: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
-      - name: Verify tested source and download signed APK
+      - name: Check out verified 0.4.38 source
+        uses: actions/checkout@v4
+        with:
+          ref: df35f506fb1c7691e2f91c2da74c02ed3256b7e1
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore stable beta signing key
         env:
-          GH_TOKEN: ${{ github.token }}
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify 0.4.38 source and run tests
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
         run: |
           set -euo pipefail
-          RUN=42072964783
-          REPO="${{ github.repository }}"
-          EXPECTED_SHA="df35f506fb1c7691e2f91c2da74c02ed3256b7e1"
-          test "$(gh run view "$RUN" --repo "$REPO" --json conclusion --jq .conclusion)" = success
-          test "$(gh run view "$RUN" --repo "$REPO" --json headSha --jq .headSha)" = "$EXPECTED_SHA"
+          test "$(git rev-parse HEAD)" = "df35f506fb1c7691e2f91c2da74c02ed3256b7e1"
+          grep -q 'versionName = "0.4.38"' app/build.gradle.kts
+          grep -q 'versionCode = 60' app/build.gradle.kts
+          gradle :app:testDebugUnitTest --no-daemon
+      - name: Build the same signed beta APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: gradle :app:assembleDebug --no-daemon
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Package APK and compact ZIP without artifact egress
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
           mkdir -p upload
-          gh run download "$RUN" --repo "$REPO" \
-            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
-          test -s upload/app-debug.apk
-          sha256sum upload/app-debug.apk
-          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.38_Beta.apk
+          cp app/build/outputs/apk/debug/app-debug.apk upload/NavTasks_Glass_0.4.38_Beta.apk
+          sha256sum upload/NavTasks_Glass_0.4.38_Beta.apk
           cd upload
           zip -q NavTasks_Glass_0.4.38_Build.zip NavTasks_Glass_0.4.38_Beta.apk
           unzip -t NavTasks_Glass_0.4.38_Build.zip
           cd ..
-
       - name: Publish version 0.4.38
         env:
           GH_TOKEN: ${{ github.token }}
@@ -48,4 +76,4 @@ jobs:
             --target df35f506fb1c7691e2f91c2da74c02ed3256b7e1 \
             --prerelease \
             --title "NavTasks Glass 0.4.38 Beta · Handover Polish" \
-            --notes "Handover now uses an animated single-section accordion. Initially collapsed sections expand/collapse smoothly, retaining current section when possible. Added rotating chevron and vector edit/add controls with enlarged touch targets. Data, completion marks, dates, notes, exports and imports remain untouched. versionCode 60, versionName 0.4.38. Unit tests, signed APK build and artifact upload passed in GitHub Actions run 42072964783. On-device testing is still required."
+            --notes "Handover now uses a compact, smoothly animated one-section accordion with rotating chevrons and vector edit/add controls. Existing entries, completion marks, dates, notes, profile export and import are unchanged. versionCode 60, versionName 0.4.38. Source commit df35f506fb1c7691e2f91c2da74c02ed3256b7e1 was previously tested in Actions run 42072964783 and is rebuilt and retested directly in this release job to avoid the GitHub artifact egress error. Device validation remains required."
