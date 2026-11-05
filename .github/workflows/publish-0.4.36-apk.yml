@@ -1,0 +1,51 @@
+name: Publish NavTasks Glass 0.4.36 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.36-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify tested source and download signed APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RUN=42066418434
+          REPO="${{ github.repository }}"
+          EXPECTED_SHA="2a0844162ee99b07bda1c87450226f97e20abf98"
+          test "$(gh run view "$RUN" --repo "$REPO" --json conclusion --jq .conclusion)" = success
+          test "$(gh run view "$RUN" --repo "$REPO" --json headSha --jq .headSha)" = "$EXPECTED_SHA"
+          mkdir -p upload
+          gh run download "$RUN" --repo "$REPO" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          sha256sum upload/app-debug.apk
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.36_Beta.apk
+          cd upload
+          zip -q NavTasks_Glass_0.4.36_Build.zip NavTasks_Glass_0.4.36_Beta.apk
+          unzip -t NavTasks_Glass_0.4.36_Build.zip
+          cd ..
+
+      - name: Publish version 0.4.36
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.36-glass-beta \
+            upload/NavTasks_Glass_0.4.36_Beta.apk \
+            upload/NavTasks_Glass_0.4.36_Build.zip \
+            --repo "${{ github.repository }}" \
+            --target 2a0844162ee99b07bda1c87450226f97e20abf98 \
+            --prerelease \
+            --title "NavTasks Glass 0.4.36 Beta · Work Dock & Fullscreen Calendar" \
+            --notes "Dock now has Today / Work / Handover / Tasks. Calendar is accessed from a round glass button above the dock on Today, opens full-screen and retains its year/month/day state. Work is embedded as the second dock tab; AMOS and maintenance screens, stores, recurrence and history are untouched. Dock capsule dimensions and animations remain intact. versionCode 58, versionName 0.4.36. Unit tests and signed APK build passed in GitHub Actions run 42066418434. Device UI testing remains for installation."
