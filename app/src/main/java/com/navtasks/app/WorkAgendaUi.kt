@@ -97,6 +97,7 @@ private fun WorkAgendaTodayCard(
         Box(
             Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
                 .glassClickable(onClick = onNavigate)
+                .heightIn(min = 44.dp)
                 .padding(horizontal = 12.dp, vertical = 11.dp),
             contentAlignment = Alignment.Center,
         ) {
