@@ -86,7 +86,7 @@ fun navPalette(dark: Boolean) = if (dark) NavPalette(
 ) else NavPalette(
     false, Color(0xFFEAF3FA), Color(0xFFF9FBFF), Color(0xF9FFFFFF),
     Color(0xFFF8FCFF), Color(0xFFE1F0FA), Color(0xFFC9DFED),
-    Color(0xFF172B42), Color(0xFF60788F), Color(0xFF267BAF), Color(0xFF60C569),
+    Color(0xFF172B42), Color(0xFF5F768D), Color(0xFF2377AA), Color(0xFF60C569),
 )
 
 /** HONOR-style success green, with readable contrast for text in Day mode. */
