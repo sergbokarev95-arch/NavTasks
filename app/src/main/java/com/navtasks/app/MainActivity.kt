@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
     private val taskStore by lazy { TaskStore(this, profileStore) }
     private val appSettings by lazy { NavSettings(this) }
     private var requestedRunKey by mutableStateOf<String?>(null)
+    private var requestedWorkOrderId by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
             Color.parseColor(if (savedDark) "#000000" else "#EAF3FA")
         ))
         requestedRunKey = intent.getStringExtra("runKey")
+        requestedWorkOrderId = intent.getStringExtra("workOrderId")
         setContent {
             // Sync status/navigation icon foregrounds to the actual selected app
             // theme, not only to Android's global Day/Night setting.
@@ -64,7 +66,13 @@ class MainActivity : ComponentActivity() {
                     flags,
                 )
             }
-            NavTasksApp(taskStore, appSettings, profileStore, requestedRunKey) { requestedRunKey = null }
+            NavTasksApp(
+                store = taskStore, settings = appSettings, profiles = profileStore,
+                requestedRunKey = requestedRunKey,
+                onRequestHandled = { requestedRunKey = null },
+                requestedWorkOrderId = requestedWorkOrderId,
+                onWorkOrderRequestHandled = { requestedWorkOrderId = null },
+            )
         }
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -77,6 +85,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         requestedRunKey = intent.getStringExtra("runKey")
+        requestedWorkOrderId = intent.getStringExtra("workOrderId")
     }
 
     override fun onResume() {
