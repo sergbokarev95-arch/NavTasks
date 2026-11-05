@@ -10,12 +10,13 @@ import java.time.temporal.ChronoUnit
 internal fun amosVisibleOnDay(work: WorkOrderEntry, day: LocalDate): Boolean {
     if (work.completed) return false
     // The current occurrence is kept visible while approaching and overdue.
-    val firstVisible = work.dueDate.minusDays(work.remindDaysBefore.toLong())
+    val firstVisible = work.dueDate.minusDays(
+        maxOf(7, work.remindDaysBefore).toLong())
     return !day.isBefore(firstVisible)
 }
 
 internal fun serviceVisibleOnDay(service: ServiceEntry, day: LocalDate): Boolean =
-    !day.isBefore(serviceWarningStart(service))
+    !day.isBefore(minOf(serviceWarningStart(service), service.nextDate.minusDays(30)))
 
 /** Fixed calendar cycle anchored at the manually selected AMOS start date. */
 internal fun amosPlannedOnDay(work: WorkOrderEntry, date: LocalDate): Boolean {

@@ -33,11 +33,13 @@ class WorkAgendaTest {
         assertTrue(workOrderComplete(entry, now).completed)
     }
 
-    @Test fun tomorrowWorkIsInFutureChipAndCalendarButNotEarlyToday() {
+    @Test fun tomorrowWorkIsVisibleAsUpcomingEvenWithoutNotification() {
         val entry = amos(start = now.plusDays(1))
-        assertFalse(amosVisibleOnDay(entry, now))
+        assertTrue(amosVisibleOnDay(entry, now))
         assertTrue(amosVisibleOnDay(entry, now.plusDays(1)))
         assertTrue(amosPlannedOnDay(entry, now.plusDays(1)))
+        val distant = amos(start = now.plusDays(9))
+        assertFalse(amosVisibleOnDay(distant, now))
     }
 
     @Test fun amosLeadTimeShowsFutureWorkInToday() {
