@@ -394,7 +394,7 @@ fun TasksScreenV2(
     p: NavPalette, lang: UiLanguage,
     onEdit: (TaskTemplate) -> Unit,
     services: ServiceStore,
-    onServices: () -> Unit,
+    onWorks: () -> Unit,
 ) {
     val labels = listOf(
         localized("День", "Daily", lang), localized("Неделя", "Weekly", lang),
@@ -415,21 +415,23 @@ fun TasksScreenV2(
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
                 .navGlass(p, radius = 17.dp, role = GlassRole.PANEL)
-                .glassClickable(onClick = onServices)
+                .glassClickable(onClick = onWorks)
                 .padding(horizontal = 15.dp, vertical = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             NavGlassGlyph("settings", p.blue, Modifier.size(24.dp))
             Spacer(Modifier.width(13.dp))
             Column(Modifier.weight(1f)) {
-                Text(localized("Сервисы", "Maintenance", lang), color = p.text,
+                Text(localized("Работы", "Work", lang), color = p.text,
                     fontSize = 16.sp)
                 Text(
-                    localized("Оборудование · Даты · Комментарии", "Equipment · Dates · Notes", lang),
+                    localized("AMOS · Сервис · Прочие", "AMOS · Maintenance · Other", lang),
                     color = p.muted, fontSize = 11.sp,
                 )
             }
-            Text(services.entries.size.toString(), color = p.blue, fontSize = 13.sp)
+            if (services.entries.isNotEmpty()) {
+                Text(services.entries.size.toString(), color = p.blue, fontSize = 13.sp)
+            }
             Spacer(Modifier.width(7.dp))
             NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
         }

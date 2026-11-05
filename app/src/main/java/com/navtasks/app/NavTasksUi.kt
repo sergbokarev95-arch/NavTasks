@@ -169,6 +169,7 @@ fun NavTasksApp(
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showProfiles by rememberSaveable { mutableStateOf(false) }
     var showServices by rememberSaveable { mutableStateOf(false) }
+    var showWorks by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val handoverStore = remember(context, profiles) { HandoverStore(context, profiles) }
     val serviceStore = remember(context, profiles) { ServiceStore(context, profiles) }
@@ -234,13 +235,14 @@ fun NavTasksApp(
 
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
-    BackHandler(enabled = editorOpen || showSettings || showProfiles || showServices ||
+    BackHandler(enabled = editorOpen || showSettings || showProfiles || showServices || showWorks ||
             profiles.active.kind == NavProfileKind.PERSONAL || tabHistory.isNotEmpty() || tab != 0) {
         when {
             editorOpen -> editorOpen = false
             showProfiles -> showProfiles = false
             showSettings -> showSettings = false
             showServices -> showServices = false
+            showWorks -> showWorks = false
             profiles.active.kind == NavProfileKind.PERSONAL -> showProfiles = true
             tabHistory.isNotEmpty() -> {
                 tab = tabHistory.last().digitToInt()
@@ -281,6 +283,10 @@ fun NavTasksApp(
             } else if (showServices) {
                 ServicesScreen(serviceStore, store, settings, palette, lang,
                     onBack = { showServices = false })
+            } else if (showWorks) {
+                WorksHubScreen(serviceStore, palette, lang,
+                    onBack = { showWorks = false },
+                    onServices = { showServices = true })
             } else {
                 val hazeState = remember { dev.chrisbanes.haze.HazeState() }
                 Box(Modifier.fillMaxSize()) {
@@ -356,7 +362,7 @@ fun NavTasksApp(
                                     )
                                     else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
                                         onEdit = { editorTask = it; editorOpen = true },
-                                        services = serviceStore, onServices = { showServices = true })
+                                        services = serviceStore, onWorks = { showWorks = true })
                                 }
                             }
                         }
