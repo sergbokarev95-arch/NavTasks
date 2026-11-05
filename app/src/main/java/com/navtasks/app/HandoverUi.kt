@@ -297,13 +297,13 @@ fun HandoverScreen(
                                         Text(entry.completedDate?.let {
                                             localized("Завершено: $it", "Completed: $it", lang)
                                         } ?: localized("Завершено без даты", "Completed without date", lang),
-                                            color = p.successText, fontSize = 10.sp)
+                                            color = p.successText, fontSize = 11.sp)
                                     } else if (entry.mark == HandoverMark.STRUCK) {
                                         Text(localized("Вычеркнуто", "Struck out", lang),
-                                            color = p.muted, fontSize = 10.sp)
+                                            color = p.muted, fontSize = 11.sp)
                                     }
                                 }
-                                Text("›", color = p.muted, fontSize = 23.sp)
+                                NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                             }
                         }
                     }
@@ -340,7 +340,7 @@ fun HandoverScreen(
                         TextButton(onClick = {
                             confirmDelete = editSectionId.orEmpty() to null
                             addSection = false
-                        }) { Text(localized("Удалить", "Delete", lang), color = Color(0xFFCF6259)) }
+                        }) { Text(localized("Удалить", "Delete", lang), color = p.dangerText) }
                     }
                     TextButton(onClick = { addSection = false }) {
                         Text(localized("Отмена", "Cancel", lang))
@@ -385,7 +385,7 @@ fun HandoverScreen(
                         TextButton(onClick = {
                             confirmDelete = sectionId to entryId
                             editEntry = null
-                        }) { Text(localized("Удалить", "Delete", lang), color = Color(0xFFCF6259)) }
+                        }) { Text(localized("Удалить", "Delete", lang), color = p.dangerText) }
                     }
                     TextButton(onClick = { editEntry = null }) { Text(localized("Отмена", "Cancel", lang)) }
                 }
@@ -465,7 +465,7 @@ fun HandoverScreen(
                     if (entryId == null) handover.deleteSection(sectionId)
                     else handover.deleteEntry(sectionId, entryId)
                     confirmDelete = null
-                }) { Text(localized("Удалить", "Delete", lang), color = Color(0xFFCF6259)) }
+                }) { Text(localized("Удалить", "Delete", lang), color = p.dangerText) }
             },
             dismissButton = {
                 TextButton(onClick = { confirmDelete = null }) {
