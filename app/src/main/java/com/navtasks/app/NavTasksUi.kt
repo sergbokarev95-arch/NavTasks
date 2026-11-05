@@ -158,6 +158,8 @@ fun NavTasksApp(
     profiles: ProfileStore,
     requestedRunKey: String? = null,
     onRequestHandled: () -> Unit = {},
+    requestedWorkOrderId: String? = null,
+    onWorkOrderRequestHandled: () -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     // Four tabs: 0=Today, 1=Plan, 2=Handover, 3=Tasks.
@@ -203,6 +205,19 @@ fun NavTasksApp(
         if (selectedDate == previousToday) selectedDate = now.toLocalDate()
         previousToday = now.toLocalDate()
         store.refresh(now.toLocalDate())
+    }
+    LaunchedEffect(requestedWorkOrderId) {
+        if (requestedWorkOrderId != null) {
+            if (workOrderStore.entries.any { it.id == requestedWorkOrderId }) {
+                editorOpen = false
+                showSettings = false
+                showProfiles = false
+                showServices = false
+                showWorks = true
+                showWorkOrders = true
+            }
+            onWorkOrderRequestHandled()
+        }
     }
     LaunchedEffect(requestedRunKey) {
         if (requestedRunKey != null) {
@@ -288,7 +303,7 @@ fun NavTasksApp(
                 ServicesScreen(serviceStore, store, settings, palette, lang,
                     onBack = { showServices = false })
             } else if (showWorkOrders) {
-                WorkOrdersScreen(workOrderStore, palette, lang,
+                WorkOrdersScreen(workOrderStore, store, settings, palette, lang,
                     onBack = { showWorkOrders = false })
             } else if (showWorks) {
                 WorksHubScreen(serviceStore, workOrderStore, palette, lang,
