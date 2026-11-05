@@ -133,9 +133,13 @@ fun PlanScreenV2(
             when (zoom) {
                 0 -> Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { year-- }) { Text("‹", fontSize = 26.sp) }
+                        NavGlassIconAction(
+                            "chevron-left", p.blue, localized("Предыдущий год", "Previous year", lang),
+                        ) { year-- }
                         Text("$year", color = p.text, fontSize = 24.sp, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                        TextButton(onClick = { year++ }) { Text("›", fontSize = 26.sp) }
+                        NavGlassIconAction(
+                            "chevron-right", p.blue, localized("Следующий год", "Next year", lang),
+                        ) { year++ }
                     }
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
@@ -185,14 +189,18 @@ fun PlanScreenV2(
                 }
                 1 -> Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = {
+                        NavGlassIconAction(
+                            "chevron-left", p.blue, localized("Предыдущий месяц", "Previous month", lang),
+                        ) {
                             if (month == 1) { month = 12; year-- } else month--
-                        }) { Text("‹", fontSize = 27.sp) }
+                        }
                         Text("${YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase() }} $year",
                             modifier = Modifier.weight(1f), color = p.text, fontSize = 19.sp, textAlign = TextAlign.Center)
-                        TextButton(onClick = {
+                        NavGlassIconAction(
+                            "chevron-right", p.blue, localized("Следующий месяц", "Next month", lang),
+                        ) {
                             if (month == 12) { month = 1; year++ } else month++
-                        }) { Text("›", fontSize = 27.sp) }
+                        }
                     }
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
                         (1..7).forEach { dow ->
@@ -274,12 +282,16 @@ fun PlanScreenV2(
                 }
                 else -> Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { level = 1 }) { Text("‹", fontSize = 25.sp) }
+                        NavGlassIconAction(
+                            "chevron-left", p.blue, localized("К месяцу", "Back to month", lang),
+                        ) { level = 1 }
                         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(navDate(selectedDay, lang, true), color = p.text, fontSize = 19.sp)
                             Text(selectedDay.dayOfWeek.getDisplayName(TextStyle.FULL, locale), color = p.muted, fontSize = 12.sp)
                         }
-                        TextButton(onClick = { level = 0 }) { Text("▦", fontSize = 21.sp) }
+                        NavGlassIconAction(
+                            "calendar", p.blue, localized("Выбрать год", "View year", lang),
+                        ) { level = 0 }
                     }
                     val rows = store.forDate(selectedDay)
                     val plannedWorks = workAgendaExistsOnDay(
