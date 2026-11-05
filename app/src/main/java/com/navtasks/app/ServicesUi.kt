@@ -566,7 +566,7 @@ private fun ServiceNumberInput(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         textStyle = TextStyle(color = p.text, fontSize = 14.sp),
         cursorBrush = SolidColor(p.blue),
-        modifier = Modifier.fillMaxWidth().height(43.dp)
+        modifier = Modifier.fillMaxWidth().height(44.dp)
             .navGlass(p, radius = 11.dp, role = GlassRole.CONTROL),
         decorationBox = { field ->
             Box(Modifier.fillMaxSize().padding(horizontal = 12.dp),
