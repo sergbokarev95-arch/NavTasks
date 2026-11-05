@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,8 +50,7 @@ fun WorkOrdersScreen(
     val today = LocalDate.now()
     val openOrders = workOrders.entries.filterNot { it.completed }.sortedWith(
         compareBy<WorkOrderEntry> { it.dueDate }.thenBy { it.reference })
-    val history = workOrders.entries.filter { it.completed }.sortedWith(
-        compareByDescending<WorkOrderEntry> { it.completedAt }.thenBy { it.reference })
+    val history = workOrderHistoryRecords(workOrders.entries)
     val overdue = openOrders.count { it.dueDate.isBefore(today) }
     val soon = openOrders.count { workOrderState(it, today) == WorkOrderState.SOON }
 
@@ -125,28 +126,38 @@ fun WorkOrdersScreen(
                     }
                 }
             }
-            items(visible, key = { it.id }) { order ->
-                WorkOrderCard(
-                    order, today, p, lang,
-                    onEdit = { editing = order; editorOpen = true },
-                    onComplete = {
-                        if (workOrderCanComplete(order)) {
-                            completeTarget = order
-                            completionDate = LocalDate.now()
-                        } else {
-                            val (done, total) = workOrderMandatoryProgress(order)
-                            feedback = localized(
-                                "Отметь обязательные пункты: $done/$total.",
-                                "Complete required checklist items first: $done/$total.", lang)
-                        }
-                    },
-                    onToggleCheck = { id, checked ->
-                        runCatching { workOrders.setCheck(order.id, id, checked) }
-                            .onFailure { feedback = it.localizedMessage }
-                    },
-                    onReopen = { reopenTarget = order },
-                    onDelete = { deleteTarget = order },
-                )
+            if (showHistory) {
+                items(history, key = {
+                    it.order.id + "@" + (if (it.order.completed) "oneoff" else it.completion.id)
+                }) { archive ->
+                    WorkOrderHistoryCard(archive, p, lang) {
+                        reopenTarget = archive.order
+                    }
+                }
+            } else {
+                items(openOrders, key = { it.id }) { order ->
+                    WorkOrderCard(
+                        order, today, p, lang,
+                        onEdit = { editing = order; editorOpen = true },
+                        onComplete = {
+                            if (workOrderCanComplete(order)) {
+                                completeTarget = order
+                                completionDate = LocalDate.now()
+                            } else {
+                                val (done, total) = workOrderMandatoryProgress(order)
+                                feedback = localized(
+                                    "Отметь обязательные пункты: $done/$total.",
+                                    "Complete required checklist items first: $done/$total.", lang)
+                            }
+                        },
+                        onToggleCheck = { id, checked ->
+                            runCatching { workOrders.setCheck(order.id, id, checked) }
+                                .onFailure { feedback = it.localizedMessage }
+                        },
+                        onReopen = { reopenTarget = order },
+                        onDelete = { deleteTarget = order },
+                    )
+                }
             }
         }
     }
@@ -170,6 +181,13 @@ fun WorkOrdersScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(order.reference + " · " + order.title, color = p.text, fontSize = 14.sp)
+                    if (order.recurring) {
+                        Text(localized(
+                            "Текущий чек-лист сохранится в истории. Следующий срок рассчитывается от фактической даты.",
+                            "Current checklist is archived. Next due is calculated from completion date.",
+                            lang,
+                        ), color = p.muted, fontSize = 12.sp)
+                    }
                     Text(localized("Дата выполнения", "Completion date", lang),
                         color = p.muted, fontSize = 12.sp)
                     WorkOrderChip(navDate(completionDate, lang, true), false, p) {
@@ -282,6 +300,10 @@ private fun WorkOrderCard(
                 navDate(order.completedAt, lang, true),
                 color = p.successText, fontSize = 12.sp)
         }
+        if (order.recurring) {
+            Text(localized("Повторяется после выполнения", "Repeats after completion", lang),
+                color = p.muted, fontSize = 11.sp)
+        }
         if (order.comment.isNotBlank()) {
             Text(order.comment, color = p.muted, fontSize = 12.sp,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -369,6 +391,15 @@ private fun WorkOrderEditorDialog(
     var comment by remember(existing?.id) { mutableStateOf(existing?.comment.orEmpty()) }
     var checklist by remember(existing?.id) { mutableStateOf(existing?.checklist.orEmpty()) }
     var remindDays by remember(existing?.id) { mutableIntStateOf(existing?.remindDaysBefore ?: 0) }
+    var repeatDays by remember(existing?.id) { mutableIntStateOf(existing?.repeatDays ?: 0) }
+    var repeatMonths by remember(existing?.id) { mutableIntStateOf(existing?.repeatMonths ?: 0) }
+    val presetMonths = listOf(0, 1, 3, 6, 12, 18, 36, 60)
+    var customInterval by remember(existing?.id) {
+        mutableStateOf(repeatDays == 0 && repeatMonths !in presetMonths)
+    }
+    var customMonths by remember(existing?.id) {
+        mutableStateOf((if (repeatMonths > 0) repeatMonths else 9).toString())
+    }
     var noteItemId by remember(existing?.id) { mutableStateOf<String?>(null) }
     var pickingDate by remember(existing?.id) { mutableStateOf(false) }
     var error by remember(existing?.id) { mutableStateOf<String?>(null) }
@@ -401,12 +432,66 @@ private fun WorkOrderEditorDialog(
                     color = p.muted, fontSize = 12.sp)
                 WorkOrderChip(navDate(dueDate, lang, true), false, p,
                     Modifier.fillMaxWidth()) { pickingDate = true }
+                Text(localized("Повторение", "Recurrence", lang),
+                    color = p.muted, fontSize = 12.sp)
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val presets = listOf(
+                        Triple(0, 0, localized("Разовая", "One-off", lang)),
+                        Triple(7, 0, localized("Неделя", "Weekly", lang)),
+                        Triple(0, 1, localized("1 мес.", "1 month", lang)),
+                        Triple(0, 3, localized("3 мес.", "3 months", lang)),
+                        Triple(0, 6, localized("6 мес.", "6 months", lang)),
+                        Triple(0, 12, localized("12 мес.", "12 months", lang)),
+                        Triple(0, 18, localized("18 мес.", "18 months", lang)),
+                        Triple(0, 36, localized("36 мес.", "36 months", lang)),
+                        Triple(0, 60, localized("60 мес.", "60 months", lang)),
+                    )
+                    presets.forEach { (days, months, label) ->
+                        WorkOrderChip(label,
+                            !customInterval && repeatDays == days && repeatMonths == months, p,
+                        ) {
+                            customInterval = false
+                            repeatDays = days
+                            repeatMonths = months
+                        }
+                    }
+                    WorkOrderChip(localized("Свой срок", "Custom months", lang), customInterval, p) {
+                        customInterval = true
+                        repeatDays = 0
+                        repeatMonths = customMonths.toIntOrNull()?.takeIf { it in 1..1200 } ?: 9
+                    }
+                }
+                if (customInterval) {
+                    Text(localized("Месяцев (1–1200)", "Months (1–1200)", lang),
+                        color = p.muted, fontSize = 11.sp)
+                    NavGlassInput(
+                        value = customMonths,
+                        onValueChange = { value ->
+                            if (value.length <= 4 && value.all(Char::isDigit)) {
+                                customMonths = value
+                                value.toIntOrNull()?.takeIf { it in 1..1200 }?.let {
+                                    repeatMonths = it
+                                }
+                            }
+                        },
+                        p = p, modifier = Modifier.fillMaxWidth(),
+                        placeholder = "9",
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    )
+                }
+                Text(localized(
+                    "Для повторяющейся работы следующий срок считается от даты выполнения. История остаётся.",
+                    "The next cycle is due after the actual completion date. History is retained.",
+                    lang,
+                ), color = p.muted, fontSize = 11.sp)
                 Text(localized("Предупредить заранее", "Remind before due", lang),
                     color = p.muted, fontSize = 12.sp)
                 androidx.compose.foundation.layout.FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(0, 1, 3, 7, 14, 30).forEach { days ->
+                    listOf(0, 1, 3, 7, 14, 30, 90).forEach { days ->
                         WorkOrderChip(
                             if (days == 0) localized("Нет", "Off", lang)
                             else localized("$days дн.", "$days days", lang),
@@ -465,6 +550,11 @@ private fun WorkOrderEditorDialog(
                 Spacer(Modifier.width(8.dp))
                 WorkOrderChip(localized("Сохранить", "Save", lang), true, p) {
                     val candidate = runCatching {
+                        if (customInterval) {
+                            require(customMonths.toIntOrNull()?.let { it in 1..1200 } == true) {
+                                "Choose 1 to 1200 months"
+                            }
+                        }
                         WorkOrderEntry(
                             id = existing?.id ?: UUID.randomUUID().toString(),
                             reference = reference.trim(),
@@ -477,11 +567,15 @@ private fun WorkOrderEditorDialog(
                             checkedItemIds = existing?.checkedItemIds.orEmpty().intersect(
                                 checklist.filter { it.title.isNotBlank() }.map { it.id }.toSet()),
                             remindDaysBefore = remindDays,
+                            repeatDays = if (customInterval) 0 else repeatDays,
+                            repeatMonths = if (customInterval)
+                                customMonths.toInt() else repeatMonths,
+                            executionHistory = existing?.executionHistory.orEmpty(),
                         )
                     }.getOrElse {
                         error = localized(
-                            "Укажи номер AMOS и название работы.",
-                            "Enter an AMOS number and job title.", lang)
+                            "Проверь номер, название работы и интервал повторения.",
+                            "Check AMOS number, title and recurrence interval.", lang)
                         return@WorkOrderChip
                     }
                     val issue = onSave(candidate)
@@ -533,4 +627,40 @@ private fun WorkOrderConfirm(
             }
         },
     )
+}
+
+/** The archived occurrence is a snapshot; later checklist edits cannot rewrite it. */
+@Composable
+private fun WorkOrderHistoryCard(
+    archive: WorkOrderHistoryRecord,
+    p: NavPalette,
+    lang: UiLanguage,
+    onReopen: () -> Unit,
+) {
+    val completion = archive.completion
+    Column(
+        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(archive.order.reference, color = p.blue, fontSize = 12.sp)
+        Text(archive.order.title, color = p.text, fontSize = 15.sp)
+        Text(localized("Срок: ", "Due: ", lang) +
+            navDate(completion.dueDate, lang, true),
+            color = p.muted, fontSize = 12.sp)
+        Text(localized("Выполнено: ", "Completed: ", lang) +
+            navDate(completion.completedAt, lang, true),
+            color = p.successText, fontSize = 12.sp)
+        if (completion.checklist.isNotEmpty()) {
+            Text(localized("Чек-лист: ", "Checklist: ", lang) +
+                completion.checkedItemIds.size + "/" + completion.checklist.size,
+                color = p.muted, fontSize = 12.sp)
+        }
+        if (archive.canUndo) {
+            WorkOrderChip(
+                localized("Отменить выполнение", "Undo completion", lang), false, p,
+                onClick = onReopen,
+            )
+        }
+    }
 }

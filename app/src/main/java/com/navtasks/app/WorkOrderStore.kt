@@ -21,6 +21,9 @@ data class WorkOrderEntry(
     val checklist: List<CheckItem> = emptyList(),
     val checkedItemIds: Set<String> = emptySet(),
     val remindDaysBefore: Int = 0,
+    val repeatDays: Int = 0,
+    val repeatMonths: Int = 0,
+    val executionHistory: List<WorkOrderCompletion> = emptyList(),
 ) {
     init {
         require(id.isNotBlank() && id.length <= 100)
@@ -28,6 +31,10 @@ data class WorkOrderEntry(
         require(title.isNotBlank() && title.length <= 200)
         require(comment.length <= 6000)
         require(remindDaysBefore in 0..90)
+        require(repeatDays in 0..3650 && repeatMonths in 0..1200)
+        require(repeatDays == 0 || repeatMonths == 0)
+        require(executionHistory.size <= 300)
+        require(executionHistory.map { it.id }.toSet().size == executionHistory.size)
         require(checklist.size <= 80)
         require(checklist.map { it.id }.toSet().size == checklist.size)
         require(checklist.all { it.id.isNotBlank() && it.title.isNotBlank() &&
@@ -35,6 +42,7 @@ data class WorkOrderEntry(
         require(checkedItemIds.all { id -> checklist.any { it.id == id } })
     }
 
+    val recurring: Boolean get() = repeatDays > 0 || repeatMonths > 0
     val completed: Boolean get() = completedAt != null
 
     fun toJson(): JSONObject = JSONObject()
@@ -48,6 +56,11 @@ data class WorkOrderEntry(
         .put("checklist", JSONArray().apply { checklist.forEach { put(it.toJson()) } })
         .put("checkedItemIds", JSONArray().apply { checkedItemIds.forEach { put(it) } })
         .put("remindDaysBefore", remindDaysBefore)
+        .put("repeatDays", repeatDays)
+        .put("repeatMonths", repeatMonths)
+        .put("executionHistory", JSONArray().apply {
+            executionHistory.forEach { put(it.toJson()) }
+        })
 
     companion object {
         fun fromJson(json: JSONObject): WorkOrderEntry {
@@ -68,6 +81,12 @@ data class WorkOrderEntry(
                     (0 until a.length()).map { a.getString(it) }.toSet()
                 },
                 remindDaysBefore = json.optInt("remindDaysBefore", 0),
+                repeatDays = json.optInt("repeatDays", 0),
+                repeatMonths = json.optInt("repeatMonths", 0),
+                executionHistory = (json.optJSONArray("executionHistory") ?: JSONArray()).let { a ->
+                    require(a.length() <= 300)
+                    (0 until a.length()).map { WorkOrderCompletion.fromJson(a.getJSONObject(it)) }
+                },
             )
         }
     }
@@ -105,13 +124,11 @@ internal fun workOrderWarningStart(order: WorkOrderEntry): LocalDate =
 internal fun workOrderComplete(order: WorkOrderEntry, day: LocalDate): WorkOrderEntry {
     require(!order.completed) { "Work order already completed" }
     require(workOrderCanComplete(order)) { "Required AMOS checklist items are not complete" }
-    return order.copy(completedAt = day)
+    return workOrderFinishCycle(order, day)
 }
 
-internal fun workOrderReopen(order: WorkOrderEntry): WorkOrderEntry {
-    require(order.completed) { "Work order is already open" }
-    return order.copy(completedAt = null)
-}
+internal fun workOrderReopen(order: WorkOrderEntry): WorkOrderEntry =
+    workOrderUndoCycle(order)
 
 internal fun validateWorkOrders(items: List<WorkOrderEntry>) {
     require(items.size <= 1500) { "Too many AMOS work orders" }
