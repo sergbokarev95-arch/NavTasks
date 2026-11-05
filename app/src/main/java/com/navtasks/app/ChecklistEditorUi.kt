@@ -32,6 +32,7 @@ internal fun ChecklistEditorPanel(
     onEditNote: (String) -> Unit,
     p: NavPalette,
     lang: UiLanguage,
+    completionHint: String? = null,
 ) {
     var focusItemId by remember { mutableStateOf<String?>(null) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -158,7 +159,7 @@ internal fun ChecklistEditorPanel(
     )
     Spacer(Modifier.height(3.dp))
     Text(
-        localized("Когда все пункты отмечены, задача завершается автоматически.",
+        completionHint ?: localized("Когда все пункты отмечены, задача завершается автоматически.",
             "All checked items automatically complete the parent task.", lang),
         color = p.muted, fontSize = 11.sp,
     )
