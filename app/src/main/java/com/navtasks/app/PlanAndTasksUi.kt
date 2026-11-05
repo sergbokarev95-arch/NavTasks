@@ -340,22 +340,24 @@ private fun PlanReadOnlyTile(
             )
         }
         Box {
-            Text("⋯", color = p.blue, fontSize = 22.sp,
-                modifier = Modifier.glassClickable { menuOpen = true }.padding(horizontal = 9.dp, vertical = 6.dp))
+            NavGlassIconAction(
+                "more", p.blue, localized("Действия с задачей", "Task actions", lang),
+            ) { menuOpen = true }
             NavPopoverMenu(p = p, expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                DropdownMenuItem(text = { Text(localized("Редактировать", "Edit", lang)) }, onClick = {
+                NavPopoverAction(localized("Редактировать", "Edit", lang), p) {
                     menuOpen = false
                     onEdit(task)
-                })
-                if (!run.completed) DropdownMenuItem(text = { Text(localized("Перенести на дату…", "Move to date…", lang)) },
-                    onClick = {
-                        menuOpen = false
-                        movingToDate = run.displayDate
-                    })
-                DropdownMenuItem(text = { Text(localized("Удалить из дня", "Remove from day", lang)) }, onClick = {
+                }
+                if (!run.completed) NavPopoverAction(localized("Перенести на дату…", "Move to date…", lang), p) {
+                    menuOpen = false
+                    movingToDate = run.displayDate
+                }
+                NavPopoverDivider(p)
+                NavPopoverAction(localized("Удалить из дня", "Remove from day", lang), p,
+                    destructive = true) {
                     menuOpen = false
                     deleteDialog = true
-                })
+                }
             }
         }
     }
@@ -764,10 +766,10 @@ fun TaskEditorScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(localized("Удалить задачу", "Delete task", lang),
-                        color = Color(0xFFE98B84), fontSize = 14.sp)
+                        color = p.dangerText, fontSize = 14.sp)
                 }
                 taskDeletionError?.let { error ->
-                    Text(error, color = Color(0xFFE98B84), fontSize = 12.sp)
+                    Text(error, color = p.dangerText, fontSize = 12.sp)
                 }
             }
             Spacer(Modifier.height(28.dp))
@@ -826,7 +828,7 @@ fun TaskEditorScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(localized("Удалить полностью", "Delete permanently", lang),
-                            color = Color(0xFFE98B84))
+                            color = p.dangerText)
                     }
                 }
             },
@@ -867,7 +869,7 @@ fun TaskEditorScreen(
                         }
                 }) {
                     Text(localized("Удалить полностью", "Delete permanently", lang),
-                        color = Color(0xFFE98B84))
+                        color = p.dangerText)
                 }
             },
             dismissButton = {
