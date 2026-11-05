@@ -104,9 +104,9 @@ fun navDate(date: LocalDate, lang: UiLanguage, includeYear: Boolean = false): St
 
 
 /**
- * Select adjacent primary tab on a horizontal swipe. Child widgets (the
- * calendar pager and the 7-day scroller) own gestures they consume.
- * A vertical movement, short swipe, or system-edge gesture never changes tabs.
+ * Select adjacent dock tab on a deliberate horizontal gesture.
+ * Vertical scrolling, the Today seven-day strip and system edge-back gestures
+ * retain priority. The standalone Calendar owns its own gestures.
  */
 internal fun tabAfterHorizontalSwipe(
     current: Int,
@@ -126,27 +126,41 @@ private fun Modifier.primaryTabSwipe(
     onSelect: (Int) -> Unit,
 ): Modifier = pointerInput(tab) {
     val edgeGuard = 28.dp.toPx()
-    val travel = 78.dp.toPx()
+    val activation = 48.dp.toPx()
+    val axisLock = 12.dp.toPx()
     awaitEachGesture {
-        // Watch the Final pass instead of claiming the child's swipe.
-        // This preserves the calendar's month/day swipe and the week strip.
+        // The Final pass lets scrolling children claim their own gestures first.
+        // In particular, horizontal drags in Today's seven-day LazyRow do not
+        // switch dock tabs. The rest of the page needs no additional swipe layer.
         val first = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
         val inContent = first.position.x > edgeGuard &&
             first.position.x < size.width - edgeGuard
         var dx = 0f
         var dy = 0f
-        var claimedByChild = false
+        var childClaimed = false
+        var verticalGesture = false
+        var switched = false
         while (true) {
             val event = awaitPointerEvent(pass = PointerEventPass.Final)
             val change = event.changes.firstOrNull { it.id == first.id } ?: break
             if (!change.pressed) break
             dx += change.position.x - change.previousPosition.x
             dy += change.position.y - change.previousPosition.y
-            if (change.isConsumed) claimedByChild = true
-        }
-        if (inContent) {
-            val next = tabAfterHorizontalSwipe(tab, dx, dy, travel, claimedByChild)
-            if (next != tab) onSelect(next)
+            if (change.isConsumed) childClaimed = true
+            // Once the user commits to vertical scrolling, never reinterpret
+            // the remainder of that same gesture as a page swipe.
+            if (!verticalGesture && abs(dy) > axisLock && abs(dy) > abs(dx) * 1.2f) {
+                verticalGesture = true
+            }
+            if (inContent && !switched && !verticalGesture && !childClaimed) {
+                val next = tabAfterHorizontalSwipe(tab, dx, dy, activation, false)
+                if (next != tab) {
+                    switched = true
+                    // Switch while dragging rather than waiting for finger-up.
+                    // The existing spring animation remains unchanged.
+                    onSelect(next)
+                }
+            }
         }
     }
 }
@@ -441,8 +455,7 @@ fun NavTasksApp(
                                         onBack = { openPrimaryTab(0) }, embeddedInTab = true,
                                     )
                                     else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                        onEdit = { editorTask = it; editorOpen = true },
-                                        services = serviceStore, onWorks = { showWorks = true })
+                                        onEdit = { editorTask = it; editorOpen = true })
                                 }
                             }
                         }

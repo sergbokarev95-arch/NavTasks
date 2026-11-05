@@ -18,6 +18,14 @@ class PrimaryTabSwipeTest {
         assertEquals(0, tabAfterHorizontalSwipe(0, 165f, 2f, 78f, false))
     }
 
+    @Test fun shorterIntentionalSwipesNowSwitchTabs() {
+        assertEquals(1, tabAfterHorizontalSwipe(0, -52f, 3f, 48f, false))
+        assertEquals(2, tabAfterHorizontalSwipe(1, -49f, 4f, 48f, false))
+        assertEquals(1, tabAfterHorizontalSwipe(2, 50f, 4f, 48f, false))
+        assertEquals(1, tabAfterHorizontalSwipe(1, 30f, 2f, 48f, false))
+        assertEquals(1, tabAfterHorizontalSwipe(1, -65f, 57f, 48f, false))
+    }
+
     @Test fun childGesturesAndVerticalScrollNeverSwitchTabs() {
         assertEquals(1, tabAfterHorizontalSwipe(1, -220f, 0f, 78f, true))
         assertEquals(0, tabAfterHorizontalSwipe(0, -220f, 240f, 78f, false))

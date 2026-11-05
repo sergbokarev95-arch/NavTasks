@@ -410,8 +410,6 @@ fun TasksScreenV2(
     store: TaskStore, filter: Frequency, onFilter: (Frequency) -> Unit,
     p: NavPalette, lang: UiLanguage,
     onEdit: (TaskTemplate) -> Unit,
-    services: ServiceStore,
-    onWorks: () -> Unit,
 ) {
     val labels = listOf(
         localized("День", "Daily", lang), localized("Неделя", "Weekly", lang),
@@ -429,29 +427,6 @@ fun TasksScreenV2(
         TaskSchedule.effectiveFrequency(it, LocalDate.now()) == filter
     }
     Column(Modifier.fillMaxSize()) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-                .navGlass(p, radius = 17.dp, role = GlassRole.PANEL)
-                .glassClickable(onClick = onWorks)
-                .padding(horizontal = 15.dp, vertical = 13.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            NavGlassGlyph("settings", p.blue, Modifier.size(24.dp))
-            Spacer(Modifier.width(13.dp))
-            Column(Modifier.weight(1f)) {
-                Text(localized("Работы", "Work", lang), color = p.text,
-                    fontSize = 16.sp)
-                Text(
-                    localized("AMOS · Сервис · Прочие", "AMOS · Maintenance · Other", lang),
-                    color = p.muted, fontSize = 11.sp,
-                )
-            }
-            if (services.entries.isNotEmpty()) {
-                Text(services.entries.size.toString(), color = p.blue, fontSize = 13.sp)
-            }
-            Spacer(Modifier.width(7.dp))
-            NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
-        }
         Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Frequency.entries.forEachIndexed { i, freq ->
                 Box(Modifier.weight(1f).navGlass(p, radius = 14.dp,
