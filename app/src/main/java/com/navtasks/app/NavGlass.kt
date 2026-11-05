@@ -499,6 +499,24 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                         cap = StrokeCap.Round)
                 }
             }
+            "edit" -> {
+                // Small neutral pencil, matching the dock's stroke-based icons.
+                val pencil = Path().apply {
+                    moveTo(6.5f * s, 24f * s)
+                    lineTo(8.5f * s, 17.2f * s)
+                    lineTo(20.8f * s, 4.9f * s)
+                    lineTo(25.1f * s, 9.2f * s)
+                    lineTo(12.8f * s, 21.5f * s)
+                    close()
+                }
+                drawPath(pencil, color, style = Stroke(
+                    width = width, cap = StrokeCap.Round, join = StrokeJoin.Round,
+                ))
+                drawLine(color, pt(17.3f, 8.5f), pt(21.5f, 12.7f),
+                    width, cap = StrokeCap.Round)
+                drawLine(color, pt(6.5f, 24f), pt(13f, 24f),
+                    width, cap = StrokeCap.Round)
+            }
             "back" -> {
                 val path = Path().apply {
                     moveTo(19f*s,5f*s)

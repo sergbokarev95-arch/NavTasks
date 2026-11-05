@@ -3,7 +3,15 @@ package com.navtasks.app
 import android.app.DatePickerDialog
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,6 +43,10 @@ internal fun orderedHandoverEntries(entries: List<HandoverEntry>): List<Handover
     entries.filter { it.mark == HandoverMark.OPEN } +
         entries.filter { it.mark != HandoverMark.OPEN }
 
+/** Exactly one Handover section can be open; tapping it a second time closes it. */
+internal fun nextExpandedHandoverSection(current: String?, tapped: String): String? =
+    if (current == tapped) null else tapped
+
 @Composable
 fun HandoverScreen(
     handover: HandoverStore,
@@ -46,7 +58,9 @@ fun HandoverScreen(
     embeddedInTab: Boolean = false,
 ) {
     val context = LocalContext.current
-    var collapsed by remember { mutableStateOf(emptySet<String>()) }
+    // A compact accordion: all sections start closed; each profile keeps
+    // its current open section when the activity is recreated.
+    var expandedSectionId by rememberSaveable { mutableStateOf<String?>(null) }
     var editSectionId by remember { mutableStateOf<String?>(null) }
     var addSection by remember { mutableStateOf(false) }
     var sectionName by remember { mutableStateOf("") }
@@ -182,30 +196,75 @@ fun HandoverScreen(
                 }
             }
             items(handover.sections, key = { it.id }) { section ->
+                val expanded = expandedSectionId == section.id
+                val chevronRotation by animateFloatAsState(
+                    targetValue = if (expanded) 180f else 0f,
+                    animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
+                    label = "handoverSectionChevron",
+                )
                 Column(
                     Modifier.fillMaxWidth().navGlass(p, radius = 19.dp, role = GlassRole.PANEL)
-                        .animateContentSize().padding(11.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                        .padding(11.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            section.title,
-                            Modifier.weight(1f).glassClickable {
-                                collapsed = if (section.id in collapsed) collapsed - section.id
-                                    else collapsed + section.id
-                            }.padding(vertical = 6.dp),
-                            color = p.text, fontSize = 17.sp, fontWeight = FontWeight.Medium,
-                        )
-                        Text("${section.entries.count { it.mark == HandoverMark.COMPLETED }}/${section.entries.size}",
-                            color = p.muted, fontSize = 12.sp)
-                        Spacer(Modifier.width(12.dp))
-                        Text("✎", Modifier.glassClickable { openSectionEditor(section) }.padding(7.dp),
-                            color = p.muted, fontSize = 19.sp)
-                        Text("+", Modifier.glassClickable { openEntryEditor(section.id, null) }.padding(horizontal = 10.dp, vertical = 5.dp),
-                            color = p.blue, fontSize = 24.sp)
+                        Row(
+                            Modifier.weight(1f)
+                                .glassClickable {
+                                    expandedSectionId = nextExpandedHandoverSection(
+                                        expandedSectionId, section.id,
+                                    )
+                                }
+                                .padding(vertical = 10.dp, horizontal = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                section.title, Modifier.weight(1f),
+                                color = p.text, fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            )
+                            Spacer(Modifier.width(7.dp))
+                            Text(
+                                "${section.entries.count { it.mark == HandoverMark.COMPLETED }}/${section.entries.size}",
+                                color = p.muted, fontSize = 12.sp,
+                            )
+                            Spacer(Modifier.width(5.dp))
+                            NavGlassGlyph(
+                                "chevron-down", p.muted,
+                                Modifier.size(17.dp).rotate(chevronRotation),
+                            )
+                        }
+                        Spacer(Modifier.width(5.dp))
+                        Box(
+                            Modifier.size(40.dp)
+                                .glassClickable { openSectionEditor(section) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            NavGlassGlyph("edit", p.muted, Modifier.size(21.dp))
+                        }
+                        Box(
+                            Modifier.size(40.dp)
+                                .glassClickable { openEntryEditor(section.id, null) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            NavGlassGlyph("plus", p.blue, Modifier.size(23.dp))
+                        }
                     }
-                    if (section.id !in collapsed) {
-                        if (section.entries.isEmpty()) {
+                    AnimatedVisibility(
+                        visible = expanded,
+                        enter = expandVertically(
+                            spring(dampingRatio = 1f, stiffness = 550f),
+                        ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
+                        exit = shrinkVertically(
+                            spring(dampingRatio = 1f, stiffness = 550f),
+                        ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
+                    ) {
+                        Column(
+                            Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Spacer(Modifier.height(1.dp))
+                            if (section.entries.isEmpty()) {
                             Text(localized("Нажми +, чтобы добавить пункт", "Tap + to add an item", lang),
                                 color = p.muted, fontSize = 12.sp,
                                 modifier = Modifier.padding(start = 5.dp, bottom = 7.dp))
@@ -244,6 +303,7 @@ fun HandoverScreen(
                                 Text("›", color = p.muted, fontSize = 23.sp)
                             }
                         }
+                    }
                     }
                 }
             }
