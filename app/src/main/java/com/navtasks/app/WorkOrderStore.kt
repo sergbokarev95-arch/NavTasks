@@ -18,12 +18,21 @@ data class WorkOrderEntry(
     val createdAt: LocalDate = LocalDate.now(),
     val completedAt: LocalDate? = null,
     val comment: String = "",
+    val checklist: List<CheckItem> = emptyList(),
+    val checkedItemIds: Set<String> = emptySet(),
+    val remindDaysBefore: Int = 0,
 ) {
     init {
         require(id.isNotBlank() && id.length <= 100)
         require(reference.isNotBlank() && reference.length <= 80)
         require(title.isNotBlank() && title.length <= 200)
         require(comment.length <= 6000)
+        require(remindDaysBefore in 0..90)
+        require(checklist.size <= 80)
+        require(checklist.map { it.id }.toSet().size == checklist.size)
+        require(checklist.all { it.id.isNotBlank() && it.title.isNotBlank() &&
+            it.title.length <= 200 && it.comment.length <= 6000 })
+        require(checkedItemIds.all { id -> checklist.any { it.id == id } })
     }
 
     val completed: Boolean get() = completedAt != null
@@ -36,6 +45,9 @@ data class WorkOrderEntry(
         .put("createdAt", createdAt.toString())
         .put("completedAt", completedAt?.toString() ?: JSONObject.NULL)
         .put("comment", comment)
+        .put("checklist", JSONArray().apply { checklist.forEach { put(it.toJson()) } })
+        .put("checkedItemIds", JSONArray().apply { checkedItemIds.forEach { put(it) } })
+        .put("remindDaysBefore", remindDaysBefore)
 
     companion object {
         fun fromJson(json: JSONObject): WorkOrderEntry {
@@ -49,6 +61,13 @@ data class WorkOrderEntry(
                 completedAt = rawCompleted.takeUnless { it.isBlank() || it == "null" }
                     ?.let(LocalDate::parse),
                 comment = json.optString("comment", ""),
+                checklist = (json.optJSONArray("checklist") ?: JSONArray()).let { a ->
+                    (0 until a.length()).map { CheckItem.fromJson(a.getJSONObject(it)) }
+                },
+                checkedItemIds = (json.optJSONArray("checkedItemIds") ?: JSONArray()).let { a ->
+                    (0 until a.length()).map { a.getString(it) }.toSet()
+                },
+                remindDaysBefore = json.optInt("remindDaysBefore", 0),
             )
         }
     }
@@ -63,8 +82,29 @@ internal fun workOrderState(order: WorkOrderEntry, today: LocalDate): WorkOrderS
     else -> WorkOrderState.OPEN
 }
 
+internal fun workOrderMandatoryProgress(order: WorkOrderEntry): Pair<Int, Int> {
+    val required = order.checklist.filter { it.required }
+    return required.count { it.id in order.checkedItemIds } to required.size
+}
+
+internal fun workOrderCanComplete(order: WorkOrderEntry): Boolean {
+    val (done, required) = workOrderMandatoryProgress(order)
+    return done == required
+}
+
+internal fun workOrderCheck(order: WorkOrderEntry, checkId: String, checked: Boolean): WorkOrderEntry {
+    require(!order.completed) { "Completed work orders are archived" }
+    require(order.checklist.any { it.id == checkId }) { "Unknown checklist item" }
+    return order.copy(checkedItemIds = if (checked) order.checkedItemIds + checkId
+        else order.checkedItemIds - checkId)
+}
+
+internal fun workOrderWarningStart(order: WorkOrderEntry): LocalDate =
+    order.dueDate.minusDays(order.remindDaysBefore.toLong())
+
 internal fun workOrderComplete(order: WorkOrderEntry, day: LocalDate): WorkOrderEntry {
     require(!order.completed) { "Work order already completed" }
+    require(workOrderCanComplete(order)) { "Required AMOS checklist items are not complete" }
     return order.copy(completedAt = day)
 }
 
@@ -121,6 +161,11 @@ class WorkOrderStore(context: Context, private val profiles: ProfileStore) {
         val index = entries.indexOfFirst { it.id == entry.id }
         write(if (index < 0) entries + entry
             else entries.toMutableList().apply { set(index, entry) })
+    }
+
+    fun setCheck(id: String, checkId: String, checked: Boolean) {
+        val entry = entries.firstOrNull { it.id == id } ?: error("Work order not found")
+        upsert(workOrderCheck(entry, checkId, checked))
     }
 
     fun complete(id: String, on: LocalDate) {
