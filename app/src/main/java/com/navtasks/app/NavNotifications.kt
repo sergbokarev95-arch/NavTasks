@@ -242,7 +242,7 @@ object NavNotifications {
                 LocalDate.now().isBefore(workOrderWarningStart(order)) ||
                 LocalDate.now().isAfter(order.dueDate)) return
             if (!mayNotify(context)) return
-            if (!alreadyNotified(context, profiles.activeId + ":amos:" +
+            if (alreadyNotified(context, profiles.activeId + ":amos:" +
                     order.id + ":" + order.dueDate + ":" + order.remindDaysBefore)) return
             val detail = order.reference + " · " + order.title + " · " +
                 localized("до ", "due ", settings.language) + order.dueDate
