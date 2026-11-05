@@ -1,0 +1,41 @@
+name: Publish NavTasks Glass 0.4.30 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.30-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download verified AMOS APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          gh run download 41975110277 --repo "${{ github.repository }}" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          echo "fca0f2ad94be7e1539171f98c5df16634155f17c9b57f3f1d2168d7d02a106a7  upload/app-debug.apk" | sha256sum -c -
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.30_Beta.apk
+
+      - name: Publish AMOS repeat history GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.30-glass-beta \
+            upload/NavTasks_Glass_0.4.30_Beta.apk \
+            --repo "${{ github.repository }}" \
+            --target 5768d20d1780ec0696ddebfed881204f809de5ce \
+            --prerelease \
+            --title "NavTasks Glass 0.4.30 Beta · AMOS Recurrence & History" \
+            --notes "Completes the next AMOS stage: manual Work Orders, checklists with notes and required-item progress, configurable due reminders, date-based recurring cycles (weekly, 1/3/6/12/18/36/60 months or custom months), and immutable dated execution/checklist history. Existing one-off AMOS records import unchanged. Next recurrence follows the actual completion date. Last execution can be safely undone without silently discarding progress in the next cycle. Maintenance, Tasks, Handover and dock unchanged. Validated in successful Actions run 41975110277."
