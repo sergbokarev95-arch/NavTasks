@@ -114,9 +114,9 @@ fun WorkOrdersScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         WorkOrderCount(localized("Открыто", "Open", lang), openOrders.size, p.blue, p)
                         WorkOrderCount(localized("Скоро", "Soon", lang), soon,
-                            if (soon > 0) Color(0xFFE6AD72) else p.muted, p)
+                            if (soon > 0) p.warningText else p.muted, p)
                         WorkOrderCount(localized("Просрочено", "Overdue", lang), overdue,
-                            if (overdue > 0) Color(0xFFE98B84) else p.muted, p)
+                            if (overdue > 0) p.dangerText else p.muted, p)
                     }
                     Text(
                         localized(
@@ -144,7 +144,7 @@ fun WorkOrdersScreen(
                 }
             }
             feedback?.let { msg ->
-                item { Text(msg, color = p.muted, fontSize = 12.sp) }
+                item { Text(msg, color = p.dangerText, fontSize = 12.sp) }
             }
             val visible = if (showHistory) history else openOrders
             if (visible.isEmpty()) {
@@ -356,8 +356,8 @@ private fun WorkOrderCard(
     val status = workOrderState(order, today)
     val accent = when (status) {
         WorkOrderState.COMPLETED -> p.successText
-        WorkOrderState.OVERDUE -> Color(0xFFE98B84)
-        WorkOrderState.SOON -> Color(0xFFE6AD72)
+        WorkOrderState.OVERDUE -> p.dangerText
+        WorkOrderState.SOON -> p.warningText
         WorkOrderState.OPEN -> p.blue
     }
     Column(
@@ -400,24 +400,26 @@ private fun WorkOrderCard(
             Text(order.comment, color = p.muted, fontSize = 12.sp,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            Text(
-                when (status) {
-                    WorkOrderState.COMPLETED -> localized("Завершено", "Completed", lang)
-                    WorkOrderState.OVERDUE -> localized("Просрочено", "Overdue", lang)
-                    WorkOrderState.SOON -> localized("Срок близко", "Due soon", lang)
-                    WorkOrderState.OPEN -> localized("Открыто", "Open", lang)
-                },
-                color = accent, fontSize = 11.sp, modifier = Modifier.weight(1f),
-            )
-            WorkOrderChip(localized("Изменить", "Edit", lang), false, p, onClick = onEdit)
+        Text(
+            when (status) {
+                WorkOrderState.COMPLETED -> localized("Завершено", "Completed", lang)
+                WorkOrderState.OVERDUE -> localized("Просрочено", "Overdue", lang)
+                WorkOrderState.SOON -> localized("Срок близко", "Due soon", lang)
+                WorkOrderState.OPEN -> localized("Открыто", "Open", lang)
+            },
+            color = accent, fontSize = 12.sp,
+        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            WorkOrderChip(localized("Изменить", "Edit", lang), false, p,
+                modifier = Modifier.weight(1f), onClick = onEdit)
             WorkOrderChip(
                 if (order.completed) localized("Вернуть", "Reopen", lang)
                 else localized("Готово", "Done", lang),
-                false, p, onClick = if (order.completed) onReopen else onComplete,
+                false, p, modifier = Modifier.weight(1f),
+                onClick = if (order.completed) onReopen else onComplete,
             )
-            WorkOrderChip(localized("Удалить", "Delete", lang), false, p, onClick = onDelete)
+            WorkOrderChip(localized("Удалить", "Delete", lang), false, p,
+                modifier = Modifier.weight(1f), onClick = onDelete)
         }
     }
     selectedNote?.let { item ->
@@ -436,11 +438,12 @@ private fun WorkOrderChip(
             role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL,
             elevation = 0.dp)
             .glassClickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 10.dp),
+            .heightIn(min = 44.dp)
+            .padding(horizontal = 9.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = if (selected) p.blue else p.text,
-            fontSize = 11.sp, maxLines = 1)
+            fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -591,7 +594,7 @@ private fun WorkOrderEditorDialog(
                             navDate(existing.completedAt, lang, true),
                         color = p.successText, fontSize = 12.sp)
                 }
-                error?.let { Text(it, color = Color(0xFFE98B84), fontSize = 12.sp) }
+                error?.let { Text(it, color = p.dangerText, fontSize = 12.sp) }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically) {
