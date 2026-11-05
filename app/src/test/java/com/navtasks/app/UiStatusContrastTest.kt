@@ -25,6 +25,8 @@ class UiStatusContrastTest {
     @Test fun dayStatusTextIsReadableOnLightGlass() {
         val p = navPalette(false)
         val surface = Color(0xFFF9FBFF)
+        assertTrue(contrast(p.blue, surface) >= 4.5)
+        assertTrue(contrast(p.muted, surface) >= 4.5)
         assertTrue(contrast(p.successText, surface) >= 4.5)
         assertTrue(contrast(p.warningText, surface) >= 4.5)
         assertTrue(contrast(p.dangerText, surface) >= 4.5)
@@ -33,6 +35,8 @@ class UiStatusContrastTest {
     @Test fun nightStatusTextIsReadableOnDarkGlass() {
         val p = navPalette(true)
         val surface = Color(0xFF21344F)
+        assertTrue(contrast(p.blue, surface) >= 4.5)
+        assertTrue(contrast(p.muted, surface) >= 4.5)
         assertTrue(contrast(p.successText, surface) >= 4.5)
         assertTrue(contrast(p.warningText, surface) >= 4.5)
         assertTrue(contrast(p.dangerText, surface) >= 4.5)
