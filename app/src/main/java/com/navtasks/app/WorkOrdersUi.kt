@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,10 +27,14 @@ import java.util.UUID
 @Composable
 fun WorkOrdersScreen(
     workOrders: WorkOrderStore,
+    tasks: TaskStore,
+    settings: NavSettings,
     p: NavPalette,
     lang: UiLanguage,
     onBack: () -> Unit,
 ) {
+    val context = LocalContext.current
+    fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
     var showHistory by rememberSaveable { mutableStateOf(false) }
     var editing by remember { mutableStateOf<WorkOrderEntry?>(null) }
     var editorOpen by remember { mutableStateOf(false) }
@@ -125,8 +130,19 @@ fun WorkOrdersScreen(
                     order, today, p, lang,
                     onEdit = { editing = order; editorOpen = true },
                     onComplete = {
-                        completeTarget = order
-                        completionDate = LocalDate.now()
+                        if (workOrderCanComplete(order)) {
+                            completeTarget = order
+                            completionDate = LocalDate.now()
+                        } else {
+                            val (done, total) = workOrderMandatoryProgress(order)
+                            feedback = localized(
+                                "Отметь обязательные пункты: $done/$total.",
+                                "Complete required checklist items first: $done/$total.", lang)
+                        }
+                    },
+                    onToggleCheck = { id, checked ->
+                        runCatching { workOrders.setCheck(order.id, id, checked) }
+                            .onFailure { feedback = it.localizedMessage }
                     },
                     onReopen = { reopenTarget = order },
                     onDelete = { deleteTarget = order },
@@ -140,7 +156,8 @@ fun WorkOrdersScreen(
             existing = editing, p = p, lang = lang,
             onDismiss = { editorOpen = false },
             onSave = { candidate ->
-                runCatching { workOrders.upsert(candidate) }.exceptionOrNull()?.localizedMessage
+                runCatching { workOrders.upsert(candidate); reschedule() }
+                    .exceptionOrNull()?.localizedMessage
             },
         )
     }
@@ -162,7 +179,7 @@ fun WorkOrdersScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    runCatching { workOrders.complete(order.id, completionDate) }
+                    runCatching { workOrders.complete(order.id, completionDate); reschedule() }
                         .onSuccess { completeTarget = null; feedback = null }
                         .onFailure { feedback = it.localizedMessage; completeTarget = null }
                 }) {
@@ -191,7 +208,7 @@ fun WorkOrdersScreen(
             description = order.reference + " · " + order.title,
             onCancel = { reopenTarget = null },
             onConfirm = {
-                runCatching { workOrders.reopen(order.id) }
+                runCatching { workOrders.reopen(order.id); reschedule() }
                     .onFailure { feedback = it.localizedMessage }
                 reopenTarget = null
             },
@@ -206,7 +223,7 @@ fun WorkOrdersScreen(
                     "The saved completion date will also be deleted.", lang),
             onCancel = { deleteTarget = null },
             onConfirm = {
-                runCatching { workOrders.delete(order.id) }
+                runCatching { workOrders.delete(order.id); reschedule() }
                     .onFailure { feedback = it.localizedMessage }
                 deleteTarget = null
             },
@@ -226,8 +243,10 @@ private fun WorkOrderCount(label: String, number: Int, color: Color, p: NavPalet
 private fun WorkOrderCard(
     order: WorkOrderEntry, today: LocalDate, p: NavPalette, lang: UiLanguage,
     onEdit: () -> Unit, onComplete: () -> Unit,
+    onToggleCheck: (String, Boolean) -> Unit,
     onReopen: () -> Unit, onDelete: () -> Unit,
 ) {
+    var selectedNote by remember(order.id) { mutableStateOf<CheckItem?>(null) }
     val status = workOrderState(order, today)
     val accent = when (status) {
         WorkOrderState.COMPLETED -> p.successText
@@ -267,6 +286,29 @@ private fun WorkOrderCard(
             Text(order.comment, color = p.muted, fontSize = 12.sp,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
+        if (order.checklist.isNotEmpty()) {
+            val (done, total) = workOrderMandatoryProgress(order)
+            Text(localized("Чек-лист $done/$total", "Checklist $done/$total", lang),
+                color = p.blue, fontSize = 12.sp)
+            order.checklist.forEach { item ->
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                    val checked = item.id in order.checkedItemIds
+                    if (order.completed) {
+                        Text(if (checked) "✓" else "○", color = if (checked) p.successText else p.muted,
+                            fontSize = 18.sp, modifier = Modifier.width(29.dp))
+                    } else {
+                        RoundCheck(checked, p, { onToggleCheck(item.id, !checked) })
+                    }
+                    Text(item.title, color = if (checked) p.muted else p.text,
+                        fontSize = 12.sp, modifier = Modifier.weight(1f),
+                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (item.comment.isNotBlank()) {
+                        ChecklistReferenceButton(p, true) { selectedNote = item }
+                    }
+                }
+            }
+        }
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             Text(
@@ -286,6 +328,10 @@ private fun WorkOrderCard(
             )
             WorkOrderChip(localized("Удалить", "Delete", lang), false, p, onClick = onDelete)
         }
+    }
+    selectedNote?.let { item ->
+        ChecklistReferenceDialog(p, lang, item.title, item.comment, editable = false,
+            onDismiss = { selectedNote = null })
     }
 }
 
@@ -321,6 +367,9 @@ private fun WorkOrderEditorDialog(
         mutableStateOf(existing?.dueDate ?: LocalDate.now().plusDays(7))
     }
     var comment by remember(existing?.id) { mutableStateOf(existing?.comment.orEmpty()) }
+    var checklist by remember(existing?.id) { mutableStateOf(existing?.checklist.orEmpty()) }
+    var remindDays by remember(existing?.id) { mutableIntStateOf(existing?.remindDaysBefore ?: 0) }
+    var noteItemId by remember(existing?.id) { mutableStateOf<String?>(null) }
     var pickingDate by remember(existing?.id) { mutableStateOf(false) }
     var error by remember(existing?.id) { mutableStateOf<String?>(null) }
 
@@ -352,6 +401,31 @@ private fun WorkOrderEditorDialog(
                     color = p.muted, fontSize = 12.sp)
                 WorkOrderChip(navDate(dueDate, lang, true), false, p,
                     Modifier.fillMaxWidth()) { pickingDate = true }
+                Text(localized("Предупредить заранее", "Remind before due", lang),
+                    color = p.muted, fontSize = 12.sp)
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(0, 1, 3, 7, 14, 30).forEach { days ->
+                        WorkOrderChip(
+                            if (days == 0) localized("Нет", "Off", lang)
+                            else localized("$days дн.", "$days days", lang),
+                            remindDays == days, p,
+                        ) { remindDays = days }
+                    }
+                }
+                if (existing?.completedAt == null) {
+                    ChecklistEditorPanel(
+                        items = checklist,
+                        onItemsChange = { checklist = it },
+                        onEditNote = { noteItemId = it },
+                        p = p, lang = lang,
+                    )
+                } else if (checklist.isNotEmpty()) {
+                    Text(localized("Чек-лист завершённой работы доступен только для просмотра.",
+                            "Archived checklist is read-only. Reopen to edit.", lang),
+                        color = p.muted, fontSize = 12.sp)
+                }
                 Text(localized("Комментарий", "Notes", lang),
                     color = p.muted, fontSize = 12.sp)
                 BasicTextField(
@@ -396,6 +470,10 @@ private fun WorkOrderEditorDialog(
                             createdAt = existing?.createdAt ?: LocalDate.now(),
                             completedAt = existing?.completedAt,
                             comment = comment.trim(),
+                            checklist = checklist.filter { it.title.isNotBlank() },
+                            checkedItemIds = existing?.checkedItemIds.orEmpty().intersect(
+                                checklist.filter { it.title.isNotBlank() }.map { it.id }.toSet()),
+                            remindDaysBefore = remindDays,
                         )
                     }.getOrElse {
                         error = localized(
@@ -415,6 +493,19 @@ private fun WorkOrderEditorDialog(
             onDismiss = { pickingDate = false },
             onSelected = { dueDate = it; pickingDate = false },
         )
+    }
+    noteItemId?.let { id ->
+        val item = checklist.firstOrNull { it.id == id }
+        if (item != null) {
+            ChecklistReferenceDialog(
+                p = p, lang = lang, title = item.title, note = item.comment, editable = true,
+                onDismiss = { noteItemId = null },
+                onSave = { note ->
+                    checklist = checklist.map { if (it.id == id) it.copy(comment = note) else it }
+                    noteItemId = null
+                },
+            )
+        }
     }
 }
 
