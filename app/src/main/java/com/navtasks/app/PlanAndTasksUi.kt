@@ -140,7 +140,7 @@ fun PlanScreenV2(
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 11.dp, end = 11.dp, top = 11.dp, bottom = 125.dp),
+                        contentPadding = PaddingValues(start = 11.dp, end = 11.dp, top = 11.dp, bottom = 28.dp),
                         horizontalArrangement = Arrangement.spacedBy(7.dp),
                         verticalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
@@ -284,7 +284,7 @@ fun PlanScreenV2(
                     val rows = store.forDate(selectedDay)
                     val plannedWorks = workAgendaExistsOnDay(
                         selectedDay, workOrders.entries, services.entries)
-                    LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 125.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (rows.isEmpty() && !plannedWorks) item {
                             NavPanel(p) { Text(localized("Задач на этот день нет", "No tasks for this day", lang), color = p.muted) }
                         }

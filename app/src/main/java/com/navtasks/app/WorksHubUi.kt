@@ -27,6 +27,7 @@ fun WorksHubScreen(
     onBack: () -> Unit,
     onServices: () -> Unit,
     onAmos: () -> Unit,
+    embeddedInTab: Boolean = false,
 ) {
     val today = LocalDate.now()
     val activeAmos = workOrders.entries.filterNot { it.completed }
@@ -40,21 +41,27 @@ fun WorksHubScreen(
                 (it.remindMonths > 0 && !today.isBefore(serviceWarningStart(it))))
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            NavGlassCircleButton(p, "back", onBack)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
-                Text(localized("Работы", "Work", lang), color = p.text, fontSize = 23.sp)
+    Column(
+        Modifier.fillMaxSize().then(
+            if (embeddedInTab) Modifier else Modifier.statusBarsPadding().navigationBarsPadding()
+        ),
+    ) {
+        if (!embeddedInTab) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                NavGlassCircleButton(p, "back", onBack)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
+                    Text(localized("Работы", "Work", lang), color = p.text, fontSize = 23.sp)
+                }
             }
         }
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp, bottom = 40.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp, bottom = if (embeddedInTab) 125.dp else 40.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {

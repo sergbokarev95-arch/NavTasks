@@ -347,7 +347,7 @@ fun NavGlassBottomBar(
             Row(Modifier.fillMaxSize().selectableGroup(), verticalAlignment = Alignment.CenterVertically) {
                 val names = listOf(
                     localized("Сегодня", "Today", lang),
-                    localized("План", "Plan", lang),
+                    localized("Работы", "Work", lang),
                     "Handover",
                     localized("Задачи", "Tasks", lang),
                 )
@@ -383,7 +383,7 @@ fun NavGlassBottomBar(
                         NavGlassGlyph(
                             kind = when (index) {
                                 0 -> "today"
-                                1 -> "calendar"
+                                1 -> "work"
                                 2 -> "handover"
                                 else -> "tasks"
                             },
@@ -426,6 +426,19 @@ fun NavGlassAddButton(p: NavPalette, hazeState: HazeState, onClick: () -> Unit) 
     }
 }
 
+/** Full-glass calendar shortcut displayed above the dock on Today only. */
+@Composable
+fun NavGlassCalendarButton(p: NavPalette, hazeState: HazeState, onClick: () -> Unit) {
+    Box(
+        Modifier.size(54.dp)
+            .navFrostedOverlay(p, hazeState, radius = 27.dp, role = GlassRole.CONTROL)
+            .glassClickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        NavGlassGlyph("calendar", p.blue, Modifier.size(26.dp))
+    }
+}
+
 /** Lightweight vector navigation pictograms, no emoji and no extended icon package. */
 @Composable
 fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
@@ -452,6 +465,21 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 for (x in listOf(10f,15f,20f)) for (y in listOf(17f,22f)) {
                     drawCircle(color, radius = 1.1f*s, center = pt(x,y))
                 }
+            }
+            "work" -> {
+                // A work case, distinct from the Tasks checklist glyph.
+                drawRoundRect(color, topLeft = pt(3.5f,10f),
+                    size = Size(23f*s,16f*s),
+                    cornerRadius = CornerRadius(3f*s),
+                    style = Stroke(width))
+                drawRoundRect(color, topLeft = pt(11f,5f),
+                    size = Size(8f*s,5f*s),
+                    cornerRadius = CornerRadius(2f*s),
+                    style = Stroke(width))
+                drawLine(color, pt(3.5f,17f), pt(26.5f,17f), width,
+                    cap = StrokeCap.Round)
+                drawLine(color, pt(14f,17f), pt(16f,17f), 3f*s,
+                    cap = StrokeCap.Round)
             }
             "handover" -> {
                 // Distinct handover notebook icon, not the same glyph as Tasks.

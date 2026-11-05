@@ -162,7 +162,8 @@ fun NavTasksApp(
     onWorkOrderRequestHandled: () -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    // Four tabs: 0=Today, 1=Plan, 2=Handover, 3=Tasks.
+    // Four dock tabs: 0=Today, 1=Work, 2=Handover, 3=Tasks.
+    // Calendar opens as its own full-screen surface, not a fifth dock tab.
     // Kept across activity recreation so Android's Back gesture retraces navigation.
     var tabHistory by rememberSaveable { mutableStateOf("") }
     // Keep the selected calendar zoom/day and tab-specific scroll state intact
@@ -172,6 +173,7 @@ fun NavTasksApp(
     var showProfiles by rememberSaveable { mutableStateOf(false) }
     var showServices by rememberSaveable { mutableStateOf(false) }
     var showWorks by rememberSaveable { mutableStateOf(false) }
+    var showCalendar by rememberSaveable { mutableStateOf(false) }
     var showWorkOrders by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val handoverStore = remember(context, profiles) { HandoverStore(context, profiles) }
@@ -216,6 +218,7 @@ fun NavTasksApp(
                 showSettings = false
                 showProfiles = false
                 showServices = false
+                showCalendar = false
                 showWorks = true
                 focusWorkOrderId = requestedWorkOrderId
                 showWorkOrders = true
@@ -230,6 +233,7 @@ fun NavTasksApp(
                 selectedDate = target.displayDate
                 tab = 0
                 tabHistory = ""
+                showCalendar = false
                 showSettings = false
                 editorOpen = false
                 expandedRun = requestedRunKey
@@ -256,7 +260,7 @@ fun NavTasksApp(
 
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
-    BackHandler(enabled = editorOpen || showSettings || showProfiles || showServices || showWorks || showWorkOrders ||
+    BackHandler(enabled = editorOpen || showSettings || showProfiles || showServices || showWorks || showWorkOrders || showCalendar ||
             profiles.active.kind == NavProfileKind.PERSONAL || tabHistory.isNotEmpty() || tab != 0) {
         when {
             editorOpen -> editorOpen = false
@@ -265,6 +269,7 @@ fun NavTasksApp(
             showServices -> { showServices = false; focusServiceId = null }
             showWorkOrders -> { showWorkOrders = false; focusWorkOrderId = null }
             showWorks -> showWorks = false
+            showCalendar -> showCalendar = false
             profiles.active.kind == NavProfileKind.PERSONAL -> showProfiles = true
             tabHistory.isNotEmpty() -> {
                 tab = tabHistory.last().digitToInt()
@@ -288,6 +293,7 @@ fun NavTasksApp(
                 ProfilesScreen(profiles, store, handoverStore, serviceStore, workOrderStore, palette, lang,
                     onBack = {
                         showProfiles = false
+                        showCalendar = false
                         tab = 0
                         tabHistory = ""
                         selectedDate = LocalDate.now()
@@ -311,6 +317,34 @@ fun NavTasksApp(
                 WorkOrdersScreen(workOrderStore, store, settings, palette, lang,
                     onBack = { showWorkOrders = false; focusWorkOrderId = null },
                     focusWorkOrderId = focusWorkOrderId)
+            } else if (showCalendar) {
+                Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        NavGlassCircleButton(palette, "back") { showCalendar = false }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("NAVTASKS", color = palette.blue, fontSize = 12.sp)
+                            Text(localized("План", "Plan", lang),
+                                color = palette.text, fontSize = 23.sp)
+                        }
+                    }
+                    Box(Modifier.fillMaxWidth().weight(1f)) {
+                        // Reuse the former Plan tab's saveable key, preserving
+                        // year/month/day when Calendar is closed and reopened.
+                        tabStateHolder.SaveableStateProvider(
+                            profiles.activeId + "/main-tab-1"
+                        ) {
+                            PlanScreenV2(
+                                store, now.toLocalDate(), palette, lang,
+                                onEdit = { editorTask = it; editorOpen = true },
+                                workOrders = workOrderStore, services = serviceStore,
+                            )
+                        }
+                    }
+                }
             } else if (showWorks) {
                 WorksHubScreen(serviceStore, workOrderStore, palette, lang,
                     onBack = { showWorks = false },
@@ -350,7 +384,7 @@ fun NavTasksApp(
                                 Text(
                                     when (tab) {
                                         0 -> localized("Сегодня", "Today", lang)
-                                        1 -> localized("План", "Plan", lang)
+                                        1 -> localized("Работы", "Work", lang)
                                         2 -> "Handover"
                                         else -> localized("Задачи", "Tasks", lang)
                                     }, fontSize = 26.sp, color = palette.text, fontWeight = FontWeight.Medium,
@@ -378,7 +412,8 @@ fun NavTasksApp(
                             label = "primaryTabSlide",
                         ) { page ->
                             tabStateHolder.SaveableStateProvider(
-                                profiles.activeId + "/main-tab-" + page
+                                if (page == 1) profiles.activeId + "/main-tab-works"
+                                else profiles.activeId + "/main-tab-" + page
                             ) {
                                 when (page) {
                                     0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
@@ -394,17 +429,31 @@ fun NavTasksApp(
                                             showWorks = true
                                             showServices = true
                                         })
-                                    1 -> PlanScreenV2(store, now.toLocalDate(), palette, lang,
-                                        onEdit = { editorTask = it; editorOpen = true },
-                                        workOrders = workOrderStore, services = serviceStore)
+                                    1 -> WorksHubScreen(
+                                        serviceStore, workOrderStore, palette, lang,
+                                        onBack = { openPrimaryTab(0) },
+                                        onServices = { focusServiceId = null; showServices = true },
+                                        onAmos = { focusWorkOrderId = null; showWorkOrders = true },
+                                        embeddedInTab = true,
+                                    )
                                     2 -> HandoverScreen(
                                         handoverStore, store, palette, lang,
-                                        onBack = { openPrimaryTab(1) }, embeddedInTab = true,
+                                        onBack = { openPrimaryTab(0) }, embeddedInTab = true,
                                     )
                                     else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
                                         onEdit = { editorTask = it; editorOpen = true },
                                         services = serviceStore, onWorks = { showWorks = true })
                                 }
+                            }
+                        }
+                    }
+                    if (tab == 0) {
+                        Box(
+                            Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
+                                .padding(end = 19.dp, bottom = 83.dp),
+                        ) {
+                            NavGlassCalendarButton(palette, hazeState) {
+                                showCalendar = true
                             }
                         }
                     }
