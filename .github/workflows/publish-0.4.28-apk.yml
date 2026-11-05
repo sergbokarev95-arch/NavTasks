@@ -1,0 +1,41 @@
+name: Publish NavTasks Glass 0.4.28 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.28-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download successfully tested APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          gh run download 41956964525 --repo "${{ github.repository }}" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          echo "8bed16401b6fc9fbc8ec5cb7b4a840223c5c4c7fb2eaf0faf187979b717b27fd  upload/app-debug.apk" | sha256sum -c -
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.28_Beta.apk
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.28-glass-beta \
+            upload/NavTasks_Glass_0.4.28_Beta.apk \
+            --repo "${{ github.repository }}" \
+            --target 58f9e40418a3a9efdccbc9bfaf6aa737c493cb19 \
+            --prerelease \
+            --title "NavTasks Glass 0.4.28 Beta · AMOS Work Orders" \
+            --notes "Manual AMOS Work Orders: create/edit numbered jobs, due dates, comments, completion dates, open/overdue status, history, reopen and confirmed delete. Stored independently in each vessel profile and included in full export/import with backward compatibility for old profile files. Existing Tasks, ServiceStore, Handover and dock are preserved. Tested and built successfully in GitHub Actions run 41956964525."
