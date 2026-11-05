@@ -561,16 +561,20 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 }
                 drawPath(path,color, style=Stroke(width=3.1f*s,cap=StrokeCap.Round,join=StrokeJoin.Round))
             }
-            "chevron-down", "chevron-right" -> {
+            "chevron-down", "chevron-right", "chevron-left" -> {
                 val path = Path().apply {
                     if (kind == "chevron-down") {
                         moveTo(7f*s, 12f*s)
                         lineTo(15f*s, 19f*s)
                         lineTo(23f*s, 12f*s)
-                    } else {
+                    } else if (kind == "chevron-right") {
                         moveTo(11f*s, 6f*s)
                         lineTo(19f*s, 15f*s)
                         lineTo(11f*s, 24f*s)
+                    } else {
+                        moveTo(19f*s, 6f*s)
+                        lineTo(11f*s, 15f*s)
+                        lineTo(19f*s, 24f*s)
                     }
                 }
                 drawPath(path, color, style = Stroke(width = 2.5f*s,
