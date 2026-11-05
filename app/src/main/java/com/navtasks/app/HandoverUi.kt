@@ -520,7 +520,7 @@ private fun HandoverGlassDialog(
         ) {
             CompositionLocalProvider(LocalContentColor provides p.text) {
                 Box(Modifier.fillMaxWidth()) {
-                    ProvideTextStyle(TextStyle(color = p.text, fontSize = 21.sp)) { title() }
+                    ProvideTextStyle(TextStyle(color = p.text, fontSize = 20.sp)) { title() }
                 }
             }
             CompositionLocalProvider(LocalContentColor provides p.muted) {
