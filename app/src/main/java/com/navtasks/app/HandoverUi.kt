@@ -27,6 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -236,14 +237,14 @@ fun HandoverScreen(
                         }
                         Spacer(Modifier.width(5.dp))
                         Box(
-                            Modifier.size(40.dp)
+                            Modifier.size(44.dp)
                                 .glassClickable { openSectionEditor(section) },
                             contentAlignment = Alignment.Center,
                         ) {
                             NavGlassGlyph("edit", p.muted, Modifier.size(21.dp))
                         }
                         Box(
-                            Modifier.size(40.dp)
+                            Modifier.size(44.dp)
                                 .glassClickable { openEntryEditor(section.id, null) },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -265,11 +266,13 @@ fun HandoverScreen(
                         ) {
                             Spacer(Modifier.height(1.dp))
                             if (section.entries.isEmpty()) {
-                            Text(localized("Нажми +, чтобы добавить пункт", "Tap + to add an item", lang),
-                                color = p.muted, fontSize = 12.sp,
-                                modifier = Modifier.padding(start = 5.dp, bottom = 7.dp))
-                        }
-                        orderedHandoverEntries(section.entries).forEach { entry ->
+                                Text(
+                                    localized("Нажми +, чтобы добавить пункт", "Tap + to add an item", lang),
+                                    color = p.muted, fontSize = 12.sp,
+                                    modifier = Modifier.padding(start = 5.dp, bottom = 7.dp),
+                                )
+                            }
+                            orderedHandoverEntries(section.entries).forEach { entry ->
                             val finished = entry.mark != HandoverMark.OPEN
                             Row(
                                 Modifier.fillMaxWidth()
