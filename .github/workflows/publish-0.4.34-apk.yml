@@ -1,0 +1,46 @@
+name: Publish NavTasks Glass 0.4.34 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.34-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download tested APK and package ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          gh run download 42052827095 --repo "${{ github.repository }}" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          echo "9915af5be7831ccf71925c1e2be81d0b9d4cccca6e586c88f78dc56e506a48a8  upload/app-debug.apk" | sha256sum -c -
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.34_Beta.apk
+          cd upload
+          zip -q NavTasks_Glass_0.4.34_Build.zip NavTasks_Glass_0.4.34_Beta.apk
+          unzip -t NavTasks_Glass_0.4.34_Build.zip
+          cd ..
+
+      - name: Publish direct APK and ZIP links
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.34-glass-beta \
+            upload/NavTasks_Glass_0.4.34_Beta.apk \
+            upload/NavTasks_Glass_0.4.34_Build.zip \
+            --repo "${{ github.repository }}" \
+            --target 80e55350ca8c80824ac700a1e82de693c8759ed0 \
+            --prerelease \
+            --title "NavTasks Glass 0.4.34 Beta · AMOS Schedule Shift & Maintenance History" \
+            --notes "AMOS: when finishing a recurring job on a different date, choose to shift future recurrences to that date or keep the previous schedule. The original due and actual completion dates are kept in history, and undo restores the previous schedule anchor. Maintenance: on Serviced choose Today or select an actual date; the new due is computed from the selected date and saved recurrence interval. Every completed maintenance cycle archives its scheduled/actual dates and AMOS request number; the new cycle clears the request. One-off maintenance closes without a fictitious next date. Older profile records continue to load, and export/import includes the new history via ServiceEntry JSON. Unit tests and APK build passed in GitHub Actions run 42052827095."
