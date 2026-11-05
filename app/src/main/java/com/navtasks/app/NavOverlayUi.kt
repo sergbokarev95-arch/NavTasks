@@ -69,7 +69,7 @@ fun NavPopoverAction(
         enabled = enabled,
         modifier = Modifier.heightIn(min = 48.dp),
         trailingIcon = if (selected) {
-            { Text("✓", color = p.blue, fontSize = 16.sp) }
+            { NavGlassGlyph("check", p.blue, Modifier.size(17.dp)) }
         } else null,
         contentPadding = PaddingValues(horizontal = 17.dp),
     )
