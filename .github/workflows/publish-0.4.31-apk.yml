@@ -1,0 +1,41 @@
+name: Publish NavTasks Glass 0.4.31 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.31-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download tested APK for 0.4.31
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          gh run download 42025316397 --repo "${{ github.repository }}" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          echo "15f86f43dad07eac0b6add1078ce94490948c5664b9538d7f189b9bcce87f8f9  upload/app-debug.apk" | sha256sum -c -
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.31_Beta.apk
+
+      - name: Publish direct-release APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.31-glass-beta \
+            upload/NavTasks_Glass_0.4.31_Beta.apk \
+            --repo "${{ github.repository }}" \
+            --target ef44efb31499ff5709d2552ce091e85516f0b85a \
+            --prerelease \
+            --title "NavTasks Glass 0.4.31 Beta · Works in Today & Calendar" \
+            --notes "AMOS and equipment maintenance appear as agenda cards in Today and as read-only information in Calendar. AMOS removes required work order number and checklist from its editor, uses the manually selected work start date as a fixed recurrence anchor, and retains old data/history for backward compatibility. Equipment servicing now asks only for next service date and recurrence, and has a Request Created control to save/display the AMOS request number. Upcoming AMOS shows 7 days early in Today (or custom earlier notification lead), maintenance shows 30 days early (or custom larger lead). Task recurrence, Handover, existing ServiceStore history and bottom dock unchanged. Validated by successful GitHub Actions run 42025316397."
