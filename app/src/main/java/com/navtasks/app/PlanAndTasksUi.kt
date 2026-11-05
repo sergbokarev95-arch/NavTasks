@@ -624,6 +624,9 @@ fun TaskEditorScreen(
     var checklist by remember(initial?.id) { mutableStateOf(initial?.checklist ?: emptyList()) }
     var editingChecklistNote by remember(initial?.id) { mutableStateOf<String?>(null) }
     var enabled by remember(initial?.id) { mutableStateOf(initial?.enabled ?: true) }
+    var showTaskDeletionOptions by remember(initial?.id) { mutableStateOf(false) }
+    var confirmPermanentTaskDeletion by remember(initial?.id) { mutableStateOf(false) }
+    var taskDeletionError by remember(initial?.id) { mutableStateOf<String?>(null) }
     var pendingCalendarDayEdit by remember(initial?.id) {
         mutableStateOf<Pair<TaskTemplate, CalendarDayEditPreview>?>(null)
     }
@@ -777,8 +780,127 @@ fun TaskEditorScreen(
                     Switch(enabled, onCheckedChange = { enabled = it }, colors = navSwitchColors(p))
                 }
             }
+            if (initial != null) {
+                TextButton(
+                    onClick = {
+                        taskDeletionError = null
+                        showTaskDeletionOptions = true
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(localized("Удалить задачу", "Delete task", lang),
+                        color = Color(0xFFE98B84), fontSize = 14.sp)
+                }
+                taskDeletionError?.let { error ->
+                    Text(error, color = Color(0xFFE98B84), fontSize = 12.sp)
+                }
+            }
             Spacer(Modifier.height(28.dp))
         }
+    }
+
+    if (showTaskDeletionOptions && initial != null) {
+        NavGlassAlertDialog(
+            p = p,
+            onDismissRequest = { showTaskDeletionOptions = false },
+            title = {
+                Text(localized("Удаление задачи", "Remove task", lang))
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(initial.title, color = p.text, fontSize = 15.sp)
+                    Text(localized(
+                        "Выбери действие. Остановка сохраняет историю и позволяет снова включить задачу. Полное удаление уничтожает все её отметки и записи.",
+                        "Choose an action. Stopping keeps history and allows reactivation. Permanent deletion erases all completions and records for this task.",
+                        lang,
+                    ), color = p.muted, fontSize = 12.sp)
+                    if (initial.enabled) {
+                        TextButton(
+                            onClick = {
+                                runCatching { store.stopRepeatingTask(initial.id) }
+                                    .onSuccess { stopped ->
+                                        if (stopped) {
+                                            showTaskDeletionOptions = false
+                                            onBack()
+                                        } else {
+                                            taskDeletionError = localized(
+                                                "Задача не найдена", "Task not found", lang)
+                                            showTaskDeletionOptions = false
+                                        }
+                                    }
+                                    .onFailure {
+                                        taskDeletionError = it.localizedMessage
+                                        showTaskDeletionOptions = false
+                                    }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                if (initial.frequency == Frequency.EXTRA)
+                                    localized("Отключить задачу", "Disable task", lang)
+                                else localized("Прекратить повторения", "Stop repeating", lang),
+                                color = p.blue,
+                            )
+                        }
+                    }
+                    TextButton(
+                        onClick = {
+                            showTaskDeletionOptions = false
+                            confirmPermanentTaskDeletion = true
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(localized("Удалить полностью", "Delete permanently", lang),
+                            color = Color(0xFFE98B84))
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showTaskDeletionOptions = false }) {
+                    Text(localized("Отмена", "Cancel", lang))
+                }
+            },
+        )
+    }
+    if (confirmPermanentTaskDeletion && initial != null) {
+        NavGlassAlertDialog(
+            p = p,
+            onDismissRequest = { confirmPermanentTaskDeletion = false },
+            title = {
+                Text(localized("Удалить навсегда?", "Delete permanently?", lang))
+            },
+            text = {
+                Text(localized(
+                    "Задача «" + initial.title + "» и вся её история выполнений, пропусков и переносов будут удалены без возможности восстановления. Остальные задачи останутся.",
+                    "The task “" + initial.title + "” and its completion, missed and moved history will be erased permanently. Other tasks stay unchanged.",
+                    lang,
+                ), color = p.muted, fontSize = 13.sp)
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    runCatching { store.deleteTaskPermanently(initial.id) }
+                        .onSuccess { deleted ->
+                            confirmPermanentTaskDeletion = false
+                            if (deleted) onBack()
+                            else taskDeletionError = localized(
+                                "Задача уже удалена", "Task already deleted", lang)
+                        }
+                        .onFailure {
+                            confirmPermanentTaskDeletion = false
+                            taskDeletionError = it.localizedMessage
+                        }
+                }) {
+                    Text(localized("Удалить полностью", "Delete permanently", lang),
+                        color = Color(0xFFE98B84))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmPermanentTaskDeletion = false }) {
+                    Text(localized("Отмена", "Cancel", lang))
+                }
+            },
+        )
     }
 
     pendingFrequencyEdit?.let { (edited, preview) ->
@@ -1046,7 +1168,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.32 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.33 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

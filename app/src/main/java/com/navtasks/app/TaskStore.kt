@@ -299,6 +299,51 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
         syncOutputs()
     }
 
+    /**
+     * Stops future scheduling while retaining the template and EVERY dated run.
+     * The task remains in Tasks as inactive and can be reactivated later.
+     */
+    fun stopRepeatingTask(taskId: String): Boolean {
+        require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
+        val existing = templates.firstOrNull { it.id == taskId } ?: return false
+        if (!existing.enabled) return true
+        val updated = templates.map {
+            if (it.id == taskId) taskStopRepeating(it) else it
+        }
+        val json = JSONArray().apply { updated.forEach { put(it.toJson()) } }.toString()
+        check(prefs.edit().putString("templates", json).commit()) {
+            "Could not stop task recurrence"
+        }
+        templates = updated
+        // All completed, moved, skipped and checklist runs are intentionally retained.
+        syncOutputs()
+        return true
+    }
+
+    /**
+     * Irreversible deletion of ONE task template and only its own TaskRuns.
+     * Save both collections as one SharedPreferences transaction; never leave
+     * a task whose historical runs are unexpectedly orphaned.
+     */
+    fun deleteTaskPermanently(taskId: String): Boolean {
+        require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
+        val result = taskDeletePermanently(templates, runs, taskId) ?: return false
+        val templatesJson = JSONArray().apply {
+            result.templates.forEach { put(it.toJson()) }
+        }.toString()
+        val runsJson = JSONArray().apply {
+            result.runs.values.forEach { put(it.toJson()) }
+        }.toString()
+        check(prefs.edit()
+            .putString("templates", templatesJson)
+            .putString("runs", runsJson)
+            .commit()) { "Could not delete task" }
+        templates = result.templates
+        runs = result.runs
+        syncOutputs()
+        return true
+    }
+
     /** Add only new templates, preserving local tasks and all completion history. */
     fun importTemplates(imported: List<TaskTemplate>): Int {
         require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
