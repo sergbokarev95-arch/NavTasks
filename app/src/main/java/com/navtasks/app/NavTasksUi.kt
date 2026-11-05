@@ -91,7 +91,14 @@ fun navPalette(dark: Boolean) = if (dark) NavPalette(
 
 /** HONOR-style success green, with readable contrast for text in Day mode. */
 val NavPalette.successText: Color
-    get() = if (dark) mint else Color(0xFF2B8951)
+    get() = if (dark) mint else Color(0xFF24834B)
+
+/** Text-safe alert accents: decorative fills and dock colors remain untouched. */
+val NavPalette.warningText: Color
+    get() = if (dark) Color(0xFFFFC78E) else Color(0xFF986012)
+
+val NavPalette.dangerText: Color
+    get() = if (dark) Color(0xFFFFB1A6) else Color(0xFFB13B32)
 
 fun localized(ru: String, en: String, lang: UiLanguage) = if (lang == UiLanguage.RU) ru else en
 
@@ -509,14 +516,21 @@ fun RoundCheck(
     interactionSource: MutableInteractionSource? = null,
 ) {
     Box(
-        modifier.size(29.dp).clip(CircleShape)
-            .background(if (checked) p.mint else Color.Transparent)
-            .border(2.dp, if (checked) p.mint else p.blue, CircleShape)
+        modifier.size(44.dp).clip(CircleShape)
             .glassClickable(interactionSource = interactionSource, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        if (checked) Text("✓", color = if (p.dark) Color(0xFF103F49) else Color.White,
-            fontWeight = FontWeight.Bold, fontSize = 17.sp)
+        Box(
+            Modifier.size(29.dp)
+                .background(if (checked) p.mint else Color.Transparent, CircleShape)
+                .border(2.dp, if (checked) p.mint else p.blue, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (checked) NavGlassGlyph(
+                "check", if (p.dark) Color(0xFF103F49) else Color.White,
+                Modifier.size(18.dp),
+            )
+        }
     }
 }
 
@@ -1000,7 +1014,7 @@ fun RunTileV2(
             verticalAlignment = Alignment.CenterVertically) {
             if (run.checklist.isNotEmpty()) {
                 Box(
-                    Modifier.size(29.dp).clip(CircleShape)
+                    Modifier.size(44.dp).clip(CircleShape)
                         .glassClickable(interactionSource = headerInteraction, onClick = onToggleExpand),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -1013,7 +1027,7 @@ fun RunTileV2(
             } else {
                 RoundCheck(run.completed || confirming, p,
                     onClick = ::requestSimpleChange,
-                    modifier = Modifier.size(27.dp), interactionSource = headerInteraction)
+                    interactionSource = headerInteraction)
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f).glassClickable(interactionSource = headerInteraction) {
@@ -1027,13 +1041,14 @@ fun RunTileV2(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (run.checklist.isNotEmpty()) Text("${run.checkedCount}/${run.checklist.size}", color = p.blue, fontSize = 11.sp)
                     if (run.transferred) Text(localized("Перенесено", "Moved", lang), color = p.successText, fontSize = 11.sp)
-                    if (overdue) Text(navDate(run.dueDate, lang), color = Color(0xFFF0AC8F), fontSize = 11.sp)
+                    if (overdue) Text(navDate(run.dueDate, lang), color = p.dangerText, fontSize = 11.sp)
                     if (task.deadlineTime != null) Text(task.deadlineTime.toString(), color = p.muted, fontSize = 11.sp)
                 }
             }
             Box {
-                Text("⋯", color = p.muted, fontSize = 20.sp,
-                    modifier = Modifier.clip(CircleShape).glassClickable { menuOpen = true }.padding(6.dp))
+                NavGlassIconAction(
+                    "more", p.muted, localized("Действия с задачей", "Task actions", lang),
+                ) { menuOpen = true }
                 RunTaskPopover(
                     p = p, lang = lang, expanded = menuOpen, available = !run.completed,
                     onDismiss = { menuOpen = false },
@@ -1069,7 +1084,7 @@ fun RunTileV2(
                                 val checking = item.id !in run.checkedIds
                                 requestChecklistChange(item.id, checking)
                             },
-                            modifier = Modifier.size(27.dp))
+                            modifier = Modifier)
                         Spacer(Modifier.width(10.dp))
                         Text(item.title, color = p.text, fontSize = 13.sp, modifier = Modifier.weight(1f),
                             textDecoration = if (item.id in run.checkedIds || confirming) TextDecoration.LineThrough else null)
