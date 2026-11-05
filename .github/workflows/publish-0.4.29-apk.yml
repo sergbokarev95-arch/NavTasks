@@ -1,0 +1,41 @@
+name: Publish NavTasks Glass 0.4.29 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.29-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download verified APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          gh run download 41974252131 --repo "${{ github.repository }}" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          echo "f75498480dce6e8ec0a5eb29afe0dada740f65bbe716a1885887b8f3afedee3f  upload/app-debug.apk" | sha256sum -c -
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.29_Beta.apk
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.29-glass-beta \
+            upload/NavTasks_Glass_0.4.29_Beta.apk \
+            --repo "${{ github.repository }}" \
+            --target 3ba8eaa4e98547cd40a8005fdf5a6271310870f1 \
+            --prerelease \
+            --title "NavTasks Glass 0.4.29 Beta · AMOS Checklists & Reminders" \
+            --notes "AMOS work order expansion: editable checklist items, journal reference notes, checked progress and completion validation for mandatory items, reminder lead time (off/1/3/7/14/30 days), and opening the AMOS register from reminder notification. Existing AMOS records and vessel profile export/import remain compatible. AMOS recurrence is NOT included yet. CI run: 41974252131."
