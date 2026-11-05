@@ -503,6 +503,7 @@ private fun TodayScreenV2(
                     Text(navDate(selectedDay, lang, true), color = p.muted, fontSize = 12.sp)
                     Text(
                         if (browsingOtherDay) localized("Прогресс выбранного дня", "Selected day's progress", lang)
+                        else if (hasWork) localized("Прогресс задач", "Task progress", lang)
                         else localized("Прогресс дня", "Daily progress", lang),
                         color = p.text, fontSize = 15.sp,
                     )

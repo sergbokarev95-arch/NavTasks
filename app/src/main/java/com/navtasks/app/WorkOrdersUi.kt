@@ -86,8 +86,8 @@ fun WorkOrdersScreen(
                     }
                     Text(
                         localized(
-                            "Ручной учёт номеров AMOS. Данные хранятся только на телефоне.",
-                            "Manual AMOS register. Data is stored locally on this phone.",
+                            "Судовые работы AMOS. Даты и история сохраняются на телефоне.",
+                            "AMOS work and history are stored locally on this phone.",
                             lang,
                         ),
                         color = p.muted, fontSize = 11.sp,

@@ -75,8 +75,8 @@ fun WorksHubScreen(
                     p = p,
                     title = "AMOS · Work Orders",
                     description = localized(
-                        "Ручной учёт AMOS: номера, сроки, статусы и история.",
-                        "Manual AMOS register: numbers, due dates, status and history.",
+                        "Судовые работы AMOS: дата начала, повторения и история.",
+                        "AMOS jobs: start dates, recurrence and history.",
                         lang,
                     ),
                     secondary = localized(
