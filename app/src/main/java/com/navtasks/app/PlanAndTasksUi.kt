@@ -870,6 +870,7 @@ fun TaskEditorScreen(
 fun SettingsScreen(
     settings: NavSettings, store: TaskStore, p: NavPalette, onBack: () -> Unit,
     profiles: ProfileStore, handover: HandoverStore, services: ServiceStore,
+    workOrders: WorkOrderStore,
 ) {
     val lang = settings.language
     val context = LocalContext.current
@@ -993,7 +994,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            ProfileExchangePanel(profiles, store, handover, services, p, lang)
+            ProfileExchangePanel(profiles, store, handover, services, workOrders, p, lang)
             if (profiles.active.kind == NavProfileKind.VESSEL) {
             NavPanel(p) {
                 Text(localized("Обмен только шаблонами", "Task templates only", lang),
@@ -1028,7 +1029,7 @@ fun SettingsScreen(
             }
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.26 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.28 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }

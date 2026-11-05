@@ -14,19 +14,23 @@ import androidx.compose.ui.unit.sp
 import java.time.LocalDate
 
 /**
- * The entry point for ship work. Maintenance continues to use the existing
- * ServiceStore and ServicesScreen unchanged. AMOS and other work are clearly
- * marked as upcoming; do not create pretend records or mutate task schedules.
+ * The entry point for ship work. AMOS uses an independent WorkOrderStore.
+ * Maintenance continues to use ServiceStore/ServicesScreen unchanged. Other
+ * work remains upcoming. Nothing here mutates task recurrence or its history.
  */
 @Composable
 fun WorksHubScreen(
     services: ServiceStore,
+    workOrders: WorkOrderStore,
     p: NavPalette,
     lang: UiLanguage,
     onBack: () -> Unit,
     onServices: () -> Unit,
+    onAmos: () -> Unit,
 ) {
     val today = LocalDate.now()
+    val activeAmos = workOrders.entries.filterNot { it.completed }
+    val overdueAmos = activeAmos.count { it.dueDate.isBefore(today) }
     val overdue = services.entries.count { it.nextDate.isBefore(today) }
     val approaching = services.entries.count {
         !it.nextDate.isBefore(today) &&
@@ -71,13 +75,15 @@ fun WorksHubScreen(
                     p = p,
                     title = "AMOS · Work Orders",
                     description = localized(
-                        "Судовые задания из AMOS. Ручной журнал добавим следующим этапом.",
-                        "AMOS work orders. A manual work log is the next step.",
+                        "Ручной учёт AMOS: номера, сроки, статусы и история.",
+                        "Manual AMOS register: numbers, due dates, status and history.",
                         lang,
                     ),
-                    secondary = localized("В разработке", "Coming next", lang),
+                    secondary = localized(
+                        "${activeAmos.size} открыто · ${overdueAmos} просрочено",
+                        "${activeAmos.size} open · ${overdueAmos} overdue", lang),
                     icon = "tasks",
-                    onClick = null,
+                    onClick = onAmos,
                 )
             }
             item {

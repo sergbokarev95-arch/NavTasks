@@ -27,6 +27,7 @@ fun ProfilesScreen(
     store: TaskStore,
     handover: HandoverStore,
     services: ServiceStore,
+    workOrders: WorkOrderStore,
     p: NavPalette,
     lang: UiLanguage,
     onBack: () -> Unit,
@@ -43,6 +44,7 @@ fun ProfilesScreen(
         store.switchProfile()
         handover.switchProfile()
         services.switchProfile()
+        workOrders.switchProfile()
         onBack()
     }
 
@@ -134,6 +136,7 @@ fun ProfilesScreen(
                             store.switchProfile()
                             handover.switchProfile()
                             services.switchProfile()
+                            workOrders.switchProfile()
                             onBack()
                         } else profiles.rename(editingId, name)
                     }.onFailure { error = it.message }
@@ -152,9 +155,9 @@ fun ProfilesScreen(
             onDismissRequest = { deleteTarget = null },
             title = { Text(localized("Удалить профиль?", "Delete profile?", lang)) },
             text = { Text(localized(
-                "Все задачи, история, пропуски, Handover и сервисы профиля «" + victim.title +
+                "Все задачи, история, пропуски, Handover, сервисы и AMOS профиля «" + victim.title +
                     "» будут безвозвратно удалены. Перед удалением экспортируй профиль.",
-                "All tasks, history, missed checks, Handover and services of " + victim.title +
+                "All tasks, history, missed checks, Handover, services and AMOS of " + victim.title +
                     " will be permanently deleted. Export this profile first.", lang)) },
             confirmButton = {
                 TextButton(onClick = {
@@ -163,6 +166,7 @@ fun ProfilesScreen(
                         store.switchProfile()
                         handover.switchProfile()
                         services.switchProfile()
+                        workOrders.switchProfile()
                     }.onSuccess { error = null }
                         .onFailure { error = it.localizedMessage }
                     deleteTarget = null
@@ -187,6 +191,7 @@ fun ProfileExchangePanel(
     store: TaskStore,
     handover: HandoverStore,
     services: ServiceStore,
+    workOrders: WorkOrderStore,
     p: NavPalette,
     lang: UiLanguage,
 ) {
@@ -247,8 +252,8 @@ fun ProfileExchangePanel(
         Text(localized("Полный обмен профилями", "Full profile transfer", lang),
             color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         Text(localized(
-            "Выбери профиль для экспорта. Файл содержит расписания, все отметки по датам, пропуски, переносы, Handover и сервисы.",
-            "Choose the profile to export. It contains all schedules, dated completions, missed and moved tasks, Handover and maintenance dates.",
+            "Выбери профиль для экспорта. Файл содержит расписания, все отметки по датам, пропуски, переносы, Handover, сервисы и AMOS.",
+            "Choose the profile to export. It contains all schedules, dated completions, missed and moved tasks, Handover, maintenance and AMOS work orders.",
             lang), color = p.muted, fontSize = 12.sp)
         Text(localized("Профиль для экспорта", "Profile to export", lang),
             color = p.muted, fontSize = 12.sp)
@@ -341,8 +346,8 @@ fun ProfileExchangePanel(
                 "Delete profile " + victim.title + "?", lang)) },
             text = {
                 Text(localized(
-                    "Все задачи, история выполнений, пропущенные, Handover и сервисы этого судна будут безвозвратно удалены. Это нельзя отменить. Перед удалением экспортируй профиль.",
-                    "All tasks, completion history, missed entries, Handover and maintenance records for this vessel will be permanently deleted. This cannot be undone. Export the profile first.",
+                    "Все задачи, история выполнений, пропущенные, Handover, сервисы и AMOS этого судна будут безвозвратно удалены. Это нельзя отменить. Перед удалением экспортируй профиль.",
+                    "All tasks, completion history, missed entries, Handover, maintenance and AMOS records for this vessel will be permanently deleted. This cannot be undone. Export the profile first.",
                     lang))
             },
             confirmButton = {
@@ -352,6 +357,7 @@ fun ProfileExchangePanel(
                         store.switchProfile()
                         handover.switchProfile()
                         services.switchProfile()
+                        workOrders.switchProfile()
                         selectedId = profiles.activeId
                     }.onSuccess {
                         feedback = localized("Профиль удалён.", "Profile deleted.", lang)
@@ -388,11 +394,12 @@ fun ProfileExchangePanel(
                         localized("отметок", "records", lang) + " · " +
                         incoming.sections.size + " " + localized("разделов", "sections", lang) +
                         " · " + incoming.services.size + " " +
-                        localized("сервисов", "services", lang))
+                        localized("сервисов", "services", lang) + " · " +
+                        incoming.workOrders.size + " AMOS")
                     if (matched != null) {
                         Spacer(Modifier.height(12.dp))
                         Text(localized(
-                            "ВНИМАНИЕ: все текущие задачи, записи и история профиля «" +
+                            "ВНИМАНИЕ: все текущие задачи, AMOS, записи и история профиля «" +
                                 matched.title + "» будут удалены и заменены содержимым файла.",
                             "WARNING: all existing tasks, history and notes in " +
                                 matched.title + " will be erased and replaced with the file.",
@@ -407,6 +414,7 @@ fun ProfileExchangePanel(
                         store.switchProfile()
                         handover.switchProfile()
                         services.switchProfile()
+                        workOrders.switchProfile()
                         selectedId = result.id
                     }.onSuccess {
                         feedback = localized("Профиль импортирован полностью.",
