@@ -283,7 +283,9 @@ private fun WorkOrderCard(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                localized("Следующее выполнение: ", "Next occurrence: ", lang) +
+                (if (order.recurring)
+                    localized("Следующее повторение: ", "Next recurrence: ", lang)
+                else localized("Начало работы: ", "Work starts: ", lang)) +
                     navDate(order.dueDate, lang, true),
                 color = if (order.completed) p.muted else accent,
                 fontSize = 12.sp,

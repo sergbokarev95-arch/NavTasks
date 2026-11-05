@@ -98,7 +98,11 @@ private fun WorkAgendaTodayCard(
             NavGlassGlyph("chevron-right", p.muted, Modifier.size(18.dp))
         }
         Text(
-            localized("Следующая дата: ", "Next date: ", lang) +
+            (if (onRequest != null)
+                localized("Следующий сервис: ", "Next maintenance: ", lang)
+            else if (repeat)
+                localized("Следующее повторение: ", "Next recurrence: ", lang)
+            else localized("Начало работы: ", "Work starts: ", lang)) +
                 navDate(dueDate, lang, true),
             color = statusColor, fontSize = 12.sp,
         )
