@@ -345,7 +345,7 @@ fun ProfileExchangePanel(
                 "Personal is protected from deletion.", lang),
                 color = p.muted, fontSize = 11.sp)
         }
-        feedback?.let { Text(it, color = if (error) p.dangerText else p.mint,
+        feedback?.let { Text(it, color = if (error) p.dangerText else p.successText,
             fontSize = 12.sp) }
     }
     deleteTarget?.let { victim ->
