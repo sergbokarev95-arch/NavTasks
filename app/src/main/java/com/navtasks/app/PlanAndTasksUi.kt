@@ -133,9 +133,13 @@ fun PlanScreenV2(
             when (zoom) {
                 0 -> Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { year-- }) { Text("‹", fontSize = 26.sp) }
+                        NavGlassIconAction(
+                            "chevron-left", p.blue, localized("Предыдущий год", "Previous year", lang),
+                        ) { year-- }
                         Text("$year", color = p.text, fontSize = 24.sp, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                        TextButton(onClick = { year++ }) { Text("›", fontSize = 26.sp) }
+                        NavGlassIconAction(
+                            "chevron-right", p.blue, localized("Следующий год", "Next year", lang),
+                        ) { year++ }
                     }
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
@@ -185,14 +189,18 @@ fun PlanScreenV2(
                 }
                 1 -> Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = {
+                        NavGlassIconAction(
+                            "chevron-left", p.blue, localized("Предыдущий месяц", "Previous month", lang),
+                        ) {
                             if (month == 1) { month = 12; year-- } else month--
-                        }) { Text("‹", fontSize = 27.sp) }
+                        }
                         Text("${YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase() }} $year",
                             modifier = Modifier.weight(1f), color = p.text, fontSize = 19.sp, textAlign = TextAlign.Center)
-                        TextButton(onClick = {
+                        NavGlassIconAction(
+                            "chevron-right", p.blue, localized("Следующий месяц", "Next month", lang),
+                        ) {
                             if (month == 12) { month = 1; year++ } else month++
-                        }) { Text("›", fontSize = 27.sp) }
+                        }
                     }
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
                         (1..7).forEach { dow ->
@@ -274,12 +282,16 @@ fun PlanScreenV2(
                 }
                 else -> Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { level = 1 }) { Text("‹", fontSize = 25.sp) }
+                        NavGlassIconAction(
+                            "chevron-left", p.blue, localized("К месяцу", "Back to month", lang),
+                        ) { level = 1 }
                         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(navDate(selectedDay, lang, true), color = p.text, fontSize = 19.sp)
                             Text(selectedDay.dayOfWeek.getDisplayName(TextStyle.FULL, locale), color = p.muted, fontSize = 12.sp)
                         }
-                        TextButton(onClick = { level = 0 }) { Text("▦", fontSize = 21.sp) }
+                        NavGlassIconAction(
+                            "calendar", p.blue, localized("Выбрать год", "View year", lang),
+                        ) { level = 0 }
                     }
                     val rows = store.forDate(selectedDay)
                     val plannedWorks = workAgendaExistsOnDay(
@@ -340,22 +352,24 @@ private fun PlanReadOnlyTile(
             )
         }
         Box {
-            Text("⋯", color = p.blue, fontSize = 22.sp,
-                modifier = Modifier.glassClickable { menuOpen = true }.padding(horizontal = 9.dp, vertical = 6.dp))
+            NavGlassIconAction(
+                "more", p.blue, localized("Действия с задачей", "Task actions", lang),
+            ) { menuOpen = true }
             NavPopoverMenu(p = p, expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                DropdownMenuItem(text = { Text(localized("Редактировать", "Edit", lang)) }, onClick = {
+                NavPopoverAction(localized("Редактировать", "Edit", lang), p) {
                     menuOpen = false
                     onEdit(task)
-                })
-                if (!run.completed) DropdownMenuItem(text = { Text(localized("Перенести на дату…", "Move to date…", lang)) },
-                    onClick = {
-                        menuOpen = false
-                        movingToDate = run.displayDate
-                    })
-                DropdownMenuItem(text = { Text(localized("Удалить из дня", "Remove from day", lang)) }, onClick = {
+                }
+                if (!run.completed) NavPopoverAction(localized("Перенести на дату…", "Move to date…", lang), p) {
+                    menuOpen = false
+                    movingToDate = run.displayDate
+                }
+                NavPopoverDivider(p)
+                NavPopoverAction(localized("Удалить из дня", "Remove from day", lang), p,
+                    destructive = true) {
                     menuOpen = false
                     deleteDialog = true
-                })
+                }
             }
         }
     }
@@ -764,10 +778,10 @@ fun TaskEditorScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(localized("Удалить задачу", "Delete task", lang),
-                        color = Color(0xFFE98B84), fontSize = 14.sp)
+                        color = p.dangerText, fontSize = 14.sp)
                 }
                 taskDeletionError?.let { error ->
-                    Text(error, color = Color(0xFFE98B84), fontSize = 12.sp)
+                    Text(error, color = p.dangerText, fontSize = 12.sp)
                 }
             }
             Spacer(Modifier.height(28.dp))
@@ -826,7 +840,7 @@ fun TaskEditorScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(localized("Удалить полностью", "Delete permanently", lang),
-                            color = Color(0xFFE98B84))
+                            color = p.dangerText)
                     }
                 }
             },
@@ -867,7 +881,7 @@ fun TaskEditorScreen(
                         }
                 }) {
                     Text(localized("Удалить полностью", "Delete permanently", lang),
-                        color = Color(0xFFE98B84))
+                        color = p.dangerText)
                 }
             },
             dismissButton = {

@@ -28,6 +28,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
@@ -439,6 +441,25 @@ fun NavGlassCalendarButton(p: NavPalette, hazeState: HazeState, onClick: () -> U
     }
 }
 
+/** Consistent, accessible 44dp target for small actions. */
+@Composable
+fun NavGlassIconAction(
+    kind: String,
+    color: Color,
+    description: String,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier.size(44.dp)
+            .semantics { contentDescription = description }
+            .clip(CircleShape)
+            .glassClickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        NavGlassGlyph(kind, color, Modifier.size(22.dp))
+    }
+}
+
 /** Lightweight vector navigation pictograms, no emoji and no extended icon package. */
 @Composable
 fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
@@ -499,6 +520,21 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                         cap = StrokeCap.Round)
                 }
             }
+            "more" -> {
+                for (x in listOf(7f, 15f, 23f)) {
+                    drawCircle(color, radius = 1.9f * s, center = pt(x, 15f))
+                }
+            }
+            "check" -> {
+                val path = Path().apply {
+                    moveTo(6f * s, 15.5f * s)
+                    lineTo(12.5f * s, 22f * s)
+                    lineTo(24f * s, 8.5f * s)
+                }
+                drawPath(path, color,
+                    style = Stroke(width = 2.8f * s,
+                        cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
             "edit" -> {
                 // Small neutral pencil, matching the dock's stroke-based icons.
                 val pencil = Path().apply {
@@ -525,16 +561,20 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 }
                 drawPath(path,color, style=Stroke(width=3.1f*s,cap=StrokeCap.Round,join=StrokeJoin.Round))
             }
-            "chevron-down", "chevron-right" -> {
+            "chevron-down", "chevron-right", "chevron-left" -> {
                 val path = Path().apply {
                     if (kind == "chevron-down") {
                         moveTo(7f*s, 12f*s)
                         lineTo(15f*s, 19f*s)
                         lineTo(23f*s, 12f*s)
-                    } else {
+                    } else if (kind == "chevron-right") {
                         moveTo(11f*s, 6f*s)
                         lineTo(19f*s, 15f*s)
                         lineTo(11f*s, 24f*s)
+                    } else {
+                        moveTo(19f*s, 6f*s)
+                        lineTo(11f*s, 15f*s)
+                        lineTo(19f*s, 24f*s)
                     }
                 }
                 drawPath(path, color, style = Stroke(width = 2.5f*s,
@@ -584,7 +624,7 @@ fun NavGlassInput(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.height(42.dp)
+        modifier = modifier.height(44.dp)
             .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL, elevation = 0.dp),
         singleLine = true,
         keyboardOptions = keyboardOptions,

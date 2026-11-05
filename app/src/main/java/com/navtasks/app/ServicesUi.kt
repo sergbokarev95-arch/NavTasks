@@ -89,9 +89,9 @@ fun ServicesScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         ServiceCount(localized("Всего", "All", lang), sorted.size, p.blue, p)
                         ServiceCount(localized("Скоро", "Soon", lang), soon,
-                            if (soon > 0) Color(0xFFE6AD72) else p.muted, p)
+                            if (soon > 0) p.warningText else p.muted, p)
                         ServiceCount(localized("Просрочены", "Overdue", lang), overdue,
-                            if (overdue > 0) Color(0xFFE98B84) else p.muted, p)
+                            if (overdue > 0) p.dangerText else p.muted, p)
                     }
                     Text(localized("Оборудование, даты, комментарии. Без вложений.",
                         "Equipment, dates and notes. No attachments.", lang),
@@ -116,8 +116,8 @@ fun ServicesScreen(
                     (service.nextDate <= now.plusDays(30) ||
                         (service.remindMonths > 0 && !now.isBefore(serviceWarningStart(service))))
                 val accent = if (completed) p.successText
-                    else if (late) Color(0xFFE98B84)
-                    else if (approaching) Color(0xFFE6AD72) else p.mint
+                    else if (late) p.dangerText
+                    else if (approaching) p.warningText else p.successText
                 Column(
                     Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
                         .glassClickable { selected = service; showEditor = true }
@@ -159,25 +159,26 @@ fun ServicesScreen(
                         Text(service.comment, color = p.muted, fontSize = 12.sp, maxLines = 2,
                             overflow = TextOverflow.Ellipsis)
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            if (completed) localized("Завершено", "Completed", lang)
-                            else if (late) localized("Просрочено", "Overdue", lang)
-                            else if (approaching)
-                                localized("Осталось " + ChronoUnit.DAYS.between(now, service.nextDate) + " дн.",
-                                    ChronoUnit.DAYS.between(now, service.nextDate).toString() + " days left", lang)
-                            else localized("Запланировано", "Scheduled", lang),
-                            color = accent, fontSize = 11.sp, modifier = Modifier.weight(1f),
-                        )
+                    Text(
+                        if (completed) localized("Завершено", "Completed", lang)
+                        else if (late) localized("Просрочено", "Overdue", lang)
+                        else if (approaching)
+                            localized("Осталось " + ChronoUnit.DAYS.between(now, service.nextDate) + " дн.",
+                                ChronoUnit.DAYS.between(now, service.nextDate).toString() + " days left", lang)
+                        else localized("Запланировано", "Scheduled", lang),
+                        color = accent, fontSize = 12.sp,
+                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                         if (!completed) {
-                            ServiceOption(localized("Проведено", "Serviced", lang), p, false) {
+                            ServiceOption(localized("Проведено", "Serviced", lang), p, false,
+                                modifier = Modifier.weight(1f)) {
                                 confirmingComplete = service
                                 completionDate = LocalDate.now()
                                 completionDatePicker = false
                             }
                         }
-                        Spacer(Modifier.width(6.dp))
-                        ServiceOption(localized("Удалить", "Delete", lang), p, false) {
+                        ServiceOption(localized("Удалить", "Delete", lang), p, false,
+                            modifier = Modifier.weight(1f)) {
                             confirmingDelete = service
                         }
                     }
@@ -464,7 +465,7 @@ private fun ServiceEditorDialog(
                             localized("Интервал: $total мес.", "Interval: $total months", lang)
                         else localized("Укажи от 1 до 1200 месяцев суммарно.",
                             "Enter a total between 1 and 1200 months.", lang),
-                        color = if (total in 1..1200) p.muted else Color(0xFFE98B84),
+                        color = if (total in 1..1200) p.muted else p.dangerText,
                         fontSize = 11.sp,
                     )
                 }
@@ -484,7 +485,7 @@ private fun ServiceEditorDialog(
                         "Serviced will calculate next due from the actual completion date.", lang),
                         color = p.muted, fontSize = 11.sp)
                 }
-                error?.let { Text(it, color = Color(0xFFE98B84), fontSize = 12.sp) }
+                error?.let { Text(it, color = p.dangerText, fontSize = 12.sp) }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 ServiceOption(localized("Отмена", "Cancel", lang), p, false, onClick = onDismiss)
@@ -565,7 +566,7 @@ private fun ServiceNumberInput(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         textStyle = TextStyle(color = p.text, fontSize = 14.sp),
         cursorBrush = SolidColor(p.blue),
-        modifier = Modifier.fillMaxWidth().height(43.dp)
+        modifier = Modifier.fillMaxWidth().height(44.dp)
             .navGlass(p, radius = 11.dp, role = GlassRole.CONTROL),
         decorationBox = { field ->
             Box(Modifier.fillMaxSize().padding(horizontal = 12.dp),
@@ -584,8 +585,10 @@ private fun ServiceOption(
     Box(modifier.navGlass(p, radius = 12.dp,
         role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
         .glassClickable(onClick = onClick)
-        .padding(horizontal = 11.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
-        Text(label, color = if (selected) p.blue else p.text, fontSize = 12.sp, maxLines = 1)
+        .heightIn(min = 44.dp)
+        .padding(horizontal = 10.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+        Text(label, color = if (selected) p.blue else p.text, fontSize = 12.sp,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

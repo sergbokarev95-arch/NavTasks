@@ -95,10 +95,10 @@ internal fun ChecklistEditorPanel(
                     onEditNote(item.id)
                 }
                 Box {
-                    Text("⋯", color = p.muted, fontSize = 21.sp,
-                        modifier = Modifier.clip(CircleShape)
-                            .glassClickable { menuOpen = true }
-                            .padding(horizontal = 6.dp, vertical = 9.dp))
+                    NavGlassIconAction(
+                        "more", p.muted,
+                        localized("Действия с пунктом", "Checklist item actions", lang),
+                    ) { menuOpen = true }
                     NavPopoverMenu(
                         p = p,
                         expanded = menuOpen,

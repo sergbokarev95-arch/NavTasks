@@ -33,14 +33,18 @@ fun ChecklistReferenceButton(
 ) {
     val accent = if (hasNote) p.blue else p.muted
     Box(
-        Modifier.size(33.dp)
-            .navGlass(p, radius = 17.dp, role = GlassRole.CONTROL)
-            .border(1.dp, accent.copy(alpha = if (hasNote) 0.65f else 0.25f), CircleShape)
-            .clip(CircleShape)
+        Modifier.size(44.dp).clip(CircleShape)
             .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text("?", color = accent, fontSize = 17.sp, fontWeight = FontWeight.Medium)
+        Box(
+            Modifier.size(33.dp)
+                .navGlass(p, radius = 17.dp, role = GlassRole.CONTROL)
+                .border(1.dp, accent.copy(alpha = if (hasNote) 0.65f else 0.25f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("?", color = accent, fontSize = 17.sp, fontWeight = FontWeight.Medium)
+        }
     }
 }
 
