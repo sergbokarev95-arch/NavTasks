@@ -1,0 +1,41 @@
+name: Publish NavTasks Glass 0.4.33 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.33-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download validated task deletion APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          gh run download 42047411339 --repo "${{ github.repository }}" \
+            --name NavTasks-Glass-0.2.6-debug-apk --dir upload
+          test -s upload/app-debug.apk
+          echo "2a8c39fa6f5cccd0c71e6410e6bf919c821782bd92f471204ca412fc3222438d  upload/app-debug.apk" | sha256sum -c -
+          mv upload/app-debug.apk upload/NavTasks_Glass_0.4.33_Beta.apk
+
+      - name: Publish direct APK GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.33-glass-beta \
+            upload/NavTasks_Glass_0.4.33_Beta.apk \
+            --repo "${{ github.repository }}" \
+            --target 5211dd5cc109635801eba9f455d42d9305e7db15 \
+            --prerelease \
+            --title "NavTasks Glass 0.4.33 Beta · Task Removal" \
+            --notes "Task editor now has a red Delete task action. Stop repeating disables a task without deleting its template or dated completion history; the task stays in Tasks and can be re-enabled. Delete permanently requires a second explicit confirmation and atomically removes only the selected task template and its own completion, missed, transferred and checklist runs. Other task history, AMOS, maintenance, Handover and dock remain unchanged. GitHub Actions unit tests and APK build successfully completed in run 42047411339."
