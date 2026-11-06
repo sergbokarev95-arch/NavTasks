@@ -14,6 +14,11 @@ import java.time.LocalDate
 
 private const val WIDGET_TOGGLE = "com.navtasks.app.WIDGET_TOGGLE"
 
+/** Keep visible task count and the overflow label in sync across widget sizes. */
+internal fun widgetOverflowCount(pendingCount: Int, wide: Boolean): Int =
+    (pendingCount - if (wide) 3 else 2).coerceAtLeast(0)
+
+
 open class NavBaseWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         NavWidgetUpdater.updateAll(context, TaskStore(context))
@@ -130,8 +135,7 @@ object NavWidgetUpdater {
                     R.id.nav_widget_task_three, R.id.nav_widget_check_three)
             }
 
-            val shown = if (wide) 3 else 2
-            val remaining = (pending.size - shown).coerceAtLeast(0)
+            val remaining = widgetOverflowCount(pending.size, wide)
             view.setTextViewText(
                 R.id.nav_widget_more,
                 if (remaining > 0) localized("+$remaining ещё", "+$remaining more", language) else "",
