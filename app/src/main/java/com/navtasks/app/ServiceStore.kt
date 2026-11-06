@@ -55,6 +55,8 @@ data class ServiceEntry(
     val serviceHistory: List<ServiceCompletion> = emptyList(),
     /** One-off services have no next cycle after completion. */
     val completedAt: LocalDate? = null,
+    /** Removed from active equipment without erasing completed cycles. */
+    val closedAt: LocalDate? = null,
 ) {
     init {
         require(id.isNotBlank() && id.length <= 100)
@@ -81,6 +83,7 @@ data class ServiceEntry(
         .put("remindMonths", remindMonths)
         .put("requestNumber", requestNumber)
         .put("completedAt", completedAt?.toString() ?: JSONObject.NULL)
+        .put("closedAt", closedAt?.toString() ?: JSONObject.NULL)
         .put("serviceHistory", JSONArray().apply {
             serviceHistory.forEach { put(it.toJson()) }
         })
@@ -102,6 +105,9 @@ data class ServiceEntry(
                 }
             },
             completedAt = json.optString("completedAt", "").takeUnless {
+                it.isBlank() || it == "null"
+            }?.let(LocalDate::parse),
+            closedAt = json.optString("closedAt", "").takeUnless {
                 it.isBlank() || it == "null"
             }?.let(LocalDate::parse),
         )
@@ -188,7 +194,25 @@ class ServiceStore(context: Context, private val profiles: ProfileStore) {
         upsert(item.copy(requestNumber = number.trim()))
     }
 
-    fun delete(id: String) = write(entries.filterNot { it.id == id })
+    /** First delete only closes this record; history is retained. */
+    fun delete(id: String) {
+        val entry = entries.firstOrNull { it.id == id } ?: error("Service not found")
+        require(entry.closedAt == null) { "Service already closed" }
+        upsert(entry.copy(closedAt = LocalDate.now()))
+    }
+
+    fun restore(id: String) {
+        val entry = entries.firstOrNull { it.id == id } ?: error("Service not found")
+        require(entry.closedAt != null) { "Service is not closed" }
+        upsert(entry.copy(closedAt = null))
+    }
+
+    fun deletePermanently(id: String) {
+        require(entries.any { it.id == id && it.closedAt != null }) {
+            "Only closed services can be permanently deleted"
+        }
+        write(entries.filterNot { it.id == id })
+    }
 
     fun complete(id: String, completedAt: LocalDate) {
         val existing = entries.firstOrNull { it.id == id } ?: error("Service not found")
