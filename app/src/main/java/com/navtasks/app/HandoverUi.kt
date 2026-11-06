@@ -60,14 +60,8 @@ fun HandoverScreen(
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
     val query = searchText.trim()
-    val shownSections = if (query.isBlank() || !searchOpen) handover.sections else
-        handover.sections.mapNotNull { section ->
-            if (section.title.contains(query, ignoreCase = true)) section
-            else section.copy(entries = section.entries.filter {
-                it.title.contains(query, ignoreCase = true) ||
-                    it.notes.contains(query, ignoreCase = true)
-            }).takeIf { it.entries.isNotEmpty() }
-        }
+    val shownSections = searchHandoverSections(
+        handover.sections, if (searchOpen) query else "")
     // A compact accordion: all sections start closed; each profile keeps
     // its current open section when the activity is recreated.
     var expandedSectionId by rememberSaveable { mutableStateOf<String?>(null) }
