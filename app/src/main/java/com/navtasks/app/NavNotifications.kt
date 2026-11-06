@@ -195,7 +195,7 @@ object NavNotifications {
                         "Missed tasks: ${overdue.size}", settings.language)
                     val details = overdue.take(4).joinToString(" · ") { it.first.title }
                     val notification = Notification.Builder(context, CHANNEL_MISSED)
-                        .setSmallIcon(R.drawable.navtasks_icon_monochrome)
+                        .setSmallIcon(R.drawable.navtasks_notification)
                         .setContentTitle(heading).setContentText(details)
                         .setStyle(Notification.BigTextStyle().bigText(details))
                         .setContentIntent(openTask(context)).setAutoCancel(true).build()
@@ -223,7 +223,7 @@ object NavNotifications {
             val detail = service.equipment + " · " +
                 localized("до ", "due ", settings.language) + service.nextDate
             val notification = Notification.Builder(context, CHANNEL_TASKS)
-                .setSmallIcon(R.drawable.navtasks_icon_monochrome)
+                .setSmallIcon(R.drawable.navtasks_notification)
                 .setContentTitle(heading).setContentText(detail)
                 .setStyle(Notification.BigTextStyle().bigText(detail))
                 .setContentIntent(openTask(context)).setAutoCancel(true).build()
@@ -249,7 +249,7 @@ object NavNotifications {
             val detail = order.reference + " · " + order.title + " · " +
                 localized("до ", "due ", settings.language) + order.dueDate
             val notification = Notification.Builder(context, CHANNEL_TASKS)
-                .setSmallIcon(R.drawable.navtasks_icon_monochrome)
+                .setSmallIcon(R.drawable.navtasks_notification)
                 .setContentTitle(localized("AMOS: срок работы", "AMOS: work due", settings.language))
                 .setContentText(detail)
                 .setStyle(Notification.BigTextStyle().bigText(detail))
@@ -284,7 +284,7 @@ object NavNotifications {
             localized("Срок прошёл. Задача добавлена в пропущенные.", "Deadline passed. Added to Missed.", settings.language)
         else localized("Скоро срок выполнения", "Due soon", settings.language)
         val builder = Notification.Builder(context, if (isMissed) CHANNEL_MISSED else CHANNEL_TASKS)
-            .setSmallIcon(R.drawable.navtasks_icon_monochrome)
+            .setSmallIcon(R.drawable.navtasks_notification)
             .setContentTitle(task.title).setContentText(message)
             .setContentIntent(openTask(context, runKey)).setAutoCancel(true)
         if (task.checklist.isEmpty()) {

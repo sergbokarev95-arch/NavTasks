@@ -3,24 +3,71 @@
     android:id="@+id/nav_widget_root"
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:background="@drawable/navtasks_widget_bg"
-    android:orientation="vertical" android:padding="13dp">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/nav_widget_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:text="Сегодня" android:textColor="#F2F8FF" android:textStyle="bold" android:textSize="14sp" android:maxLines="1" />
-        <TextView android:id="@+id/nav_widget_progress" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="0/0" android:textColor="#75D8C4" android:textSize="14sp" />
+    android:orientation="vertical" android:padding="12dp">
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView android:id="@+id/nav_widget_title"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Сегодня" android:textColor="#F2F8FF"
+            android:textSize="15sp" android:textStyle="bold"
+            android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/nav_widget_progress"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="0/0" android:textColor="#69D4BE" android:textSize="14sp" />
     </LinearLayout>
-    <ProgressBar android:id="@+id/nav_widget_bar" style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent" android:layout_height="5dp" android:layout_marginTop="9dp"
+    <ProgressBar android:id="@+id/nav_widget_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent" android:layout_height="4dp"
+        android:layout_marginTop="8dp" android:layout_marginBottom="5dp"
         android:progressTint="#69D4BE" android:progressBackgroundTint="#52677B" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-        android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/nav_widget_check_one" android:layout_width="34dp" android:layout_height="40dp"
-            android:gravity="center" android:text="◯" android:textColor="#69D4BE" android:textSize="24sp" />
-        <TextView android:id="@+id/nav_widget_task_one" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:gravity="center_vertical" android:text="NavTasks" android:maxLines="2" android:ellipsize="end"
-            android:textColor="#F2F8FF" android:textSize="12sp" />
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="0dp" android:layout_weight="1"
+        android:gravity="center_vertical" android:orientation="vertical">
+
+        <LinearLayout android:id="@+id/nav_widget_row_one"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="30dp" android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="visible">
+            <TextView android:id="@+id/nav_widget_check_one"
+                android:layout_width="34dp" android:layout_height="32dp"
+                android:gravity="center" android:text="○"
+                android:textColor="#69D4BE" android:textSize="23sp" />
+            <TextView android:id="@+id/nav_widget_task_one"
+                android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Задача" android:textColor="#F2F8FF"
+                android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/nav_widget_row_two"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="30dp" android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+            <TextView android:id="@+id/nav_widget_check_two"
+                android:layout_width="34dp" android:layout_height="32dp"
+                android:gravity="center" android:text="○"
+                android:textColor="#69D4BE" android:textSize="23sp" />
+            <TextView android:id="@+id/nav_widget_task_two"
+                android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Задача" android:textColor="#F2F8FF"
+                android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
+        </LinearLayout>
     </LinearLayout>
-    <TextView android:id="@+id/nav_widget_missed" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Пропущено: 0" android:textColor="#F0BD9F" android:textSize="11sp" android:maxLines="1" />
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView android:id="@+id/nav_widget_status"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:maxLines="1"
+            android:ellipsize="end" android:text="Осталось: 0"
+            android:textColor="#AFC4D8" android:textSize="11sp" />
+        <TextView android:id="@+id/nav_widget_secondary"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:maxLines="1" android:textColor="#AFC4D8"
+            android:textSize="11sp" android:text="" />
+    </LinearLayout>
 </LinearLayout>
