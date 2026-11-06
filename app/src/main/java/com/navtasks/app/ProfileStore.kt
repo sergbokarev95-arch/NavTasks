@@ -257,7 +257,7 @@ class ProfileStore(context: Context) {
      * Atomic append-only selective import. Does not touch TaskRun history,
      * lastVisit, profile identity, or application-wide settings.
      */
-    fun mergeSelected(bundle: SelectiveBundle): SelectiveImportCounts {
+    internal fun mergeSelected(bundle: SelectiveBundle): SelectiveImportCounts {
         require(active.kind == NavProfileKind.VESSEL) { "Select a vessel profile" }
         require(bundle.records > 0) { "File contains no records" }
         val merged = mergeSelective(snapshot(activeId), bundle)
