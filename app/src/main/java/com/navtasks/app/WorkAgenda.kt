@@ -10,17 +10,17 @@ import java.time.temporal.ChronoUnit
 internal fun amosVisibleOnDay(work: WorkOrderEntry, day: LocalDate): Boolean {
     if (work.closedAt != null || work.completed ||
         work.executionHistory.any { it.completedAt == day }) return false
-    // The current occurrence is kept visible while approaching and overdue.
-    val firstVisible = work.dueDate.minusDays(
-        maxOf(7, work.remindDaysBefore).toLong())
-    return !day.isBefore(firstVisible)
+    // Today is a due-date agenda, not an early-warning list.
+    // remindDaysBefore is exclusively for notification scheduling and AMOS's
+    // Soon filter; it must not make a future work order appear today.
+    return day == work.dueDate
 }
 
 internal fun serviceVisibleOnDay(service: ServiceEntry, day: LocalDate): Boolean =
     service.closedAt == null && service.completedAt == null &&
-        !day.isBefore(minOf(serviceWarningStart(service), service.nextDate.minusDays(30)))
+        day == service.nextDate
 
-/** Once the AMOS requisition is recorded, remove the reminder from Today only. */
+/** A registered AMOS service request suppresses the outstanding Today card. */
 internal fun serviceReminderVisibleOnDay(service: ServiceEntry, day: LocalDate): Boolean =
     service.requestNumber.isBlank() && serviceVisibleOnDay(service, day) &&
         service.serviceHistory.none { it.completedAt == day }
