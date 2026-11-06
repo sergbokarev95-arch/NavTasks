@@ -253,6 +253,37 @@ class ProfileStore(context: Context) {
         )
     }
 
+    /**
+     * Atomic append-only selective import. Does not touch TaskRun history,
+     * lastVisit, profile identity, or application-wide settings.
+     */
+    internal fun mergeSelected(bundle: SelectiveBundle): SelectiveImportCounts {
+        require(active.kind == NavProfileKind.VESSEL) { "Select a vessel profile" }
+        require(bundle.records > 0) { "File contains no records" }
+        val merged = mergeSelective(snapshot(activeId), bundle)
+        if (merged.added.total == 0) return merged.added
+        val data = merged.snapshot
+        val encodedTasks = JSONArray().apply {
+            data.templates.forEach { put(it.toJson()) }
+        }.toString()
+        val encodedHandover = JSONArray().apply {
+            data.sections.forEach { put(it.toJson()) }
+        }.toString()
+        val encodedServices = JSONArray().apply {
+            data.services.forEach { put(it.toJson()) }
+        }.toString()
+        val encodedAmos = JSONArray().apply {
+            data.workOrders.forEach { put(it.toJson()) }
+        }.toString()
+        check(this.data(activeId).edit()
+            .putString("templates", encodedTasks)
+            .putString("sections", encodedHandover)
+            .putString("services", encodedServices)
+            .putString("workOrders", encodedAmos)
+            .commit()) { "Selective import could not be saved" }
+        return merged.added
+    }
+
     /** Replace ALL tasks, history, notes, services and AMOS as one preference transaction. */
     fun importReplace(incoming: ProfileSnapshot): NavProfile {
         val matched = findMatch(incoming.profile)

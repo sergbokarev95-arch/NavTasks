@@ -1,5 +1,7 @@
 package com.navtasks.app
 
+import dev.chrisbanes.haze.hazeSource
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,6 +43,9 @@ fun WorkOrdersScreen(
     val context = LocalContext.current
     fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
     var showClosed by rememberSaveable { mutableStateOf(false) }
+    var searchOpen by rememberSaveable { mutableStateOf(false) }
+    var searchText by rememberSaveable { mutableStateOf("") }
+    val hazeState = remember { dev.chrisbanes.haze.HazeState() }
     var selectedFilter by rememberSaveable { mutableStateOf(WorkOverviewFilter.ALL) }
     var completionNotice by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<WorkOrderEntry?>(null) }
@@ -61,8 +66,14 @@ fun WorkOrdersScreen(
     val closedOrders = workOrders.entries.filter { it.closedAt != null }
         .sortedByDescending { it.closedAt }
     val listState = rememberLazyListState()
-    val filteredOrders = filterAmosOverview(activeOrders, today, selectedFilter)
+    val filteredOrders = searchAmosTitles(
+        filterAmosOverview(activeOrders, today, selectedFilter), searchText)
+    val filteredClosed = searchAmosTitles(closedOrders, searchText)
     LaunchedEffect(focusWorkOrderId, focusHistoryWorkOrderId) {
+        if (focusWorkOrderId != null || focusHistoryWorkOrderId != null) {
+            searchText = ""
+            searchOpen = false
+        }
         when {
             focusHistoryWorkOrderId != null -> {
                 showClosed = false
@@ -113,7 +124,9 @@ fun WorkOrdersScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+    Box(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
+        .hazeSource(hazeState)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -124,15 +137,21 @@ fun WorkOrdersScreen(
                 Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
                 Text("AMOS · Work Orders", color = p.text, fontSize = 22.sp)
             }
-            NavGlassCircleButton(p, "plus") {
-                editing = null
-                editorOpen = true
+            NavGlassCircleButton(p, "search") {
+                searchOpen = !searchOpen
+                if (!searchOpen) searchText = ""
             }
+        }
+        if (searchOpen) {
+            NavGlassSearchField(
+                searchText, { searchText = it }, p, lang,
+                placeholder = localized("Поиск по названию AMOS", "Search AMOS titles", lang),
+            )
         }
         LazyColumn(
             Modifier.fillMaxSize(),
             state = listState,
-            contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp, bottom = 42.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp, bottom = 106.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
             item {
@@ -191,12 +210,15 @@ fun WorkOrdersScreen(
             feedback?.let { msg ->
                 item { Text(msg, color = p.dangerText, fontSize = 12.sp) }
             }
-            val visible = if (showClosed) closedOrders else filteredOrders
+            val visible = if (showClosed) filteredClosed else filteredOrders
             if (visible.isEmpty()) {
                 item {
                     NavPanel(p) {
                         Text(
-                            if (showClosed)
+                            if (searchText.isNotBlank())
+                                localized("Работы с таким названием не найдены.",
+                                    "No work orders match this title.", lang)
+                            else if (showClosed)
                                 localized("Закрытых работ пока нет.", "No closed work orders yet.", lang)
                             else if (selectedFilter != WorkOverviewFilter.ALL)
                                 localized("В этом фильтре работ нет.", "No work orders match this filter.", lang)
@@ -208,7 +230,7 @@ fun WorkOrdersScreen(
                 }
             }
             if (showClosed) {
-                items(closedOrders, key = { it.id }) { order ->
+                items(filteredClosed, key = { it.id }) { order ->
                     WorkOrderClosedCard(
                         order, p, lang,
                         onHistory = { viewingHistory = order },
@@ -241,6 +263,16 @@ fun WorkOrdersScreen(
             }
         }
     }
+    Box(
+        Modifier.align(Alignment.BottomStart).navigationBarsPadding()
+            .padding(start = 19.dp, bottom = 18.dp),
+    ) {
+        NavGlassAddButton(p, hazeState) {
+            editing = null
+            editorOpen = true
+        }
+    }
+    } // End work screen; floating Add retains its separate glass overlay.
 
     if (editorOpen) {
         WorkOrderEditorDialog(

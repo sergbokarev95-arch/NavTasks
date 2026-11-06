@@ -580,6 +580,16 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 drawPath(path, color, style = Stroke(width = 2.5f*s,
                     cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
+            "search" -> {
+                drawCircle(color, radius = 7.5f*s, center = pt(13f, 13f),
+                    style = Stroke(width = width, cap = StrokeCap.Round))
+                drawLine(color, pt(18.7f, 18.7f), pt(26f, 26f), width * 1.15f,
+                    cap = StrokeCap.Round)
+            }
+            "x" -> {
+                drawLine(color, pt(9f, 9f), pt(21f, 21f), width, cap = StrokeCap.Round)
+                drawLine(color, pt(21f, 9f), pt(9f, 21f), width, cap = StrokeCap.Round)
+            }
             "plus" -> {
                 drawLine(color, pt(15f, 6f), pt(15f, 24f), width * 1.2f, cap = StrokeCap.Round)
                 drawLine(color, pt(6f, 15f), pt(24f, 15f), width * 1.2f, cap = StrokeCap.Round)
@@ -639,4 +649,29 @@ fun NavGlassInput(
             }
         },
     )
+}
+
+/** Compact search input shared across AMOS, maintenance and Handover. */
+@Composable
+fun NavGlassSearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    p: NavPalette,
+    lang: UiLanguage,
+    placeholder: String = localized("Поиск", "Search", lang),
+) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        NavGlassGlyph("search", p.blue, Modifier.size(20.dp))
+        NavGlassInput(
+            value = value, onValueChange = { onValueChange(it.take(120)) }, p = p,
+            placeholder = placeholder, modifier = Modifier.weight(1f),
+        )
+        if (value.isNotEmpty()) {
+            NavGlassIconAction("x", p.muted,
+                localized("Очистить поиск", "Clear search", lang)) { onValueChange("") }
+        }
+    }
 }
