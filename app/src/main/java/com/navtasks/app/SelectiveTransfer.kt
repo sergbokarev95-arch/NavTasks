@@ -188,18 +188,17 @@ internal fun mergeSelective(
     val source = SelectiveTransfer.clean(incoming)
     val newTasks = NavTaskTransfer.newTemplates(existing.templates, source.tasks)
 
-    val workNames = existing.workOrders.map { uniqueLabel(it.title) }.toMutableSet()
-    val workRefs = existing.workOrders.map { uniqueLabel(it.reference) }
-        .filter { it.isNotBlank() }.toMutableSet()
-    val newWork = source.workOrders.filter { item ->
-        val label = uniqueLabel(item.title)
-        val ref = uniqueLabel(item.reference)
-        if (label in workNames || (ref.isNotBlank() && ref in workRefs)) false
-        else {
-            workNames.add(label)
-            if (ref.isNotBlank()) workRefs.add(ref)
-            true
-        }
+    // Two AMOS jobs may legitimately share a title while having different
+    // AMOS references. An unnumbered job is identified by its own schedule.
+    fun workIdentity(item: WorkOrderEntry): String {
+        val reference = uniqueLabel(item.reference)
+        return if (reference.isNotBlank()) "ref:" + reference
+        else "unnumbered:" + uniqueLabel(item.title) + "|" + item.dueDate +
+            "|" + item.repeatDays + "|" + item.repeatMonths
+    }
+    val knownWork = existing.workOrders.map(::workIdentity).toMutableSet()
+    val newWork = source.workOrders.filter {
+        knownWork.add(workIdentity(it))
     }.map { item ->
         item.copy(id = UUID.randomUUID().toString(), completedAt = null,
             closedAt = null, createdAt = LocalDate.now(),
