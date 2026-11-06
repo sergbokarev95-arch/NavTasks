@@ -1,0 +1,80 @@
+name: Publish NavTasks Glass 0.4.46 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.46-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out verified 0.4.46 due-only Today and improved widgets source
+        uses: actions/checkout@v4
+        with:
+          ref: 59f6a77b2e8a3cccb2b70b96b7d59f123d37ebeb
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore stable beta signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify source and run regression tests
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "59f6a77b2e8a3cccb2b70b96b7d59f123d37ebeb"
+          grep -q 'versionName = "0.4.46"' app/build.gradle.kts
+          grep -q 'versionCode = 68' app/build.gradle.kts
+          gradle :app:testDebugUnitTest --no-daemon
+      - name: Build stable-signed debug APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: gradle :app:assembleDebug --no-daemon
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Package compact ZIP directly from build
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p upload
+          cp app/build/outputs/apk/debug/app-debug.apk upload/NavTasks_Glass_0.4.46_Beta.apk
+          sha256sum upload/NavTasks_Glass_0.4.46_Beta.apk
+          cd upload
+          zip -q NavTasks_Glass_0.4.46_Build.zip NavTasks_Glass_0.4.46_Beta.apk
+          unzip -t NavTasks_Glass_0.4.46_Build.zip
+          cd ..
+      - name: Publish 0.4.46 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.46-glass-beta \
+            upload/NavTasks_Glass_0.4.46_Beta.apk \
+            upload/NavTasks_Glass_0.4.46_Build.zip \
+            --repo "${{ github.repository }}" \
+            --target 59f6a77b2e8a3cccb2b70b96b7d59f123d37ebeb \
+            --prerelease \
+            --title "NavTasks Glass 0.4.46 Beta · Accurate Today and Useful Widgets" \
+            --notes "NavTasks 0.4.46: AMOS work scheduled for 13 November no longer appears in Today on 7 November, regardless of its 7-90 day early-notification lead. AMOS and maintenance cards appear on their actual due date, while early notifications, Soon and Overdue filters, completion history, recurrence and Calendar projections stay unchanged. Home widgets show 2-4 upcoming unchecked tasks where space permits, remove redundant bar/progress text, display a useful overflow/Open all tasks link and missed counter, and open task details when tapping a title rather than accidentally completing the task. Only a simple task checkmark completes directly; checklist tasks still open the app. No profile schema or task data change. VersionCode 68. Verified in branch regression CI 42253639898 and signed main CI 42254343735; release workflow repeats tests and signs same beta key. On-device verification required."
