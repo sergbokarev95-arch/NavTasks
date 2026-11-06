@@ -1,0 +1,54 @@
+name: Validate NavTasks 0.4.46 Today due-date and widgets
+on:
+  push:
+    branches: [fix-today-due-and-widget-0.4.46]
+    paths: ['.github/workflows/validate-0.4.46.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Verify widget resources, paths and version
+        run: |
+          set -euo pipefail
+          grep -q 'versionName = "0.4.46"' app/build.gradle.kts
+          grep -q 'versionCode = 68' app/build.gradle.kts
+          python3 - <<'PY'
+          import pathlib,xml.etree.ElementTree as ET
+          r=pathlib.Path("app/src/main/res/layout")
+          k=pathlib.Path("app/src/main/java/com/navtasks/app/NavWidgets.kt").read_text()
+          ns='{http://schemas.android.com/apk/res/android}'
+          for size in ['compact','wide']:
+              layout=r/f'navtasks_widget_{size}.xml'
+              root=ET.parse(layout).getroot()
+              ids={v.attrib.get(ns+'id') for v in root.iter()}
+              for field in ['row_one','row_two','row_three','row_four',
+                            'task_one','task_two','task_three','task_four',
+                            'check_one','check_two','check_three','check_four',
+                            'status','secondary','progress','title','root','bar']:
+                  assert '@+id/nav_widget_'+field in ids,(size,field)
+              bar=next(v for v in root.iter() if v.attrib.get(ns+'id')=='@+id/nav_widget_bar')
+              assert bar.attrib.get(ns+'visibility')=='gone'
+          assert 'view.setOnClickPendingIntent(\n                            nameId, NavNotifications.openTask(context, run.key))' in k
+          print('Layouts have 4 rows; redundant progress bar hidden; task title opens detail')
+          PY
+      - name: Run unit tests and due-date regressions
+        run: gradle :app:testDebugUnitTest --no-daemon
+      - name: Assemble Android app
+        run: gradle :app:assembleDebug --no-daemon
