@@ -1,5 +1,7 @@
 package com.navtasks.app
 
+import dev.chrisbanes.haze.hazeSource
+
 import android.app.DatePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,6 +47,9 @@ fun ServicesScreen(
     var confirmingDelete by remember { mutableStateOf<ServiceEntry?>(null) }
     var confirmingPurge by remember { mutableStateOf<ServiceEntry?>(null) }
     var showClosed by rememberSaveable { mutableStateOf(false) }
+    var searchOpen by rememberSaveable { mutableStateOf(false) }
+    var searchText by rememberSaveable { mutableStateOf("") }
+    val hazeState = remember { dev.chrisbanes.haze.HazeState() }
     var requestTarget by remember { mutableStateOf<ServiceEntry?>(null) }
     var confirmingComplete by remember { mutableStateOf<ServiceEntry?>(null) }
     var completionDate by remember { mutableStateOf(LocalDate.now()) }
@@ -58,8 +63,14 @@ fun ServicesScreen(
         .sortedByDescending { it.closedAt }
     val listState = rememberLazyListState()
     val filteredServices = filterServiceOverview(activeServices, now, selectedFilter)
+        .filter { it.equipment.contains(searchText.trim(), ignoreCase = true) }
+    val filteredClosed = closedServices.filter {
+        it.equipment.contains(searchText.trim(), ignoreCase = true)
+    }
     LaunchedEffect(focusServiceId) {
         if (focusServiceId != null) {
+            searchText = ""
+            searchOpen = false
             showClosed = false
             selectedFilter = WorkOverviewFilter.ALL
             withFrameNanos { }
@@ -72,7 +83,9 @@ fun ServicesScreen(
 
     fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+    Box(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
+        .hazeSource(hazeState)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -83,12 +96,22 @@ fun ServicesScreen(
                 Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
                 Text(localized("Сервисы", "Maintenance", lang), color = p.text, fontSize = 23.sp)
             }
-            NavGlassCircleButton(p, "plus") { selected = null; showEditor = true }
+            NavGlassCircleButton(p, "search") {
+                searchOpen = !searchOpen
+                if (!searchOpen) searchText = ""
+            }
+        }
+        if (searchOpen) {
+            NavGlassSearchField(
+                searchText, { searchText = it }, p, lang,
+                placeholder = localized("Поиск по названию оборудования",
+                    "Search equipment names", lang),
+            )
         }
         LazyColumn(
             Modifier.fillMaxSize(),
             state = listState,
-            contentPadding = PaddingValues(16.dp, 6.dp, 16.dp, 36.dp),
+            contentPadding = PaddingValues(16.dp, 6.dp, 16.dp, 106.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
@@ -135,12 +158,15 @@ fun ServicesScreen(
             message?.let { msg ->
                 item { Text(msg, color = p.muted, fontSize = 12.sp) }
             }
-            val visible = if (showClosed) closedServices else filteredServices
+            val visible = if (showClosed) filteredClosed else filteredServices
             if (visible.isEmpty()) {
                 item {
                     NavPanel(p) {
                         Text(
-                            if (showClosed)
+                            if (searchText.isNotBlank())
+                                localized("Нет работ с таким названием.",
+                                    "No maintenance names match.", lang)
+                            else if (showClosed)
                                 localized("Закрытых сервисов пока нет.", "No closed services yet.", lang)
                             else if (selectedFilter == WorkOverviewFilter.ALL)
                                 localized("Нет сервисов. Добавь оборудование кнопкой +.",
@@ -153,7 +179,7 @@ fun ServicesScreen(
                 }
             }
             if (showClosed) {
-                items(closedServices, key = { it.id }) { service ->
+                items(filteredClosed, key = { it.id }) { service ->
                     ServiceClosedCard(service, p, lang,
                         onHistory = { viewingHistory = service },
                         onRestore = {
@@ -239,6 +265,16 @@ fun ServicesScreen(
             }
         }
     }
+    Box(
+        Modifier.align(Alignment.BottomStart).navigationBarsPadding()
+            .padding(start = 19.dp, bottom = 18.dp),
+    ) {
+        NavGlassAddButton(p, hazeState) {
+            selected = null
+            showEditor = true
+        }
+    }
+    } // End maintenance screen and floating Add overlay.
     if (showEditor) {
         ServiceEditorDialog(
             selected, p, lang,
