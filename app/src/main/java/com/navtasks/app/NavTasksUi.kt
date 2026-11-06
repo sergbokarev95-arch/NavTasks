@@ -202,6 +202,7 @@ fun NavTasksApp(
     val workOrderStore = remember(context, profiles) { WorkOrderStore(context, profiles) }
     // A Today reminder navigates to the exact entry in its owning module.
     var focusWorkOrderId by rememberSaveable { mutableStateOf<String?>(null) }
+    var focusHistoryWorkOrderId by rememberSaveable { mutableStateOf<String?>(null) }
     var focusServiceId by rememberSaveable { mutableStateOf<String?>(null) }
     var editorOpen by remember { mutableStateOf(false) }
     var editorTask by remember { mutableStateOf<TaskTemplate?>(null) }
@@ -242,6 +243,7 @@ fun NavTasksApp(
                 showCalendar = false
                 showWorks = true
                 focusWorkOrderId = requestedWorkOrderId
+                focusHistoryWorkOrderId = null
                 showWorkOrders = true
             }
             onWorkOrderRequestHandled()
@@ -288,7 +290,11 @@ fun NavTasksApp(
             showProfiles -> showProfiles = false
             showSettings -> showSettings = false
             showServices -> { showServices = false; focusServiceId = null }
-            showWorkOrders -> { showWorkOrders = false; focusWorkOrderId = null }
+            showWorkOrders -> {
+                showWorkOrders = false
+                focusWorkOrderId = null
+                focusHistoryWorkOrderId = null
+            }
             showWorks -> showWorks = false
             showCalendar -> showCalendar = false
             profiles.active.kind == NavProfileKind.PERSONAL -> showProfiles = true
@@ -336,8 +342,13 @@ fun NavTasksApp(
                     focusServiceId = focusServiceId)
             } else if (showWorkOrders) {
                 WorkOrdersScreen(workOrderStore, store, settings, palette, lang,
-                    onBack = { showWorkOrders = false; focusWorkOrderId = null },
-                    focusWorkOrderId = focusWorkOrderId)
+                    onBack = {
+                        showWorkOrders = false
+                        focusWorkOrderId = null
+                        focusHistoryWorkOrderId = null
+                    },
+                    focusWorkOrderId = focusWorkOrderId,
+                    focusHistoryWorkOrderId = focusHistoryWorkOrderId)
             } else if (showCalendar) {
                 Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                     Row(
@@ -370,7 +381,11 @@ fun NavTasksApp(
                 WorksHubScreen(serviceStore, workOrderStore, palette, lang,
                     onBack = { showWorks = false },
                     onServices = { focusServiceId = null; showServices = true },
-                    onAmos = { focusWorkOrderId = null; showWorkOrders = true })
+                    onAmos = {
+                        focusWorkOrderId = null
+                        focusHistoryWorkOrderId = null
+                        showWorkOrders = true
+                    })
             } else {
                 val hazeState = remember { dev.chrisbanes.haze.HazeState() }
                 Box(Modifier.fillMaxSize()) {
@@ -442,6 +457,13 @@ fun NavTasksApp(
                                         workOrders = workOrderStore, services = serviceStore,
                                         onAmos = { id ->
                                             focusWorkOrderId = id
+                                            focusHistoryWorkOrderId = null
+                                            showWorks = true
+                                            showWorkOrders = true
+                                        },
+                                        onAmosHistory = { id ->
+                                            focusWorkOrderId = null
+                                            focusHistoryWorkOrderId = id
                                             showWorks = true
                                             showWorkOrders = true
                                         },
@@ -454,7 +476,11 @@ fun NavTasksApp(
                                         serviceStore, workOrderStore, palette, lang,
                                         onBack = { openPrimaryTab(0) },
                                         onServices = { focusServiceId = null; showServices = true },
-                                        onAmos = { focusWorkOrderId = null; showWorkOrders = true },
+                                        onAmos = {
+                        focusWorkOrderId = null
+                        focusHistoryWorkOrderId = null
+                        showWorkOrders = true
+                    },
                                         embeddedInTab = true,
                                     )
                                     2 -> HandoverScreen(
@@ -547,6 +573,7 @@ private fun TodayScreenV2(
     workOrders: WorkOrderStore,
     services: ServiceStore,
     onAmos: (String) -> Unit,
+    onAmosHistory: (String) -> Unit,
     onServices: (String) -> Unit,
 ) {
     var showMissed by rememberSaveable { mutableStateOf(false) }
@@ -568,6 +595,10 @@ private fun TodayScreenV2(
     val extraDue = groupTodayByFrequency(rows).filter { it.first != Frequency.DAILY }
     val dayWorkOrders = workOrders.entries
     val dayServices = services.entries
+    val completedAmosWork = amosCompletedOnDay(dayWorkOrders, selectedDay)
+    val completedServiceWork = serviceCompletedOnDay(dayServices, selectedDay)
+    val completedWorkCount = completedAmosWork.size + completedServiceWork.size
+    val completedTotal = complete.size + completedWorkCount
     val hasWork = dayWorkOrders.any { amosVisibleOnDay(it, selectedDay) } ||
         dayServices.any { serviceReminderVisibleOnDay(it, selectedDay) }
 
@@ -578,7 +609,8 @@ private fun TodayScreenV2(
                     Text(navDate(selectedDay, lang, true), color = p.muted, fontSize = 12.sp)
                     Text(
                         if (browsingOtherDay) localized("Прогресс выбранного дня", "Selected day's progress", lang)
-                        else if (hasWork) localized("Прогресс задач", "Task progress", lang)
+                        else if (hasWork || completedWorkCount > 0)
+                            localized("Прогресс задач", "Task progress", lang)
                         else localized("Прогресс дня", "Daily progress", lang),
                         color = p.text, fontSize = 15.sp,
                     )
@@ -745,10 +777,10 @@ private fun TodayScreenV2(
                             viewingDate = selectedDay, today = currentDay)
                     }
                 }
-                if (incomplete.isEmpty() && !hasWork) item {
+                if (incomplete.isEmpty() && !hasWork && completedTotal == 0) item {
                     NavPanel(p) { Text(localized("На этот день всё выполнено ✓", "All done for this day ✓", lang), color = p.successText) }
                 }
-                if (complete.isNotEmpty()) item {
+                if (completedTotal > 0) item {
                     val completedArrow by animateFloatAsState(
                         targetValue = if (showCompleted) 180f else 0f,
                         animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
@@ -764,7 +796,7 @@ private fun TodayScreenV2(
                                 Spacer(Modifier.width(9.dp))
                                 Text(localized("Выполнено", "Completed", lang), color = p.text,
                                     modifier = Modifier.weight(1f), fontSize = 15.sp)
-                                Text(complete.size.toString(), color = p.muted, fontSize = 14.sp)
+                                Text(completedTotal.toString(), color = p.muted, fontSize = 14.sp)
                                 Spacer(Modifier.width(9.dp))
                                 NavGlassGlyph(
                                     "chevron-down", p.muted,
@@ -814,6 +846,13 @@ private fun TodayScreenV2(
                                         }
                                     }
                                 }
+                                WorkAgendaCompletedTodaySection(
+                                    completedAmos = completedAmosWork,
+                                    completedServices = completedServiceWork,
+                                    p = p, lang = lang,
+                                    onAmosHistory = onAmosHistory,
+                                    onServices = onServices,
+                                )
                             }
                         }
                     }
