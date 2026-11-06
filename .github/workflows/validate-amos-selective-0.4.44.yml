@@ -1,0 +1,28 @@
+name: Validate AMOS identity for selective import
+on:
+  push:
+    branches: [amos-selective-identity-0.4.44]
+    paths: ['.github/workflows/validate-amos-selective-0.4.44.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Test selective AMOS identity and full regressions
+        run: gradle :app:testDebugUnitTest --no-daemon
+      - name: Assemble APK
+        run: gradle :app:assembleDebug --no-daemon
