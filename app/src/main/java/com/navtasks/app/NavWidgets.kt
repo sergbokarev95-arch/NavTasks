@@ -15,6 +15,21 @@ import java.time.LocalDate
 
 private const val WIDGET_TOGGLE = "com.navtasks.app.WIDGET_TOGGLE"
 
+/**
+ * Capacity uses the space actually available for the task list, not a fixed
+ * "compact == 2" assumption. Both widget types support four rows.
+ * Rows are 28dp tall; header and footer together occupy roughly 55dp.
+ */
+internal fun widgetTaskCapacity(heightDp: Int): Int = when {
+    heightDp >= 170 -> 4
+    heightDp >= 140 -> 3
+    else -> 2
+}
+
+internal fun widgetHiddenTaskCount(pendingCount: Int, displayedCount: Int): Int =
+    (pendingCount - displayedCount).coerceAtLeast(0)
+
+
 open class NavBaseWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         NavWidgetUpdater.updateAll(context, TaskStore(context))
@@ -83,7 +98,9 @@ object NavWidgetUpdater {
             Triple(R.id.nav_widget_row_one, R.id.nav_widget_task_one, R.id.nav_widget_check_one),
             Triple(R.id.nav_widget_row_two, R.id.nav_widget_task_two, R.id.nav_widget_check_two),
         )
-        val rowIdsWide = rowIdsCompact + listOf(
+        // Both layouts expose up to four task rows; the measured height decides
+        // how many are shown without leaving a huge unused central block.
+        val rowIds = rowIdsCompact + listOf(
             Triple(R.id.nav_widget_row_three, R.id.nav_widget_task_three, R.id.nav_widget_check_three),
             Triple(R.id.nav_widget_row_four, R.id.nav_widget_task_four, R.id.nav_widget_check_four),
         )
@@ -91,16 +108,17 @@ object NavWidgetUpdater {
             val component = ComponentName(context,
                 if (wide) NavWideWidgetProvider::class.java else NavCompactWidgetProvider::class.java)
             val ids = manager.getAppWidgetIds(component)
-            val rowIds = if (wide) rowIdsWide else rowIdsCompact
             for (id in ids) {
-                val height = manager.getAppWidgetOptions(id)
-                    .getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,
-                        if (wide) 120 else 110)
-                val capacity = if (wide) when {
-                    height >= 192 -> 4
-                    height >= 154 -> 3
-                    else -> 2
-                } else if (height >= 147) 2 else 1
+                val options = manager.getAppWidgetOptions(id)
+                val minHeight = options.getInt(
+                    AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, if (wide) 120 else 110)
+                val maxHeight = options.getInt(
+                    AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, minHeight)
+                // On portrait phones, maxHeight reflects the portrait cell
+                // geometry. In landscape use the smaller bound to avoid clipping.
+                val availableHeight = if (context.resources.configuration.orientation ==
+                    Configuration.ORIENTATION_LANDSCAPE) minHeight else maxOf(minHeight, maxHeight)
+                val capacity = widgetTaskCapacity(availableHeight)
                 val count = if (pending.isEmpty()) 1 else minOf(capacity, pending.size)
 
                 val view = RemoteViews(context.packageName,
@@ -137,26 +155,28 @@ object NavWidgetUpdater {
                         val action = if (run.checklist.isEmpty()) togglePending(context, run.key)
                             else NavNotifications.openTask(context, run.key)
                         view.setOnClickPendingIntent(checkId, action)
-                        view.setOnClickPendingIntent(nameId, action)
+                        // Tapping a title must never silently complete a task.
+                        view.setOnClickPendingIntent(
+                            nameId, NavNotifications.openTask(context, run.key))
                     }
                     view.setTextColor(nameId, textColor)
                     view.setTextColor(checkId, accent)
                 }
 
+                val hidden = widgetHiddenTaskCount(pending.size, count)
                 val status = when {
-                    rows.isEmpty() -> localized("Добавьте первую задачу", "Add your first task", language)
-                    pending.isEmpty() -> localized("Все задачи выполнены", "All tasks completed", language)
-                    else -> localized("Осталось: ${pending.size}", "Remaining: ${pending.size}", language)
+                    rows.isEmpty() -> localized("Добавить задачи", "Add tasks", language)
+                    pending.isEmpty() -> localized("Все выполнено", "All done", language)
+                    hidden > 0 -> localized("Ещё $hidden · Все задачи", "$hidden more · All tasks", language)
+                    else -> localized("Открыть список", "Open task list", language)
                 }
-                val hidden = (pending.size - count).coerceAtLeast(0)
-                val secondary = when {
-                    missedCount > 0 -> localized("Пропущено: $missedCount", "Missed: $missedCount", language)
-                    hidden > 0 -> localized("Ещё $hidden", "$hidden more", language)
-                    else -> ""
-                }
+                val secondary = if (missedCount > 0)
+                    localized("Пропущено: $missedCount", "Missed: $missedCount", language)
+                else ""
                 view.setTextViewText(R.id.nav_widget_status, status)
                 view.setTextViewText(R.id.nav_widget_secondary, secondary)
-                view.setTextColor(R.id.nav_widget_status, muted)
+                view.setTextColor(R.id.nav_widget_status, accent)
+                view.setOnClickPendingIntent(R.id.nav_widget_status, NavNotifications.openTask(context))
                 view.setTextColor(R.id.nav_widget_secondary,
                     if (missedCount > 0) 0xFFF0B493.toInt() else muted)
                 view.setViewVisibility(R.id.nav_widget_secondary,
