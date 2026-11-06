@@ -1,26 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Small widget: dense rows, no height-weight stretching; all actions use RemoteViews. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/nav_widget_root"
-    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="top"
     android:background="@drawable/navtasks_widget_bg"
-    android:orientation="vertical" android:padding="13dp">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/nav_widget_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:text="Сегодня" android:textColor="#F2F8FF" android:textStyle="bold" android:textSize="14sp" android:maxLines="1" />
-        <TextView android:id="@+id/nav_widget_progress" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="0/0" android:textColor="#75D8C4" android:textSize="14sp" />
+    android:padding="11dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <TextView android:id="@+id/nav_widget_title"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Сегодня" android:textColor="#F5F9FF"
+            android:textSize="14sp" android:maxLines="1" />
+        <TextView android:id="@+id/nav_widget_progress"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="0/0" android:textColor="#80DCC4" android:textSize="14sp" />
     </LinearLayout>
-    <ProgressBar android:id="@+id/nav_widget_bar" style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent" android:layout_height="5dp" android:layout_marginTop="9dp"
-        android:progressTint="#69D4BE" android:progressBackgroundTint="#52677B" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-        android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/nav_widget_check_one" android:layout_width="34dp" android:layout_height="40dp"
-            android:gravity="center" android:text="◯" android:textColor="#69D4BE" android:textSize="24sp" />
-        <TextView android:id="@+id/nav_widget_task_one" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:gravity="center_vertical" android:text="NavTasks" android:maxLines="2" android:ellipsize="end"
-            android:textColor="#F2F8FF" android:textSize="12sp" />
+    <ProgressBar android:id="@+id/nav_widget_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent" android:layout_height="4dp"
+        android:layout_marginTop="7dp" android:layout_marginBottom="3dp"
+        android:progressTint="#80DCC4" android:progressBackgroundTint="#4068798D" />
+    <LinearLayout android:id="@+id/nav_widget_row_one"
+        android:layout_width="match_parent" android:layout_height="29dp"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:layout_marginTop="4dp">
+        <TextView android:id="@+id/nav_widget_check_one"
+            android:layout_width="38dp" android:layout_height="29dp"
+            android:gravity="center" android:text="◯"
+            android:textColor="#80DCC4" android:textSize="22sp" />
+        <TextView android:id="@+id/nav_widget_task_one"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:gravity="center_vertical"
+            android:text="NavTasks" android:textColor="#F5F9FF"
+            android:textSize="12sp" android:maxLines="1" android:ellipsize="end" />
     </LinearLayout>
-    <TextView android:id="@+id/nav_widget_missed" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Пропущено: 0" android:textColor="#F0BD9F" android:textSize="11sp" android:maxLines="1" />
+    <LinearLayout android:id="@+id/nav_widget_row_two"
+        android:layout_width="match_parent" android:layout_height="29dp"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:layout_marginTop="3dp">
+        <TextView android:id="@+id/nav_widget_check_two"
+            android:layout_width="38dp" android:layout_height="29dp"
+            android:gravity="center" android:text="◯"
+            android:textColor="#80DCC4" android:textSize="22sp" />
+        <TextView android:id="@+id/nav_widget_task_two"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:gravity="center_vertical"
+            android:text="NavTasks" android:textColor="#F5F9FF"
+            android:textSize="12sp" android:maxLines="1" android:ellipsize="end" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:layout_marginTop="5dp">
+        <TextView android:id="@+id/nav_widget_more"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="Ещё 0"
+            android:textColor="#B5C5D7" android:textSize="10sp"
+            android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/nav_widget_missed"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Пропущено: 0" android:textColor="#B5C5D7"
+            android:textSize="10sp" android:maxLines="1" />
+    </LinearLayout>
 </LinearLayout>
