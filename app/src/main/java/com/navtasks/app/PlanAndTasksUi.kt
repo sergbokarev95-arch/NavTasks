@@ -12,16 +12,9 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
@@ -46,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -429,14 +421,6 @@ fun TasksScreenV2(
         localized("День", "Daily", lang), localized("Неделя", "Weekly", lang),
         localized("Месяц", "Monthly", lang), localized("Разовые", "Extra", lang),
     )
-    // Reset to a closed stack whenever this tab or frequency is opened.
-    // Templates and their saved state stay untouched until the user edits them.
-    var listExpanded by remember(filter) { mutableStateOf(false) }
-    val listArrow by animateFloatAsState(
-        targetValue = if (listExpanded) 180f else 0f,
-        animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
-        label = "taskListArrow",
-    )
     val filtered = store.templates.filter {
         TaskSchedule.effectiveFrequency(it, LocalDate.now()) == filter
     }
@@ -451,97 +435,51 @@ fun TasksScreenV2(
                 }
             }
         }
-        Column(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp),
+        // This panel is informative, not a disclosure control: tasks remain visible.
+        Row(
+            Modifier.fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 5.dp)
+                .navGlass(p, radius = 14.dp, role = GlassRole.PANEL)
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                Modifier.fillMaxWidth()
-                    .navGlass(p, radius = 17.dp, role = GlassRole.PANEL)
-                    .glassClickable { listExpanded = !listExpanded }
-                    .padding(horizontal = 16.dp, vertical = 13.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(localized("Список задач", "Task list", lang), color = p.text,
-                    fontSize = 14.sp, modifier = Modifier.weight(1f))
-                Text(filtered.size.toString() + " " + localized("задач", "tasks", lang),
-                    color = p.muted, fontSize = 12.sp)
-                Spacer(Modifier.width(9.dp))
-                NavGlassGlyph(
-                    "chevron-down", p.muted,
-                    Modifier.size(17.dp).rotate(listArrow),
-                )
-            }
-            AnimatedVisibility(
-                visible = !listExpanded && filtered.isNotEmpty(),
-                enter = expandVertically(
-                    spring(dampingRatio = 1f, stiffness = 550f),
-                    expandFrom = Alignment.Top,
-                ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
-                exit = shrinkVertically(
-                    spring(dampingRatio = 1f, stiffness = 550f),
-                    shrinkTowards = Alignment.Top,
-                ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
-            ) {
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
-                        Modifier.fillMaxWidth(0.94f).height(5.dp)
-                            .background(p.border.copy(alpha = 0.50f),
-                                RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)),
-                    )
-                    Box(
-                        Modifier.fillMaxWidth(0.87f).height(4.dp)
-                            .background(p.border.copy(alpha = 0.32f),
-                                RoundedCornerShape(bottomStart = 9.dp, bottomEnd = 9.dp)),
-                    )
-                }
-            }
+            Text(localized("Список задач", "Task list", lang), color = p.text,
+                fontSize = 13.sp, modifier = Modifier.weight(1f))
+            Text(filtered.size.toString() + " " + localized("задач", "tasks", lang),
+                color = p.muted, fontSize = 12.sp)
         }
-        Column(Modifier.weight(1f)) {
-            // Reveal the full list as one group while retaining LazyColumn and item keys.
-            AnimatedVisibility(
-                visible = listExpanded,
-                enter = expandVertically(
-                    spring(dampingRatio = 1f, stiffness = 550f),
-                    expandFrom = Alignment.Top,
-                ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
-                exit = shrinkVertically(
-                    spring(dampingRatio = 1f, stiffness = 550f),
-                    shrinkTowards = Alignment.Top,
-                ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
-            ) {
-                LazyColumn(
-                    Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
-                        top = 5.dp, bottom = 180.dp),
-                    verticalArrangement = Arrangement.spacedBy(9.dp),
-                ) {
-                    if (filtered.isEmpty()) item { NavPanel(p) { Text(localized("Задач пока нет", "No tasks yet", lang), color = p.muted) } }
-                    itemsIndexed(filtered, key = { _, item -> item.id }) { _, task ->
-                            Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp,
-                            role = if (task.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
-                            .glassClickable { onEdit(task) }
-                            .padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
-                            // Templates are not executable, so no fake empty checkbox or checkbox icon here.
-                            Spacer(Modifier.width(1.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(task.title, color = if (task.enabled) p.text else p.muted, fontSize = 14.sp)
-                                Text(
-                                    when {
-                                        TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.EXTRA -> navDate(task.startDate, lang)
-                                        task.scheduleMode == ScheduleMode.AFTER_COMPLETION -> localized("От выполнения", "After completion", lang)
-                                        TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.WEEKLY -> DayOfWeek.of(effectiveCalendarWeekday(task, LocalDate.now())).getDisplayName(
-                                            TextStyle.FULL, if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH)
-                                        TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.MONTHLY -> "${effectiveCalendarMonthDay(task, LocalDate.now())}"
-                                        else -> localized("Каждый день", "Every day", lang)
-                                    }, color = p.muted, fontSize = 11.sp,
-                                )
-                            }
-                            if (task.checklist.isNotEmpty()) Text("${task.checklist.size}", color = p.blue, fontSize = 12.sp)
-                            Spacer(Modifier.width(5.dp))
-                            NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
-                            }
+        // Keep the same lazy list, stable item keys and editing navigation.
+        LazyColumn(
+            Modifier.weight(1f),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
+                top = 5.dp, bottom = 180.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp),
+        ) {
+            if (filtered.isEmpty()) item { NavPanel(p) { Text(localized("Задач пока нет", "No tasks yet", lang), color = p.muted) } }
+            itemsIndexed(filtered, key = { _, item -> item.id }) { _, task ->
+                    Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp,
+                    role = if (task.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
+                    .glassClickable { onEdit(task) }
+                    .padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
+                    // Templates are not executable, so no fake empty checkbox or checkbox icon here.
+                    Spacer(Modifier.width(1.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(task.title, color = if (task.enabled) p.text else p.muted, fontSize = 14.sp)
+                        Text(
+                            when {
+                                TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.EXTRA -> navDate(task.startDate, lang)
+                                task.scheduleMode == ScheduleMode.AFTER_COMPLETION -> localized("От выполнения", "After completion", lang)
+                                TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.WEEKLY -> DayOfWeek.of(effectiveCalendarWeekday(task, LocalDate.now())).getDisplayName(
+                                    TextStyle.FULL, if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH)
+                                TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.MONTHLY -> "${effectiveCalendarMonthDay(task, LocalDate.now())}"
+                                else -> localized("Каждый день", "Every day", lang)
+                            }, color = p.muted, fontSize = 11.sp,
+                        )
                     }
-                }
+                    if (task.checklist.isNotEmpty()) Text("${task.checklist.size}", color = p.blue, fontSize = 12.sp)
+                    Spacer(Modifier.width(5.dp))
+                    NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
+                    }
             }
         }
     }
