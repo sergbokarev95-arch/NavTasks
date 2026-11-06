@@ -33,20 +33,28 @@ class WorkAgendaTest {
         assertTrue(workOrderComplete(entry, now).completed)
     }
 
-    @Test fun tomorrowWorkIsVisibleAsUpcomingEvenWithoutNotification() {
+    @Test fun amosAppearsInTodayOnScheduledDayOnly() {
         val entry = amos(start = now.plusDays(1))
-        assertTrue(amosVisibleOnDay(entry, now))
+        assertFalse(amosVisibleOnDay(entry, now))
         assertTrue(amosVisibleOnDay(entry, now.plusDays(1)))
+        assertFalse(amosVisibleOnDay(entry, now.plusDays(2)))
         assertTrue(amosPlannedOnDay(entry, now.plusDays(1)))
         val distant = amos(start = now.plusDays(9))
         assertFalse(amosVisibleOnDay(distant, now))
     }
 
-    @Test fun amosLeadTimeShowsFutureWorkInToday() {
-        val entry = amos(start = now.plusDays(7), remindDays = 7)
-        assertTrue(amosVisibleOnDay(entry, now))
-        assertFalse(amosPlannedOnDay(entry, now))
-        assertTrue(amosPlannedOnDay(entry, now.plusDays(7)))
+    @Test fun amosDueNovemberThirteenthNeverShowsOnSeventhEvenWith90DayNotice() {
+        val seventh = LocalDate.of(2026, 11, 7)
+        val thirteenth = LocalDate.of(2026, 11, 13)
+        val entry = amos(start = thirteenth, remindDays = 90)
+        assertFalse(amosVisibleOnDay(entry, seventh))
+        assertTrue(amosVisibleOnDay(entry, thirteenth))
+        assertFalse(amosVisibleOnDay(entry, thirteenth.plusDays(1)))
+        assertFalse(amosPlannedOnDay(entry, seventh))
+        assertTrue(amosPlannedOnDay(entry, thirteenth))
+        // Early notices remain a separate setting and still determine the
+        // approaching-work state in the AMOS list, not the Today agenda.
+        assertEquals(90, entry.remindDaysBefore)
     }
 
     @Test fun recurringCalendarUsesStartAnchorAcrossMonths() {
@@ -56,10 +64,12 @@ class WorkAgendaTest {
         assertFalse(amosPlannedOnDay(entry, LocalDate.of(2026, 3, 28)))
     }
 
-    @Test fun serviceIsVisibleFromThreeMonthsBeforeAndForecastInCalendar() {
+    @Test fun serviceAppearsOnlyOnDueDayWhileForecastRemainsInCalendar() {
         val due = LocalDate.of(2027, 1, 16)
         val entry = service(due)
-        assertTrue(serviceVisibleOnDay(entry, now))
+        assertFalse(serviceVisibleOnDay(entry, now))
+        assertTrue(serviceVisibleOnDay(entry, due))
+        assertFalse(serviceVisibleOnDay(entry, due.plusDays(1)))
         assertTrue(servicePlannedOnDay(entry, due))
         assertTrue(servicePlannedOnDay(entry, due.plusYears(1)))
         assertFalse(servicePlannedOnDay(entry, due.minusDays(1)))
@@ -73,20 +83,24 @@ class WorkAgendaTest {
     @Test fun maintenanceRequestHidesOnlyTodayReminderNotCalendarOrRecord() {
         val due = now.plusDays(12)
         val service = service(due)
-        assertTrue(serviceVisibleOnDay(service, now))
-        assertFalse(serviceReminderVisibleOnDay(service, now))
+        assertFalse(serviceVisibleOnDay(service, now))
+        assertTrue(serviceVisibleOnDay(service, due))
+        assertFalse(serviceReminderVisibleOnDay(service, due))
         assertTrue(servicePlannedOnDay(service, due))
         assertTrue(workAgendaExistsOnDay(due, emptyList(), listOf(service)))
 
         val withoutRequest = service.copy(requestNumber = "")
-        assertTrue(serviceReminderVisibleOnDay(withoutRequest, now))
+        assertFalse(serviceReminderVisibleOnDay(withoutRequest, now))
+        assertTrue(serviceReminderVisibleOnDay(withoutRequest, due))
         assertEquals("REQ-2026-91", service.requestNumber)
     }
 
     @Test fun serviceRequestMatchingIsWhitespacedSafe() {
-        val entry = service(now.plusDays(15)).copy(requestNumber = " ")
-        assertTrue(serviceReminderVisibleOnDay(entry, now))
-        assertFalse(serviceReminderVisibleOnDay(entry.copy(requestNumber = "AMOS-123"), now))
+        val due = now.plusDays(15)
+        val entry = service(due).copy(requestNumber = " ")
+        assertFalse(serviceReminderVisibleOnDay(entry, now))
+        assertTrue(serviceReminderVisibleOnDay(entry, due))
+        assertFalse(serviceReminderVisibleOnDay(entry.copy(requestNumber = "AMOS-123"), due))
     }
 
     @Test fun completedOneOffServiceIsHiddenFromAgenda() {
@@ -108,7 +122,8 @@ class WorkAgendaTest {
         assertFalse(amosVisibleOnDay(closed, now))
         assertEquals(1, amosCompletedOnDay(listOf(closed), now).size)
         assertEquals(now, amosCompletedOnDay(listOf(closed), now).single().completion.completedAt)
-        assertTrue(amosVisibleOnDay(closed, closed.dueDate.minusDays(1)))
+        assertFalse(amosVisibleOnDay(closed, closed.dueDate.minusDays(1)))
+        assertTrue(amosVisibleOnDay(closed, closed.dueDate))
         assertTrue(amosCompletedOnDay(listOf(closed), now.plusDays(1)).isEmpty())
     }
 
@@ -127,7 +142,8 @@ class WorkAgendaTest {
         assertEquals(now.plusMonths(1), closed.nextDate)
         assertEquals(1, serviceCompletedOnDay(listOf(closed), now).size)
         assertFalse(serviceReminderVisibleOnDay(closed, now))
-        assertTrue(serviceReminderVisibleOnDay(closed, now.plusDays(1)))
+        assertFalse(serviceReminderVisibleOnDay(closed, now.plusDays(1)))
+        assertTrue(serviceReminderVisibleOnDay(closed, closed.nextDate))
         assertTrue(serviceCompletedOnDay(listOf(closed), now.plusDays(1)).isEmpty())
     }
 
