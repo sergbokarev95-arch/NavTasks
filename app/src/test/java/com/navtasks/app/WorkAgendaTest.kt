@@ -100,6 +100,64 @@ class WorkAgendaTest {
             now.plusDays(1), emptyList(), listOf(finished)))
     }
 
+    @Test fun recurringAmosCompletionMovesToTodayCompletedAndKeepsNextCycle() {
+        val planned = amos(repeatMonths = 1)
+        val closed = workOrderComplete(planned, now)
+        assertFalse(closed.completed)
+        assertEquals(now.plusMonths(1), closed.dueDate)
+        assertFalse(amosVisibleOnDay(closed, now))
+        assertEquals(1, amosCompletedOnDay(listOf(closed), now).size)
+        assertEquals(now, amosCompletedOnDay(listOf(closed), now).single().completion.completedAt)
+        assertTrue(amosVisibleOnDay(closed, closed.dueDate.minusDays(1)))
+        assertTrue(amosCompletedOnDay(listOf(closed), now.plusDays(1)).isEmpty())
+    }
+
+    @Test fun oneOffAmosCompletionIsShownOnlyOnItsActualCompletionDay() {
+        val planned = amos(start = now.minusDays(2))
+        val closed = workOrderComplete(planned, now)
+        assertTrue(closed.completed)
+        assertFalse(amosVisibleOnDay(closed, now))
+        assertEquals(1, amosCompletedOnDay(listOf(closed), now).size)
+        assertTrue(amosCompletedOnDay(listOf(closed), now.minusDays(2)).isEmpty())
+    }
+
+    @Test fun serviceCompletionAppearsInCompletedAndNotAgainAsTodayReminder() {
+        val planned = service(now).copy(periodMonths = 1, requestNumber = "")
+        val closed = completeServiceCycle(planned, now)
+        assertEquals(now.plusMonths(1), closed.nextDate)
+        assertEquals(1, serviceCompletedOnDay(listOf(closed), now).size)
+        assertFalse(serviceReminderVisibleOnDay(closed, now))
+        assertTrue(serviceReminderVisibleOnDay(closed, now.plusDays(1)))
+        assertTrue(serviceCompletedOnDay(listOf(closed), now.plusDays(1)).isEmpty())
+    }
+
+    @Test fun amosOverviewCountersAndRowsMatchTheSameFilters() {
+        val overdue = amos(start = now.minusDays(1)).copy(id = "overdue")
+        val soon = amos(start = now.plusDays(3)).copy(id = "soon")
+        val distant = amos(start = now.plusDays(15)).copy(id = "distant")
+        val archived = workOrderComplete(
+            amos(start = now.minusDays(5)).copy(id = "archived"), now)
+        val orders = listOf(overdue, soon, distant, archived)
+        assertEquals(3, filterAmosOverview(orders, now, WorkOverviewFilter.ALL).size)
+        assertEquals(listOf("soon"),
+            filterAmosOverview(orders, now, WorkOverviewFilter.SOON).map { it.id })
+        assertEquals(listOf("overdue"),
+            filterAmosOverview(orders, now, WorkOverviewFilter.OVERDUE).map { it.id })
+    }
+
+    @Test fun serviceOverviewCountersUseSameSoonAndOverdueDefinitionsAsCards() {
+        val late = service(now.minusDays(1)).copy(id = "late")
+        val soon = service(now.plusDays(20)).copy(id = "soon")
+        val far = service(now.plusMonths(8), 0).copy(id = "far")
+        val all = listOf(late, soon, far)
+        assertEquals(3, filterServiceOverview(all, now, WorkOverviewFilter.ALL).size)
+        assertEquals(listOf("soon"),
+            filterServiceOverview(all, now, WorkOverviewFilter.SOON).map { it.id })
+        assertEquals(listOf("late"),
+            filterServiceOverview(all, now, WorkOverviewFilter.OVERDUE).map { it.id })
+        assertFalse(serviceDueSoon(late, now))
+    }
+
     @Test fun calendarDetectsScheduledWorkEvenWithoutOrdinaryTasks() {
         val entry = amos(start = now.plusDays(2))
         assertTrue(workAgendaExistsOnDay(now.plusDays(2), listOf(entry), emptyList()))
