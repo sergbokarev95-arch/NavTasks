@@ -1,4 +1,5 @@
 name: Validate NavTasks 0.4.44 selective exchange and search
+# Repeat validation after Kotlin visibility fix.
 on:
   push:
     branches: [selective-sharing-search-0.4.44]
