@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
+import android.view.View
 import android.widget.RemoteViews
 import java.time.LocalDate
 
@@ -86,31 +87,57 @@ object NavWidgetUpdater {
             view.setTextColor(R.id.nav_widget_missed, if (missedCount == 0) muted else 0xFFF0B493.toInt())
             view.setOnClickPendingIntent(R.id.nav_widget_root, NavNotifications.openTask(context))
 
-            fun renderTask(index: Int, nameId: Int, checkId: Int) {
+            // RemoteViews has no intrinsic scrolling. Keep a fixed, compact number
+            // of pending tasks and show an honest overflow counter for the rest.
+            fun renderTask(index: Int, rowId: Int, nameId: Int, checkId: Int) {
                 val pair = pending.getOrNull(index)
+                if (pair == null && (index > 0 || pending.isNotEmpty())) {
+                    view.setViewVisibility(rowId, View.GONE)
+                    return
+                }
+                view.setViewVisibility(rowId, View.VISIBLE)
                 if (pair == null) {
-                    view.setTextViewText(nameId, if (index == 0) localized("Всё выполнено", "All done", language) else "")
-                    view.setTextViewText(checkId, if (index == 0) "✓" else "")
-                    view.setOnClickPendingIntent(nameId, NavNotifications.openTask(context))
-                    view.setOnClickPendingIntent(checkId, NavNotifications.openTask(context))
+                    view.setTextViewText(
+                        nameId,
+                        if (rows.isEmpty()) localized("На сегодня задач нет", "No tasks today", language)
+                        else localized("Все задачи выполнены", "All tasks completed", language),
+                    )
+                    view.setTextViewText(checkId, if (rows.isEmpty()) "·" else "✓")
+                    val open = NavNotifications.openTask(context)
+                    view.setOnClickPendingIntent(nameId, open)
+                    view.setOnClickPendingIntent(checkId, open)
                 } else {
                     val (task, run) = pair
                     view.setTextViewText(nameId, task.title)
-                    view.setTextViewText(checkId, if (run.checklist.isEmpty()) "◯" else "▤")
+                    view.setTextViewText(checkId, if (run.checklist.isEmpty()) "◯" else "☷")
+                    // Task title opens its details. Only the check control toggles a
+                    // checklist-free task: avoiding accidental completions on title tap.
+                    view.setOnClickPendingIntent(nameId, NavNotifications.openTask(context, run.key))
                     val action = if (run.checklist.isEmpty()) togglePending(context, run.key)
-                    else NavNotifications.openTask(context, run.key)
+                        else NavNotifications.openTask(context, run.key)
                     view.setOnClickPendingIntent(checkId, action)
-                    view.setOnClickPendingIntent(nameId, action)
                 }
                 view.setTextColor(nameId, textColor)
                 view.setTextColor(checkId, accent)
             }
-            renderTask(0, R.id.nav_widget_task_one, R.id.nav_widget_check_one)
+
+            renderTask(0, R.id.nav_widget_row_one,
+                R.id.nav_widget_task_one, R.id.nav_widget_check_one)
+            renderTask(1, R.id.nav_widget_row_two,
+                R.id.nav_widget_task_two, R.id.nav_widget_check_two)
             if (wide) {
-                renderTask(1, R.id.nav_widget_task_two, R.id.nav_widget_check_two)
-                view.setTextViewText(R.id.nav_widget_completed, localized("✓ $completed выполнено", "✓ $completed done", language))
-                view.setTextColor(R.id.nav_widget_completed, muted)
+                renderTask(2, R.id.nav_widget_row_three,
+                    R.id.nav_widget_task_three, R.id.nav_widget_check_three)
             }
+
+            val shown = if (wide) 3 else 2
+            val remaining = (pending.size - shown).coerceAtLeast(0)
+            view.setTextViewText(
+                R.id.nav_widget_more,
+                if (remaining > 0) localized("+$remaining ещё", "+$remaining more", language) else "",
+            )
+            view.setTextColor(R.id.nav_widget_more, muted)
+            view.setOnClickPendingIntent(R.id.nav_widget_more, NavNotifications.openTask(context))
             manager.updateAppWidget(ids, view)
         }
     }
