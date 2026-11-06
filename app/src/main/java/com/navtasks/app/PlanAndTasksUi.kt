@@ -514,6 +514,27 @@ private fun OptionLine(options: List<Pair<String, String>>, selected: String, p:
     }
 }
 
+/** Editor-only preview; delegates to the existing calendar calculation.
+ * It never creates tasks or modifies a stored schedule. */
+internal fun monthlySchedulePreview(
+    activeFrom: LocalDate, dayOfMonth: Int, count: Int = 3,
+): List<LocalDate> {
+    if (dayOfMonth !in 1..31 || count <= 0) return emptyList()
+    val preview = TaskTemplate(
+        title = "preview", frequency = Frequency.MONTHLY,
+        scheduleMode = ScheduleMode.CALENDAR,
+        startDate = activeFrom, dayOfMonth = dayOfMonth,
+    )
+    val upcoming = mutableListOf<LocalDate>()
+    var cursor = activeFrom
+    repeat(count) {
+        val next = TaskSchedule.nextCalendarDate(preview, cursor) ?: return upcoming
+        upcoming.add(next)
+        cursor = next.plusDays(1)
+    }
+    return upcoming
+}
+
 @Composable
 fun TaskEditorScreen(
     initial: TaskTemplate?, defaultFrequency: Frequency,
@@ -540,6 +561,14 @@ fun TaskEditorScreen(
     var monthDay by remember(initial?.id) {
         mutableStateOf((initial?.let { effectiveCalendarMonthDay(it, LocalDate.now()) }
             ?: LocalDate.now().dayOfMonth).toString())
+    }
+    // Remember the fixed date if the user briefly selects "Last day of month".
+    // A 31 in existing profiles already means the end of every month.
+    var fixedMonthDay by remember(initial?.id) {
+        val selected = initial?.let { effectiveCalendarMonthDay(it, LocalDate.now()) }
+            ?: LocalDate.now().dayOfMonth
+        mutableStateOf((if (selected == 31) date.dayOfMonth.coerceAtMost(30)
+            else selected).toString())
     }
     var interval by remember(initial?.id) { mutableStateOf((initial?.intervalCount ?: 1).toString()) }
     var missedPolicy by remember(initial?.id) { mutableStateOf(initial?.missedPolicy ?: MissedPolicy.HISTORY) }
@@ -639,19 +668,87 @@ fun TaskEditorScreen(
                         "$weekDay", p) { weekDay = it.toInt() }
                 }
                 if (frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR) {
-                    FormLabel("Число месяца", "Day of month", lang, p)
-                    OutlinedTextField(monthDay, { monthDay = it }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                    FormLabel("Когда выполнять каждый месяц", "Monthly execution date", lang, p)
+                    Spacer(Modifier.height(5.dp))
+                    OptionLine(
+                        listOf(
+                            "fixed" to localized("В конкретное число", "Specific day", lang),
+                            "end" to localized("В последний день", "Last day", lang),
+                        ),
+                        if (monthDay == "31") "end" else "fixed", p,
+                    ) { choice ->
+                        if (choice == "end") {
+                            if (monthDay.toIntOrNull() in 1..30) fixedMonthDay = monthDay
+                            monthDay = "31"
+                        } else {
+                            monthDay = fixedMonthDay.takeIf {
+                                it.toIntOrNull() in 1..30
+                            } ?: "1"
+                        }
+                    }
+                    if (monthDay != "31") {
+                        Spacer(Modifier.height(10.dp))
+                        FormLabel("Число месяца (1–30)", "Day of month (1–30)", lang, p)
+                        OutlinedTextField(
+                            monthDay, {
+                                monthDay = it.take(2)
+                                fixedMonthDay = monthDay
+                            },
+                            modifier = Modifier.fillMaxWidth(), singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        )
+                        Text(
+                            localized(
+                                "Если такого числа нет (например, 30 февраля), работа назначается на последний день месяца.",
+                                "If the date does not exist (e.g. February 30), the work is due on the last day.",
+                                lang,
+                            ),
+                            color = p.muted, fontSize = 11.sp,
+                        )
+                    }
                 }
                 if (frequency != Frequency.EXTRA && mode == ScheduleMode.AFTER_COMPLETION) {
                     FormLabel("Интервал между выполнениями", "Interval between completions", lang, p)
                     OutlinedTextField(interval, { interval = it }, modifier = Modifier.fillMaxWidth(), singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 }
-                FormLabel(if (frequency == Frequency.EXTRA) "Дата выполнения" else "Дата начала",
-                    if (frequency == Frequency.EXTRA) "Due date" else "Start date", lang, p)
+                FormLabel(
+                    when {
+                        frequency == Frequency.EXTRA -> "Дата выполнения"
+                        frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR ->
+                            "Расписание действует с"
+                        mode == ScheduleMode.AFTER_COMPLETION -> "Первое выполнение"
+                        else -> "Дата начала"
+                    },
+                    when {
+                        frequency == Frequency.EXTRA -> "Due date"
+                        frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR ->
+                            "Schedule active from"
+                        mode == ScheduleMode.AFTER_COMPLETION -> "First execution"
+                        else -> "Start date"
+                    }, lang, p,
+                )
                 OutlinedButton(onClick = { showDateWheel = true },
                     modifier = Modifier.fillMaxWidth()) { Text(navDate(date, lang, true)) }
+                if (frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR) {
+                    Text(
+                        localized(
+                            "Это не обязательно день выполнения: первая работа появится на ближайшую расчётную дату не раньше указанной.",
+                            "This is not necessarily the due date: the first occurrence is the next matching day on or after it.",
+                            lang,
+                        ),
+                        color = p.muted, fontSize = 11.sp,
+                    )
+                    val upcoming = monthlySchedulePreview(date, monthDay.toIntOrNull() ?: 0)
+                    if (upcoming.isNotEmpty()) {
+                        Spacer(Modifier.height(7.dp))
+                        FormLabel("Ближайшие выполнения", "Upcoming executions", lang, p)
+                        Text(
+                            upcoming.joinToString("  ·  ") { navDate(it, lang, true) },
+                            color = p.blue, fontSize = 12.sp,
+                        )
+                    }
+                }
                 Spacer(Modifier.height(10.dp))
                 FormLabel("Срок выполнения", "Deadline", lang, p)
                 OptionLine(listOf("day" to localized("До конца дня", "End of day", lang),
