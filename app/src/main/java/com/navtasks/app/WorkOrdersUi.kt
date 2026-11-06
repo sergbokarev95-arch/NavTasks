@@ -375,10 +375,12 @@ fun WorkOrdersScreen(
     deleteTarget?.let { order ->
         WorkOrderConfirm(
             p = p, lang = lang,
-            title = localized("Удалить запись AMOS?", "Delete AMOS record?", lang),
-            description = order.title +
-                "\n" + localized("Это удалит и сохранённую дату завершения.",
-                    "The saved completion date will also be deleted.", lang),
+            title = localized("Переместить в закрытые?", "Move to Closed?", lang),
+            description = order.title + "\n" + localized(
+                "Запись и вся история сохранятся. Из раздела «Закрытые» её можно восстановить.",
+                "The work order and its history are kept. You can restore them from Closed.",
+                lang,
+            ),
             onCancel = { deleteTarget = null },
             onConfirm = {
                 runCatching { workOrders.delete(order.id); reschedule() }
@@ -386,6 +388,93 @@ fun WorkOrdersScreen(
                 deleteTarget = null
             },
         )
+    }
+    purgeTarget?.let { order ->
+        WorkOrderConfirm(
+            p = p, lang = lang,
+            title = localized("Удалить навсегда?", "Permanently delete?", lang),
+            description = order.title + "\n" + localized(
+                "Запись, график и ВСЯ история выполнения будут удалены без возможности восстановления.",
+                "The work order, schedule and ALL completion history will be erased permanently.",
+                lang,
+            ),
+            onCancel = { purgeTarget = null },
+            onConfirm = {
+                runCatching { workOrders.deletePermanently(order.id); reschedule() }
+                    .onFailure { feedback = it.localizedMessage }
+                purgeTarget = null
+            },
+        )
+    }
+    viewingHistory?.let { entry ->
+        val current = workOrders.entries.firstOrNull { it.id == entry.id } ?: entry
+        val history = workOrderHistoryRecords(listOf(current))
+        NavGlassAlertDialog(
+            p = p, onDismissRequest = { viewingHistory = null },
+            title = { Text(localized("История AMOS", "AMOS history", lang)) },
+            text = {
+                Column(
+                    Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(current.title, color = p.text, fontSize = 15.sp)
+                    if (history.isEmpty()) {
+                        Text(localized(
+                            "Выполнений пока нет. После «Готово» здесь появится дата и история.",
+                            "No completions yet. Dates and history appear here after Done.",
+                            lang,
+                        ), color = p.muted, fontSize = 13.sp)
+                    } else {
+                        history.forEach { record ->
+                            key(record.completion.id) {
+                                WorkOrderHistoryCard(record, p, lang) {
+                                    viewingHistory = null
+                                    reopenTarget = current
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewingHistory = null }) {
+                    Text(localized("Закрыть", "Close", lang))
+                }
+            },
+        )
+    }
+}
+
+/** Closed means explicitly removed, not completed. Preserves all cycles. */
+@Composable
+private fun WorkOrderClosedCard(
+    order: WorkOrderEntry, p: NavPalette, lang: UiLanguage,
+    onHistory: () -> Unit, onRestore: () -> Unit, onPurge: () -> Unit,
+) {
+    Column(
+        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
+            .padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Column(Modifier.fillMaxWidth().glassClickable(onClick = onHistory)
+            .padding(vertical = 3.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text("AMOS", color = p.blue, fontSize = 11.sp)
+            Text(order.title, color = p.text, fontSize = 15.sp)
+            order.closedAt?.let {
+                Text(localized("Закрыта: ", "Closed: ", lang) +
+                    navDate(it, lang, true), color = p.muted, fontSize = 12.sp)
+            }
+            Text(
+                localized("История выполнений: ", "Completions: ", lang) +
+                    workOrderHistoryRecords(listOf(order)).size,
+                color = p.muted, fontSize = 12.sp,
+            )
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            WorkOrderChip(localized("Восстановить", "Restore", lang), false, p,
+                modifier = Modifier.weight(1f), onClick = onRestore)
+            WorkOrderChip(localized("Удалить навсегда", "Delete forever", lang), false, p,
+                modifier = Modifier.weight(1f), onClick = onPurge)
+        }
     }
 }
 
