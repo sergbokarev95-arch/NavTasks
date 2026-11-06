@@ -24,6 +24,57 @@ class TaskScheduleTest {
             TaskSchedule.nextCalendarDate(task, LocalDate.of(2026, 2, 1)))
     }
 
+    @Test fun monthlyPreviewShowsLastCalendarDayAcrossShortAndLongMonths() {
+        assertEquals(
+            listOf(
+                LocalDate.of(2026, 11, 30),
+                LocalDate.of(2026, 12, 31),
+                LocalDate.of(2027, 1, 31),
+            ),
+            monthlySchedulePreview(LocalDate.of(2026, 11, 30), 31),
+        )
+        assertEquals(
+            listOf(
+                LocalDate.of(2028, 2, 29),
+                LocalDate.of(2028, 3, 31),
+                LocalDate.of(2028, 4, 30),
+            ),
+            monthlySchedulePreview(LocalDate.of(2028, 2, 5), 31),
+        )
+    }
+
+    @Test fun monthlyPreviewUsesActivationStartOnlyAsEarliestAllowedDate() {
+        assertEquals(
+            listOf(
+                LocalDate.of(2026, 11, 6),
+                LocalDate.of(2026, 12, 6),
+                LocalDate.of(2027, 1, 6),
+            ),
+            monthlySchedulePreview(LocalDate.of(2026, 11, 6), 6),
+        )
+        assertEquals(
+            listOf(
+                LocalDate.of(2026, 12, 6),
+                LocalDate.of(2027, 1, 6),
+                LocalDate.of(2027, 2, 6),
+            ),
+            monthlySchedulePreview(LocalDate.of(2026, 11, 7), 6),
+        )
+    }
+
+    @Test fun fixedThirtiethClampsOnlyInShortMonthsButNotInDecember() {
+        assertEquals(
+            listOf(
+                LocalDate.of(2027, 1, 30),
+                LocalDate.of(2027, 2, 28),
+                LocalDate.of(2027, 3, 30),
+            ),
+            monthlySchedulePreview(LocalDate.of(2027, 1, 1), 30),
+        )
+        assertTrue(monthlySchedulePreview(LocalDate.of(2026, 11, 1), 0).isEmpty())
+        assertTrue(monthlySchedulePreview(LocalDate.of(2026, 11, 1), 32).isEmpty())
+    }
+
     @Test fun intervalStartsFromActualCompletion() {
         val task = TaskTemplate(title = "Rolling", frequency = Frequency.WEEKLY,
             scheduleMode = ScheduleMode.AFTER_COMPLETION, intervalCount = 2,
