@@ -66,11 +66,9 @@ fun WorkOrdersScreen(
     val closedOrders = workOrders.entries.filter { it.closedAt != null }
         .sortedByDescending { it.closedAt }
     val listState = rememberLazyListState()
-    val filteredOrders = filterAmosOverview(activeOrders, today, selectedFilter)
-        .filter { it.title.contains(searchText.trim(), ignoreCase = true) }
-    val filteredClosed = closedOrders.filter {
-        it.title.contains(searchText.trim(), ignoreCase = true)
-    }
+    val filteredOrders = searchAmosTitles(
+        filterAmosOverview(activeOrders, today, selectedFilter), searchText)
+    val filteredClosed = searchAmosTitles(closedOrders, searchText)
     LaunchedEffect(focusWorkOrderId, focusHistoryWorkOrderId) {
         if (focusWorkOrderId != null || focusHistoryWorkOrderId != null) {
             searchText = ""
