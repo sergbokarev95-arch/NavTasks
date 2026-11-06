@@ -36,10 +36,13 @@ fun WorkOrdersScreen(
     lang: UiLanguage,
     onBack: () -> Unit,
     focusWorkOrderId: String? = null,
+    focusHistoryWorkOrderId: String? = null,
 ) {
     val context = LocalContext.current
     fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
     var showHistory by rememberSaveable { mutableStateOf(false) }
+    var selectedFilter by rememberSaveable { mutableStateOf(WorkOverviewFilter.ALL) }
+    var completionNotice by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<WorkOrderEntry?>(null) }
     var editorOpen by remember { mutableStateOf(false) }
     var completeTarget by remember { mutableStateOf<WorkOrderEntry?>(null) }
@@ -55,19 +58,29 @@ fun WorkOrdersScreen(
         compareBy<WorkOrderEntry> { it.dueDate }.thenBy { it.reference })
     val history = workOrderHistoryRecords(workOrders.entries)
     val listState = rememberLazyListState()
-    LaunchedEffect(focusWorkOrderId, showHistory) {
-        if (focusWorkOrderId != null) {
-            // Wait until the Open list is composed before scrolling to the work.
-            if (showHistory) {
+    val filteredOrders = filterAmosOverview(openOrders, today, selectedFilter)
+    // Focus is a one-time navigation request. Never observe showHistory here:
+    // otherwise tapping History immediately forces the Open tab back on screen.
+    LaunchedEffect(focusWorkOrderId, focusHistoryWorkOrderId) {
+        when {
+            focusHistoryWorkOrderId != null -> {
+                showHistory = true
+                selectedFilter = WorkOverviewFilter.ALL
+                withFrameNanos { }
+                val index = history.indexOfFirst { it.order.id == focusHistoryWorkOrderId }
+                if (index >= 0) listState.scrollToItem(2 + index)
+            }
+            focusWorkOrderId != null -> {
                 showHistory = false
-            } else {
+                selectedFilter = WorkOverviewFilter.ALL
+                withFrameNanos { }
                 val index = openOrders.indexOfFirst { it.id == focusWorkOrderId }
                 if (index >= 0) listState.scrollToItem(2 + index)
             }
         }
     }
-    val overdue = openOrders.count { it.dueDate.isBefore(today) }
-    val soon = openOrders.count { workOrderState(it, today) == WorkOrderState.SOON }
+    val overdue = filterAmosOverview(openOrders, today, WorkOverviewFilter.OVERDUE).size
+    val soon = filterAmosOverview(openOrders, today, WorkOverviewFilter.SOON).size
 
     fun finalizeCompletion(shiftFuture: Boolean) {
         val order = completeTarget ?: return
@@ -75,11 +88,23 @@ fun WorkOrdersScreen(
             workOrders.complete(order.id, completionDate, shiftFuture)
             reschedule()
         }.onSuccess {
+            val next = workOrders.entries.firstOrNull { it.id == order.id }
+            completionNotice = if (next?.recurring == true) {
+                localized("Работа выполнена: ", "Work completed: ", lang) +
+                    navDate(completionDate, lang, true) +
+                    localized(" · Следующее выполнение: ", " · Next due: ", lang) +
+                    navDate(next.dueDate, lang, true)
+            } else {
+                localized("Работа выполнена: ", "Work completed: ", lang) +
+                    navDate(completionDate, lang, true) +
+                    localized(" · Перенесена в историю", " · Moved to history", lang)
+            }
             completeTarget = null
             chooseShiftAfterCompletion = false
             completionDatePicker = false
             feedback = null
         }.onFailure {
+            completionNotice = null
             completeTarget = null
             chooseShiftAfterCompletion = false
             completionDatePicker = false
@@ -111,12 +136,24 @@ fun WorkOrdersScreen(
         ) {
             item {
                 NavPanel(p) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        WorkOrderCount(localized("Открыто", "Open", lang), openOrders.size, p.blue, p)
-                        WorkOrderCount(localized("Скоро", "Soon", lang), soon,
-                            if (soon > 0) p.warningText else p.muted, p)
-                        WorkOrderCount(localized("Просрочено", "Overdue", lang), overdue,
-                            if (overdue > 0) p.dangerText else p.muted, p)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        WorkOrderCount(
+                            localized("Все", "All", lang), openOrders.size, p.blue, p,
+                            selected = !showHistory && selectedFilter == WorkOverviewFilter.ALL,
+                            modifier = Modifier.weight(1f),
+                        ) { showHistory = false; selectedFilter = WorkOverviewFilter.ALL }
+                        WorkOrderCount(
+                            localized("Скоро", "Soon", lang), soon,
+                            if (soon > 0) p.warningText else p.muted, p,
+                            selected = !showHistory && selectedFilter == WorkOverviewFilter.SOON,
+                            modifier = Modifier.weight(1f),
+                        ) { showHistory = false; selectedFilter = WorkOverviewFilter.SOON }
+                        WorkOrderCount(
+                            localized("Просрочено", "Overdue", lang), overdue,
+                            if (overdue > 0) p.dangerText else p.muted, p,
+                            selected = !showHistory && selectedFilter == WorkOverviewFilter.OVERDUE,
+                            modifier = Modifier.weight(1f),
+                        ) { showHistory = false; selectedFilter = WorkOverviewFilter.OVERDUE }
                     }
                     Text(
                         localized(
@@ -126,6 +163,13 @@ fun WorkOrdersScreen(
                         ),
                         color = p.muted, fontSize = 11.sp,
                     )
+                }
+            }
+            completionNotice?.let { notice ->
+                item(key = "completion-notice") {
+                    NavPanel(p) {
+                        Text(notice, color = p.successText, fontSize = 13.sp)
+                    }
                 }
             }
             item {
@@ -146,13 +190,15 @@ fun WorkOrdersScreen(
             feedback?.let { msg ->
                 item { Text(msg, color = p.dangerText, fontSize = 12.sp) }
             }
-            val visible = if (showHistory) history else openOrders
+            val visible = if (showHistory) history else filteredOrders
             if (visible.isEmpty()) {
                 item {
                     NavPanel(p) {
                         Text(
                             if (showHistory)
                                 localized("Завершённых работ пока нет.", "No completed work orders yet.", lang)
+                            else if (selectedFilter != WorkOverviewFilter.ALL)
+                                localized("В этом фильтре работ нет.", "No work orders match this filter.", lang)
                             else localized("Работ пока нет. Добавь запись кнопкой +.",
                                 "No open work orders. Add one with +.", lang),
                             color = p.muted, fontSize = 13.sp,
@@ -169,7 +215,7 @@ fun WorkOrdersScreen(
                     }
                 }
             } else {
-                items(openOrders, key = { it.id }) { order ->
+                items(filteredOrders, key = { it.id }) { order ->
                     WorkOrderCard(
                         order, today, p, lang,
                         onEdit = { editing = order; editorOpen = true },
@@ -338,10 +384,22 @@ fun WorkOrdersScreen(
 }
 
 @Composable
-private fun WorkOrderCount(label: String, number: Int, color: Color, p: NavPalette) {
-    Column {
+private fun WorkOrderCount(
+    label: String, number: Int, color: Color, p: NavPalette,
+    selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit,
+) {
+    Column(
+        modifier.navGlass(p, radius = 14.dp,
+            role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
+            .glassClickable(onClick = onClick)
+            .heightIn(min = 75.dp)
+            .padding(horizontal = 8.dp, vertical = 9.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Text(number.toString(), color = color, fontSize = 21.sp)
-        Text(label, color = p.muted, fontSize = 11.sp)
+        Text(label, color = if (selected) p.blue else p.muted, fontSize = 11.sp,
+            maxLines = 1)
     }
 }
 
@@ -376,26 +434,24 @@ private fun WorkOrderCard(
             }
             NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                (if (order.recurring)
-                    localized("Следующее повторение: ", "Next recurrence: ", lang)
-                else localized("Начало работы: ", "Work starts: ", lang)) +
-                    navDate(order.dueDate, lang, true),
-                color = if (order.completed) p.muted else accent,
-                fontSize = 12.sp,
-            )
-        }
-        if (order.completedAt != null) {
-            Text(localized("Выполнено: ", "Completed: ", lang) +
-                navDate(order.completedAt, lang, true),
-                color = p.successText, fontSize = 12.sp)
-        }
-        if (order.recurring) {
-            Text(localized("Начало: ", "Started: ", lang) +
-                navDate(order.startDate ?: order.dueDate, lang, true),
-                color = p.muted, fontSize = 11.sp)
-        }
+        val latestCompleted = order.executionHistory.lastOrNull()?.completedAt
+            ?: order.completedAt
+        Text(
+            if (latestCompleted == null)
+                localized("Последнее выполнение: ещё не выполнялась",
+                    "Last completed: not yet completed", lang)
+            else localized("Последнее выполнение: ", "Last completed: ", lang) +
+                navDate(latestCompleted, lang, true),
+            color = if (latestCompleted == null) p.muted else p.successText,
+            fontSize = 12.sp,
+        )
+        Text(
+            localized(
+                if (order.recurring) "Следующее выполнение: " else "Плановая дата: ",
+                if (order.recurring) "Next due: " else "Scheduled date: ", lang,
+            ) + navDate(order.dueDate, lang, true),
+            color = accent, fontSize = 12.sp,
+        )
         if (order.comment.isNotBlank()) {
             Text(order.comment, color = p.muted, fontSize = 12.sp,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
