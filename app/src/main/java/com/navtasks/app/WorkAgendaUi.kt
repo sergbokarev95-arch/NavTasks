@@ -62,6 +62,53 @@ internal fun WorkAgendaTodaySection(
     }
 }
 
+/** Archived AMOS and service cycles appear inside Today's Completed stack.
+ * These are read-only snapshots; tapping Go to opens the owning Work module.
+ */
+@Composable
+internal fun WorkAgendaCompletedTodaySection(
+    completedAmos: List<WorkOrderHistoryRecord>,
+    completedServices: List<ServiceAgendaCompletion>,
+    p: NavPalette,
+    lang: UiLanguage,
+    onAmosHistory: (String) -> Unit,
+    onServices: (String) -> Unit,
+) {
+    if (completedAmos.isEmpty() && completedServices.isEmpty()) return
+    Text(
+        localized("Работы", "Work", lang), color = p.muted, fontSize = 13.sp,
+        modifier = Modifier.padding(start = 4.dp, top = 6.dp, bottom = 2.dp),
+    )
+    completedAmos.forEach { record ->
+        key("completed-amos-" + record.order.id + "-" + record.completion.id) {
+            WorkAgendaTodayCard(
+                title = record.order.title,
+                category = "AMOS",
+                nextServiceDate = null,
+                completedAt = record.completion.completedAt,
+                p = p, lang = lang,
+                onNavigate = { onAmosHistory(record.order.id) },
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+    }
+    completedServices.forEach { record ->
+        key("completed-service-" + record.service.id + "-" + record.completion.completedAt) {
+            WorkAgendaTodayCard(
+                title = record.service.equipment,
+                category = localized("Сервис", "Maintenance", lang),
+                nextServiceDate = record.service.nextDate.takeIf {
+                    record.service.completedAt == null
+                },
+                completedAt = record.completion.completedAt,
+                p = p, lang = lang,
+                onNavigate = { onServices(record.service.id) },
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+    }
+}
+
 /**
  * Read-only reminder: only the explicit navigation button is interactive.
  * Work completion, requests and editing live in the appropriate Works module.
@@ -71,6 +118,7 @@ private fun WorkAgendaTodayCard(
     title: String,
     category: String,
     nextServiceDate: LocalDate?,
+    completedAt: LocalDate? = null,
     p: NavPalette,
     lang: UiLanguage,
     onNavigate: () -> Unit,
@@ -88,6 +136,12 @@ private fun WorkAgendaTodayCard(
             Text(category, color = p.blue, fontSize = 11.sp)
             Text(title, color = p.text, fontSize = 14.sp,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
+            completedAt?.let { done ->
+                Text(
+                    localized("Выполнено: ", "Completed: ", lang) + navDate(done, lang, true),
+                    color = p.successText, fontSize = 11.sp,
+                )
+            }
             nextServiceDate?.let { due ->
                 Text(localized("Следующий сервис: ", "Next service: ", lang) +
                     navDate(due, lang, true),
