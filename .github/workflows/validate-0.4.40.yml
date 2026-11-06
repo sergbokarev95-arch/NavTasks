@@ -1,4 +1,5 @@
 name: Validate NavTasks 0.4.40 AMOS fixes
+# Re-run after Compose import verification.
 on:
   push:
     branches: [fix-amos-agenda-filters-0.4.40]
