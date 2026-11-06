@@ -172,6 +172,26 @@ class SelectiveExchangeTest {
         assertEquals(sections, searchHandoverSections(sections, ""))
     }
 
+    @Test fun sameAmosTitleWithDifferentNumbersOrSchedulesCanBothBeImported() {
+        val existing = ProfileSnapshot(vessel, emptyList(), emptyList(),
+            emptyList(), day.toString(), workOrders = listOf(
+                WorkOrderEntry(reference = "R-100", title = "Gyro service",
+                    dueDate = day.plusDays(4)),
+            ))
+        val imported = SelectiveBundle(workOrders = listOf(
+            WorkOrderEntry(reference = "R-101", title = "Gyro service",
+                dueDate = day.plusDays(4)),
+            WorkOrderEntry(reference = "", title = "Gyro service",
+                dueDate = day.plusDays(12)),
+            WorkOrderEntry(reference = "", title = "Gyro service",
+                dueDate = day.plusDays(30)),
+        ))
+        val first = mergeSelective(existing, imported)
+        assertEquals(3, first.added.amos)
+        assertEquals(4, first.snapshot.workOrders.size)
+        assertEquals(0, mergeSelective(first.snapshot, imported).added.amos)
+    }
+
     @Test fun personalProfileCannotReceiveVesselData() {
         val personal = ProfileSnapshot(
             NavProfile("personal", "Личное", NavProfileKind.PERSONAL),
