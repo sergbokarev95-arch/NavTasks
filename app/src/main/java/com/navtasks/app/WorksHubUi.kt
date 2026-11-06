@@ -30,12 +30,15 @@ fun WorksHubScreen(
     embeddedInTab: Boolean = false,
 ) {
     val today = LocalDate.now()
-    val activeAmos = workOrders.entries.filterNot { it.completed }
+    val activeAmos = workOrders.entries.filter {
+        it.closedAt == null && !it.completed
+    }
+    val activeServices = services.entries.filter { it.closedAt == null }
     val overdueAmos = activeAmos.count { it.dueDate.isBefore(today) }
-    val overdue = services.entries.count {
+    val overdue = activeServices.count {
         it.completedAt == null && it.nextDate.isBefore(today)
     }
-    val approaching = services.entries.count {
+    val approaching = activeServices.count {
         it.completedAt == null && !it.nextDate.isBefore(today) &&
             (it.nextDate <= today.plusDays(30) ||
                 (it.remindMonths > 0 && !today.isBefore(serviceWarningStart(it))))
@@ -105,8 +108,8 @@ fun WorksHubScreen(
                         lang,
                     ),
                     secondary = localized(
-                        "${services.entries.size} записей · ${overdue} просрочено · ${approaching} скоро",
-                        "${services.entries.size} records · ${overdue} overdue · ${approaching} soon",
+                        "${activeServices.size} записей · ${overdue} просрочено · ${approaching} скоро",
+                        "${activeServices.size} records · ${overdue} overdue · ${approaching} soon",
                         lang,
                     ),
                     icon = "settings",

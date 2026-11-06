@@ -40,7 +40,7 @@ fun WorkOrdersScreen(
 ) {
     val context = LocalContext.current
     fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
-    var showHistory by rememberSaveable { mutableStateOf(false) }
+    var showClosed by rememberSaveable { mutableStateOf(false) }
     var selectedFilter by rememberSaveable { mutableStateOf(WorkOverviewFilter.ALL) }
     var completionNotice by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<WorkOrderEntry?>(null) }
@@ -51,36 +51,37 @@ fun WorkOrdersScreen(
     var chooseShiftAfterCompletion by remember { mutableStateOf(false) }
     var reopenTarget by remember { mutableStateOf<WorkOrderEntry?>(null) }
     var deleteTarget by remember { mutableStateOf<WorkOrderEntry?>(null) }
+    var purgeTarget by remember { mutableStateOf<WorkOrderEntry?>(null) }
+    var viewingHistory by remember { mutableStateOf<WorkOrderEntry?>(null) }
     var feedback by remember { mutableStateOf<String?>(null) }
 
     val today = LocalDate.now()
-    val openOrders = workOrders.entries.filterNot { it.completed }.sortedWith(
-        compareBy<WorkOrderEntry> { it.dueDate }.thenBy { it.reference })
-    val history = workOrderHistoryRecords(workOrders.entries)
+    val activeOrders = workOrders.entries.filter { it.closedAt == null }.sortedWith(
+        compareBy<WorkOrderEntry> { it.completed }.thenBy { it.dueDate }.thenBy { it.reference })
+    val closedOrders = workOrders.entries.filter { it.closedAt != null }
+        .sortedByDescending { it.closedAt }
     val listState = rememberLazyListState()
-    val filteredOrders = filterAmosOverview(openOrders, today, selectedFilter)
-    // Focus is a one-time navigation request. Never observe showHistory here:
-    // otherwise tapping History immediately forces the Open tab back on screen.
+    val filteredOrders = filterAmosOverview(activeOrders, today, selectedFilter)
     LaunchedEffect(focusWorkOrderId, focusHistoryWorkOrderId) {
         when {
             focusHistoryWorkOrderId != null -> {
-                showHistory = true
+                showClosed = false
                 selectedFilter = WorkOverviewFilter.ALL
-                withFrameNanos { }
-                val index = history.indexOfFirst { it.order.id == focusHistoryWorkOrderId }
-                if (index >= 0) listState.scrollToItem(2 + index)
+                viewingHistory = workOrders.entries.firstOrNull {
+                    it.id == focusHistoryWorkOrderId
+                }
             }
             focusWorkOrderId != null -> {
-                showHistory = false
+                showClosed = false
                 selectedFilter = WorkOverviewFilter.ALL
                 withFrameNanos { }
-                val index = openOrders.indexOfFirst { it.id == focusWorkOrderId }
+                val index = activeOrders.indexOfFirst { it.id == focusWorkOrderId }
                 if (index >= 0) listState.scrollToItem(2 + index)
             }
         }
     }
-    val overdue = filterAmosOverview(openOrders, today, WorkOverviewFilter.OVERDUE).size
-    val soon = filterAmosOverview(openOrders, today, WorkOverviewFilter.SOON).size
+    val overdue = filterAmosOverview(activeOrders, today, WorkOverviewFilter.OVERDUE).size
+    val soon = filterAmosOverview(activeOrders, today, WorkOverviewFilter.SOON).size
 
     fun finalizeCompletion(shiftFuture: Boolean) {
         val order = completeTarget ?: return
@@ -97,7 +98,7 @@ fun WorkOrdersScreen(
             } else {
                 localized("Работа выполнена: ", "Work completed: ", lang) +
                     navDate(completionDate, lang, true) +
-                    localized(" · Перенесена в историю", " · Moved to history", lang)
+                    localized(" · История доступна в карточке", " · History available in card", lang)
             }
             completeTarget = null
             chooseShiftAfterCompletion = false
@@ -138,22 +139,22 @@ fun WorkOrdersScreen(
                 NavPanel(p) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         WorkOrderCount(
-                            localized("Все", "All", lang), openOrders.size, p.blue, p,
-                            selected = !showHistory && selectedFilter == WorkOverviewFilter.ALL,
+                            localized("Все", "All", lang), activeOrders.size, p.blue, p,
+                            selected = !showClosed && selectedFilter == WorkOverviewFilter.ALL,
                             modifier = Modifier.weight(1f),
-                        ) { showHistory = false; selectedFilter = WorkOverviewFilter.ALL }
+                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.ALL }
                         WorkOrderCount(
                             localized("Скоро", "Soon", lang), soon,
                             if (soon > 0) p.warningText else p.muted, p,
-                            selected = !showHistory && selectedFilter == WorkOverviewFilter.SOON,
+                            selected = !showClosed && selectedFilter == WorkOverviewFilter.SOON,
                             modifier = Modifier.weight(1f),
-                        ) { showHistory = false; selectedFilter = WorkOverviewFilter.SOON }
+                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.SOON }
                         WorkOrderCount(
                             localized("Просрочено", "Overdue", lang), overdue,
                             if (overdue > 0) p.dangerText else p.muted, p,
-                            selected = !showHistory && selectedFilter == WorkOverviewFilter.OVERDUE,
+                            selected = !showClosed && selectedFilter == WorkOverviewFilter.OVERDUE,
                             modifier = Modifier.weight(1f),
-                        ) { showHistory = false; selectedFilter = WorkOverviewFilter.OVERDUE }
+                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.OVERDUE }
                     }
                     Text(
                         localized(
@@ -178,25 +179,25 @@ fun WorkOrdersScreen(
                     horizontalArrangement = Arrangement.spacedBy(9.dp),
                 ) {
                     WorkOrderChip(
-                        localized("Открытые · ${openOrders.size}", "Open · ${openOrders.size}", lang),
-                        !showHistory, p, Modifier.weight(1f),
-                    ) { showHistory = false }
+                        localized("Работы · ${activeOrders.size}", "Work · ${activeOrders.size}", lang),
+                        !showClosed, p, Modifier.weight(1f),
+                    ) { showClosed = false }
                     WorkOrderChip(
-                        localized("История · ${history.size}", "History · ${history.size}", lang),
-                        showHistory, p, Modifier.weight(1f),
-                    ) { showHistory = true }
+                        localized("Закрытые · ${closedOrders.size}", "Closed · ${closedOrders.size}", lang),
+                        showClosed, p, Modifier.weight(1f),
+                    ) { showClosed = true }
                 }
             }
             feedback?.let { msg ->
                 item { Text(msg, color = p.dangerText, fontSize = 12.sp) }
             }
-            val visible = if (showHistory) history else filteredOrders
+            val visible = if (showClosed) closedOrders else filteredOrders
             if (visible.isEmpty()) {
                 item {
                     NavPanel(p) {
                         Text(
-                            if (showHistory)
-                                localized("Завершённых работ пока нет.", "No completed work orders yet.", lang)
+                            if (showClosed)
+                                localized("Закрытых работ пока нет.", "No closed work orders yet.", lang)
                             else if (selectedFilter != WorkOverviewFilter.ALL)
                                 localized("В этом фильтре работ нет.", "No work orders match this filter.", lang)
                             else localized("Работ пока нет. Добавь запись кнопкой +.",
@@ -206,18 +207,23 @@ fun WorkOrdersScreen(
                     }
                 }
             }
-            if (showHistory) {
-                items(history, key = {
-                    it.order.id + "@" + (if (it.order.completed) "oneoff" else it.completion.id)
-                }) { archive ->
-                    WorkOrderHistoryCard(archive, p, lang) {
-                        reopenTarget = archive.order
-                    }
+            if (showClosed) {
+                items(closedOrders, key = { it.id }) { order ->
+                    WorkOrderClosedCard(
+                        order, p, lang,
+                        onHistory = { viewingHistory = order },
+                        onRestore = {
+                            runCatching { workOrders.restore(order.id); reschedule() }
+                                .onFailure { feedback = it.localizedMessage }
+                        },
+                        onPurge = { purgeTarget = order },
+                    )
                 }
             } else {
                 items(filteredOrders, key = { it.id }) { order ->
                     WorkOrderCard(
                         order, today, p, lang,
+                        onHistory = { viewingHistory = order },
                         onEdit = { editing = order; editorOpen = true },
                         onComplete = {
                             completeTarget = order
@@ -369,10 +375,12 @@ fun WorkOrdersScreen(
     deleteTarget?.let { order ->
         WorkOrderConfirm(
             p = p, lang = lang,
-            title = localized("Удалить запись AMOS?", "Delete AMOS record?", lang),
-            description = order.title +
-                "\n" + localized("Это удалит и сохранённую дату завершения.",
-                    "The saved completion date will also be deleted.", lang),
+            title = localized("Переместить в закрытые?", "Move to Closed?", lang),
+            description = order.title + "\n" + localized(
+                "Запись и вся история сохранятся. Из раздела «Закрытые» её можно восстановить.",
+                "The work order and its history are kept. You can restore them from Closed.",
+                lang,
+            ),
             onCancel = { deleteTarget = null },
             onConfirm = {
                 runCatching { workOrders.delete(order.id); reschedule() }
@@ -380,6 +388,93 @@ fun WorkOrdersScreen(
                 deleteTarget = null
             },
         )
+    }
+    purgeTarget?.let { order ->
+        WorkOrderConfirm(
+            p = p, lang = lang,
+            title = localized("Удалить навсегда?", "Permanently delete?", lang),
+            description = order.title + "\n" + localized(
+                "Запись, график и ВСЯ история выполнения будут удалены без возможности восстановления.",
+                "The work order, schedule and ALL completion history will be erased permanently.",
+                lang,
+            ),
+            onCancel = { purgeTarget = null },
+            onConfirm = {
+                runCatching { workOrders.deletePermanently(order.id); reschedule() }
+                    .onFailure { feedback = it.localizedMessage }
+                purgeTarget = null
+            },
+        )
+    }
+    viewingHistory?.let { entry ->
+        val current = workOrders.entries.firstOrNull { it.id == entry.id } ?: entry
+        val history = workOrderHistoryRecords(listOf(current))
+        NavGlassAlertDialog(
+            p = p, onDismissRequest = { viewingHistory = null },
+            title = { Text(localized("История AMOS", "AMOS history", lang)) },
+            text = {
+                Column(
+                    Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(current.title, color = p.text, fontSize = 15.sp)
+                    if (history.isEmpty()) {
+                        Text(localized(
+                            "Выполнений пока нет. После «Готово» здесь появится дата и история.",
+                            "No completions yet. Dates and history appear here after Done.",
+                            lang,
+                        ), color = p.muted, fontSize = 13.sp)
+                    } else {
+                        history.forEach { record ->
+                            key(record.completion.id) {
+                                WorkOrderHistoryCard(record, p, lang) {
+                                    viewingHistory = null
+                                    reopenTarget = current
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewingHistory = null }) {
+                    Text(localized("Закрыть", "Close", lang))
+                }
+            },
+        )
+    }
+}
+
+/** Closed means explicitly removed, not completed. Preserves all cycles. */
+@Composable
+private fun WorkOrderClosedCard(
+    order: WorkOrderEntry, p: NavPalette, lang: UiLanguage,
+    onHistory: () -> Unit, onRestore: () -> Unit, onPurge: () -> Unit,
+) {
+    Column(
+        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
+            .padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Column(Modifier.fillMaxWidth().glassClickable(onClick = onHistory)
+            .padding(vertical = 3.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text("AMOS", color = p.blue, fontSize = 11.sp)
+            Text(order.title, color = p.text, fontSize = 15.sp)
+            order.closedAt?.let {
+                Text(localized("Закрыта: ", "Closed: ", lang) +
+                    navDate(it, lang, true), color = p.muted, fontSize = 12.sp)
+            }
+            Text(
+                localized("История выполнений: ", "Completions: ", lang) +
+                    workOrderHistoryRecords(listOf(order)).size,
+                color = p.muted, fontSize = 12.sp,
+            )
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            WorkOrderChip(localized("Восстановить", "Restore", lang), false, p,
+                modifier = Modifier.weight(1f), onClick = onRestore)
+            WorkOrderChip(localized("Удалить навсегда", "Delete forever", lang), false, p,
+                modifier = Modifier.weight(1f), onClick = onPurge)
+        }
     }
 }
 
@@ -406,7 +501,7 @@ private fun WorkOrderCount(
 @Composable
 private fun WorkOrderCard(
     order: WorkOrderEntry, today: LocalDate, p: NavPalette, lang: UiLanguage,
-    onEdit: () -> Unit, onComplete: () -> Unit,
+    onHistory: () -> Unit, onEdit: () -> Unit, onComplete: () -> Unit,
     onToggleCheck: (String, Boolean) -> Unit,
     onReopen: () -> Unit, onDelete: () -> Unit,
 ) {
@@ -420,12 +515,12 @@ private fun WorkOrderCard(
     }
     Column(
         Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
-            .padding(14.dp),
+            .glassClickable(onClick = onHistory).padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(9.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(
-                Modifier.weight(1f).glassClickable(onClick = onEdit),
+                Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text("AMOS", color = p.blue, fontSize = 12.sp)
@@ -445,13 +540,15 @@ private fun WorkOrderCard(
             color = if (latestCompleted == null) p.muted else p.successText,
             fontSize = 12.sp,
         )
-        Text(
-            localized(
-                if (order.recurring) "Следующее выполнение: " else "Плановая дата: ",
-                if (order.recurring) "Next due: " else "Scheduled date: ", lang,
-            ) + navDate(order.dueDate, lang, true),
-            color = accent, fontSize = 12.sp,
-        )
+        if (!order.completed) {
+            Text(
+                localized(
+                    if (order.recurring) "Следующее выполнение: " else "Плановая дата: ",
+                    if (order.recurring) "Next due: " else "Scheduled date: ", lang,
+                ) + navDate(order.dueDate, lang, true),
+                color = accent, fontSize = 12.sp,
+            )
+        }
         if (order.comment.isNotBlank()) {
             Text(order.comment, color = p.muted, fontSize = 12.sp,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)

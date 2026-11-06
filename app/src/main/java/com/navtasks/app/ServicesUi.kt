@@ -43,6 +43,8 @@ fun ServicesScreen(
     var showEditor by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<ServiceEntry?>(null) }
     var confirmingDelete by remember { mutableStateOf<ServiceEntry?>(null) }
+    var confirmingPurge by remember { mutableStateOf<ServiceEntry?>(null) }
+    var showClosed by rememberSaveable { mutableStateOf(false) }
     var requestTarget by remember { mutableStateOf<ServiceEntry?>(null) }
     var confirmingComplete by remember { mutableStateOf<ServiceEntry?>(null) }
     var completionDate by remember { mutableStateOf(LocalDate.now()) }
@@ -50,20 +52,23 @@ fun ServicesScreen(
     var viewingHistory by remember { mutableStateOf<ServiceEntry?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     var selectedFilter by rememberSaveable { mutableStateOf(WorkOverviewFilter.ALL) }
-    val sorted = services.entries.sortedWith(
+    val activeServices = services.entries.filter { it.closedAt == null }.sortedWith(
         compareBy<ServiceEntry> { it.completedAt != null }.thenBy { it.nextDate })
+    val closedServices = services.entries.filter { it.closedAt != null }
+        .sortedByDescending { it.closedAt }
     val listState = rememberLazyListState()
-    val filteredServices = filterServiceOverview(sorted, now, selectedFilter)
+    val filteredServices = filterServiceOverview(activeServices, now, selectedFilter)
     LaunchedEffect(focusServiceId) {
         if (focusServiceId != null) {
+            showClosed = false
             selectedFilter = WorkOverviewFilter.ALL
             withFrameNanos { }
-            val index = sorted.indexOfFirst { it.id == focusServiceId }
-            if (index >= 0) listState.scrollToItem(1 + index)
+            val index = activeServices.indexOfFirst { it.id == focusServiceId }
+            if (index >= 0) listState.scrollToItem(2 + index)
         }
     }
-    val overdue = filterServiceOverview(sorted, now, WorkOverviewFilter.OVERDUE).size
-    val soon = filterServiceOverview(sorted, now, WorkOverviewFilter.SOON).size
+    val overdue = filterServiceOverview(activeServices, now, WorkOverviewFilter.OVERDUE).size
+    val soon = filterServiceOverview(activeServices, now, WorkOverviewFilter.SOON).size
 
     fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
 
@@ -90,36 +95,54 @@ fun ServicesScreen(
                 NavPanel(p) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ServiceCount(
-                            localized("Всего", "All", lang), sorted.size, p.blue, p,
-                            selected = selectedFilter == WorkOverviewFilter.ALL,
+                            localized("Всего", "All", lang), activeServices.size, p.blue, p,
+                            selected = !showClosed && selectedFilter == WorkOverviewFilter.ALL,
                             modifier = Modifier.weight(1f),
-                        ) { selectedFilter = WorkOverviewFilter.ALL }
+                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.ALL }
                         ServiceCount(
                             localized("Скоро", "Soon", lang), soon,
                             if (soon > 0) p.warningText else p.muted, p,
-                            selected = selectedFilter == WorkOverviewFilter.SOON,
+                            selected = !showClosed && selectedFilter == WorkOverviewFilter.SOON,
                             modifier = Modifier.weight(1f),
-                        ) { selectedFilter = WorkOverviewFilter.SOON }
+                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.SOON }
                         ServiceCount(
                             localized("Просрочены", "Overdue", lang), overdue,
                             if (overdue > 0) p.dangerText else p.muted, p,
-                            selected = selectedFilter == WorkOverviewFilter.OVERDUE,
+                            selected = !showClosed && selectedFilter == WorkOverviewFilter.OVERDUE,
                             modifier = Modifier.weight(1f),
-                        ) { selectedFilter = WorkOverviewFilter.OVERDUE }
+                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.OVERDUE }
                     }
                     Text(localized("Оборудование, даты, комментарии. Без вложений.",
                         "Equipment, dates and notes. No attachments.", lang),
                         color = p.muted, fontSize = 11.sp)
                 }
             }
+            item {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(9.dp),
+                ) {
+                    ServiceOption(
+                        localized("Работы · ${activeServices.size}", "Work · ${activeServices.size}", lang),
+                        p, !showClosed, modifier = Modifier.weight(1f),
+                    ) { showClosed = false }
+                    ServiceOption(
+                        localized("Закрытые · ${closedServices.size}", "Closed · ${closedServices.size}", lang),
+                        p, showClosed, modifier = Modifier.weight(1f),
+                    ) { showClosed = true }
+                }
+            }
             message?.let { msg ->
                 item { Text(msg, color = p.muted, fontSize = 12.sp) }
             }
-            if (filteredServices.isEmpty()) {
+            val visible = if (showClosed) closedServices else filteredServices
+            if (visible.isEmpty()) {
                 item {
                     NavPanel(p) {
                         Text(
-                            if (selectedFilter == WorkOverviewFilter.ALL)
+                            if (showClosed)
+                                localized("Закрытых сервисов пока нет.", "No closed services yet.", lang)
+                            else if (selectedFilter == WorkOverviewFilter.ALL)
                                 localized("Нет сервисов. Добавь оборудование кнопкой +.",
                                     "No records. Add equipment with +.", lang)
                             else localized("В этом фильтре сервисов нет.",
@@ -129,7 +152,19 @@ fun ServicesScreen(
                     }
                 }
             }
-            items(filteredServices, key = { it.id }) { service ->
+            if (showClosed) {
+                items(closedServices, key = { it.id }) { service ->
+                    ServiceClosedCard(service, p, lang,
+                        onHistory = { viewingHistory = service },
+                        onRestore = {
+                            runCatching { services.restore(service.id); reschedule() }
+                                .onFailure { message = it.localizedMessage }
+                        },
+                        onPurge = { confirmingPurge = service },
+                    )
+                }
+            } else {
+                items(filteredServices, key = { it.id }) { service ->
                 val completed = service.completedAt != null
                 val late = !completed && service.nextDate.isBefore(now)
                 val approaching = serviceDueSoon(service, now)
@@ -138,7 +173,7 @@ fun ServicesScreen(
                     else if (approaching) p.warningText else p.successText
                 Column(
                     Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
-                        .glassClickable { selected = service; showEditor = true }
+                        .glassClickable { viewingHistory = service }
                         .padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(9.dp),
                 ) {
@@ -168,13 +203,6 @@ fun ServicesScreen(
                             p, service.requestNumber.isNotBlank(), Modifier.fillMaxWidth(),
                         ) { requestTarget = service }
                     }
-                    if (service.serviceHistory.isNotEmpty()) {
-                        ServiceOption(
-                            localized("История · ", "History · ", lang) +
-                                service.serviceHistory.size,
-                            p, false, Modifier.fillMaxWidth(),
-                        ) { viewingHistory = service }
-                    }
                     if (service.comment.isNotBlank()) {
                         Text(service.comment, color = p.muted, fontSize = 12.sp, maxLines = 2,
                             overflow = TextOverflow.Ellipsis)
@@ -189,6 +217,10 @@ fun ServicesScreen(
                         color = accent, fontSize = 12.sp,
                     )
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        ServiceOption(
+                            localized("Изменить", "Edit", lang), p, false,
+                            modifier = Modifier.weight(1f),
+                        ) { selected = service; showEditor = true }
                         if (!completed) {
                             ServiceOption(localized("Проведено", "Serviced", lang), p, false,
                                 modifier = Modifier.weight(1f)) {
@@ -202,6 +234,7 @@ fun ServicesScreen(
                             confirmingDelete = service
                         }
                     }
+                }
                 }
             }
         }
@@ -232,12 +265,28 @@ fun ServicesScreen(
     }
     confirmingDelete?.let { entry ->
         ServiceConfirmDialog(
-            p, localized("Удалить сервис?", "Delete service?", lang),
-            entry.equipment, lang, onDismiss = { confirmingDelete = null },
+            p, localized("Переместить в закрытые?", "Move to Closed?", lang),
+            entry.equipment + "\n" + localized(
+                "Сервис и история сохранятся. Запись можно будет восстановить.",
+                "The service and full history are kept and can be restored.", lang),
+            lang, onDismiss = { confirmingDelete = null },
         ) {
             runCatching { services.delete(entry.id); reschedule() }
                 .onFailure { message = it.localizedMessage }
             confirmingDelete = null
+        }
+    }
+    confirmingPurge?.let { entry ->
+        ServiceConfirmDialog(
+            p, localized("Удалить навсегда?", "Permanently delete?", lang),
+            entry.equipment + "\n" + localized(
+                "Сервис и ВСЯ история обслуживания будут уничтожены без восстановления.",
+                "The service and ALL maintenance history will be permanently erased.", lang),
+            lang, onDismiss = { confirmingPurge = null },
+        ) {
+            runCatching { services.deletePermanently(entry.id); reschedule() }
+                .onFailure { message = it.localizedMessage }
+            confirmingPurge = null
         }
     }
     confirmingComplete?.let { entry ->
@@ -329,6 +378,14 @@ fun ServicesScreen(
                     Modifier.heightIn(max = 375.dp).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    Text(entry.equipment, color = p.text, fontSize = 15.sp)
+                    if (entry.serviceHistory.isEmpty()) {
+                        Text(localized(
+                            "Обслуживаний пока нет. После «Проведено» здесь появится история.",
+                            "No services recorded yet. History appears here after Serviced.",
+                            lang,
+                        ), color = p.muted, fontSize = 13.sp)
+                    }
                     entry.serviceHistory.asReversed().forEach { item ->
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(item.equipment, color = p.text, fontSize = 14.sp)
@@ -359,6 +416,42 @@ fun ServicesScreen(
                 }
             },
         )
+    }
+}
+
+/** Explicitly removed maintenance records retain the entire execution journal. */
+@Composable
+private fun ServiceClosedCard(
+    entry: ServiceEntry, p: NavPalette, lang: UiLanguage,
+    onHistory: () -> Unit, onRestore: () -> Unit, onPurge: () -> Unit,
+) {
+    Column(
+        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().glassClickable(onClick = onHistory)
+                .padding(vertical = 3.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            Text(entry.equipment, color = p.text, fontSize = 15.sp)
+            entry.closedAt?.let {
+                Text(localized("Закрыт: ", "Closed: ", lang) +
+                    navDate(it, lang, true), color = p.muted, fontSize = 12.sp)
+            }
+            Text(
+                localized("История обслуживаний: ", "Service history: ", lang) +
+                    entry.serviceHistory.size,
+                color = p.muted, fontSize = 12.sp,
+            )
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ServiceOption(localized("Восстановить", "Restore", lang), p, false,
+                modifier = Modifier.weight(1f), onClick = onRestore)
+            ServiceOption(localized("Удалить навсегда", "Delete forever", lang), p, false,
+                modifier = Modifier.weight(1f), onClick = onPurge)
+        }
     }
 }
 

@@ -8,7 +8,8 @@ import java.time.temporal.ChronoUnit
  * These functions never create TaskRuns, modify task frequency, or write data.
  */
 internal fun amosVisibleOnDay(work: WorkOrderEntry, day: LocalDate): Boolean {
-    if (work.completed || work.executionHistory.any { it.completedAt == day }) return false
+    if (work.closedAt != null || work.completed ||
+        work.executionHistory.any { it.completedAt == day }) return false
     // The current occurrence is kept visible while approaching and overdue.
     val firstVisible = work.dueDate.minusDays(
         maxOf(7, work.remindDaysBefore).toLong())
@@ -16,7 +17,7 @@ internal fun amosVisibleOnDay(work: WorkOrderEntry, day: LocalDate): Boolean {
 }
 
 internal fun serviceVisibleOnDay(service: ServiceEntry, day: LocalDate): Boolean =
-    service.completedAt == null &&
+    service.closedAt == null && service.completedAt == null &&
         !day.isBefore(minOf(serviceWarningStart(service), service.nextDate.minusDays(30)))
 
 /** Once the AMOS requisition is recorded, remove the reminder from Today only. */
@@ -26,6 +27,7 @@ internal fun serviceReminderVisibleOnDay(service: ServiceEntry, day: LocalDate):
 
 /** Fixed calendar cycle anchored at the manually selected AMOS start date. */
 internal fun amosPlannedOnDay(work: WorkOrderEntry, date: LocalDate): Boolean {
+    if (work.closedAt != null) return false
     val start = work.startDate ?: work.dueDate
     if (date.isBefore(start)) return false
     if (!work.recurring) return date == start
@@ -40,7 +42,8 @@ internal fun amosPlannedOnDay(work: WorkOrderEntry, date: LocalDate): Boolean {
 
 /** Service calendar markers are informative, including projected future servicing. */
 internal fun servicePlannedOnDay(service: ServiceEntry, date: LocalDate): Boolean {
-    if (service.completedAt != null || date.isBefore(service.nextDate)) return false
+    if (service.closedAt != null || service.completedAt != null ||
+        date.isBefore(service.nextDate)) return false
     if (date == service.nextDate) return true
     if (service.periodMonths == 0) return false
     val months = ChronoUnit.MONTHS.between(service.nextDate.withDayOfMonth(1),
@@ -65,14 +68,17 @@ internal fun filterAmosOverview(
     orders: List<WorkOrderEntry>, today: LocalDate, filter: WorkOverviewFilter,
 ): List<WorkOrderEntry> = orders.filter { order ->
     when (filter) {
-        WorkOverviewFilter.ALL -> !order.completed
-        WorkOverviewFilter.SOON -> workOrderState(order, today) == WorkOrderState.SOON
-        WorkOverviewFilter.OVERDUE -> workOrderState(order, today) == WorkOrderState.OVERDUE
+        WorkOverviewFilter.ALL -> order.closedAt == null
+        WorkOverviewFilter.SOON -> order.closedAt == null &&
+            workOrderState(order, today) == WorkOrderState.SOON
+        WorkOverviewFilter.OVERDUE -> order.closedAt == null &&
+            workOrderState(order, today) == WorkOrderState.OVERDUE
     }
 }
 
 internal fun serviceDueSoon(service: ServiceEntry, today: LocalDate): Boolean =
-    service.completedAt == null && !service.nextDate.isBefore(today) &&
+    service.closedAt == null && service.completedAt == null &&
+        !service.nextDate.isBefore(today) &&
         (service.nextDate <= today.plusDays(30) ||
             (service.remindMonths > 0 && !today.isBefore(serviceWarningStart(service))))
 
@@ -80,10 +86,11 @@ internal fun filterServiceOverview(
     services: List<ServiceEntry>, today: LocalDate, filter: WorkOverviewFilter,
 ): List<ServiceEntry> = services.filter { entry ->
     when (filter) {
-        WorkOverviewFilter.ALL -> true
+        WorkOverviewFilter.ALL -> entry.closedAt == null
         WorkOverviewFilter.SOON -> serviceDueSoon(entry, today)
         WorkOverviewFilter.OVERDUE ->
-            entry.completedAt == null && entry.nextDate.isBefore(today)
+            entry.closedAt == null && entry.completedAt == null &&
+                entry.nextDate.isBefore(today)
     }
 }
 
@@ -93,7 +100,8 @@ internal fun amosCompletedOnDay(
 ): List<WorkOrderHistoryRecord> =
     orders.asSequence()
         .filter { work ->
-            work.completedAt == day || work.executionHistory.any { it.completedAt == day }
+            work.closedAt == null &&
+                (work.completedAt == day || work.executionHistory.any { it.completedAt == day })
         }
         .flatMap { workOrderHistoryRecords(listOf(it)).asSequence() }
         .filter { it.completion.completedAt == day }
@@ -108,7 +116,9 @@ internal data class ServiceAgendaCompletion(
 internal fun serviceCompletedOnDay(
     services: List<ServiceEntry>, day: LocalDate,
 ): List<ServiceAgendaCompletion> = services.flatMap { service ->
-    service.serviceHistory.filter { it.completedAt == day }.map {
+    service.serviceHistory.filter {
+        service.closedAt == null && it.completedAt == day
+    }.map {
         ServiceAgendaCompletion(service, it)
     }
 }

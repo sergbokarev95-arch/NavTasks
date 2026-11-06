@@ -138,7 +138,9 @@ class WorkAgendaTest {
         val archived = workOrderComplete(
             amos(start = now.minusDays(5)).copy(id = "archived"), now)
         val orders = listOf(overdue, soon, distant, archived)
-        assertEquals(3, filterAmosOverview(orders, now, WorkOverviewFilter.ALL).size)
+        // A completed one-off stays in Work for its individual history;
+        // only an explicitly closed (soft-removed) record moves to Closed.
+        assertEquals(4, filterAmosOverview(orders, now, WorkOverviewFilter.ALL).size)
         assertEquals(listOf("soon"),
             filterAmosOverview(orders, now, WorkOverviewFilter.SOON).map { it.id })
         assertEquals(listOf("overdue"),
@@ -156,6 +158,53 @@ class WorkAgendaTest {
         assertEquals(listOf("late"),
             filterServiceOverview(all, now, WorkOverviewFilter.OVERDUE).map { it.id })
         assertFalse(serviceDueSoon(late, now))
+    }
+
+    @Test fun softClosedAmosHasNoRemindersButRetainsCompletedHistoryForRestoration() {
+        val original = amos(repeatMonths = 1)
+        val finished = workOrderComplete(original, now)
+        val removed = finished.copy(closedAt = now.plusDays(1))
+        assertEquals(1, removed.executionHistory.size)
+        assertEquals(1, workOrderHistoryRecords(listOf(removed)).size)
+        assertFalse(amosVisibleOnDay(removed, now.plusDays(3)))
+        assertFalse(amosPlannedOnDay(removed, removed.dueDate))
+        assertFalse(workAgendaExistsOnDay(removed.dueDate, listOf(removed), emptyList()))
+        assertTrue(amosCompletedOnDay(listOf(removed), now).isEmpty())
+        assertTrue(filterAmosOverview(listOf(removed), now, WorkOverviewFilter.ALL).isEmpty())
+        assertTrue(filterAmosOverview(listOf(removed), now, WorkOverviewFilter.SOON).isEmpty())
+        val restored = removed.copy(closedAt = null)
+        assertEquals(finished.executionHistory, restored.executionHistory)
+        assertEquals(finished.dueDate, restored.dueDate)
+        assertEquals(finished.startDate, restored.startDate)
+        assertTrue(amosPlannedOnDay(restored, restored.dueDate))
+        assertEquals(1, amosCompletedOnDay(listOf(restored), now).size)
+    }
+
+    @Test fun softClosedServiceRetainsServiceAndRequestJournal() {
+        val original = service(now.plusDays(4)).copy(requestNumber = "REQ-912")
+        val finished = completeServiceCycle(original, now)
+        val removed = finished.copy(closedAt = now)
+        assertEquals("REQ-912", removed.serviceHistory.single().requestNumber)
+        assertFalse(serviceVisibleOnDay(removed, now.plusDays(1)))
+        assertFalse(servicePlannedOnDay(removed, removed.nextDate))
+        assertTrue(serviceCompletedOnDay(listOf(removed), now).isEmpty())
+        assertTrue(filterServiceOverview(listOf(removed), now, WorkOverviewFilter.ALL).isEmpty())
+        assertTrue(filterServiceOverview(listOf(removed), now, WorkOverviewFilter.SOON).isEmpty())
+        val restored = removed.copy(closedAt = null)
+        assertEquals(finished.serviceHistory, restored.serviceHistory)
+        assertEquals(finished.nextDate, restored.nextDate)
+        assertTrue(servicePlannedOnDay(restored, restored.nextDate))
+        assertEquals(1, serviceCompletedOnDay(listOf(restored), now).size)
+    }
+
+    @Test fun finishedOneOffWorkRemainsBrowsableWithoutBecomingClosed() {
+        val done = workOrderComplete(amos(), now)
+        assertTrue(done.completed)
+        assertEquals(null, done.closedAt)
+        assertEquals(listOf(done.id),
+            filterAmosOverview(listOf(done), now, WorkOverviewFilter.ALL).map { it.id })
+        assertTrue(filterAmosOverview(listOf(done), now, WorkOverviewFilter.SOON).isEmpty())
+        assertEquals(1, workOrderHistoryRecords(listOf(done)).size)
     }
 
     @Test fun calendarDetectsScheduledWorkEvenWithoutOrdinaryTasks() {
