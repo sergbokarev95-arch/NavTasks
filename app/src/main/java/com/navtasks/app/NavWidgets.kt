@@ -7,6 +7,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.content.res.ColorStateList
+import android.os.Build
 import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
@@ -72,7 +74,7 @@ object NavWidgetUpdater {
         val language = settings.language
         val textColor = if (dark) 0xFFF2F8FF.toInt() else 0xFF193147.toInt()
         val muted = if (dark) 0xFFAFC4D8.toInt() else 0xFF5E7489.toInt()
-        val accent = if (dark) 0xFF69D4BE.toInt() else 0xFF218E87.toInt()
+        val accent = if (dark) 0xFF80DCC4.toInt() else 0xFF166E6B.toInt()
 
         for (wide in listOf(false, true)) {
             val component = ComponentName(context,
@@ -88,6 +90,18 @@ object NavWidgetUpdater {
             view.setTextColor(R.id.nav_widget_title, textColor)
             view.setTextColor(R.id.nav_widget_progress, accent)
             view.setProgressBar(R.id.nav_widget_bar, rows.size.coerceAtLeast(1), completed, false)
+            // API 31+ RemoteViews supports ProgressBar tint changes at apply time.
+            // Keep the XML-defined fallback for older Samsung/Android devices.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                view.setColorStateList(
+                    R.id.nav_widget_bar, "setProgressTintList",
+                    ColorStateList.valueOf(accent),
+                )
+                view.setColorStateList(
+                    R.id.nav_widget_bar, "setProgressBackgroundTintList",
+                    ColorStateList.valueOf(if (dark) 0xFF41566A.toInt() else 0xFFBED4DD.toInt()),
+                )
+            }
             view.setTextViewText(R.id.nav_widget_missed, localized("Пропущено: $missedCount", "Missed: $missedCount", language))
             view.setTextColor(R.id.nav_widget_missed, if (missedCount == 0) muted else 0xFFF0B493.toInt())
             view.setOnClickPendingIntent(R.id.nav_widget_root, NavNotifications.openTask(context))
