@@ -27,6 +27,8 @@ data class WorkOrderEntry(
     val executionHistory: List<WorkOrderCompletion> = emptyList(),
     /** First scheduled work date; fixed anchor for all repeated occurrences. */
     val startDate: LocalDate? = null,
+    /** Soft removal is separate from completing a cycle. */
+    val closedAt: LocalDate? = null,
 ) {
     init {
         require(id.isNotBlank() && id.length <= 100)
@@ -56,6 +58,7 @@ data class WorkOrderEntry(
         .put("dueDate", dueDate.toString())
         .put("createdAt", createdAt.toString())
         .put("completedAt", completedAt?.toString() ?: JSONObject.NULL)
+        .put("closedAt", closedAt?.toString() ?: JSONObject.NULL)
         .put("comment", comment)
         .put("checklist", JSONArray().apply { checklist.forEach { put(it.toJson()) } })
         .put("checkedItemIds", JSONArray().apply { checkedItemIds.forEach { put(it) } })
@@ -77,6 +80,9 @@ data class WorkOrderEntry(
                 createdAt = LocalDate.parse(json.getString("createdAt")),
                 completedAt = rawCompleted.takeUnless { it.isBlank() || it == "null" }
                     ?.let(LocalDate::parse),
+                closedAt = json.optString("closedAt", "").takeUnless {
+                    it.isBlank() || it == "null"
+                }?.let(LocalDate::parse),
                 comment = json.optString("comment", ""),
                 checklist = (json.optJSONArray("checklist") ?: JSONArray()).let { a ->
                     (0 until a.length()).map { CheckItem.fromJson(a.getJSONObject(it)) }
@@ -205,8 +211,23 @@ class WorkOrderStore(context: Context, private val profiles: ProfileStore) {
         upsert(workOrderReopen(entry))
     }
 
+    /** Reversible removal; completion history stays in the same record. */
     fun delete(id: String) {
-        require(entries.any { it.id == id }) { "Work order not found" }
+        val entry = entries.firstOrNull { it.id == id } ?: error("Work order not found")
+        require(entry.closedAt == null) { "Work order already closed" }
+        upsert(entry.copy(closedAt = LocalDate.now()))
+    }
+
+    fun restore(id: String) {
+        val entry = entries.firstOrNull { it.id == id } ?: error("Work order not found")
+        require(entry.closedAt != null) { "Work order is not closed" }
+        upsert(entry.copy(closedAt = null))
+    }
+
+    fun deletePermanently(id: String) {
+        require(entries.any { it.id == id && it.closedAt != null }) {
+            "Only closed work orders can be permanently deleted"
+        }
         write(entries.filterNot { it.id == id })
     }
 }
