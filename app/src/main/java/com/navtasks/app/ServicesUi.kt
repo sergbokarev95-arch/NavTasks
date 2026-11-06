@@ -265,12 +265,28 @@ fun ServicesScreen(
     }
     confirmingDelete?.let { entry ->
         ServiceConfirmDialog(
-            p, localized("Удалить сервис?", "Delete service?", lang),
-            entry.equipment, lang, onDismiss = { confirmingDelete = null },
+            p, localized("Переместить в закрытые?", "Move to Closed?", lang),
+            entry.equipment + "\n" + localized(
+                "Сервис и история сохранятся. Запись можно будет восстановить.",
+                "The service and full history are kept and can be restored.", lang),
+            lang, onDismiss = { confirmingDelete = null },
         ) {
             runCatching { services.delete(entry.id); reschedule() }
                 .onFailure { message = it.localizedMessage }
             confirmingDelete = null
+        }
+    }
+    confirmingPurge?.let { entry ->
+        ServiceConfirmDialog(
+            p, localized("Удалить навсегда?", "Permanently delete?", lang),
+            entry.equipment + "\n" + localized(
+                "Сервис и ВСЯ история обслуживания будут уничтожены без восстановления.",
+                "The service and ALL maintenance history will be permanently erased.", lang),
+            lang, onDismiss = { confirmingPurge = null },
+        ) {
+            runCatching { services.deletePermanently(entry.id); reschedule() }
+                .onFailure { message = it.localizedMessage }
+            confirmingPurge = null
         }
     }
     confirmingComplete?.let { entry ->
@@ -362,6 +378,14 @@ fun ServicesScreen(
                     Modifier.heightIn(max = 375.dp).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    Text(entry.equipment, color = p.text, fontSize = 15.sp)
+                    if (entry.serviceHistory.isEmpty()) {
+                        Text(localized(
+                            "Обслуживаний пока нет. После «Проведено» здесь появится история.",
+                            "No services recorded yet. History appears here after Serviced.",
+                            lang,
+                        ), color = p.muted, fontSize = 13.sp)
+                    }
                     entry.serviceHistory.asReversed().forEach { item ->
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(item.equipment, color = p.text, fontSize = 14.sp)
@@ -392,6 +416,42 @@ fun ServicesScreen(
                 }
             },
         )
+    }
+}
+
+/** Explicitly removed maintenance records retain the entire execution journal. */
+@Composable
+private fun ServiceClosedCard(
+    entry: ServiceEntry, p: NavPalette, lang: UiLanguage,
+    onHistory: () -> Unit, onRestore: () -> Unit, onPurge: () -> Unit,
+) {
+    Column(
+        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().glassClickable(onClick = onHistory)
+                .padding(vertical = 3.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            Text(entry.equipment, color = p.text, fontSize = 15.sp)
+            entry.closedAt?.let {
+                Text(localized("Закрыт: ", "Closed: ", lang) +
+                    navDate(it, lang, true), color = p.muted, fontSize = 12.sp)
+            }
+            Text(
+                localized("История обслуживаний: ", "Service history: ", lang) +
+                    entry.serviceHistory.size,
+                color = p.muted, fontSize = 12.sp,
+            )
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ServiceOption(localized("Восстановить", "Restore", lang), p, false,
+                modifier = Modifier.weight(1f), onClick = onRestore)
+            ServiceOption(localized("Удалить навсегда", "Delete forever", lang), p, false,
+                modifier = Modifier.weight(1f), onClick = onPurge)
+        }
     }
 }
 
