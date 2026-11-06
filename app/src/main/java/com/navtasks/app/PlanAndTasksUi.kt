@@ -440,13 +440,16 @@ fun TasksScreenV2(
             Modifier.fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 5.dp)
                 .navGlass(p, radius = 14.dp, role = GlassRole.PANEL)
+                .border(1.dp, p.warningText.copy(alpha = 0.52f), RoundedCornerShape(14.dp))
+                .background(p.warningText.copy(alpha = if (p.dark) 0.10f else 0.055f),
+                    RoundedCornerShape(14.dp))
                 .padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(localized("Список задач", "Task list", lang), color = p.text,
+            Text(localized("Список задач", "Task list", lang), color = p.warningText,
                 fontSize = 13.sp, modifier = Modifier.weight(1f))
             Text(filtered.size.toString() + " " + localized("задач", "tasks", lang),
-                color = p.muted, fontSize = 12.sp)
+                color = p.warningText, fontSize = 12.sp)
         }
         // Keep the same lazy list, stable item keys and editing navigation.
         LazyColumn(
