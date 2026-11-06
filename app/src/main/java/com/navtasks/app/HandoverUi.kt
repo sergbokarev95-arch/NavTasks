@@ -1,8 +1,6 @@
 package com.navtasks.app
 
 import android.app.DatePickerDialog
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -31,12 +29,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.io.IOException
 import java.time.LocalDate
 
 /** Active notes stay at the top. Resolved/struck entries remain visible at the end. */
@@ -58,7 +54,18 @@ fun HandoverScreen(
     personalMode: Boolean = false,
     embeddedInTab: Boolean = false,
 ) {
-    val context = LocalContext.current
+    val hazeState = remember { dev.chrisbanes.haze.HazeState() }
+    var searchOpen by rememberSaveable { mutableStateOf(false) }
+    var searchText by rememberSaveable { mutableStateOf("") }
+    val query = searchText.trim()
+    val shownSections = if (query.isBlank() || !searchOpen) handover.sections else
+        handover.sections.mapNotNull { section ->
+            if (section.title.contains(query, ignoreCase = true)) section
+            else section.copy(entries = section.entries.filter {
+                it.title.contains(query, ignoreCase = true) ||
+                    it.notes.contains(query, ignoreCase = true)
+            }).takeIf { it.entries.isNotEmpty() }
+        }
     // A compact accordion: all sections start closed; each profile keeps
     // its current open section when the activity is recreated.
     var expandedSectionId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -71,8 +78,6 @@ fun HandoverScreen(
     var selectedEntry by remember { mutableStateOf<Pair<String, String>?>(null) }
     var completingWithDate by remember { mutableStateOf<Triple<String, String, LocalDate>?>(null) }
     var confirmDelete by remember { mutableStateOf<Pair<String, String?>?>(null) }
-    var pendingImport by remember { mutableStateOf<HandoverPackage?>(null) }
-    var feedback by remember { mutableStateOf<String?>(null) }
 
     fun openSectionEditor(section: HandoverSection?) {
         editSectionId = section?.id
@@ -86,51 +91,9 @@ fun HandoverScreen(
         entryNotes = entry?.notes.orEmpty()
     }
 
-    val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri ->
-        if (uri != null) {
-            runCatching {
-                val stream = context.contentResolver.openOutputStream(uri)
-                    ?: throw IOException("Cannot create file")
-                stream.bufferedWriter(Charsets.UTF_8).use {
-                    it.write(HandoverTransfer.export(tasks.templates, handover.sections))
-                }
-            }.onSuccess {
-                feedback = localized("Пакет передачи дел сохранён.", "Handover package saved.", lang)
-            }.onFailure {
-                feedback = it.localizedMessage ?: localized("Ошибка экспорта", "Export failed", lang)
-            }
-        }
-    }
-    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            runCatching {
-                val input = context.contentResolver.openInputStream(uri)
-                    ?: throw IOException("Cannot open file")
-                val text = input.bufferedReader(Charsets.UTF_8).use { reader ->
-                    val out = StringBuilder()
-                    val buffer = CharArray(4096)
-                    while (true) {
-                        val count = reader.read(buffer)
-                        if (count < 0) break
-                        if (out.length + count > 2_000_000) throw IOException("File exceeds 2 MB")
-                        out.append(buffer, 0, count)
-                    }
-                    out.toString()
-                }
-                HandoverTransfer.parse(text)
-            }.onSuccess {
-                pendingImport = it
-                feedback = null
-            }.onFailure {
-                feedback = it.localizedMessage ?: localized("Ошибка импорта", "Import failed", lang)
-            }
-        }
-    }
-
+    Box(Modifier.fillMaxSize()) {
     Column(
-        Modifier.fillMaxSize()
+        Modifier.fillMaxSize().hazeSource(hazeState)
             .then(if (embeddedInTab) Modifier else Modifier.statusBarsPadding().navigationBarsPadding())
     ) {
         Row(
@@ -151,34 +114,16 @@ fun HandoverScreen(
                         color = p.text, fontSize = 22.sp)
                 }
             }
-            NavGlassCircleButton(p, "plus") { openSectionEditor(null) }
+            NavGlassCircleButton(p, "search") {
+                searchOpen = !searchOpen
+                if (!searchOpen) searchText = ""
+            }
         }
-        if (!personalMode) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 17.dp, vertical = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(9.dp),
-        ) {
-            Box(
-                Modifier.weight(1f).navGlass(p, radius = 15.dp, role = GlassRole.CONTROL)
-                    .glassClickable { exportLauncher.launch("NavTasks_Handover_${LocalDate.now()}.json") }
-                    .padding(vertical = 12.dp), contentAlignment = Alignment.Center,
-            ) { Text(localized("Экспорт пакета", "Export package", lang), color = p.blue, fontSize = 13.sp) }
-            Box(
-                Modifier.weight(1f).navGlass(p, radius = 15.dp, role = GlassRole.CONTROL)
-                    .glassClickable { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
-                    .padding(vertical = 12.dp), contentAlignment = Alignment.Center,
-            ) { Text(localized("Импорт пакета", "Import package", lang), color = p.blue, fontSize = 13.sp) }
-        }
-        Text(
-            localized("В пакете: задачи и заметки передачи дел. История личных отметок и настройки не передаются.",
-                "Package contains tasks and handover notes, not private task history or settings.", lang),
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 3.dp),
-            color = p.muted, fontSize = 11.sp,
-        )
-        }
-        feedback?.let {
-            Text(it, modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp),
-                color = p.successText, fontSize = 12.sp)
+        if (searchOpen) {
+            NavGlassSearchField(
+                searchText, { searchText = it }, p, lang,
+                placeholder = localized("Поиск по всему Handover", "Search all Handover", lang),
+            )
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -188,16 +133,21 @@ fun HandoverScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (handover.sections.isEmpty()) {
+            if (shownSections.isEmpty()) {
                 item {
                     NavPanel(p) {
-                        Text(localized("Пока нет разделов. Нажми +, чтобы создать первый.",
-                            "No sections yet. Tap + to create one.", lang), color = p.muted)
+                        Text(
+                            if (query.isNotBlank() && searchOpen)
+                                localized("Совпадений не найдено.", "No matches found.", lang)
+                            else localized("Пока нет разделов. Нажми +, чтобы создать первый.",
+                                "No sections yet. Tap + to create one.", lang),
+                            color = p.muted,
+                        )
                     }
                 }
             }
-            items(handover.sections, key = { it.id }) { section ->
-                val expanded = expandedSectionId == section.id
+            items(shownSections, key = { it.id }) { section ->
+                val expanded = (searchOpen && query.isNotBlank()) || expandedSectionId == section.id
                 val chevronRotation by animateFloatAsState(
                     targetValue = if (expanded) 180f else 0f,
                     animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
@@ -312,6 +262,14 @@ fun HandoverScreen(
             }
         }
     }
+    Box(
+        Modifier.align(Alignment.BottomStart)
+            .navigationBarsPadding()
+            .padding(start = 19.dp, bottom = if (embeddedInTab) 83.dp else 18.dp),
+    ) {
+        NavGlassAddButton(p, hazeState) { openSectionEditor(null) }
+    }
+    } // Content and floating Add button share the same glass source.
 
     if (addSection) {
         HandoverGlassDialog(
@@ -475,30 +433,7 @@ fun HandoverScreen(
         )
     }
 
-    pendingImport?.let { pack ->
-        HandoverGlassDialog(
-            p = p, 
-            onDismissRequest = { pendingImport = null },
-            title = { Text(localized("Импорт передачи дел", "Import Handover", lang)) },
-            text = { Text(localized(
-                "В файле ${pack.sections.size} разделов, ${pack.sections.sumOf { it.entries.size }} пунктов и ${pack.tasks.size} шаблонов задач. Добавить без замены существующих данных?",
-                "File contains ${pack.sections.size} sections, ${pack.sections.sumOf { it.entries.size }} notes and ${pack.tasks.size} task templates. Merge without replacing existing data?", lang)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    val merged = handover.mergeSections(pack.sections)
-                    val newTasks = tasks.importTemplates(pack.tasks)
-                    pendingImport = null
-                    feedback = localized("Добавлено: ${merged.first} разделов, ${merged.second} пунктов, $newTasks задач.",
-                        "Added ${merged.first} sections, ${merged.second} notes and $newTasks tasks.", lang)
-                }) { Text(localized("Импортировать", "Import", lang)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingImport = null }) {
-                    Text(localized("Отмена", "Cancel", lang))
-                }
-            },
-        )
-    }
+
 }
 
 /** The same glass language as NavTasks cards. Avoids lavender Material alert surfaces. */
