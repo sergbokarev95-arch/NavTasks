@@ -48,20 +48,21 @@ fun ServicesScreen(
     var completionDatePicker by remember { mutableStateOf(false) }
     var viewingHistory by remember { mutableStateOf<ServiceEntry?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
+    var selectedFilter by rememberSaveable { mutableStateOf(WorkOverviewFilter.ALL) }
     val sorted = services.entries.sortedWith(
         compareBy<ServiceEntry> { it.completedAt != null }.thenBy { it.nextDate })
     val listState = rememberLazyListState()
+    val filteredServices = filterServiceOverview(sorted, now, selectedFilter)
     LaunchedEffect(focusServiceId) {
         if (focusServiceId != null) {
+            selectedFilter = WorkOverviewFilter.ALL
+            withFrameNanos { }
             val index = sorted.indexOfFirst { it.id == focusServiceId }
             if (index >= 0) listState.scrollToItem(1 + index)
         }
     }
-    val overdue = sorted.count { it.completedAt == null && it.nextDate.isBefore(now) }
-    val soon = sorted.count { it.completedAt == null && !it.nextDate.isBefore(now) && (
-        it.nextDate <= now.plusDays(30) ||
-        (it.remindMonths > 0 && !now.isBefore(serviceWarningStart(it)))
-    ) }
+    val overdue = filterServiceOverview(sorted, now, WorkOverviewFilter.OVERDUE).size
+    val soon = filterServiceOverview(sorted, now, WorkOverviewFilter.SOON).size
 
     fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
 
@@ -86,12 +87,24 @@ fun ServicesScreen(
         ) {
             item {
                 NavPanel(p) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        ServiceCount(localized("Всего", "All", lang), sorted.size, p.blue, p)
-                        ServiceCount(localized("Скоро", "Soon", lang), soon,
-                            if (soon > 0) p.warningText else p.muted, p)
-                        ServiceCount(localized("Просрочены", "Overdue", lang), overdue,
-                            if (overdue > 0) p.dangerText else p.muted, p)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ServiceCount(
+                            localized("Всего", "All", lang), sorted.size, p.blue, p,
+                            selected = selectedFilter == WorkOverviewFilter.ALL,
+                            modifier = Modifier.weight(1f),
+                        ) { selectedFilter = WorkOverviewFilter.ALL }
+                        ServiceCount(
+                            localized("Скоро", "Soon", lang), soon,
+                            if (soon > 0) p.warningText else p.muted, p,
+                            selected = selectedFilter == WorkOverviewFilter.SOON,
+                            modifier = Modifier.weight(1f),
+                        ) { selectedFilter = WorkOverviewFilter.SOON }
+                        ServiceCount(
+                            localized("Просрочены", "Overdue", lang), overdue,
+                            if (overdue > 0) p.dangerText else p.muted, p,
+                            selected = selectedFilter == WorkOverviewFilter.OVERDUE,
+                            modifier = Modifier.weight(1f),
+                        ) { selectedFilter = WorkOverviewFilter.OVERDUE }
                     }
                     Text(localized("Оборудование, даты, комментарии. Без вложений.",
                         "Equipment, dates and notes. No attachments.", lang),
@@ -101,20 +114,24 @@ fun ServicesScreen(
             message?.let { msg ->
                 item { Text(msg, color = p.muted, fontSize = 12.sp) }
             }
-            if (sorted.isEmpty()) {
+            if (filteredServices.isEmpty()) {
                 item {
                     NavPanel(p) {
-                        Text(localized("Нет сервисов. Добавь оборудование кнопкой +.",
-                            "No records. Add equipment with +.", lang), color = p.muted)
+                        Text(
+                            if (selectedFilter == WorkOverviewFilter.ALL)
+                                localized("Нет сервисов. Добавь оборудование кнопкой +.",
+                                    "No records. Add equipment with +.", lang)
+                            else localized("В этом фильтре сервисов нет.",
+                                "No maintenance matches this filter.", lang),
+                            color = p.muted,
+                        )
                     }
                 }
             }
-            items(sorted, key = { it.id }) { service ->
+            items(filteredServices, key = { it.id }) { service ->
                 val completed = service.completedAt != null
                 val late = !completed && service.nextDate.isBefore(now)
-                val approaching = !completed && !late &&
-                    (service.nextDate <= now.plusDays(30) ||
-                        (service.remindMonths > 0 && !now.isBefore(serviceWarningStart(service))))
+                val approaching = serviceDueSoon(service, now)
                 val accent = if (completed) p.successText
                     else if (late) p.dangerText
                     else if (approaching) p.warningText else p.successText
@@ -132,11 +149,13 @@ fun ServicesScreen(
                             overflow = TextOverflow.Ellipsis)
                         NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                     }
-                    if (completed) {
-                        Text(localized("Проведено: ", "Serviced: ", lang) +
-                            navDate(service.completedAt!!, lang, true),
-                            color = p.successText, fontSize = 12.sp)
-                    } else {
+                    Text(
+                        localized("Последнее обслуживание: ", "Last serviced: ", lang) +
+                            navDate(service.serviceHistory.lastOrNull()?.completedAt
+                                ?: service.lastDate, lang, true),
+                        color = p.successText, fontSize = 12.sp,
+                    )
+                    if (!completed) {
                         Text(localized("Следующее обслуживание: ", "Next service: ", lang) +
                             navDate(service.nextDate, lang, true),
                             color = accent, fontSize = 12.sp)
@@ -343,10 +362,22 @@ fun ServicesScreen(
 }
 
 @Composable
-private fun ServiceCount(label: String, number: Int, color: Color, p: NavPalette) {
-    Column {
+private fun ServiceCount(
+    label: String, number: Int, color: Color, p: NavPalette,
+    selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit,
+) {
+    Column(
+        modifier.navGlass(p, radius = 14.dp,
+            role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
+            .glassClickable(onClick = onClick)
+            .heightIn(min = 75.dp)
+            .padding(horizontal = 8.dp, vertical = 9.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
         Text(number.toString(), color = color, fontSize = 22.sp)
-        Text(label, color = p.muted, fontSize = 11.sp)
+        Text(label, color = if (selected) p.blue else p.muted, fontSize = 11.sp,
+            maxLines = 1)
     }
 }
 
