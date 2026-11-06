@@ -67,8 +67,8 @@ fun ProfilesScreen(
             verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
             Text(localized(
-                "Каждое судно хранит собственные задачи, историю и передачу дел. Личное хранит только заметки.",
-                "Each vessel keeps its own tasks, history and handover. Personal contains notes only.",
+                "Каждое судно отдельно хранит задачи, историю, AMOS, сервисы и Handover. Личное — только заметки.",
+                "Each vessel separately stores tasks, history, AMOS, maintenance and Handover. Personal contains notes only.",
                 lang), color = p.muted, fontSize = 13.sp)
             profiles.profiles.forEach { profile ->
                 val current = profiles.activeId == profile.id
@@ -85,7 +85,8 @@ fun ProfilesScreen(
                         Text(
                             if (profile.kind == NavProfileKind.PERSONAL)
                                 localized("Заметки", "Notes", lang)
-                            else localized("Задачи · История · Handover", "Tasks · History · Handover", lang),
+                            else localized("Задачи · AMOS · Сервисы · Handover · История",
+                                    "Tasks · AMOS · Maintenance · Handover · History", lang),
                             color = p.muted, fontSize = 12.sp)
                     }
                     if (current) NavGlassGlyph("check", p.successText, Modifier.size(19.dp))
