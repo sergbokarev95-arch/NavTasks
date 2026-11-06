@@ -92,10 +92,10 @@ internal fun WorkAgendaCompletedTodaySection(
         }
         Spacer(Modifier.height(6.dp))
     }
-    completedServices.forEach { record ->
-        key("completed-service-" + record.service.id + "-" + record.completion.completedAt) {
+    completedServices.forEachIndexed { index, record ->
+        key("completed-service-" + record.service.id + "-" + index) {
             WorkAgendaTodayCard(
-                title = record.service.equipment,
+                title = record.completion.equipment.ifBlank { record.service.equipment },
                 category = localized("Сервис", "Maintenance", lang),
                 nextServiceDate = record.service.nextDate.takeIf {
                     record.service.completedAt == null
