@@ -1,0 +1,53 @@
+name: Validate NavTasks 0.4.45 notifications and widgets
+on:
+  push:
+    branches: [notification-widgets-0.4.45]
+    paths: ['.github/workflows/validate-0.4.45.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Validate resource layouts and notification icon
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          d=Path("app/src/main/res")
+          vector=d/"drawable/navtasks_notification_small.xml"
+          v=ET.parse(vector).getroot()
+          assert v.attrib["{http://schemas.android.com/apk/res/android}viewportWidth"] == "24"
+          assert "navtasks_icon_monochrome" not in Path("app/src/main/java/com/navtasks/app/NavNotifications.kt").read_text()
+          for mode,maxrows in (("compact",2),("wide",3)):
+              p=d/"layout"/f"navtasks_widget_{mode}.xml"
+              root=ET.parse(p).getroot()
+              ids={x.attrib.get("{http://schemas.android.com/apk/res/android}id","") for x in root.iter()}
+              required={"@+id/nav_widget_root","@+id/nav_widget_title","@+id/nav_widget_progress",
+                        "@+id/nav_widget_bar","@+id/nav_widget_missed","@+id/nav_widget_more"}
+              for i in ("one","two","three")[:maxrows]:
+                  required|={f"@+id/nav_widget_row_{i}",f"@+id/nav_widget_task_{i}",f"@+id/nav_widget_check_{i}"}
+              assert not required-ids,(mode,required-ids)
+              assert all(x.attrib.get("{http://schemas.android.com/apk/res/android}layout_height") != "0dp" for x in root.iter()),mode
+          print("Verified both dense widget layouts, overflow labels and 24dp notification glyph")
+          PY
+          grep -q 'versionName = "0.4.45"' app/build.gradle.kts
+      - name: Run unit and widget regression tests
+        run: gradle :app:testDebugUnitTest --no-daemon
+      - name: Compile native Android RemoteViews and notification resources
+        run: gradle :app:assembleDebug --no-daemon
