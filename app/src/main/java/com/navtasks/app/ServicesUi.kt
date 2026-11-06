@@ -62,11 +62,9 @@ fun ServicesScreen(
     val closedServices = services.entries.filter { it.closedAt != null }
         .sortedByDescending { it.closedAt }
     val listState = rememberLazyListState()
-    val filteredServices = filterServiceOverview(activeServices, now, selectedFilter)
-        .filter { it.equipment.contains(searchText.trim(), ignoreCase = true) }
-    val filteredClosed = closedServices.filter {
-        it.equipment.contains(searchText.trim(), ignoreCase = true)
-    }
+    val filteredServices = searchServiceTitles(
+        filterServiceOverview(activeServices, now, selectedFilter), searchText)
+    val filteredClosed = searchServiceTitles(closedServices, searchText)
     LaunchedEffect(focusServiceId) {
         if (focusServiceId != null) {
             searchText = ""
