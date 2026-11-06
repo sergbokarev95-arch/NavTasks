@@ -2,9 +2,6 @@ package com.navtasks.app
 
 import android.app.DatePickerDialog
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import java.io.IOException
 import android.app.AlarmManager
 import android.app.TimePickerDialog
 import android.content.Intent
@@ -1041,54 +1038,6 @@ fun SettingsScreen(
     val lang = settings.language
     val context = LocalContext.current
     var showDigestWheel by remember { mutableStateOf(false) }
-    var transferMessage by remember { mutableStateOf<String?>(null) }
-    var transferError by remember { mutableStateOf(false) }
-    var pendingImport by remember { mutableStateOf<List<TaskTemplate>?>(null) }
-    val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri ->
-        if (uri != null) {
-            runCatching {
-                val stream = context.contentResolver.openOutputStream(uri)
-                    ?: throw IOException("Cannot create file")
-                stream.bufferedWriter(Charsets.UTF_8).use { it.write(NavTaskTransfer.export(store.templates)) }
-            }.onSuccess {
-                transferError = false
-                transferMessage = localized("Задачи экспортированы в файл.", "Tasks exported to file.", lang)
-            }.onFailure {
-                transferError = true
-                transferMessage = it.localizedMessage ?: localized("Ошибка экспорта", "Export failed", lang)
-            }
-        }
-    }
-    val importLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        if (uri != null) {
-            runCatching {
-                val stream = context.contentResolver.openInputStream(uri)
-                    ?: throw IOException("Cannot read file")
-                val raw = stream.bufferedReader(Charsets.UTF_8).use { reader ->
-                    val buffer = CharArray(4096)
-                    val result = StringBuilder()
-                    while (true) {
-                        val read = reader.read(buffer)
-                        if (read == -1) break
-                        if (result.length + read > 2_000_000) throw IOException("File exceeds 2 MB")
-                        result.append(buffer, 0, read)
-                    }
-                    result.toString()
-                }
-                NavTaskTransfer.parse(raw)
-            }.onSuccess { templates ->
-                pendingImport = templates
-                transferMessage = null
-            }.onFailure {
-                transferError = true
-                transferMessage = it.localizedMessage ?: localized("Ошибка импорта", "Import failed", lang)
-            }
-        }
-    }
     fun syncSettings() {
         NavNotifications.reschedule(context, store, settings)
         NavWidgetUpdater.updateAll(context, store)
@@ -1162,70 +1111,18 @@ fun SettingsScreen(
             }
             ProfileExchangePanel(profiles, store, handover, services, workOrders, p, lang)
             if (profiles.active.kind == NavProfileKind.VESSEL) {
-            NavPanel(p) {
-                Text(localized("Обмен только шаблонами", "Task templates only", lang),
-                    color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                Spacer(Modifier.height(3.dp))
-                Text(localized("Можно отправить другу файл с шаблонами задач и вложенными проверками. История выполнения и настройки телефона не передаются.",
-                    "Share task templates and checklists with a friend. Completion history and device settings are not shared.", lang),
-                    color = p.muted, fontSize = 12.sp)
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(9.dp),
-                    modifier = Modifier.fillMaxWidth()) {
-                    Box(Modifier.weight(1f).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
-                        .glassClickable {
-                            exportLauncher.launch("NavTasks_tasks_${LocalDate.now()}.json")
-                        }.padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
-                        Text(localized("Экспорт", "Export", lang), color = p.blue, fontSize = 13.sp)
-                    }
-                    Box(Modifier.weight(1f).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
-                        .glassClickable { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
-                        .padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
-                        Text(localized("Импорт", "Import", lang), color = p.blue, fontSize = 13.sp)
-                    }
-                }
-                Text(localized("Импорт добавляет новые задачи. Существующие задачи и отметки о выполнении не заменяются.",
-                    "Import adds new tasks only. Existing tasks and completion records are never replaced.", lang),
-                    color = p.muted, fontSize = 11.sp)
-                if (transferMessage != null) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(transferMessage.orEmpty(), color = if (transferError) Color(0xFFE48E83) else p.mint,
-                        fontSize = 12.sp)
-                }
-            }
+                SelectiveExchangePanel(
+                    profiles, store, handover, services, workOrders, settings, p, lang,
+                )
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.34 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass 0.4.44 beta", color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
         }
     }
-    pendingImport?.let { imported ->
-        val newCount = NavTaskTransfer.countNew(store.templates, imported)
-        NavGlassAlertDialog(p = p, 
-            onDismissRequest = { pendingImport = null },
-            title = { Text(localized("Импорт задач", "Import tasks", lang)) },
-            text = {
-                Text(localized(
-                    "В файле: ${imported.size}. Новых задач: $newCount. Уже существующих: ${imported.size - newCount}. Добавить новые задачи без изменения истории?",
-                    "In file: ${imported.size}. New tasks: $newCount. Already existing: ${imported.size - newCount}. Add new tasks without changing history?", lang))
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    val added = store.importTemplates(imported)
-                    pendingImport = null
-                    transferError = false
-                    transferMessage = localized("Добавлено задач: $added", "Tasks added: $added", lang)
-                }) { Text(localized("Добавить", "Add", lang)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingImport = null }) {
-                    Text(localized("Отмена", "Cancel", lang))
-                }
-            },
-        )
-    }
+
 }
 
 @Composable
