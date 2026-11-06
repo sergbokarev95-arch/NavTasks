@@ -1,0 +1,80 @@
+name: Publish NavTasks Glass 0.4.43 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.43-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out verified 0.4.43 monthly schedule editor source
+        uses: actions/checkout@v4
+        with:
+          ref: 86a144e43a1aaa48e31abd2315edd4bf68d124a0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore stable beta signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify source and run regression tests
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "86a144e43a1aaa48e31abd2315edd4bf68d124a0"
+          grep -q 'versionName = "0.4.43"' app/build.gradle.kts
+          grep -q 'versionCode = 65' app/build.gradle.kts
+          gradle :app:testDebugUnitTest --no-daemon
+      - name: Build stable-signed debug APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: gradle :app:assembleDebug --no-daemon
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Package compact ZIP directly from build
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p upload
+          cp app/build/outputs/apk/debug/app-debug.apk upload/NavTasks_Glass_0.4.43_Beta.apk
+          sha256sum upload/NavTasks_Glass_0.4.43_Beta.apk
+          cd upload
+          zip -q NavTasks_Glass_0.4.43_Build.zip NavTasks_Glass_0.4.43_Beta.apk
+          unzip -t NavTasks_Glass_0.4.43_Build.zip
+          cd ..
+      - name: Publish 0.4.43 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.43-glass-beta \
+            upload/NavTasks_Glass_0.4.43_Beta.apk \
+            upload/NavTasks_Glass_0.4.43_Build.zip \
+            --repo "${{ github.repository }}" \
+            --target 86a144e43a1aaa48e31abd2315edd4bf68d124a0 \
+            --prerelease \
+            --title "NavTasks Glass 0.4.43 Beta · Clear Monthly Scheduling" \
+            --notes "NavTasks 0.4.43: monthly recurring tasks now offer an explicit Specific day (1-30) versus Last day of month choice. The Last day option reuses the original month-day=31 rule, automatically handling November 30, February 28/29, and long months without changing existing schedules. The ambiguous Start date field for calendar monthly tasks is renamed Schedule active from. The editor previews the next three actual execution dates using the same TaskSchedule.nextCalendarDate engine as production scheduling. For After completion recurrence, the start date is labelled First execution. Existing task frequency rules, stored JSON, completion history, reminders, import/export, AMOS, Services, Today, Handover and glass dock are untouched. VersionCode 65. Verified in branch CI 42181881777 and stable-signed main CI 42182270578, and retested in release job. Device validation remains required."
