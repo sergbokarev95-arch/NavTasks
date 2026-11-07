@@ -3,10 +3,10 @@
 Reviewed 2026-11-07 against GitHub main and successful signed 0.4.51 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current published and CI-verified version: 0.4.51, versionCode 73; v0.4.50 remains the prior published release. Debug variant adds -beta and .glass.
+- Current source under validation: 0.4.52 (versionCode 74); last signed published release is 0.4.51 (versionCode 73), pending 0.4.52 CI/release. Debug variant adds -beta and .glass.
 - Previous stable source: 0.4.46 at 59f6a77 (due-only AMOS/Services and widget visibility); 0.4.47 source update pending CI: actual app icon on notifications, red missed chips, widget layout and navigation.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
-- Current release workflow: .github/workflows/publish-0.4.48-apk.yml; release v0.4.48-glass-beta (APK and ZIP), pinned to 2968dcce377f531b4bc3a57166cb8e0b62d1e1de. Previous v0.4.47 release marked superseded.
+- Previous release workflow: .github/workflows/publish-0.4.51-apk.yml, source 651948cb0c280cd63a418d0054515f4d83102ea9. 0.4.52 publisher will pin the tested new source commit.
 - GitHub Actions Build NavTasks Android APK run 42254823995 completed successfully on 2026-11-06. CI runs unit tests and assembles debug APK. Physical-device validation is not established by CI.
 - Main modules: Today, Plan/calendar, Tasks and recurrence, profiles, import/export, handover, Services, AMOS work orders, Works agenda, notifications and two home widgets. Implementation is Kotlin/Jetpack Compose, with RemoteViews XML widgets.
 - Notification implementation: app/src/main/java/com/navtasks/app/NavNotifications.kt; icon app/src/main/res/drawable/navtasks_notification.xml.
@@ -68,3 +68,10 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.51 release; su
 - Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42354150215 SUCCESS; stable-signed publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42354348234 SUCCESS.
 - Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.51-glass-beta; APK SHA-256 ea58622fad66204e812dfdaea6ed7e8546ed98e672c6764481dd91f35ae8e4c3.
 - HONOR device validation of UI and data flow remains pending.
+
+## 0.4.52 — remove artificial bottom edge in Services and AMOS (source stage, 2026-11-07)
+- User reported (HONOR screenshots) that service cards and AMOS cards have a visible bottom cutoff above the system gesture navigation area; Today draws content to the screen edge.
+- Source audit verified the cause: both ServicesUi.kt and WorkOrdersUi.kt applied navigationBarsPadding() to their entire scrolling Column, unlike the root Today screen.
+- Only change: drop navigationBarsPadding() from the two scrolling Column roots, retaining statusBarsPadding() and hazeSource(). Keep navigationBarsPadding() on both separate floating Add buttons so they remain outside Android's gesture area.
+- Existing LazyColumn contentPadding bottom=106dp ensures last cards can scroll entirely clear of the bottom gesture area; no changes to card geometry, models, dates, notifications, AMOS logic, data, or profile format.
+- Need CI unit tests/compilation and physical HONOR day/night verification; no device result yet.

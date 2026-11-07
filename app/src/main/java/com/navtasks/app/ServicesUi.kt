@@ -83,7 +83,8 @@ fun ServicesScreen(
     fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
 
     Box(Modifier.fillMaxSize()) {
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
+    // Edge-to-edge scroll content, matching Today; keep only the Add FAB inset.
+    Column(Modifier.fillMaxSize().statusBarsPadding()
         .hazeSource(hazeState)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),

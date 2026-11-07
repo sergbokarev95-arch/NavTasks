@@ -35,3 +35,5 @@
 - 2026-11-07 (0.4.51): “Дата заявки AMOS” for an unplanned service is manually selectable, defaulting to the current day for new entries. It is historical/reference metadata, not a due/completion date; must not create reminders, recurrence, scheduled Today/Calendar entries, Soon/Overdue status, or affect actual completion date. Reuse the existing Unplanned lastDate field; old profiles must remain compatible.
 
 - 0.4.51 signed release 2026-11-07, source 651948cb0c280cd63a418d0054515f4d83102ea9: unplanned AMOS request date remains informational; it is not a deadline or the service-completion date. No change to profile JSON schema.
+
+- 2026-11-07 (0.4.52 design): for standalone Services and AMOS pages, the scroll container must be edge-to-edge like Today. No navigationBarsPadding() on the full scrolling Column; the status-bar inset stays. Keep safe navigationBarsPadding() on the bottom-left floating Add control and 106dp internal LazyColumn trailing content padding for accessible card buttons. Do not introduce opaque reserved footer/bottomBar.
