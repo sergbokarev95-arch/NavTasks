@@ -33,3 +33,23 @@ No data/profile schema migration, recurrence rewrite or unrelated screen changes
 - Source commit 41ae92386e1459099a6c1c3c069a987c5de04203; CI 42335111965 SUCCESS.
 - Release workflow commit 5dedee07a6f14d95f4730e52ee5fef62da6f8096; CI 42335349500 SUCCESS; APK/ZIP in v0.4.49-glass-beta.
 - Next: verify on HONOR that empty Missed chip leaves **no gap**, 0→1 slides in red, 1→0 hides automatically, dates scroll normally in both themes, and no unexpected changes to other task flows. Do not claim device validation before the user tests it.
+
+## New field feedback: planned vs unplanned equipment maintenance (2026-11-07)
+
+User is testing 0.4.49 and reports a concrete issue in Services > New service: the form always requires a next maintenance date, but unplanned maintenance should be entered directly with an AMOS requisition/request number.
+
+### Source audit (no application code changed yet)
+
+- `app/src/main/java/com/navtasks/app/ServicesUi.kt` > `ServiceEditorDialog`: only the next-date/interval form is available. The existing request number is entered later in a separate `ServiceRequestDialog` after saving.
+- `ServiceStore.kt`: `ServiceEntry` always has `nextDate`, and the constructor requires it to follow `lastDate`; `requestNumber` already exists, is saved in JSON and archived in `serviceHistory` on completion.
+- `WorkAgenda.kt`, `WorksHubUi.kt`, `NavNotifications.kt`: service dates participate in Today/Calendar, Soon/Overdue, and notification scheduling. Merely hiding nextDate will create bogus deadlines.
+- `ServiceScheduleTest.kt`: regression tests cover intervals, original request numbers, one-off service, and history. Existing services must remain compatible and retain planned recurrence.
+
+### Proposed scoped implementation — awaiting agreement on detailed behavior
+
+1. Add an explicit Planned/Unplanned selector to the existing service editor; older records default to Planned when decoding missing new type field.
+2. **Planned**: preserve all current fields and calculations (Next date, interval presets/custom, advance warning, AMOS request number added later as today).
+3. **Unplanned**: show Equipment, AMOS request number, Comment (and an explicit request creation date if needed). Do **not** require a next-service date or recurrence; show an open request in Services until marked completed. Do not put it in scheduled Today/Calendar or Soon/Overdue based on a fabricated due date.
+4. Preserve history, request number, completion date, deletion/restoration, and profile import/export. Keep the internal JSON backwards compatible; test conversions and unexpected switching between types with existing history.
+5. No direct AMOS API/requisition submission integration exists in the repo: the number is entered/recorded in NavTasks, it does not send a new request to the external AMOS system.
+6. When approved, implement in narrow changes and run tests, signed CI build and HONOR device checks before offering a release. **No code or version bump has been made for this issue.**
