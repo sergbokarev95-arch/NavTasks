@@ -117,3 +117,12 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.56 release; su
 - Reviewed NavGlass.kt + NavTasksUi.kt at f6cb1eb0d9a4a11072f11cc964a4d534416cb9bc versus Telegram Android master 3de37c8cfb039452be7398909461da6288babf15. Audit: docs/development/GLASS_TECH_AUDIT.md.
 - Current Haze 1.7.1 genuinely blurs the background; it does not have Telegram-style AGSL refraction. Multiple tinted fill layers can make the dock appear matte. No NavTasks application source changed, no version bump; latest signed release remains 0.4.56.
 - Proposed Stage 0 device baseline and Stage 1 material opacity/edge review are **not yet approved implementation**; Stage 2 optional API33+ shader would require separately tested, license-safe code.
+
+## 0.4.57 optical dock prototype (2026-11-07; source stage — NOT YET VERIFIED)
+- User explicitly requested an actual glass result rather than merely a semi-transparent container, authorizing an incremental optics prototype after the Telegram/Haze audit. 0.4.56 remains the last published signed baseline until this source passes CI and release.
+- Source changes limited to `NavGlass.kt`, new `NavGlassOptics.kt` (independently authored AGSL), `NavGlassOpticsTest.kt` and version in `app/build.gradle.kts`; no Kotlin/Compose/Haze dependency upgrades.
+- The backdrop is still sourced from **one shared HazeState**; NavGlass splits the dock into an independently drawn Haze background, an optical effect layer, a thin glass face/edge layer, and the original animated selection/foreground. The shader is never applied to icons, click targets, or the active-pill Canvas.
+- API 33+ attempts local signed-distance capsule edge refraction using RenderEffect/RuntimeShader on the **blurred Haze layer only**; API 31-32, invalid layers or known shader-construction failures fall back to Haze without refraction. No content outside the app is sampled.
+- NavGlass's overly opaque stacked navigation/control overlays are reduced and blur softened to let actual content shine through, maintaining the 56dp dock, 4 tabs, 19dp right-side FABs and original critically-damped selection spring. Active capsule uses more translucent materials.
+- No profile/task/service/AMOS/scheduling/notification/widget/storage changes. Unit coverage checks API/size feature gating only, not actual shader visual quality.
+- **Do not call this glass visually verified:** GitHub compilation, signed release and physical HONOR dark/light/scroll/gesture/frame-time validation are all pending at source stage.

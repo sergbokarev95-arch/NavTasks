@@ -61,3 +61,7 @@
 **Do Stage 0, then Stage 1 first.** There is already a working realtime blur stack. Reducing excessive tint/material opacity and strengthening selective edge definition is a smaller and safer candidate than importing or rebuilding Telegram's GPU pipeline. Introduce an optional refractive shader only if these corrections are demonstrably insufficient.
 
 **Implementation status: NONE. This is an analysis-only decision brief.**
+
+## First approved prototype — 0.4.57 (2026-11-07; pending CI/physical verification)
+The user asked to move beyond translucency and achieve actual glass. Rather than importing GPL-2.0 Telegram code or upgrading all existing Haze 1.x usages to Haze 2, we introduced an independently written API33+ capsule-distance AGSL sampler (`NavGlassOptics.kt`). It applies a narrow inward texture-coordinate bend to a separate already-blurred Haze layer. The final face/edge, selected Canvas and all glyphs are drawn afterwards, so UI controls are not distorted. Existing API31/32 Haze fallback remains; construction failures fall back to it.
+A small material adjustment also reduces previously stacked high-opacity tints and shortens blur. Preserve original 56dp layout, critically-damped selection and four-tab navigation. **No runtime appearance or performance claim is warranted until testing on HONOR.**

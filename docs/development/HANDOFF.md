@@ -146,3 +146,10 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 ## Glass rendering research (2026-11-07, no source changes)
 - Read docs/development/GLASS_TECH_AUDIT.md before proposing further Liquid Glass changes. NavTasks baseline 0.4.56 uses Haze 1.7.1 blur + gradient active lens; Telegram Android master 3de37c8cfb039452be7398909461da6288babf15 uses API33+ AGSL refractive shader in an optional graphics pipeline. This was an audit only: no code or app version changed.
 - Recommended first: obtain HONOR day/night screenshots over real scrolling content, then, **only with user approval**, prototype minimal opacity/edge tuning in NavGlass.kt. Do not introduce a full RenderNode/shader port or copy GPL-2.0 Telegram code. Keep all four tabs, active indicator geometry, gestures and data paths intact. Previous 0.4.56 device acceptance remains pending.
+
+## Current 0.4.57 experiment — genuinely refractive dock (2026-11-07)
+- The user wanted dock glass to be *real*, not only a translucent container, following a read-only audit saved in GLASS_TECH_AUDIT.md.
+- Target version 0.4.57/versionCode 79. Code changed only: NavGlass.kt (split Haze material backdrop from glass face and icons; reduce opaque tints, soften blur, translucent pill), new NavGlassOptics.kt (independently authored AGSL API33+ edge refraction of Haze layer), NavGlassOpticsTest.kt (capability fallback), app/build.gradle.kts. No Haze dependency version change and no data or business logic changes.
+- The shader is applied only to the background Box, not the Row/Canvas/icons; graphicsLayer renderEffect on the independent Haze Box. Fallback for API 31/32 or creation exception is Haze. Older signed release 0.4.56 remains the verified baseline until CI+release.
+- Need check full main CI, stable Beta signing and GitHub release before offering APK, update docs with source SHA/run IDs/hash. Then HONOR dark/light screenshots over moving content, fast tab switching, frame pacing and no flicker. CI does not constitute visual QA.
+- On any crash, severe lag or rendering glitch, revert NavGlass optics only. Do not roll back unrelated Services, AMOS, Handover, task and profile data.

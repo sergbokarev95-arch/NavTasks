@@ -36,3 +36,11 @@
 - Stage 1 proposal: A/B tune Haze + navGlass opacity/tints/edge in NavGlass.kt, keeping dock size, Haze source, spring geometry, accessibility and gesture logic unchanged. **Await approval before coding.**
 - Stage 2 only if needed: independent API33+ refractive shader prototype with Haze fallback and performance testing, without copying GPL-2.0 code. Explicit separate approval required.
 - Existing 0.4.56 Handover/right-side Add HONOR acceptance remains pending and unaffected.
+
+## Current experiment — 0.4.57 actual dock refraction (2026-11-07)
+- User reported the 0.4.56 dock still looked like a translucent container, not glass. An incremental **refraction prototype** was implemented in a new independent AGSL shader, rather than copying Telegram GPL-2.0 code or migrating the entire app to Haze 2.
+- Validate Kotlin compilation and all unit tests (including the new API33+/API31-32 fallback guard), then build stable-beta-signed 0.4.57 (versionCode 79) from immutable tested source and record CI, APK SHA-256 and release link.
+- **HONOR visual acceptance mandatory:** test (a) Day over bright cards, (b) Night over content with distinct boundaries, (c) empty black Today (should not be claimed as refraction proof), (d) scrolling behind dock, (e) fast tab taps + swipes, (f) active pill symmetry and readability, (g) no white/blue startup flash, stale blur, flicker or shader crash.
+- Performance criteria: compare old 0.4.56 to 0.4.57 on hardware, 60/120Hz frame pacing and touch response. If regression, prefer small shader-strength/material adjustments or revert only NavGlass changes, never app data.
+- Compatibility: Android 12/12L uses existing Haze; Android 13+ uses optics only if RenderEffect initialization succeeds. Ensure the fallback material still looks acceptable.
+- Original navigation behavior, tab positions, source capture, controls and all Handover/Services/AMOS improvements must remain intact.
