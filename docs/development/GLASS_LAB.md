@@ -76,3 +76,11 @@ Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still p
 - Signed APK SHA-256: `fdeb481c91252db2c1e39f7ed02acba4541b2488f3a94bcc6d640b4f64a785c9` from CI log.
 - Physical HONOR test still pending for new moving-and-grey lens; previous 0.1.1 optics received positive screenshot feedback. Check day/night, four tab icons/contrast, 0→3 and 3→0 rapid taps, dynamic stretch, settling into matte grey, border refraction and shimmering on scroll.
 - Source backup before UI changes: `backup/glasslab-0.1.1-before-nav-animation`. Production `main` still NavTasks 0.4.59; no app code migration yet. Preserve staged acceptance before integration.
+ 
+## Glass Lab 0.1.3 — larger travelling selection (2026-11-08)
+- User provided visual reference of a lens that expands to roughly 1.3–1.45× its resting tab width, and authorized the specific first experiment of 28dp horizontal expansion.
+- One optical-motion parameter only: `GlassLabDockTabs.maxStretchDp` 10f → 28f. Existing critically damped positional/material/stretch springs, first/last-tab position clamp, 56dp bar, 52dp baseline selection, icon strokes/colors, and approved 0.1.1 refraction are unchanged.
+- Guard unit test now asserts exact 28dp and an upper bound of 32dp; this is a parameter regression test, **not** proof of good phone animation or absence of clipping.
+- Standalone package `com.navtasks.glasslab`, lab versionCode 4 / versionName 0.1.3; signed prerelease should be published only after a passing lab-only CI. Stable main NavTasks 0.4.59 remains untouched.
+- Backup before change: `backup/glasslab-0.1.2-before-28dp-stretch`; previous 0.1.2 prerelease retained.
+- HONOR test: swipe/tap 0→3 and 3→0 repeatedly while looking at first/last endpoints; ensure the widened lens does not overlap outside dock, settle grey behavior is still legible, labels/icons stay crisp, and moving card edges do not shimmer.

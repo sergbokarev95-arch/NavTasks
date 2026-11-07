@@ -4,7 +4,7 @@ package com.navtasks.glasslab
 internal data class GlassLabDockTab(val glyph: String, val label: String)
 
 internal object GlassLabDockTabs {
-    const val maxStretchDp = 10f
+    const val maxStretchDp = 28f
     val items = listOf(
         GlassLabDockTab("today", "Сегодня"),
         GlassLabDockTab("work", "Работы"),

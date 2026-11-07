@@ -16,6 +16,9 @@ class GlassLabDockTabsTest {
     @Test
     fun springStretchStaysWithinDockCapsule() {
         assertEquals(4, GlassLabDockTabs.items.size)
-        assertTrue(GlassLabDockTabs.maxStretchDp in 0f..10f)
+        assertEquals(28f, GlassLabDockTabs.maxStretchDp, 0f)
+        // The animation width is intentionally pronounced (~one third of a tab)
+        // while lensX still clamps the capsule inside both dock ends.
+        assertTrue(GlassLabDockTabs.maxStretchDp in 0f..32f)
     }
 }
