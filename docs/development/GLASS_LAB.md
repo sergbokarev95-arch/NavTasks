@@ -101,3 +101,12 @@ Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still p
 - Keep the same spring stiffness (travel 550, material 700, grow 600), the horizontal first/last tab clamp, snap-back to matte neutral grey, real backdrop refraction, glyphs/colors, theme and OFF mode unchanged.
 - Regression tests assert equal-axis scale and actual vertical overflow. CI and HONOR physical motion/clip acceptance are still necessary.
 - Isolated experiment only: `experiments/liquid-glass-backdrop`, package `com.navtasks.glasslab`, versionName 0.1.4/versionCode 5; retain `backup/glasslab-0.1.3-before-proportional-scale`. Production NavTasks 0.4.59 unchanged. Do not merge into main before user acceptance.
+
+
+### 0.1.4 verified separate APK — physical HONOR acceptance pending
+- Immutable tested source: `0ca6d8874a6c6febe86cb874b81ba0b846e087fe` (proportional scale commit `11d9a6db9bb735b2f860271f4ac98b2bb5c8b8e4` plus required `wrapContentSize` import).
+- GitHub Actions run https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42392699540 SUCCESS; `:glasslab:testDebugUnitTest` and `:glasslab:assembleDebug` passed.
+- Signed prerelease https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.4
+- APK https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasslab-v0.1.4/NavTasks_LiquidGlass_Lab_0.1.4.apk ; SHA-256 `7a1f9d7a372bc3d1985d7484983c830b883a63dd5b810ff8c40fd31b1e2856f0` from GitHub Actions logs.
+- First CI attempt 42392603493 failed solely from missing `wrapContentSize` import; corrected in tested source before publishing. No production code, models or profiles changed.
+- Confirm on real HONOR that larger glass body actually protrudes both above and below 56dp outer dock on fast 0↔3 taps, returns to original 52dp height and matte grey, keeps icon size steady, avoids shimmer, preserves light/dark refraction. CI validates compilation and pure geometry, not runtime clipping.
