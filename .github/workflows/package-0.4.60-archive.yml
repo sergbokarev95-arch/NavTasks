@@ -1,0 +1,53 @@
+name: Pack signed 0.4.60 ExactLab update as small ZIP
+
+on:
+  push:
+    branches:
+      - feature/navtasks-liquid-glass-0.4.60-candidate
+    paths:
+      - '.github/workflows/package-0.4.60-archive.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the EXISTING signed 0.4.60 candidate APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download v0.4.60-exactlab-candidate --repo "$GITHUB_REPOSITORY" \
+            --pattern 'NavTasks_Glass_0.4.60_ExactLab_Beta.apk' --dir .
+          test -s NavTasks_Glass_0.4.60_ExactLab_Beta.apk
+          echo 'f360f897619c71df90eacdf52ad22db426ad17d404fabb02c270a193bd35004a  NavTasks_Glass_0.4.60_ExactLab_Beta.apk' | sha256sum -c -
+      - name: Compress into a compatible ZIP (no APK rebuild, no signature changes)
+        run: |
+          set -euo pipefail
+          command -v zip || (sudo apt-get update -qq && sudo apt-get install -y zip unzip)
+          zip -9 -X NavTasks_0.4.60_ExactLab_Update.zip NavTasks_Glass_0.4.60_ExactLab_Beta.apk
+          unzip -t NavTasks_0.4.60_ExactLab_Update.zip
+          unzip -p NavTasks_0.4.60_ExactLab_Update.zip NavTasks_Glass_0.4.60_ExactLab_Beta.apk | \
+            sha256sum | grep -Fq f360f897619c71df90eacdf52ad22db426ad17d404fabb02c270a193bd35004a
+          echo "Original APK bytes: $(stat -c %s NavTasks_Glass_0.4.60_ExactLab_Beta.apk)"
+          echo "Archive ZIP bytes: $(stat -c %s NavTasks_0.4.60_ExactLab_Update.zip)"
+          sha256sum NavTasks_0.4.60_ExactLab_Update.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NavTasks-0.4.60-ExactLab-Compact-Update
+          path: NavTasks_0.4.60_ExactLab_Update.zip
+          retention-days: 60
+          if-no-files-found: error
+      - name: Attach ZIP alongside APK in existing candidate release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release upload v0.4.60-exactlab-candidate \
+            NavTasks_0.4.60_ExactLab_Update.zip \
+            --repo "$GITHUB_REPOSITORY" --clobber
