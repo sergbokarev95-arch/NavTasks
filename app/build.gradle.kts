@@ -15,8 +15,8 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 81
-        versionName = "0.4.59"
+        versionCode = 83
+        versionName = "0.4.60"
     }
 
     signingConfigs {
@@ -68,6 +68,9 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     // Portable true backdrop blur for our floating navigation (HONOR, Samsung, etc.).
     implementation("dev.chrisbanes.haze:haze:1.7.1")
+    // Direct-scene Backdrop 1.0.6 accepted in Glass Lab 0.1.5.
+    implementation("io.github.kyant0:backdrop:1.0.6")
+    implementation("io.github.kyant0:shapes:1.2.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
 }

@@ -1,0 +1,10 @@
+# NavTasks 0.4.60 Liquid Glass — exact lab material in-place candidate
+
+- Goal: user rejected full-app Preview R1/R2 after optical appearance diverged from approved Glass Lab 0.1.5. **Do not further tune material.**
+- User-approved optical source: Glass Lab 0.1.5 commit `ea412201936a8a178c657b77bda7a3347b878f06`, class `GlassLabDock` in `glasslab/src/main/java/com/navtasks/glasslab/GlassLabActivity.kt`; lens parameter source `GlassLabOptics.kt`.
+- Transplant optical function directly into `NavLiquidGlassBottomBar`, changing only production component inputs (palette, labels/icons, callback); same Backdrop 1.0.6, bar blur 2dp / lens blur 1.5dp, bar lens height/amount 12/36dp, active lens 10/18dp, 56dp dock, 1.30x proportional movement, layer siblings, grey resting lens, glow/sheens.
+- Exact lab outer location is `Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(horizontal=15.dp, vertical=8.dp)`. Content is captured into an independent `rememberLayerBackdrop` source. Stable Haze controls/fallback retained.
+- IMPORTANT: Lab demo cards use multi-colored gradients and high contrast borders. NavTasks has different content/colors/typography; **pixel-identical screenshots are not guaranteed** even with byte-identical optics. Do not fake parity by recoloring users' cards or modifying their task/AMOS logic.
+- Same installed beta app ID `com.navtasks.app.glass`, same `betaStable` signing as v0.4.59; bump versionCode 81→83/versionName 0.4.60-beta to support in-place upgrade. DO NOT uninstall existing app. Export the profile/full backup first.
+- Stable baseline remains in `backup/navtasks-0.4.59-before-liquid-glass`, stable release v0.4.59-glass-beta. Branch `feature/navtasks-liquid-glass-0.4.60-candidate` is isolated and must be tested on HONOR before any merge to main.
+- First real-device test: contrast of text/card borders at different scroll positions, Day/Night, rapid 0↔3 taps, full lens overhang beyond outer 56dp bar, no ghosting/shimmer/jank, legacy screens/missed lists and notification deep links.

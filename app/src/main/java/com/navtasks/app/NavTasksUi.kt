@@ -1,6 +1,7 @@
 package com.navtasks.app
 
 import android.app.DatePickerDialog
+import com.kyant.backdrop.backdrops.layerBackdrop
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
@@ -408,7 +409,17 @@ fun NavTasksApp(
                     })
             } else {
                 val hazeState = remember { dev.chrisbanes.haze.HazeState() }
+                // As in the approved Lab: record the original page, not Haze's
+                // output, and keep the dock outside the captured layer.
+                val glassBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+                    com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
                 Box(Modifier.fillMaxSize()) {
+                    Box(
+                        Modifier.fillMaxSize().then(
+                            if (glassBackdrop != null)
+                                Modifier.layerBackdrop(glassBackdrop) else Modifier
+                        )
+                    ) {
                     // Content paints to the bottom edge. Navigation is an overlay,
                     // NOT a Scaffold bottomBar which would reserve an opaque footer.
                     Column(Modifier.fillMaxSize().statusBarsPadding().hazeSource(hazeState)
@@ -515,6 +526,7 @@ fun NavTasksApp(
                             }
                         }
                     }
+                    } // End original page capture before any floating glass.
                     if (tab == 0) {
                         Box(
                             Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
@@ -536,12 +548,25 @@ fun NavTasksApp(
                             }
                         }
                     }
-                    NavGlassBottomBar(
-                        p = palette, selected = tab, lang = lang,
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        hazeState = hazeState,
-                        onSelect = ::openPrimaryTab,
-                    )
+                    if (glassBackdrop != null) {
+                        NavLiquidGlassBottomBar(
+                            p = palette, selected = tab, lang = lang,
+                            backdrop = glassBackdrop,
+                            // EXACT Lab 0.1.5 positioning, including 8dp on both axes.
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                                .navigationBarsPadding()
+                                .padding(horizontal = 15.dp, vertical = 8.dp),
+                            onSelect = ::openPrimaryTab,
+                        )
+                    } else {
+                        // Android API 31/32 keeps the original, fully tested dock.
+                        NavGlassBottomBar(
+                            p = palette, selected = tab, lang = lang,
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                            hazeState = hazeState,
+                            onSelect = ::openPrimaryTab,
+                        )
+                    }
                 }
 
             }
