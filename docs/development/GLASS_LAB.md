@@ -23,7 +23,18 @@ There is intentionally no direct Telegram GPL implementation copied or ported. T
 - CI 42385333484 could not install platforms;android-37 (SDK Manager did not list that package). Rather than upgrading production build tools or relying on unavailable preview SDK, pinned the same Apache-2.0 Backdrop engine to version 1.0.6, whose archived Gradle module compiles against Android 36 and supports the same LayerBackdrop/drawBackdrop/lens APIs. Removed an unnecessary Compose drawRect import. Only the standalone module/workflow changed; main NavTasks 0.4.59 remains untouched.
 
 ## Current status
-First lab source, pending CI and physical HONOR validation. Do NOT claim this achieves the final material until device testing.
+Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still pending. Do NOT claim the final material is achieved until device testing.
+
+## Verified 0.1.0 standalone release (2026-11-08)
+- Version 0.1.0 / versionCode 1; applicationId com.navtasks.glasslab (different package from NavTasks).
+- Tested source commit 512cb355d0e1a37cba22eb79e5ada7cc32294eab; branch experiments/liquid-glass-backdrop.
+- CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42385989762 — SUCCESS, Gradle :glasslab:testDebugUnitTest and :glasslab:assembleDebug, separate stable Beta signing.
+- Prerelease https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.0; APK https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasslab-v0.1.0/NavTasks_LiquidGlass_Lab_0.1.0.apk.
+- APK sha256:caeb1cbc7189e1aca707416f3f3660696dce1438fd546811099e8e7fcb24063c.
+- Dependency: Apache-2.0 Backdrop 1.0.6 + shapes 1.2.0; Android compileSdk 36. Avoid Backdrop 2.0.0 in this repo until a stable API37 SDK & suitable AGP are available.
+- The library samples the recorded scrollable content layer, not the existing NavTasks Haze layer. Refractive lens appears behind the active selection and outer bar. UI in dark/light theme with effect on/off is available for direct A/B comparison.
+- No real-device inspection, frame-time measurements, or user visual acceptance yet. CI only proves compilability and packaging.
+
 
 ## Build attempt 1
 - Initial CI 42385094225 failed on AAR metadata: Backdrop 2.0.0 requires compileSdk 37, whereas the new lab was set to 36. The correction changes only the lab compileSdk and workflow Android SDK install to 37; production :app stays compileSdk 36. Gradle plugin 8.13.2 may warn about untested SDK 37; await CI before accepting.
