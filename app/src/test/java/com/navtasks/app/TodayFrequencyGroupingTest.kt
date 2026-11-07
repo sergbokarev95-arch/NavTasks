@@ -38,6 +38,17 @@ class TodayFrequencyGroupingTest {
         assertTrue(groupTodayByFrequency(emptyList()).isEmpty())
     }
 
+    @Test fun missedChipIsCompletelyAbsentWhenBacklogIsEmpty() {
+        assertEquals(false, todayMissedChipVisible(0))
+        assertEquals(false, todayMissedChipVisible(-1))
+    }
+
+    @Test fun missedChipAppearsAtAnyPositiveBacklogCount() {
+        assertTrue(todayMissedChipVisible(1))
+        assertTrue(todayMissedChipVisible(2))
+        assertTrue(todayMissedChipVisible(100))
+    }
+
     @Test fun completedAndPendingTasksUseTheSameFrequencyPartition() {
         val weekly = row("Weekly", Frequency.WEEKLY)
         val daily = row("Daily", Frequency.DAILY)

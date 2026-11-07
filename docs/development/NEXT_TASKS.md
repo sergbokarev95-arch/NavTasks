@@ -1,6 +1,6 @@
 # NavTasks — Next Tasks
 
-## Current stage — 0.4.48 published; phone verification pending
+## Current stage — 0.4.49 Today chip change; source validation pending
 
 User approved the design on 2026-11-07.
 
@@ -21,3 +21,10 @@ No data/profile schema migration, recurrence rewrite or unrelated screen changes
 - Today missed chip: zero is neutral; count > 0 has restrained red treatment in both light/dark themes.
 - Widgets: compact and wide responsive size, accurate date/progress/remaining tasks; red missed badge appears only at positive count and opens Missed; simple completion works, checklist tap opens app.
 - AMOS work scheduled for 13 Nov is not shown as a Today card before 13 Nov, while early notification still works.
+
+## 0.4.49 approved change (2026-11-07)
+- On Today, hide the entire Missed chip and its 7dp gap when backlog=0, so the date strip fills the available horizontal space.
+- At >0, animate a subtle red Missed chip + red count back into the row; tapping opens Missed backlog as before.
+- If the user finishes the last missed task while viewing the Missed backlog, return to the ordinary selected-day view automatically.
+- Add unit regression checks for 0, negative (defensive) and positive counts; run all CI tests, build signed APK, and verify on HONOR.
+- The home widgets already hide their missed pill at 0; do not modify them for this task.

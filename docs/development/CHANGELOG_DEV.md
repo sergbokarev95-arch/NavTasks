@@ -19,3 +19,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-07 — 0.4.48 widget initialization follow-up: initial XML hides Missed pill and uses neutral Today placeholder; live RemoteViews update alone supplies real localized date and overdue count. No data changes.
 
 - 2026-11-07 — 0.4.48 confirmed: source 2968dcce377f531b4bc3a57166cb8e0b62d1e1de; publication workflow 0b77bce58613dbf828b17b8e6dc5ae1a081ecb34. Main CI 42332014351 SUCCESS; release CI 42332255873 SUCCESS. Published https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.48-glass-beta. APK SHA-256 55f1b97fb7c31fefc990ef3904efb4bf617aaf06eecc0538275e914728b52c04. 0.4.47 release title updated to Superseded, do not install. No hardware validation yet.
+
+- 2026-11-07 — 0.4.49 source stage (CI/release pending): fully hide Today Missed chip and spacing at zero, let 7-day selector expand; animate entry/exit, reset empty Missed mode, and add regressions. Code initially based on main 76246c05ced3b1bdbebb96e0375305b283e1db5c. Final commit and checks to record after validation.

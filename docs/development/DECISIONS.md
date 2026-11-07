@@ -19,3 +19,5 @@
 - Widgets are Android RemoteViews. Use only its supported layout/view classes; do not put android.widget.Space or arbitrary Compose/custom views inside widget XML. Use layout padding or margins for gaps. Include a CI guard for known forbidden classes.
 
 - 2026-11-07: version 0.4.48 is the first deliverable of this notification/widget update; v0.4.47 was automatically published then superseded due to unsupported widget XML. Do not recommend v0.4.47.
+
+- 2026-11-07 user-approved clarification: Today Missed is completely absent (including its reserved horizontal gap) when backlog count is zero; the dates occupy that space. When count becomes positive, show restrained red glass with animated horizontal appearance; do not change data, overdue semantics, or the widget's existing zero-count behavior.

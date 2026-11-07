@@ -13,9 +13,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
@@ -619,6 +621,10 @@ private fun TodayScreenV2(
     val incomplete = rows.filterNot { it.second.completed }
     val complete = rows.filter { it.second.completed }
     val missed = store.missed(now)
+    // Exiting the last missed task must not leave the screen in an empty backlog mode.
+    LaunchedEffect(showMissed, missed.size) {
+        if (showMissed && !todayMissedChipVisible(missed.size)) showMissed = false
+    }
     val browsingOtherDay = !showMissed && selectedDay != currentDay
     val extraDue = groupTodayByFrequency(rows).filter { it.first != Frequency.DAILY }
     val dayWorkOrders = workOrders.entries
@@ -654,7 +660,7 @@ private fun TodayScreenV2(
             )
         }
         Spacer(Modifier.height(12.dp))
-        // The missed chip is pinned, and only the week scrolls inside card margins.
+        // Dates use all available width whenever there is no missed backlog.
         val daysScroll = rememberLazyListState()
         LaunchedEffect(selectedDay, currentDay) {
             val index = java.time.temporal.ChronoUnit.DAYS.between(currentDay, selectedDay).toInt()
@@ -666,22 +672,22 @@ private fun TodayScreenV2(
                 .height(62.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (missed.isNotEmpty()) {
-                MissedCountChip(missed.size, showMissed, p, lang,
-                    modifier = Modifier.width(105.dp).fillMaxHeight()) {
-                    showMissed = true
-                    onExpanded(null)
-                }
-            } else {
-                DayChip(
-                    localized("Пропущенные", "Missed", lang), "0", showMissed,
-                    p.muted, p, modifier = Modifier.width(105.dp).fillMaxHeight(),
-                ) {
-                    showMissed = true
-                    onExpanded(null)
+            AnimatedVisibility(
+                visible = todayMissedChipVisible(missed.size),
+                enter = fadeIn(tween(180)) + expandHorizontally(
+                    expandFrom = Alignment.Start, animationSpec = tween(180)),
+                exit = fadeOut(tween(160)) + shrinkHorizontally(
+                    shrinkTowards = Alignment.Start, animationSpec = tween(180)),
+            ) {
+                Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+                    MissedCountChip(missed.size, showMissed, p, lang,
+                        modifier = Modifier.width(105.dp).fillMaxHeight()) {
+                        showMissed = true
+                        onExpanded(null)
+                    }
+                    Spacer(Modifier.width(7.dp))
                 }
             }
-            Spacer(Modifier.width(7.dp))
             LazyRow(
                 state = daysScroll,
                 modifier = Modifier.weight(1f).fillMaxHeight()
@@ -961,7 +967,10 @@ private fun DayChip(
     }
 }
 
-/** Red missed-count control while backlog > 0; zero retains the neutral glass. */
+/** A zero backlog occupies no space in the Today date selector. */
+internal fun todayMissedChipVisible(missedCount: Int): Boolean = missedCount > 0
+
+/** Red missed-count control only while backlog > 0. */
 @Composable
 private fun MissedCountChip(
     count: Int, selected: Boolean, p: NavPalette, lang: UiLanguage,
