@@ -52,6 +52,14 @@ import java.util.Locale
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
+/** Weekend styling in the month grid is not a task status. */
+internal fun calendarIsWeekend(date: LocalDate): Boolean =
+    date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
+
+/** Preserve existing status-dot meaning independently of its layout position. */
+internal fun calendarHasOutcomeDot(state: CalendarDayState, hasWork: Boolean): Boolean =
+    hasWork || (state != CalendarDayState.EMPTY && state != CalendarDayState.SCHEDULED)
+
 /** The same swipe gesture changes the visible unit at the current calendar zoom. */
 internal data class CalendarSwipePosition(val year: Int, val month: Int, val day: LocalDate)
 
@@ -177,6 +185,7 @@ fun PlanScreenV2(
                     }
                 }
                 1 -> Column {
+                    val weekendInk = if (p.dark) Color(0xFFE5A4A0) else Color(0xFFB36563)
                     Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                         NavGlassIconAction(
                             "chevron-left", p.blue, localized("Предыдущий месяц", "Previous month", lang),
@@ -191,10 +200,14 @@ fun PlanScreenV2(
                             if (month == 12) { month = 1; year++ } else month++
                         }
                     }
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
                         (1..7).forEach { dow ->
                             Text(DayOfWeek.of(dow).getDisplayName(TextStyle.SHORT, locale),
-                                color = p.muted, fontSize = 11.sp, textAlign = TextAlign.Center,
+                                color = if (dow >= 6) weekendInk else p.muted,
+                                fontSize = 11.sp, textAlign = TextAlign.Center,
                                 modifier = Modifier.weight(1f).padding(vertical = 7.dp))
                         }
                     }
@@ -214,40 +227,52 @@ fun PlanScreenV2(
                                     CalendarDayState.EMPTY -> p.border
                                 }
                                 val shape = RoundedCornerShape(10.dp)
+                                // Quiet filled cells; no neon-blue outlines.
                                 val cellColor = when {
-                                    isToday -> p.blue.copy(alpha = if (p.dark) 0.88f else 0.25f)
-                                    status == CalendarDayState.COMPLETE -> p.mint.copy(alpha = if (p.dark) 0.13f else 0.09f)
-                                    status == CalendarDayState.PARTIAL -> statusColor.copy(alpha = 0.11f)
-                                    status == CalendarDayState.INCOMPLETE -> statusColor.copy(alpha = 0.08f)
-                                    else -> if (p.dark) Color.White.copy(alpha = 0.035f) else Color.White.copy(alpha = 0.10f)
+                                    isToday -> p.blue.copy(alpha = if (p.dark) 0.24f else 0.14f)
+                                    !inMonth -> if (p.dark) Color.White.copy(alpha = 0.018f)
+                                        else p.blue.copy(alpha = 0.018f)
+                                    status == CalendarDayState.COMPLETE ->
+                                        p.mint.copy(alpha = if (p.dark) 0.13f else 0.09f)
+                                    status == CalendarDayState.PARTIAL ->
+                                        statusColor.copy(alpha = if (p.dark) 0.12f else 0.09f)
+                                    status == CalendarDayState.INCOMPLETE ->
+                                        statusColor.copy(alpha = if (p.dark) 0.10f else 0.07f)
+                                    else -> if (p.dark) Color.White.copy(alpha = 0.075f)
+                                        else p.blue.copy(alpha = 0.055f)
                                 }
-                                val edge = when {
-                                    isToday -> p.blue
-                                    !inMonth -> p.border.copy(alpha = 0.20f)
-                                    status == CalendarDayState.EMPTY && !hasWork ->
-                                        p.border.copy(alpha = 0.48f)
-                                    else -> statusColor.copy(alpha = 0.85f)
-                                }
-                                Column(
+                                Box(
                                     Modifier.weight(1f).height(54.dp)
                                         .clip(shape).background(cellColor, shape)
-                                        .border(if (isToday) 2.dp else 1.dp, edge, shape)
-                                        .glassClickable { selectedDay = date; year = date.year; month = date.monthValue; level = 2 },
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center,
+                                        .glassClickable {
+                                            selectedDay = date
+                                            year = date.year
+                                            month = date.monthValue
+                                            level = 2
+                                        },
                                 ) {
-                                    Text("${date.dayOfMonth}", color = when {
-                                        isToday -> if (p.dark) Color(0xFF092C43) else p.text
-                                        !inMonth -> p.muted.copy(alpha = 0.52f)
-                                        else -> p.text
-                                    }, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal, fontSize = 14.sp)
-                                    // Calendar markers show outcomes only, not ordinary scheduled days.
-                                    // This removes distracting blue dots without changing day status logic.
-                                    if (hasWork ||
-                                        (status != CalendarDayState.EMPTY &&
-                                            status != CalendarDayState.SCHEDULED)) {
-                                        Box(Modifier.padding(top = 4.dp).size(5.dp)
-                                            .background(statusColor.copy(alpha = if (inMonth) 1f else 0.45f), CircleShape))
+                                    // Number stays at the exact center with or without a dot.
+                                    Text(
+                                        "${date.dayOfMonth}",
+                                        modifier = Modifier.align(Alignment.Center),
+                                        color = when {
+                                            !inMonth -> p.muted.copy(alpha = 0.46f)
+                                            calendarIsWeekend(date) -> weekendInk
+                                            isToday -> p.blue
+                                            else -> p.text
+                                        },
+                                        fontWeight = if (isToday) FontWeight.Medium else FontWeight.Normal,
+                                        fontSize = 16.sp,
+                                    )
+                                    if (calendarHasOutcomeDot(status, hasWork)) {
+                                        Box(
+                                            Modifier.align(Alignment.BottomCenter)
+                                                .padding(bottom = 6.dp).size(5.dp)
+                                                .background(
+                                                    statusColor.copy(alpha = if (inMonth) 1f else 0.35f),
+                                                    CircleShape,
+                                                ),
+                                        )
                                     }
                                 }
                             }

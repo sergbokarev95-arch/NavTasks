@@ -1,6 +1,6 @@
 # NavTasks — Next Tasks
 
-## Current stage: 0.4.52 released and CI-verified; HONOR visual acceptance pending
+## Current stage: 0.4.53 monthly-calendar visual update; CI and release pending
 
 User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above system navigation in Services and AMOS, unlike Today. User explicitly requested removal.
 
@@ -27,3 +27,11 @@ User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above syst
 - Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42356909189 SUCCESS; release CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42357102513 SUCCESS.
 - Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.52-glass-beta; APK SHA-256 e05d0691f0d0320c288e6b466507adc160cad2c13fd83422656daf9726eea3fb. Hardware HONOR display and interaction acceptance NOT yet confirmed.
 - Follow up after screenshots: look for bottom-edge transition, last-card tappability, floating Add, dark/day mode and edge Back gesture before closing this stage.
+
+## Current user feedback — monthly Plan calendar (2026-11-07)
+- In night-mode calendar, cyan outlines on every day are too harsh; use soft filled tiles without bright outlines, preserving a distinct but subtle Today.
+- Saturdays/Sundays need visual separation: muted coral weekday labels and in-month date numerals, not aggressive red background; avoid confusing this with missed-task status.
+- Numerals should be a little larger (14sp→16sp) and always stay dead-center whether a bottom status dot is shown or not.
+- Keep status dots, their existing color meanings, month navigation, swipe, year/day zoom, and task-business logic unchanged.
+- Implemented in PlanAndTasksUi.kt; CalendarVisualRulesTest.kt added to assert weekend and dot semantics. Version 0.4.53 / versionCode 75.
+- Next: CI test+build, stable-signed GitHub APK/ZIP from immutable source, update all docs with actual commit/runs/assets, then receive HONOR screenshots in both themes.

@@ -3,7 +3,7 @@
 Reviewed 2026-11-07 against GitHub main and successful signed 0.4.52 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current published and CI-verified release: 0.4.52 (versionCode 74); previous signed version 0.4.51 (versionCode 73). Debug variant adds -beta and .glass.
+- Current source stage 0.4.53 (versionCode 75), awaiting CI and signed release. Last published and CI-verified release remains 0.4.52 (versionCode 74). Debug variant adds -beta and .glass.
 - Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date. Current 0.4.52 adjusts only edge-to-edge drawing.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Current release workflow .github/workflows/publish-0.4.52-apk.yml, pinned to d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d. Previous workflow .github/workflows/publish-0.4.51-apk.yml remains for historical release.
@@ -78,3 +78,10 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.52 release; su
 - Immutable source commit d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d; publisher workflow commit f448c0f5225c6415d3cf414b1edcf2dff2a3bd8f.
 - Published https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.52-glass-beta; APK SHA-256 e05d0691f0d0320c288e6b466507adc160cad2c13fd83422656daf9726eea3fb.
 - Physical HONOR day/night and gesture navigation verification remains outstanding.
+
+## 0.4.53 — calm monthly calendar cells (source stage, 2026-11-07)
+- User tested 0.4.52 on HONOR and reported highly saturated blue outlines around all dates in the monthly Plan calendar, uneven day-number positions when a dot is present, small numerals, and no distinction between weekends and weekdays.
+- Planned targeted implementation in PlanAndTasksUi.kt, month zoom only: remove all blue calendar-cell borders; use subtle neutral/day-status fills and a restrained blue-tinted Today fill. Weekend header labels and in-month Saturday/Sunday numerals use muted coral (dark/light variants), with no change to semantic missed/completed dot colors.
+- Calendar month day numerals increased 14sp → 16sp, now centered in a 54dp Box regardless of dot; marker anchored to bottom center with 6dp padding. Dot conditions unchanged. Outside-month dates remain dimmed.
+- Added pure unit tests for weekend detection and status-dot inclusion. No changes to navigation, task scheduling, completion, AMOS, service data, profiles, widgets, or persisted calendar state.
+- CI/signed APK and HONOR visual acceptance pending. Prior release 0.4.52 remains available.
