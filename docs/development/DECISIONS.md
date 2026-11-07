@@ -80,3 +80,6 @@
 
 
 - 2026-11-08: The selected lens must **scale uniformly in X and Y**, not stretch only in width. On transition, a 1.30x experiment raises the 52dp selection to 67.6dp, visibly outside the 56dp outer bar, while the dock itself stays the same. Resting lens returns to 52dp and neutral grey. Keep the 0.1.1 direct Backdrop refraction, original icons/blue palette, springs, horizontal clamps, and unmoving icon sizes. Lab 0.1.4 CI 42392699540 SUCCESS; HONOR approval still pending. Stable main 0.4.59 is untouched.
+
+
+- 2026-11-08: A uniformly scaled selection must not be nested under a backdrop parent that clips its children. Lab 0.1.5 renders backing, 1.30× lens and four-tab foreground as siblings, preserves actual refraction, and protects layout architecture in CI. First/last clipping and smoothness still require HONOR test. Do not change stable 0.4.59 app before acceptance.

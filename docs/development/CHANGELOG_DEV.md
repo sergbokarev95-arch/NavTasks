@@ -76,3 +76,6 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 
 - 2026-11-08 — standalone Glass Lab 0.1.4 (not product release): corrected 0.1.3 horizontal-only expansion to proportional 1.30x X/Y 52→67.6dp selection lens; unbounded composition allows top/bottom extension outside 56dp dock; icon sizing and optics untouched. CI 42392699540 SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.4, tested source 0ca6d8874a6c6febe86cb874b81ba0b846e087fe, APK SHA-256 7a1f9d7a372bc3d1985d7484983c830b883a63dd5b810ff8c40fd31b1e2856f0. Physical HONOR acceptance pending; NavTasks main app 0.4.59 unchanged.
+
+
+- 2026-11-08 — standalone Glass Lab 0.1.5: fix cropped lens by making optical backing a sibling to the moving selection, rather than the parent modifier. Preserve 1.30× scale, 56dp dock and visual colors. Source ea412201936a8a178c657b77bda7a3347b878f06, CI 42393384091 SUCCESS, signed release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.5, APK SHA-256 c2e2d34e48578d189dd31238a1e04aa38137fb9d6ea022116821d7bd2c680f3f. HONOR motion acceptance pending; main 0.4.59 untouched.

@@ -215,3 +215,10 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - Signed APK https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasslab-v0.1.4/NavTasks_LiquidGlass_Lab_0.1.4.apk; CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42392699540 SUCCESS. SHA-256 `7a1f9d7a372bc3d1985d7484983c830b883a63dd5b810ff8c40fd31b1e2856f0`.
 - Next step: HONOR check during fast tabs and scrolling, both themes: physical protrusion top/bottom, no clipping, steady text, grey rest, unchanged icon sizes and border refraction. Only after user's approval consider production integration.
 - Preserved `backup/glasslab-0.1.3-before-proportional-scale` and old prerelease. **Main NavTasks application remains 0.4.59/versionCode81, code unchanged.**
+
+
+## 2026-11-08 — Glass Lab 0.1.5 fixes observed vertical cropping; HONOR retest next
+- User HONOR screenshot of Lab 0.1.4 showed taller 1.30× lens still visually clipped at the 56dp dock top/bottom. Measurements alone did not prevent parent optical drawing clip.
+- Lab 0.1.5 moves `drawBackdrop` backing/outline from parent to a separate background sibling. Enlarged selection (52→67.6dp) now has an unmodified parent so should render above and below dock, preserving 56dp bar, glyphs, colors, springs, card-border refraction, matte-grey resting lens.
+- Source `ea412201936a8a178c657b77bda7a3347b878f06`, CI `42393384091` SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.5. APK SHA-256 `c2e2d34e48578d189dd31238a1e04aa38137fb9d6ea022116821d7bd2c680f3f`.
+- Backup `backup/glasslab-0.1.4-before-unclipped-layer`. Physical HONOR acceptance pending; DO NOT merge production. Main app v0.4.59 unchanged.

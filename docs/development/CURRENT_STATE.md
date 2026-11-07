@@ -169,3 +169,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - After HONOR rejected Lab 0.1.3's horizontal-only lens stretch, trial 0.1.4 uses a uniform 1.30x scale for width and height: 52dp → 67.6dp active lens centered over 56dp bar, protruding ~5.8dp top/bottom in motion. Existing dynamic refraction, 4 glyphs, animations and matte grey settled state retained.
 - Tested commit `0ca6d8874a6c6febe86cb874b81ba0b846e087fe`, GitHub Actions `42392699540` SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.4; actual HONOR rendering **not yet verified**.
 - Separate `experiments/liquid-glass-backdrop` module/package only. Main NavTasks 0.4.59 source / versionCode 81 unchanged.
+
+
+## Lab 0.1.5 standalone compositor correction (2026-11-08)
+- HONOR v0.1.4: lens grows but top/bottom clipped. Lab 0.1.5 separates backing and lens into siblings and retains direct Backdrop, 1.30× uniform scale, 56dp outer dock and production glyphs.
+- Source `ea412201936a8a178c657b77bda7a3347b878f06`, CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42393384091 SUCCESS; signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.5. Physical user validation pending. No main NavTasks code changes.
