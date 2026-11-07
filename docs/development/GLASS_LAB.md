@@ -93,3 +93,11 @@ Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still p
 - GitHub release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.3
 - APK SHA-256 `8f0b7e18cce69c007ff8a3f4e73a40da1affbdaffca3507420a72626ab6f83c9` from CI.
 - Acceptance: physical HONOR motion and outer-edge clipping tests **pending**. Only the stretch parameter changed from 10dp to 28dp; main app remains 0.4.59. Preserve backup and older 0.1.2.
+
+## Glass Lab 0.1.4 — proportional selection growth (2026-11-08; source change)
+- User rejected v0.1.3 width-only expansion: reference requires the selection lens to grow as a whole, crossing ABOVE and BELOW the dock, not merely stretching across it.
+- Replace `maxStretchDp=28f` with one uniform scale factor `movingScale=1.30f` applied to BOTH capsule width and height. Resting lens is 52dp high within a 56dp bar; moving lens becomes 67.6dp high, centered so it protrudes 5.8dp on both sides vertically. Aspect ratio is preserved at every animation frame.
+- `wrapContentSize(unbounded=true, align=TopStart)` prevents the parent dock's 56dp layout constraint from silently shrinking the overhanging moving lens. The 56dp outer backdrop and icons/labels remain fixed; only selected lens changes.
+- Keep the same spring stiffness (travel 550, material 700, grow 600), the horizontal first/last tab clamp, snap-back to matte neutral grey, real backdrop refraction, glyphs/colors, theme and OFF mode unchanged.
+- Regression tests assert equal-axis scale and actual vertical overflow. CI and HONOR physical motion/clip acceptance are still necessary.
+- Isolated experiment only: `experiments/liquid-glass-backdrop`, package `com.navtasks.glasslab`, versionName 0.1.4/versionCode 5; retain `backup/glasslab-0.1.3-before-proportional-scale`. Production NavTasks 0.4.59 unchanged. Do not merge into main before user acceptance.

@@ -14,11 +14,19 @@ class GlassLabDockTabsTest {
     }
 
     @Test
-    fun springStretchStaysWithinDockCapsule() {
+    fun movingLensUsesOneScaleForBothAxesAndExceedsDockHeight() {
         assertEquals(4, GlassLabDockTabs.items.size)
-        assertEquals(28f, GlassLabDockTabs.maxStretchDp, 0f)
-        // The animation width is intentionally pronounced (~one third of a tab)
-        // while lensX still clamps the capsule inside both dock ends.
-        assertTrue(GlassLabDockTabs.maxStretchDp in 0f..32f)
+        assertEquals(1f, GlassLabDockTabs.scaleAt(0f), 0f)
+        assertEquals(GlassLabDockTabs.movingScale, GlassLabDockTabs.scaleAt(1f), 0f)
+        assertEquals(GlassLabDockTabs.movingScale, GlassLabDockTabs.scaleAt(2f), 0f)
+
+        // The scaled selection must actually cross both vertical dock edges.
+        val enlargedHeight = GlassLabDockTabs.restingLensHeightDp *
+            GlassLabDockTabs.scaleAt(1f)
+        assertTrue(enlargedHeight > GlassLabDockTabs.dockHeightDp)
+        val verticalInset = (GlassLabDockTabs.dockHeightDp - enlargedHeight) / 2f
+        assertTrue(verticalInset < 0f)
+        assertEquals(-verticalInset,
+            enlargedHeight + verticalInset - GlassLabDockTabs.dockHeightDp, .001f)
     }
 }

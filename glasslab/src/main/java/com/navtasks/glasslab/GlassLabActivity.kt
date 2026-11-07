@@ -336,10 +336,15 @@ private fun GlassLabDock(
             animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
             label = "glassLabLensStretch"
         )
-        val extraWidth = GlassLabDockTabs.maxStretchDp.dp * stretched.coerceIn(0f, 1f)
-        val lensWidth = cellWidth - 4.dp + extraWidth
-        val lensX = (cellWidth * slide + 2.dp - extraWidth / 2f)
+        // True proportional growth: both axes expand by the same factor.
+        // Unlike 0.1.3's horizontal stretch, this makes the glass rise above
+        // and drop below the 56dp navigation capsule while it is travelling.
+        val lensScale = GlassLabDockTabs.scaleAt(stretched)
+        val lensWidth = (cellWidth - 4.dp) * lensScale
+        val lensHeight = GlassLabDockTabs.restingLensHeightDp.dp * lensScale
+        val lensX = (cellWidth * (slide + .5f) - lensWidth / 2f)
             .coerceIn(2.dp, (maxWidth - 2.dp - lensWidth).coerceAtLeast(2.dp))
+        val lensY = (GlassLabDockTabs.dockHeightDp.dp - lensHeight) / 2f
 
         // Exactly one moving lens. While travelling it is optically refractive;
         // after it lands, its own face fades into neutral graphite/grey.
@@ -371,8 +376,12 @@ private fun GlassLabDock(
         }
 
         Box(
-            Modifier.offset(x = lensX, y = 2.dp)
-                .width(lensWidth).height(52.dp)
+            Modifier.offset(x = lensX, y = lensY)
+                // Explicitly allow the travelling material to render outside
+                // the 56dp dock bounds; otherwise Compose constraints can
+                // coerce a taller lens back to the bar's own height.
+                .wrapContentSize(unbounded = true, align = Alignment.TopStart)
+                .size(width = lensWidth, height = lensHeight)
                 .then(selection)
         )
 
