@@ -20,8 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import android.os.Build
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -106,9 +104,9 @@ fun Modifier.navGlass(
         GlassRole.PANEL -> if (p.dark) Color(0x851F3143) else Color(0x85FFFFFF)
         GlassRole.TASK -> if (p.dark) Color(0x781C2D40) else Color(0x79FFFFFF)
         GlassRole.NESTED_TASK -> if (p.dark) Color(0x80234259) else Color(0x7BDDECF7)
-        GlassRole.NAVIGATION -> if (p.dark) Color(0x3D182D3C) else Color(0x45FFFFFF)
+        GlassRole.NAVIGATION -> if (p.dark) Color(0x7918202A) else Color(0x7AFFFFFF)
         GlassRole.SELECTED -> if (p.dark) Color(0x582989C5) else Color(0x493EA1F2)
-        GlassRole.CONTROL -> if (p.dark) Color(0x462C3D50) else Color(0x48FFFFFF)
+        GlassRole.CONTROL -> if (p.dark) Color(0x792C3D50) else Color(0x80FFFFFF)
     }
     // The edge, not a white/blue blanket on the surface, communicates the glass.
     // Day dock's top border was almost white on white, while the bottom
@@ -141,46 +139,32 @@ fun Modifier.navGlass(
  * Keep a single source and reuse it here to avoid extra offscreen captures.
  * The blur is drawn underneath crisp icons/labels and clipped to the lens.
  */
-/**
- * Backdrop sampling is kept separate from the face of the lens. The dock can
- * refract only this blurred layer (never the icons) while the same Haze-backed
- * material stays available to the existing floating controls and older phones.
- */
-private fun Modifier.navHazeBackdrop(
+fun Modifier.navFrostedOverlay(
     p: NavPalette,
     hazeState: HazeState,
     radius: Dp,
     role: GlassRole,
 ): Modifier {
     val shape = RoundedCornerShape(radius)
-    return this.clip(shape).hazeEffect(
-        state = hazeState,
-        style = HazeStyle(
-            // Keep the live content visible THROUGH the glass. Two former
-            // overlapping ~50% overlays were making it look like matte plastic.
-            backgroundColor = when {
-                p.dark && role == GlassRole.NAVIGATION -> Color(0x49172739)
-                p.dark -> Color(0x43172739)
-                role == GlassRole.NAVIGATION -> Color(0x48F3F3F3)
-                else -> Color(0x50EDF5FA)
-            },
-            blurRadius = if (role == GlassRole.NAVIGATION) 30.dp else 17.dp,
-            tints = listOf(HazeTint(
-                if (p.dark) Color(0x14141E2B) else Color(0x0DFFFFFF)
-            )),
-            noiseFactor = 0.017f,
-        ),
-    )
+    return this
+        .clip(shape)
+        .hazeEffect(
+            state = hazeState,
+            style = HazeStyle(
+                // Dock glass is neutral in Day mode; the previous icy blue
+                // source tint was showing through the selected capsule.
+                backgroundColor = if (p.dark) Color(0x68172739)
+                    else if (role == GlassRole.NAVIGATION) Color(0x88F3F3F3)
+                    else Color(0x74EDF5FA),
+                blurRadius = 34.dp,
+                tints = listOf(
+                    HazeTint(if (p.dark) Color(0x24141E2B) else Color(0x16FFFFFF))
+                ),
+                noiseFactor = 0.025f,
+            ),
+        )
+        .navGlass(p, radius = radius, role = role, elevation = 0.dp)
 }
-
-fun Modifier.navFrostedOverlay(
-    p: NavPalette,
-    hazeState: HazeState,
-    radius: Dp,
-    role: GlassRole,
-): Modifier = this
-    .navHazeBackdrop(p, hazeState, radius, role)
-    .navGlass(p, radius = radius, role = role, elevation = 0.dp)
 
 /**
  * An accessible click target without the platform's transient ripple or grey pressed film.
@@ -238,33 +222,11 @@ fun NavGlassBottomBar(
     ) {
         BoxWithConstraints(
             Modifier.fillMaxWidth().height(56.dp)
-                // Full-size dock material. Only the foreground controls
-                // are inset: the 0.4.57 layout accidentally shrank the
-                // *entire glass surface* by 2dp x 4dp.
-                .clip(RoundedCornerShape(30.dp)),
+                .navFrostedOverlay(p, hazeState, radius = 30.dp, role = GlassRole.NAVIGATION)
+                // HONOR screenshot: selected lens height ≈89% of dock height,
+                // not the old 79% produced by 4dp padding + 2dp inset.
+                .padding(horizontal = 1.dp, vertical = 2.dp),
         ) {
-            // The refraction is limited to the Haze background layer. Its input
-            // never includes the selected capsule, tab labels, or touch targets.
-            // API 31/32 and driver failures use the same live Haze without optics.
-            val density = LocalDensity.current
-            val widthPx = with(density) { maxWidth.toPx() }
-            val heightPx = with(density) { maxHeight.toPx() }
-            val refractiveEffect = remember(widthPx, heightPx, density.density) {
-                if (canRenderNavGlassRefraction(Build.VERSION.SDK_INT, widthPx, heightPx)) {
-                    createNavDockRefraction(widthPx, heightPx, density.density)
-                } else null
-            }
-            Box(
-                Modifier.matchParentSize()
-                    .graphicsLayer { renderEffect = refractiveEffect }
-                    .navHazeBackdrop(p, hazeState, radius = 30.dp, role = GlassRole.NAVIGATION),
-            )
-            // Face tint and crisp rim are drawn AFTER refraction, before the
-            // animated selection and icons. No new blur capture is introduced.
-            Box(
-                Modifier.matchParentSize()
-                    .navGlass(p, radius = 30.dp, role = GlassRole.NAVIGATION),
-            )
             // Retarget the live spring, retaining position and velocity on rapid taps.
             // Draw one lens directly so no stale composited selection is left behind.
             val target = selected.coerceIn(0, 3).toFloat()
@@ -287,9 +249,7 @@ fun NavGlassBottomBar(
                 animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
                 label = "navLensStretch",
             )
-            Canvas(
-                Modifier.matchParentSize().padding(horizontal = 1.dp, vertical = 2.dp),
-            ) {
+            Canvas(Modifier.matchParentSize()) {
                 val cell = size.width / 4f
                 val inset = 1.dp.toPx()
                 val stretch = liquidStretch.coerceIn(0f, 1f) *
@@ -326,10 +286,10 @@ fun NavGlassBottomBar(
                 // Night material stays unchanged. Day uses neutral WHITE/GRAPHITE,
                 // not blue; same translucent lens animation and draw geometry.
                 // Identical top/bottom shades eliminate the weighted lower rim.
-                val moveTop = if (p.dark) Color(0x765A8CA9) else Color(0x6DFAFAFB)
-                val moveMid = if (p.dark) Color(0x57507696) else Color(0x4FE2E3E5)
-                val moveBottom = if (p.dark) Color(0x763E647D) else Color(0x6DFAFAFB)
-                val restingFill = if (p.dark) Color(0x50616B77) else Color(0x59D7D8DA)
+                val moveTop = if (p.dark) Color(0xA35A8CA9) else Color(0xC4FAFAFB)
+                val moveMid = if (p.dark) Color(0x84507696) else Color(0xA9E2E3E5)
+                val moveBottom = if (p.dark) Color(0xA33E647D) else Color(0xC4FAFAFB)
+                val restingFill = if (p.dark) Color(0x89616B77) else Color(0xB2D7D8DA)
                 drawRoundRect(
                     brush = Brush.verticalGradient(
                         listOf(
@@ -386,12 +346,7 @@ fun NavGlassBottomBar(
                     )
                 }
             }
-            Row(
-                Modifier.fillMaxSize()
-                    .padding(horizontal = 1.dp, vertical = 2.dp)
-                    .selectableGroup(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            Row(Modifier.fillMaxSize().selectableGroup(), verticalAlignment = Alignment.CenterVertically) {
                 val names = listOf(
                     localized("Сегодня", "Today", lang),
                     localized("Работы", "Work", lang),
