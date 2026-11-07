@@ -36,8 +36,8 @@ android {
             signingConfigs.findByName("betaStable")?.let { signingConfig = it }
             // A separate test package protects the installed 0.1 data when
             // the original ephemeral debug signing key is unavailable.
-            applicationIdSuffix = ".glass"
-            versionNameSuffix = "-beta"
+            applicationIdSuffix = ".glassdiagnostic"
+            versionNameSuffix = "-capture-diagnostic1"
         }
         release {
             isMinifyEnabled = false

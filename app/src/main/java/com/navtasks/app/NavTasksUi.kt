@@ -409,6 +409,7 @@ fun NavTasksApp(
                     })
             } else {
                 val hazeState = remember { dev.chrisbanes.haze.HazeState() }
+                var glassDiagnosticMode by remember { mutableIntStateOf(NavGlassDiagnosticModes.LIVE_HAZE) }
                 // As in the approved Lab: record the original page, not Haze's
                 // output, and keep the dock outside the captured layer.
                 val glassBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
@@ -420,9 +421,14 @@ fun NavTasksApp(
                                 Modifier.layerBackdrop(glassBackdrop) else Modifier
                         )
                     ) {
+                    if (glassDiagnosticMode == NavGlassDiagnosticModes.LAB_REFERENCE) {
+                        NavGlassDiagnosticReferenceScene(palette.dark)
+                    } else {
                     // Content paints to the bottom edge. Navigation is an overlay,
                     // NOT a Scaffold bottomBar which would reserve an opaque footer.
-                    Column(Modifier.fillMaxSize().statusBarsPadding().hazeSource(hazeState)
+                    Column(Modifier.fillMaxSize().statusBarsPadding()
+                        .then(if (glassDiagnosticMode == NavGlassDiagnosticModes.LIVE_HAZE)
+                            Modifier.hazeSource(hazeState) else Modifier)
                         .primaryTabSwipe(tab, ::openPrimaryTab)) {
                         Row(
                             Modifier.fillMaxWidth().padding(start = 18.dp, end = 14.dp, top = 14.dp, bottom = 10.dp),
@@ -526,8 +532,15 @@ fun NavTasksApp(
                             }
                         }
                     }
+                    } // End live screen branch.
                     } // End original page capture before any floating glass.
-                    if (tab == 0) {
+                    NavGlassDiagnosticControl(
+                        selected = glassDiagnosticMode,
+                        onSelect = { glassDiagnosticMode = it },
+                        modifier = Modifier.align(Alignment.TopCenter)
+                            .statusBarsPadding().padding(top = 5.dp)
+                    )
+                    if (glassDiagnosticMode == NavGlassDiagnosticModes.LIVE_HAZE && tab == 0) {
                         Box(
                             Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
                                 .padding(end = 19.dp, bottom = 83.dp),
@@ -537,7 +550,7 @@ fun NavTasksApp(
                             }
                         }
                     }
-                    if (tab == 3) {
+                    if (glassDiagnosticMode == NavGlassDiagnosticModes.LIVE_HAZE && tab == 3) {
                         Box(
                             Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
                                 .padding(end = 19.dp, bottom = 83.dp),
