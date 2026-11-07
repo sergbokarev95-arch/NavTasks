@@ -1,0 +1,96 @@
+name: Publish NavTasks Glass 0.4.54 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.54-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out verified 0.4.54 Today weekend strip source
+        uses: actions/checkout@v4
+        with:
+          ref: 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore stable beta signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify source and run regression tests
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f"
+          grep -q 'versionName = "0.4.54"' app/build.gradle.kts
+          grep -q 'versionCode = 76' app/build.gradle.kts
+          if grep -Fq 'Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()' \
+              app/src/main/java/com/navtasks/app/ServicesUi.kt \
+              app/src/main/java/com/navtasks/app/WorkOrdersUi.kt; then
+            echo "::error::Standalone work pages must be edge-to-edge"
+            exit 1
+          fi
+          if grep -Fq '.border(if (isToday) 2.dp else 1.dp' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt; then
+            echo "::error::Bright month-cell borders regressed"
+            exit 1
+          fi
+          grep -Fq 'weekend = calendarIsWeekend(day)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'calendarWeekendInk(p)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          if grep -Eq '<Space([[:space:]]|>)' app/src/main/res/layout/navtasks_widget_*.xml; then
+            echo "::error::Unsupported Space in RemoteViews layout"
+            exit 1
+          fi
+          gradle :app:testDebugUnitTest --no-daemon
+      - name: Build stable-signed debug APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: gradle :app:assembleDebug --no-daemon
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Package compact ZIP directly from build
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p upload
+          cp app/build/outputs/apk/debug/app-debug.apk upload/NavTasks_Glass_0.4.54_Beta.apk
+          sha256sum upload/NavTasks_Glass_0.4.54_Beta.apk
+          cd upload
+          zip -q NavTasks_Glass_0.4.54_Build.zip NavTasks_Glass_0.4.54_Beta.apk
+          unzip -t NavTasks_Glass_0.4.54_Build.zip
+          cd ..
+      - name: Publish 0.4.54 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.54-glass-beta \
+            upload/NavTasks_Glass_0.4.54_Beta.apk \
+            upload/NavTasks_Glass_0.4.54_Build.zip \
+            --repo "${{ github.repository }}" \
+            --target 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f \
+            --prerelease \
+            --title "NavTasks Glass 0.4.54 Beta · Weekend Today Strip" \
+            --notes "NavTasks 0.4.54: Today's seven-day strip now highlights Saturday and Sunday names and dates with exactly the same restrained coral ink as the Plan month calendar in light and dark themes. Selected weekend dates keep the existing blue selected glass backing; weekday colors and layout remain unchanged. Today's day numbers increase from 15sp to 16sp for consistency. All date selection, seven-day scrolling, missed-count layout, Plan calendar status dots, schedules, profiles, Services, AMOS, widgets, and notifications remain unchanged. Immutable source pinned to 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f; regression tests and stable-signed APK/ZIP build are repeated by this workflow. HONOR visual testing still required."
