@@ -37,7 +37,7 @@ jobs:
           test -n "$KEYSTORE_B64"
           printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
           test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
-      - name: Verify isolation and build lab
+      - name: Verify isolated preview and run app regression tests
         env:
           NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
           NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
@@ -46,7 +46,10 @@ jobs:
           # The preview is a different app ID and cannot replace user data.
           grep -Fq 'applicationIdSuffix = ".glasspreview"' app/build.gradle.kts
           grep -Fq 'versionName = "0.4.59"' app/build.gradle.kts
-          grep -Fq 'versionCode = 81' app/build.gradle.kts
+          grep -Fq 'versionCode = 82' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-dock-preview2"' app/build.gradle.kts
+          grep -Fq 'blurDp = 5.0f' app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt
+          grep -Fq 'blurDp = 4.0f' app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt
           grep -Fq 'implementation("io.github.kyant0:backdrop:1.0.6")' app/build.gradle.kts
           grep -Fq 'implementation("io.github.kyant0:shapes:1.2.0")' app/build.gradle.kts
           grep -Fq 'Modifier.matchParentSize().then(backing).then(opticalEdge)' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
@@ -56,16 +59,16 @@ jobs:
       - name: Destroy temporary signing key
         if: always()
         run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
-      - name: Verify generated lab APK
+      - name: Verify signed preview APK
         run: |
           set -euo pipefail
           test -s app/build/outputs/apk/debug/app-debug.apk
-          cp app/build/outputs/apk/debug/app-debug.apk NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk
-          sha256sum NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk
+          cp app/build/outputs/apk/debug/app-debug.apk NavTasks_LiquidGlass_Dock_Preview_R2.apk
+          sha256sum NavTasks_LiquidGlass_Dock_Preview_R2.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: NavTasks-LiquidGlass-Dock-Preview-0.4.59
-          path: NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk
+          name: NavTasks-LiquidGlass-Dock-Preview-R2
+          path: NavTasks_LiquidGlass_Dock_Preview_R2.apk
           if-no-files-found: error
           retention-days: 60
       - name: Publish separate prerelease (not production)
@@ -73,13 +76,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="dockpreview-v0.4.59-r1"
+          TAG="dockpreview-v0.4.59-r2"
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk --clobber
+            gh release upload "$TAG" NavTasks_LiquidGlass_Dock_Preview_R2.apk --clobber
           else
-            gh release create "$TAG" NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk \
+            gh release create "$TAG" NavTasks_LiquidGlass_Dock_Preview_R2.apk \
               --target "$GITHUB_SHA" \
-              --title "NavTasks 0.4.59 Full-App Liquid Glass Dock Preview (separate install)" \
-              --notes "SEPARATE FULL-APP PREVIEW, debug applicationId com.navtasks.app.glasspreview. Installs alongside stable NavTasks without replacing profiles/data. Base production v0.4.59, app screens/data/AMOS/navigation logic unchanged; direct-scene Backdrop 1.0.6 reproduces visually approved Glass Lab 0.1.5 only in 56dp dock. Stationary 24dp glyphs, 1.30x moving capsule protrudes above/below dock, returns to matte grey; original Haze bottom bar retained as fallback for API 31/32 and all other floating buttons. Please test on HONOR light/dark, scroll, rapid tabs, widget/notifications compatibility; not merged to main." \
+              --title "NavTasks 0.4.59 Liquid Glass Dock Preview R2 (soft background blur)" \
+              --notes "SEPARATE FULL-APP PREVIEW R2, package com.navtasks.app.glasspreview; installs alongside stable NavTasks. Targeted HONOR screenshot fix: task titles behind outer dock were too legible and competed with navigation text. Backdrop pre-lens blur raised from 2dp to 5dp for the bar and 1.5dp to 4dp for selection; all refraction heights/amounts, proportional 1.30x animation, unclipped rendering, colors and glyphs unchanged. Preview versionCode 82. No changes to task, AMOS, Services, Handover, profile or notification business logic. The previous signed R1 remains available. Test real day/night scrolling, card borders and label legibility before integrating into main." \
               --prerelease
           fi

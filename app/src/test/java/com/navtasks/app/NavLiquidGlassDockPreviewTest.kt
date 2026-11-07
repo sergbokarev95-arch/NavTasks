@@ -22,7 +22,12 @@ class NavLiquidGlassDockPreviewTest {
         assertTrue(expanded > NavLiquidDockTabs.dockHeightDp)
         val symmetricOverflow = (expanded - NavLiquidDockTabs.dockHeightDp) / 2f
         assertEquals(5.8f, symmetricOverflow, .01f)
-        assertEquals(2f, NavLiquidDockOptics.bar.blurDp, 0f)
+        assertEquals(5f, NavLiquidDockOptics.bar.blurDp, 0f)
+        assertEquals(4f, NavLiquidDockOptics.selection.blurDp, 0f)
+        // Distortion geometry must stay exactly as in user-approved Lab 0.1.5.
+        assertEquals(12f, NavLiquidDockOptics.bar.refractionHeightDp, 0f)
+        assertEquals(10f, NavLiquidDockOptics.selection.refractionHeightDp, 0f)
+        assertEquals(18f, NavLiquidDockOptics.selection.refractionAmountDp, 0f)
         assertEquals(36f, NavLiquidDockOptics.bar.refractionAmountDp, 0f)
     }
 }

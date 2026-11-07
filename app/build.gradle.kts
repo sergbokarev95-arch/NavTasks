@@ -15,7 +15,7 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 81
+        versionCode = 82
         versionName = "0.4.59"
     }
 
@@ -37,7 +37,7 @@ android {
             // A separate test package protects the installed 0.1 data when
             // the original ephemeral debug signing key is unavailable.
             applicationIdSuffix = ".glasspreview"
-            versionNameSuffix = "-dock-preview1"
+            versionNameSuffix = "-dock-preview2"
         }
         release {
             isMinifyEnabled = false
