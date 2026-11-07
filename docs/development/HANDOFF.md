@@ -130,3 +130,8 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - APK SHA-256 156b24d04dcbb496e8480ce463423e430651d40fe412e42b2f9202ace07229be. No data/profile/schema/task/service/AMOS logic changes; only right-side Add (+) placements in Tasks, Services and AMOS.
 - Next HONOR acceptance: screenshots/tap on Tasks, Services and AMOS + controls in dark/light themes. Check last-card tap/swipe and bottom safe area. Calendar icon in Today must remain right-aligned. Device test pending.
 - Restart instruction: «Продолжим NavTasks через GitHub sergbokarev95-arch/NavTasks. Прочитай docs/development/HANDOFF.md, CURRENT_STATE.md, NEXT_TASKS.md, проверь main и релиз 0.4.55. Текущий этап — тест плюсов справа на HONOR. Все изменения точечные, сохраняй функциональность и обновляй документацию».
+
+## Pending 0.4.56 (2026-11-07): Handover (+) placement
+- User screenshot revealed Handover (+) stayed at lower-left after v0.4.55's Tasks/Services/AMOS right-alignment. Separate implementation: app/src/main/java/com/navtasks/app/HandoverUi.kt.
+- Code updated only its floating Add Box to Alignment.BottomEnd with padding(end=19.dp); preserve navigationBarsPadding, bottom 83dp embedded / 18dp standalone, and openSectionEditor(null) action. Build version 0.4.56 / versionCode 78; docs updated.
+- Next confirm CI and signed GitHub release before installation; last verified release 0.4.55. Then user tests Handover + placement/opening on HONOR.

@@ -51,3 +51,5 @@
 - 2026-11-07 (0.4.55 UI): Floating primary creation Add (+) is anchored at BottomEnd on Tasks, Services and AMOS, aligned conceptually with the Today bottom-right calendar shortcut. Horizontal inset 19dp, original vertical insets and navigationBarsPadding() preserved. Do not move dock or alter click semantics.
 
 - 0.4.55 published on 2026-11-07 from 401564269c574271b1e3c22c356989fe2d94eb58; all floating Add (+) controls in Tasks, Services and AMOS consistently use right-side placement and retain safe insets. CI success does not replace real-device acceptance.
+
+- 2026-11-07 (0.4.56): Handover floating Add (+) follows the same BottomEnd placement and 19dp right inset as Tasks, Services and AMOS. Retain 83dp bottom gap when Handover embedded in main tab dock, 18dp when standalone, platform navigation safe inset, and original Add action. This completes the intended consistent primary-creation placement.

@@ -259,9 +259,9 @@ fun HandoverScreen(
         }
     }
     Box(
-        Modifier.align(Alignment.BottomStart)
+        Modifier.align(Alignment.BottomEnd)
             .navigationBarsPadding()
-            .padding(start = 19.dp, bottom = if (embeddedInTab) 83.dp else 18.dp),
+            .padding(end = 19.dp, bottom = if (embeddedInTab) 83.dp else 18.dp),
     ) {
         NavGlassAddButton(p, hazeState) { openSectionEditor(null) }
     }

@@ -47,3 +47,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-07 — 0.4.55 source stage (CI pending): reposition only Add (+) floating wrappers from BottomStart/start 19dp to BottomEnd/end 19dp in Tasks, Services and AMOS; preserve callbacks, bottom offsets and Android gesture insets. No data/business logic changes. VersionCode 77.
 
 - 2026-11-07 — 0.4.55 SIGNED RELEASE: moved three floating Add button wrappers to BottomEnd/end19dp, retained exact vertical offsets and callbacks. Source 401564269c574271b1e3c22c356989fe2d94eb58; publisher workflow aa4ed6b8f4140e7f78364819a8a8f1998e0ab279; source CI 42369659340 SUCCESS, signed release CI 42369873080 SUCCESS. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.55-glass-beta, APK SHA-256 156b24d04dcbb496e8480ce463423e430651d40fe412e42b2f9202ace07229be. HONOR UI/tap verification pending.
+
+- 2026-11-07 — 0.4.56 source stage (CI pending): fixed overlooked Handover (+), moving only its Add wrapper from BottomStart/start=19dp to BottomEnd/end=19dp in HandoverUi.kt; retained all vertical offsets, safe areas and handler. VersionCode 78. No data/business-logic changes.
