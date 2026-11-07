@@ -1,9 +1,9 @@
 # NavTasks — Current State
 
-Reviewed 2026-11-07 against GitHub main and successful signed 0.4.55 release; subsequent documentation-only commits may advance main HEAD.
+Reviewed 2026-11-07 against GitHub main and successful signed 0.4.56 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current source under validation: 0.4.56 (versionCode 78), Handover floating Add right alignment. Last CI-verified signed release is v0.4.55 (versionCode 77). Debug variant adds -beta and .glass.
+- Current signed and published release is v0.4.56 (versionCode 78), following successful CI and release workflow. v0.4.55 (versionCode 77) remains the previous released baseline. Debug variant adds -beta and .glass.
 - Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date. Current 0.4.52 adjusts only edge-to-edge drawing.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Current release workflow .github/workflows/publish-0.4.54-apk.yml pinned to 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f. Earlier signed release workflows are retained for provenance.
@@ -104,8 +104,11 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.55 release; su
 - Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42369659340 SUCCESS (unit tests, APK). Signed publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42369873080 SUCCESS (repeated tests, signed APK/ZIP, publication).
 - Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.55-glass-beta; APK SHA-256 156b24d04dcbb496e8480ce463423e430651d40fe412e42b2f9202ace07229be. Actual HONOR visual/tap acceptance remains outstanding.
 
-## 0.4.56 Handover Add placement (2026-11-07, source stage)
+## 0.4.56 Handover Add placement (2026-11-07, released)
 - User provided HONOR screenshot showing the Handover (+) still at bottom left, overlooked in 0.4.55. Source audit found a separate HandoverUi.kt floating Add wrapper, not covered by the previous three fixes.
 - Minimal fix: the one Handover Add wrapper is now BottomEnd / end=19dp instead of BottomStart / start=19dp. Preserve the same NavGlassAddButton, openSectionEditor(null) handler, navigationBarsPadding(), and bottom offset: 83dp when embedded in main dock, 18dp when standalone.
 - Build version 0.4.56 / versionCode 78; no data, profile, business logic, task, schedule or widget changes.
-- GitHub Actions tests and signed release remain pending; device verification required afterward.
+- Immutable source commit 612ba1ba215e8c1871a654acda2304f5c44c678c; publication workflow commit 49ae8ce49b6dfc90cfd094a17c07bfd815faf2a0.
+- Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42373593478 SUCCESS (unit tests and APK). Publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42373854191 SUCCESS (repeated tests, stable-signed APK, ZIP and release).
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.56-glass-beta; APK SHA-256 f01d6f88729a9227ee7813e281f733c711cfab42b621f9f9a557eb3e244cb69b.
+- Physical HONOR test of final alignment and section-creation tap remains outstanding.

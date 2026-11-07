@@ -53,3 +53,5 @@
 - 0.4.55 published on 2026-11-07 from 401564269c574271b1e3c22c356989fe2d94eb58; all floating Add (+) controls in Tasks, Services and AMOS consistently use right-side placement and retain safe insets. CI success does not replace real-device acceptance.
 
 - 2026-11-07 (0.4.56): Handover floating Add (+) follows the same BottomEnd placement and 19dp right inset as Tasks, Services and AMOS. Retain 83dp bottom gap when Handover embedded in main tab dock, 18dp when standalone, platform navigation safe inset, and original Add action. This completes the intended consistent primary-creation placement.
+
+- 0.4.56 signed release 2026-11-07: Handover Add is now right-aligned and has the same safe area and original section-creation action. Source 612ba1ba215e8c1871a654acda2304f5c44c678c. No schema or business changes; do not treat CI as visual-device acceptance.
