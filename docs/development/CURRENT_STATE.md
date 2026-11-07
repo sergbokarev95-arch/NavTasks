@@ -150,3 +150,10 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Refractive renderer uses Apache-2.0 `io.github.kyant0:backdrop:1.0.6` with `shapes:1.2.0`, capturing **unblurred scrollable content** into a GPU-backed LayerBackdrop and then applying vibrancy, blur and lens in a separate dock. Unlike v0.4.57/0.4.58, this does NOT attempt to refract an existing Haze effect output.
 - CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42385989762 SUCCESS; experimental prerelease https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.0; APK SHA-256 caeb1cbc7189e1aca707416f3f3660696dce1438fd546811099e8e7fcb24063c.
 - **Not tested on HONOR yet.** Do not integrate into production or claim final glass achieved until Day/Night and moving-content acceptance; see experimental branch `docs/development/GLASS_LAB.md`.
+
+
+## 0.1.2 separate glass laboratory handoff (2026-11-08)
+- User HONOR screenshots confirmed v0.1.1 clearly refracts card borders in Day and Night; requested exact NavTasks icons/color and animated expanding/sliding lens that settles to neutral grey.
+- Updated only standalone `:glasslab` sources in `experiments/liquid-glass-backdrop`; original production `app` module remains 0.4.59 / versionCode 81.
+- Lab 0.1.2 source `049836c2bd05bbd3378162e174a46f2ae249c240`; CI `42389729911` SUCCESS (tests + signed APK); prerelease https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.2. APK SHA-256 `fdeb481c91252db2c1e39f7ed02acba4541b2488f3a94bcc6d640b4f64a785c9`.
+- Physical acceptance of new animation **not yet confirmed**. Next: test 4 tabs and Day/Night on HONOR, then plan minimal non-destructive integration into production.

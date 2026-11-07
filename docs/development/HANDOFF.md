@@ -191,3 +191,12 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42385989762 SUCCESS; tested source `512cb355d0e1a37cba22eb79e5ada7cc32294eab`; prerelease https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.0; APK https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasslab-v0.1.0/NavTasks_LiquidGlass_Lab_0.1.0.apk sha256:caeb1cbc7189e1aca707416f3f3660696dce1438fd546811099e8e7fcb24063c.
 - User has NOT yet confirmed HONOR appearance/performance. Next: review Day/Night and scrolling/fast tab switching in **Lab**. If accepted, propose minimal NavGlass integration separately with 0.4.59 unchanged until then. Full details at `docs/development/GLASS_LAB.md` on the experiment branch.
 - Recovery prompt: «Продолжай NavTasks из GitHub. Стабильный main 0.4.59. Для Liquid Glass открой ветку experiments/liquid-glass-backdrop и docs/development/GLASS_LAB.md. Отдельный тестовый APK Glass Lab 0.1.0 уже собран, GH Actions 42385989762 SUCCESS. Сначала получи HONOR-результат Glass ON/OFF над прокручиваемыми карточками, затем решай об интеграции. Код main не менять без проверки».
+
+
+## 2026-11-08 — Liquid Glass Lab 0.1.2 signed; await HONOR lens animation verification
+- User approved v0.1.1 direct Backdrop capture and card-border refraction visually (day/night screenshots). Separate lab now tests exact production four glyphs/colors and glass-to-matte transition; **not yet approved for main**.
+- Experimental branch: `experiments/liquid-glass-backdrop`, immutable source `049836c2bd05bbd3378162e174a46f2ae249c240` (0.1.2 / versionCode 3); signed prerelease https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.2
+- CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42389729911 SUCCESS; APK SHA-256 `fdeb481c91252db2c1e39f7ed02acba4541b2488f3a94bcc6d640b4f64a785c9`.
+- Next: user visually tests real HONOR movement: production icons and colors, spring stretch/travel, neutral-grey lens once settled; cross-card border refraction, scroll smoothness, rapid 0↔3 switches, Day/Night.
+- `main` app remains v0.4.59 / versionCode 81 with stable Haze; no production source change. Main branch docs-only updates may advance HEAD. Only after acceptance, stage isolated production integration without changing task/AMOS/profile logic.
+- Lab history and rollback: backup branch `backup/glasslab-0.1.1-before-nav-animation`; see `docs/development/GLASS_LAB.md` on lab branch.
