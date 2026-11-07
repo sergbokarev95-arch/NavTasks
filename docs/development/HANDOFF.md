@@ -207,3 +207,11 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - Experiment-only source `9f3ac3c8574d539141dd828d76c9c08da28fbe6f`, branch `experiments/liquid-glass-backdrop`; CI `42390942917` SUCCESS and signed release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.3
 - APK SHA-256 `8f0b7e18cce69c007ff8a3f4e73a40da1affbdaffca3507420a72626ab6f83c9`. Separate package and signing retained; main NavTasks is still **0.4.59**, unchanged.
 - Next: on HONOR test expanded travel 0↔3, dock edge containment, selected grey settled state and background border refraction, in both themes. Older 0.1.2 is backed up at `backup/glasslab-0.1.2-before-28dp-stretch`. Do not integrate until user approves.
+
+
+## 2026-11-08 — Liquid Glass Lab 0.1.4 proportional lens ready for HONOR verification
+- User clarified that 0.1.3's +28dp **width-only stretch** was wrong: on movement the whole active lens should grow **proportionally on both axes**, visibly protruding above and below the 56dp dock, then return to 52dp high and neutral grey on rest.
+- Isolated experimental release `glasslab-v0.1.4` from commit `0ca6d8874a6c6febe86cb874b81ba0b846e087fe`. Max moving scale 1.30x on both width and height, 52dp → 67.6dp moving height, centered ±5.8dp outside dock; height measured without normal 56dp constraint by `wrapContentSize(unbounded=true)`.
+- Signed APK https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasslab-v0.1.4/NavTasks_LiquidGlass_Lab_0.1.4.apk; CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42392699540 SUCCESS. SHA-256 `7a1f9d7a372bc3d1985d7484983c830b883a63dd5b810ff8c40fd31b1e2856f0`.
+- Next step: HONOR check during fast tabs and scrolling, both themes: physical protrusion top/bottom, no clipping, steady text, grey rest, unchanged icon sizes and border refraction. Only after user's approval consider production integration.
+- Preserved `backup/glasslab-0.1.3-before-proportional-scale` and old prerelease. **Main NavTasks application remains 0.4.59/versionCode81, code unchanged.**

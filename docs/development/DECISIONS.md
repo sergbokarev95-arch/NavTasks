@@ -77,3 +77,6 @@
 
 
 - 2026-11-08 — user chose first increased selection lens width test of +28dp vs previous +10dp, exclusively in isolated Glass Lab 0.1.3. Keep height 52dp, outer dock 56dp, existing direct backdrop refraction and spring motion unchanged. Lab CI 42390942917 successful; physical HONOR review remains required before production integration. Source 9f3ac3c8574d539141dd828d76c9c08da28fbe6f; release glasslab-v0.1.3.
+
+
+- 2026-11-08: The selected lens must **scale uniformly in X and Y**, not stretch only in width. On transition, a 1.30x experiment raises the 52dp selection to 67.6dp, visibly outside the 56dp outer bar, while the dock itself stays the same. Resting lens returns to 52dp and neutral grey. Keep the 0.1.1 direct Backdrop refraction, original icons/blue palette, springs, horizontal clamps, and unmoving icon sizes. Lab 0.1.4 CI 42392699540 SUCCESS; HONOR approval still pending. Stable main 0.4.59 is untouched.

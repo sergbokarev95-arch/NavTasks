@@ -73,3 +73,6 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 
 - 2026-11-08 — standalone Glass Lab 0.1.3: selected capsule maximum horizontal spring width changed 10dp→28dp in lab only; updated exact-value unit test. Source 9f3ac3c8574d539141dd828d76c9c08da28fbe6f, CI 42390942917 SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.3, APK SHA-256 8f0b7e18cce69c007ff8a3f4e73a40da1affbdaffca3507420a72626ab6f83c9. HONOR acceptance pending. NavTasks app 0.4.59 untouched.
+
+
+- 2026-11-08 — standalone Glass Lab 0.1.4 (not product release): corrected 0.1.3 horizontal-only expansion to proportional 1.30x X/Y 52→67.6dp selection lens; unbounded composition allows top/bottom extension outside 56dp dock; icon sizing and optics untouched. CI 42392699540 SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.4, tested source 0ca6d8874a6c6febe86cb874b81ba0b846e087fe, APK SHA-256 7a1f9d7a372bc3d1985d7484983c830b883a63dd5b810ff8c40fd31b1e2856f0. Physical HONOR acceptance pending; NavTasks main app 0.4.59 unchanged.
