@@ -232,3 +232,12 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - **Separate application** debug ID `com.navtasks.app.glasspreview` (stable debug uses `com.navtasks.app.glass`); stores/profiles NOT shared and neither installation replaces the other. Same visible launcher label/icon as NavTasks for this first preview.
 - Only dock integration: dedicated `rememberLayerBackdrop` records page content, selected 1.30x refractive lens with independent backing, 4 production NavGlassGlyphs, day/night, matte grey rest. Existing `NavGlassBottomBar` stays for API31–32 and rollback; other floating buttons still use Haze. No task, Services, AMOS, Handover, data, notification, or widget logic edited.
 - **Next:** user verifies new *full app* on HONOR: day/night, Today/Work/Handover/Tasks, real scrolling text/borders, 0↔3 quick taps, protrusion above/below dock, no shimmer or lag, grey rest. First-stage approval before extending same glass to '+', calendar and settings.
+
+
+## 2026-11-08 — Glass Dock Preview R2: soften visible text behind the glass
+- HONOR R1 screenshot: "Check ECDIS License" title remained sharply legible behind the lower dock and visually competed with navigation labels. User requested a **small additional blur**, not new lens distortions or a redesign.
+- Branch `feature/liquid-glass-dock-preview`, source commit `0a5e91f2d5b10b811f4a763d922a683115b0a1cb`. Previous preview R1 source `51f04825196093b70288bc078fe0874abf1d2723` preserved as `backup/dockpreview-r1-before-soft-blur`, with unchanged old release.
+- R2 changes only `NavLiquidDockOptics.bar.blurDp` 2→5dp and `selection.blurDp` 1.5→4dp. Optical refraction geometries remain bar 12/36dp and selection 10/18dp. Tab glyphs, colors, 1.30× tall animated capsule, direct content capture and business logic unchanged.
+- Signed full-app preview R2 `com.navtasks.app.glasspreview`, versionCode 82/versionName `0.4.59-dock-preview2`; GitHub Actions https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42398375900 SUCCESS including full app unit tests and signed APK.
+- Download https://github.com/sergbokarev95-arch/NavTasks/releases/download/dockpreview-v0.4.59-r2/NavTasks_LiquidGlass_Dock_Preview_R2.apk ; SHA256 `f8380c7b492220a79256fcc71bfe95e9e5fa217ecd5ad13eb9002c945202f236`.
+- Physical HONOR assessment pending: text readability behind glass vs icons, remain crisp navigation labels, card borders still refract under scrolling, light and dark contrast and motion. **Stable main app still NavTasks 0.4.59/versionCode81; NO production code changed.**

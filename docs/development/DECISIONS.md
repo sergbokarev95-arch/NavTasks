@@ -86,3 +86,6 @@
 
 
 - 2026-11-08 — Port HONOR-approved standalone Glass Lab 0.1.5 optics into a **separate full NavTasks preview**, NOT into stable production. Experimental branch `feature/liquid-glass-dock-preview`, original main source snapshot `backup/navtasks-0.4.59-before-liquid-glass`. Keep 56dp dock + 1.30x proportional outward-growing selection, LayerBackdrop capturing unblurred page only, four original glyphs and matte-grey settle; retain legacy Haze dock for older API and rollback. Full app test uses debug `applicationIdSuffix=".glasspreview"`, isolating all user data; CI 42397184202 passes. Only after HONOR approval progress to '+' / calendar / settings, never blanket-apply glass to all controls at once.
+
+
+- 2026-11-08 — User requires NavTasks Liquid Glass dock to blur underlying **text slightly more** so names such as "Check ECDIS License" do not compete with navigation labels. Tune only pre-lens blur (outer bar 2→5dp, selected lens 1.5→4dp) in isolated full-app Preview R2. Preserve existing refraction displacement/height, 1.30x proportional grow, grey rest, original glyphs and fallback Haze. CI 42398375900 SUCCESS; physical HONOR acceptance outstanding. No main app changes.

@@ -181,3 +181,9 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Signed standalone **full app** test https://github.com/sergbokarev95-arch/NavTasks/releases/tag/dockpreview-v0.4.59-r1; app ID `com.navtasks.app.glasspreview`, APK hash `84f0609f7ce37d4818dcc3e4ec66fb1d8360af21d1c93b8dfd32a9ffaba87faa`. Preview has separate data from stable app.
 - Only primary bottom dock uses direct original-content Backdrop 1.0.6 with 0.1.5 optics and 1.30x unclipped lens. Existing Haze dock retained on Android 12/12L and as recovery. Floating buttons remain unchanged.
 - Stable production app/release 0.4.59 untouched. HONOR visual/performance acceptance of preview pending before product integration and control rollout.
+
+
+## 2026-11-08 — full-app Glass Dock Preview R2 available for test
+- Preview R1 confirmed real glass in full NavTasks, but user feedback: background text too sharp under lower dock. Experimentally blur only at outer bar 5dp (was 2dp), moving/selected lens 4dp (was 1.5dp), preserve all lens() parameters and geometry.
+- Preview branch `feature/liquid-glass-dock-preview`, source `0a5e91f2d5b10b811f4a763d922a683115b0a1cb`; GitHub Actions 42398375900 SUCCESS; signed standalone https://github.com/sergbokarev95-arch/NavTasks/releases/tag/dockpreview-v0.4.59-r2. APK SHA256 `f8380c7b492220a79256fcc71bfe95e9e5fa217ecd5ad13eb9002c945202f236`.
+- Test package `com.navtasks.app.glasspreview`, versionCode82. Old R1 preserved. User visual acceptance pending. Main production code/version v0.4.59 remains untouched.
