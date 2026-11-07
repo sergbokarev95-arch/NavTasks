@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.navtasks.glasslab"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.navtasks.glasslab"

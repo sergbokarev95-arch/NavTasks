@@ -21,3 +21,6 @@ There is intentionally no direct Telegram GPL implementation copied or ported. T
 
 ## Current status
 First lab source, pending CI and physical HONOR validation. Do NOT claim this achieves the final material until device testing.
+
+## Build attempt 1
+- Initial CI 42385094225 failed on AAR metadata: Backdrop 2.0.0 requires compileSdk 37, whereas the new lab was set to 36. The correction changes only the lab compileSdk and workflow Android SDK install to 37; production :app stays compileSdk 36. Gradle plugin 8.13.2 may warn about untested SDK 37; await CI before accepting.
