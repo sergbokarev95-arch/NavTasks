@@ -84,3 +84,12 @@ Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still p
 - Standalone package `com.navtasks.glasslab`, lab versionCode 4 / versionName 0.1.3; signed prerelease should be published only after a passing lab-only CI. Stable main NavTasks 0.4.59 remains untouched.
 - Backup before change: `backup/glasslab-0.1.2-before-28dp-stretch`; previous 0.1.2 prerelease retained.
 - HONOR test: swipe/tap 0→3 and 3→0 repeatedly while looking at first/last endpoints; ensure the widened lens does not overlap outside dock, settle grey behavior is still legible, labels/icons stay crisp, and moving card edges do not shimmer.
+
+
+### Verified 0.1.3 delivery
+- Immutable source commit `9f3ac3c8574d539141dd828d76c9c08da28fbe6f`; separate package `com.navtasks.glasslab`, versionCode 4/versionName 0.1.3.
+- CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42390942917 SUCCESS: `:glasslab:testDebugUnitTest`, `:glasslab:assembleDebug` and signed prerelease publishing.
+- Signed lab APK: https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasslab-v0.1.3/NavTasks_LiquidGlass_Lab_0.1.3.apk
+- GitHub release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.3
+- APK SHA-256 `8f0b7e18cce69c007ff8a3f4e73a40da1affbdaffca3507420a72626ab6f83c9` from CI.
+- Acceptance: physical HONOR motion and outer-edge clipping tests **pending**. Only the stretch parameter changed from 10dp to 28dp; main app remains 0.4.59. Preserve backup and older 0.1.2.
