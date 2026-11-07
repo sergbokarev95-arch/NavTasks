@@ -100,6 +100,24 @@ fun Modifier.navGlass(
     elevation: Dp = 0.dp, // Kept for existing call sites; material draws NO shadow.
 ): Modifier {
     val shape = RoundedCornerShape(radius)
+    // Non-floating panels have no dynamic content behind them; a half-
+    // transparent fill only flattens the source image sampled by Liquid Glass.
+    // Keep the original NAVIGATION and SELECTED material byte-for-byte.
+    navSolidCardTokens(p, role)?.let { solid ->
+        return this
+            .clip(shape)
+            .background(
+                Brush.horizontalGradient(listOf(solid.left, solid.right)),
+                shape
+            )
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(solid.borderTop, solid.borderMid, solid.borderBottom)
+                ),
+                shape
+            )
+    }
     val fill = when (role) {
         GlassRole.PANEL -> if (p.dark) Color(0x851F3143) else Color(0x85FFFFFF)
         GlassRole.TASK -> if (p.dark) Color(0x781C2D40) else Color(0x79FFFFFF)
