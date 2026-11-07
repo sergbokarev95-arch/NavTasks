@@ -94,3 +94,6 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 
 - 2026-11-08 — isolated `NavTasks Glass Check` 0.4.60 capture A/B/C diagnostic from commit eb504f145b8a4e0cf8612cd9e814b8c6c6a1ab8f, release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasscapture-v0.4.60-diagnostic1, CI 42402960923 SUCCESS, signed ZIP 10,865,575 bytes SHA256 969f570d1feab063be5e3ac657e18e839c8767cad30d8a9fbb4893814383d9bf. Same dock/optics, scenes live Haze vs live no Haze vs original Lab reference cards, separate app package/data. HONOR review pending, main v0.4.59 untouched.
+
+
+- 2026-11-08 — full-app isolated Liquid Glass Surface Preview1: central `Modifier.navGlass` uses new `NavSolidCardTokens` for opaque 2-stop tonal gradients and 1dp brighter borders in static PANEL/TASK/NESTED_TASK/CONTROL roles in both themes. Original optics/dock/selected controls/business logic unchanged. Branch `feature/liquid-glass-surface-preview` source `9d210be7d0dc5d4e5f3bcaa24a49a17ad0f920f7`, CI `42404664493` SUCCESS, signed ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasssurfaces-preview1 (10,856,702 bytes, SHA256 1c0df6d2c3aa28eeac80ef525cd94999f393af05a3173fcfc4d895a4c17739ac). User HONOR acceptance pending; stable main 0.4.59 source intact.

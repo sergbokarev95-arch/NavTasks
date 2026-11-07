@@ -155,3 +155,10 @@
 - [ ] User installs separate `NavTasks Glass Check`, tests all three in night/day; scrolls text and bright card borders through dock and records screenshots at analogous positions, reports shimmer/performance.
 - [ ] Diagnose: ЭТАЛОН matches Lab → target scenes/colors; БЕЗ HAZE differs from ЭКРАН on same content → investigate source capture/Haze; ЭТАЛОН differs from Lab → investigate root composition/device density.
 - [ ] Only then design minimal controlled correction with tests. Do not merge speculative changes into production or touch existing task/card business logic.
+
+
+## Current priority — HONOR test opaque card surfaces Preview 1 (2026-11-08)
+- [x] User confirmed Live Haze and Live no Haze glass nearly indistinguishable, Lab reference looks much better. Adopt option 1: role-specific, opaque HIG-style card gradients/edges in shared navGlass; no changes to screen geometry or task state logic.
+- [x] Preserve original `NavLiquidGlassDock.kt`, `NavLiquidDockOptics.kt`, `NavTasksUi.kt`; isolated `feature/liquid-glass-surface-preview` CI 42404664493 SUCCESS; signed compact ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasssurfaces-preview1/NavTasks_LiquidGlass_Surfaces_Preview1.zip.
+- [ ] User installs separate `NavTasks Glass Surface` (no production data mutation); if needed imports copy of profile; checks Today, monthly task list under dock, nested tasks, calendar, Works/AMOS/Services/Handover and profiles for attractive Day/Night surfaces, labels/status contrast, scrolling, refracted borders and absence of flickering.
+- [ ] If accepted, plan safe in-place signed update (versionCode > current candidate83, and rollback with higher version), without modifying business logic. If not, tune just tokens centrally. Do not roll out optical glass to all inputs/cards.

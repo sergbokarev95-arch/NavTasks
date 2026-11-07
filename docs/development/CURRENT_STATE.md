@@ -205,3 +205,9 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Installed full-app 0.4.60 Beta user says refractive output less convincing than approved Lab 0.1.5. Renderer function and optics were verified identical, but background scene and Haze layer differ.
 - Independent `glasscapture-v0.4.60-diagnostic1` ZIP signed CI `42402960923` SUCCESS; package `com.navtasks.app.glassdiagnostic`, 3 modes (LIVE Haze, LIVE no Haze, Lab reference cards), unchanged dock/lens. https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasscapture-v0.4.60-diagnostic1.
 - On-device comparison pending; do not infer whether source capture or scene colors are responsible until screenshots. Main source remains stable v0.4.59.
+
+
+## 2026-11-08 — solid-gradient card system preview available
+- User chose richer **static card materials** rather than speculative changes to approved 0.1.5 glass. Common `navGlass` now has separate opaque gradient tokens for PANEL/TASK/NESTED_TASK/CONTROL in isolated feature; selected navigation and true optical dock preserved.
+- Signed standalone https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasssurfaces-preview1, CI 42404664493 SUCCESS, source 9d210be7d0dc5d4e5f3bcaa24a49a17ad0f920f7; ZIP SHA256 1c0df6d2c3aa28eeac80ef525cd94999f393af05a3173fcfc4d895a4c17739ac. Separate app `com.navtasks.app.glasssurface`, no shared user data.
+- Real HONOR design acceptance pending. Other overlay/dialog surfaces not rewritten. Production main app source remains v0.4.59 and in-place 0.4.60 candidate unchanged.

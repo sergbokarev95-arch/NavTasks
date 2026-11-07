@@ -98,3 +98,6 @@
 
 
 - 2026-11-08: Do NOT keep modifying Liquid Glass blur/refraction by guess. Since source renderer/lens parameters already match accepted Lab 0.1.5, first isolate whether NavTasks UI contents or Haze composition affect sampling. Use separate package `com.navtasks.app.glassdiagnostic` with three scene modes from same untouched renderer; signed CI 42402960923 SUCCESS. No production code changes until HONOR A/B/C feedback.
+
+
+- 2026-11-08: User selected option 1 after controlled diagnostic: change common static panel/card surfaces to a stronger, more opaque Apple-HIG-like tone/gradient system for all regular roles, NOT the actual refractive dock shader and NOT task layout/data. In first preview role-specific static PANEL/TASK/NESTED_TASK/CONTROL are opaque; NAVIGATION and SELECTED stay translucent. Enforce source hash stability of `NavTasksUi.kt`, `NavLiquidGlassDock.kt`, `NavLiquidDockOptics.kt` in CI. Preview release glasssurfaces-preview1 succeeded, physical HONOR acceptance pending.
