@@ -58,3 +58,11 @@ Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still p
 - APK SHA-256: 26c5a418e395a83c1c3733e77158e501d2ba5b950a88ed2e5d59ffbd9a5f1d69 (GitHub Actions sha256sum).
 - HONOR acceptance outstanding: observe actual curvature of light card outlines under Glass ON, both themes, and check scrolling for text shimmer/jank. Compilation and unit tests do not prove visual quality.
 - main remains d2792ab504610d0ddf02738f573db0ca0206041d with production NavTasks 0.4.59 / versionCode 81; no app-module changes. Previous lab prerelease 0.1.0 and backup branch retained.
+
+## 0.1.2 — production dock icons and mobile selection motion (2026-11-08)
+- User HONOR day/night screenshots **accept** the visible glass/refraction of 0.1.1: card borders now visibly bend under the 56dp outer dock. Moving shimmer has not been independently measured; keep testing.
+- Precisely copy the four glyph stroke paths from stable main NavGlassGlyph into isolated GlassLabDockGlyph: today/check, work case, handover notebook, tasks/checklist. Do not import production :app module or modify NavTasks source.
+- Match production dock colors: selected icon/label night #329CFF and day #087DFA, inactive icon text night #F2F8FF day #172B42 at 89% alpha; inactive labels night #AFC4D8 and day #5F768D; 24dp glyph and 10sp label.
+- Lens animation follows the stable NavTasks critically damped positional spring (stiffness 550), material spring (700), and up-to-10dp horizontal stretch (600); keep a 2dp selected capsule inset and 52dp baseline height. During travel glass stays optically visible, after settling the active lens becomes matte neutral grey. The full dock keeps the approved Backdrop optics.
+- Preserve existing Glass ON/OFF, Day/Night, direct source capture, scrollable cards, and no access to production data. Add model regression tests for tab identities and bounded stretch.
+- Release signed isolated Glass Lab 0.1.2 only after GitHub CI success. **Do not merge into main yet**: first verify live switching on HONOR, rapid retargeting, light/dark, border refraction during scroll, clip/overflow at first and last tabs and that the resting selection is neutral grey.

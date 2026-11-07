@@ -3,13 +3,18 @@ package com.navtasks.glasslab
 import android.app.Activity
 import android.os.Bundle
 import android.view.WindowInsetsController
+import android.view.HapticFeedbackConstants
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -40,10 +45,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -59,6 +68,7 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
+import kotlin.math.abs
 
 /**
  * Totally separate app ID; no NavTasks stores, profiles, network, permissions
@@ -244,11 +254,12 @@ private fun GlassLabDock(
     val density = LocalDensity.current
     val ambient = if (dark) Color(0xFF111E2E).copy(alpha = .15f)
         else Color.White.copy(alpha = .12f)
-    val textColor = if (dark) Color(0xFFE3EBF4) else Color(0xFF142B3F)
-    val blue = if (dark) Color(0xFF4BABFF) else Color(0xFF057DD2)
+    // Exact production NavTasks active blue, inactive icon and caption colors.
+    val activeBlue = if (dark) Color(0xFF329CFF) else Color(0xFF087DFA)
+    val inactiveGlyph = if (dark) Color(0xFFF2F8FF).copy(alpha = .89f)
+        else Color(0xFF172B42).copy(alpha = .89f)
+    val inactiveLabel = if (dark) Color(0xFFAFC4D8) else Color(0xFF5F768D)
     val fallback = if (dark) Color(0xDC1D2A38) else Color(0xEAE4EDF3)
-    // A faint *surface* reflection stays visible over flat colors; the optics
-    // beneath it must still refract actual card outlines rather than wash them out.
     val surfaceSheen = Brush.verticalGradient(
         if (dark) listOf(
             Color.White.copy(alpha = .08f),
@@ -261,13 +272,14 @@ private fun GlassLabDock(
         )
     )
 
+    // Keep the proven 0.1.1 direct-scene lens for the entire 56dp navigation bar.
+    // Selection, glyphs and interaction remain on top and outside this shader.
     val backing = if (optical) {
         Modifier.drawBackdrop(
             backdrop = backdrop,
             shape = { Capsule() },
             effects = {
                 vibrancy()
-                // Preserve thin card borders before bending them at the glass rim.
                 blur(with(density) { GlassLabOptics.bar.blurDp.dp.toPx() })
                 lens(
                     with(density) { GlassLabOptics.bar.refractionHeightDp.dp.toPx() },
@@ -300,13 +312,38 @@ private fun GlassLabDock(
     } else Modifier
 
     BoxWithConstraints(modifier.fillMaxWidth().height(56.dp).then(backing).then(opticalEdge)) {
-        val cellWidth = maxWidth / 4
-        val offset by animateDpAsState(
-            targetValue = cellWidth * selected,
-            animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
-            label = "glassLabSelected"
+        val cellWidth = maxWidth / GlassLabDockTabs.items.size
+        val target = selected.coerceIn(0, GlassLabDockTabs.items.lastIndex).toFloat()
+        // Follow the working NavTasks 0.4.59 movement: quick, interruptible spring,
+        // while extra width and material settle independently of travel.
+        val slide by animateFloatAsState(
+            targetValue = target,
+            animationSpec = spring(
+                dampingRatio = 1f,
+                stiffness = 550f,
+                visibilityThreshold = .001f
+            ),
+            label = "glassLabDockSlide"
         )
-        val highlightModifier = if (optical) {
+        val moving = abs(slide - target) > .015f
+        val matte by animateFloatAsState(
+            targetValue = if (moving) 0f else 1f,
+            animationSpec = spring(dampingRatio = 1f, stiffness = 700f),
+            label = "glassLabLensMatte"
+        )
+        val stretched by animateFloatAsState(
+            targetValue = if (moving) 1f else 0f,
+            animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
+            label = "glassLabLensStretch"
+        )
+        val extraWidth = GlassLabDockTabs.maxStretchDp.dp * stretched.coerceIn(0f, 1f)
+        val lensWidth = cellWidth - 4.dp + extraWidth
+        val lensX = (cellWidth * slide + 2.dp - extraWidth / 2f)
+            .coerceIn(2.dp, (maxWidth - 2.dp - lensWidth).coerceAtLeast(2.dp))
+
+        // Exactly one moving lens. While travelling it is optically refractive;
+        // after it lands, its own face fades into neutral graphite/grey.
+        val selection = if (optical) {
             Modifier.drawBackdrop(
                 backdrop = backdrop,
                 shape = { Capsule() },
@@ -318,44 +355,71 @@ private fun GlassLabDock(
                         with(density) { GlassLabOptics.selection.refractionAmountDp.dp.toPx() }
                     )
                 },
-                highlight = { Highlight.Default.copy(alpha = .75f) },
+                highlight = { Highlight.Default.copy(alpha = .3f + (1f - matte) * .45f) },
                 innerShadow = { InnerShadow(radius = 8.dp, alpha = .18f) },
                 onDrawSurface = {
-                    drawRect(
-                        if (dark) Color(0xFF75B8F0).copy(alpha = .13f)
+                    val traveling = if (dark) Color(0xFF75B8F0).copy(alpha = .13f)
                         else Color.White.copy(alpha = .19f)
-                    )
+                    val resting = if (dark) Color(0xFF616B77).copy(alpha = .86f)
+                        else Color(0xFFD7D8DA).copy(alpha = .87f)
+                    drawRect(lerp(traveling, resting, matte.coerceIn(0f, 1f)))
                 }
             )
-        } else Modifier.clip(RoundedCornerShape(26.dp))
-            .background(if (dark) Color(0xFF3C5368) else Color(0xFFBDD6E7))
+        } else {
+            Modifier.clip(RoundedCornerShape(26.dp))
+                .background(if (dark) Color(0xFF3C5368) else Color(0xFFBDD6E7))
+        }
 
         Box(
-            Modifier.offset(x = offset + 2.dp, y = 2.dp)
-                .width(cellWidth - 4.dp).height(52.dp)
-                .then(highlightModifier)
+            Modifier.offset(x = lensX, y = 2.dp)
+                .width(lensWidth).height(52.dp)
+                .then(selection)
         )
 
-        val symbols = listOf("◎", "▣", "⇥", "☷")
-        val labels = listOf("Сегодня", "Работы", "Handover", "Задачи")
+        val view = LocalView.current
         Row(
-            Modifier.fillMaxSize().padding(vertical = 2.dp),
+            Modifier.fillMaxSize().padding(vertical = 2.dp).selectableGroup(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            repeat(4) { i ->
+            GlassLabDockTabs.items.forEachIndexed { index, item ->
+                val active = selected == index
+                val interaction = remember { MutableInteractionSource() }
+                val pressed by interaction.collectIsPressedAsState()
+                val pressScale by animateFloatAsState(
+                    targetValue = if (pressed) .94f else 1f,
+                    animationSpec = spring(dampingRatio = 1f, stiffness = 1600f),
+                    label = "glassLabTabPress"
+                )
                 Column(
                     Modifier.weight(1f).fillMaxHeight()
-                        .clickable { onSelected(i) },
+                        .clip(RoundedCornerShape(21.dp))
+                        .selectable(
+                            selected = active,
+                            role = Role.Tab,
+                            interactionSource = interaction,
+                            indication = null
+                        ) {
+                            if (!active) {
+                                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                                onSelected(index)
+                            }
+                        },
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        symbols[i], fontSize = 23.sp,
-                        color = if (selected == i) blue else textColor
+                    GlassLabDockGlyph(
+                        kind = item.glyph,
+                        color = if (active) activeBlue else inactiveGlyph,
+                        modifier = Modifier.size(24.dp).graphicsLayer {
+                            scaleX = pressScale
+                            scaleY = pressScale
+                        }
                     )
+                    Spacer(Modifier.height(1.dp))
                     Text(
-                        labels[i], fontSize = 10.sp,
-                        color = if (selected == i) blue else textColor,
+                        text = item.label,
+                        color = if (active) activeBlue else inactiveLabel,
+                        fontSize = 10.sp,
                         textAlign = TextAlign.Center
                     )
                 }
