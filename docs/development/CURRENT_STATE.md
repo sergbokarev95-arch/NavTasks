@@ -157,3 +157,9 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Updated only standalone `:glasslab` sources in `experiments/liquid-glass-backdrop`; original production `app` module remains 0.4.59 / versionCode 81.
 - Lab 0.1.2 source `049836c2bd05bbd3378162e174a46f2ae249c240`; CI `42389729911` SUCCESS (tests + signed APK); prerelease https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.2. APK SHA-256 `fdeb481c91252db2c1e39f7ed02acba4541b2488f3a94bcc6d640b4f64a785c9`.
 - Physical acceptance of new animation **not yet confirmed**. Next: test 4 tabs and Day/Night on HONOR, then plan minimal non-destructive integration into production.
+
+
+## 0.1.3 independent Liquid Glass Lab tested by CI (2026-11-08)
+- Requested change: motion-only `GlassLabDockTabs.maxStretchDp` 10f → 28f. No production code, lens height, direct Backdrop capture, glyph colors, data or navigation changed.
+- Source `9f3ac3c8574d539141dd828d76c9c08da28fbe6f`, CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42390942917 SUCCESS; signed pre-release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.3; APK SHA256 `8f0b7e18cce69c007ff8a3f4e73a40da1affbdaffca3507420a72626ab6f83c9`.
+- HONOR visual evaluation of the larger lens pending; `main` application version remains NavTasks 0.4.59/versionCode 81.

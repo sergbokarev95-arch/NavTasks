@@ -74,3 +74,6 @@
 
 
 - 2026-11-08 (Glass Lab 0.1.2): HONOR visual feedback accepts the new border-refraction quality of Lab 0.1.1. Replicate production NavGlassGlyph vector paths for four tabs exactly in the standalone app; use active blue #329CFF night/#087DFA day and production inactive glyph/caption colors. Animate one lens with stable spring, max 10dp horizontal stretch, then neutral matte-grey settled selection; keep 56dp backdrop geometry, real scene capture and Glass OFF fallback. Main application is unchanged until HONOR test of 0.1.2 confirms motion, no shimmer, smooth switching and geometry. CI 42389729911 SUCCESS; standalone https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.2.
+
+
+- 2026-11-08 — user chose first increased selection lens width test of +28dp vs previous +10dp, exclusively in isolated Glass Lab 0.1.3. Keep height 52dp, outer dock 56dp, existing direct backdrop refraction and spring motion unchanged. Lab CI 42390942917 successful; physical HONOR review remains required before production integration. Source 9f3ac3c8574d539141dd828d76c9c08da28fbe6f; release glasslab-v0.1.3.

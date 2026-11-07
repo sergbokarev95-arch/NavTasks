@@ -70,3 +70,6 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 
 - 2026-11-08 — Glass Lab 0.1.2 **isolated experiment only**: exact four production NavTasks glyph shapes and color semantics copied into standalone lab; moving active lens now briefly stretches with a spring and settles to graphite/neutral grey while outer dock retains 0.1.1 Backdrop refraction. Source 049836c2bd05bbd3378162e174a46f2ae249c240; GitHub Actions 42389729911 SUCCESS; signed APK https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.2; APK SHA-256 fdeb481c91252db2c1e39f7ed02acba4541b2488f3a94bcc6d640b4f64a785c9. HONOR motion acceptance pending. NavTasks main app source remains 0.4.59 unchanged.
+
+
+- 2026-11-08 — standalone Glass Lab 0.1.3: selected capsule maximum horizontal spring width changed 10dp→28dp in lab only; updated exact-value unit test. Source 9f3ac3c8574d539141dd828d76c9c08da28fbe6f, CI 42390942917 SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.3, APK SHA-256 8f0b7e18cce69c007ff8a3f4e73a40da1affbdaffca3507420a72626ab6f83c9. HONOR acceptance pending. NavTasks app 0.4.59 untouched.

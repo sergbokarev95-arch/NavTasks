@@ -200,3 +200,10 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - Next: user visually tests real HONOR movement: production icons and colors, spring stretch/travel, neutral-grey lens once settled; cross-card border refraction, scroll smoothness, rapid 0↔3 switches, Day/Night.
 - `main` app remains v0.4.59 / versionCode 81 with stable Haze; no production source change. Main branch docs-only updates may advance HEAD. Only after acceptance, stage isolated production integration without changing task/AMOS/profile logic.
 - Lab history and rollback: backup branch `backup/glasslab-0.1.1-before-nav-animation`; see `docs/development/GLASS_LAB.md` on lab branch.
+
+
+## 2026-11-08 — Glass Lab 0.1.3: 28dp expanding lens published
+- User requested a much larger transient selected lens like screenshot reference; authorized first increase from 10dp to **28dp**, width only. Do not alter height or refraction while testing.
+- Experiment-only source `9f3ac3c8574d539141dd828d76c9c08da28fbe6f`, branch `experiments/liquid-glass-backdrop`; CI `42390942917` SUCCESS and signed release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.3
+- APK SHA-256 `8f0b7e18cce69c007ff8a3f4e73a40da1affbdaffca3507420a72626ab6f83c9`. Separate package and signing retained; main NavTasks is still **0.4.59**, unchanged.
+- Next: on HONOR test expanded travel 0↔3, dock edge containment, selected grey settled state and background border refraction, in both themes. Older 0.1.2 is backed up at `backup/glasslab-0.1.2-before-28dp-stretch`. Do not integrate until user approves.
