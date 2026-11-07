@@ -1,12 +1,12 @@
 # NavTasks — Current State
 
-Reviewed 2026-11-07 against GitHub main and successful signed 0.4.58 release; subsequent documentation-only commits may advance main HEAD.
+Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current signed and CI-verified release: **v0.4.58 (versionCode 80), corrective glass prototype; HONOR visual acceptance still pending.** v0.4.57 (versionCode 79) is known visually regressed, and v0.4.56 is the pre-optics rollback reference. Debug variant adds -beta and .glass.
+- Current signed CI-verified release: **v0.4.59 (versionCode 81), runtime dock restored to v0.4.56; HONOR acceptance pending.** v0.4.57 and v0.4.58 were visually rejected for shimmering content; v0.4.56 is the dock renderer baseline. Debug variant adds -beta and .glass.
 - Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date; 0.4.52 edge-to-edge standalone screens; 0.4.53–0.4.54 calendar/Today weekend refinement; 0.4.55–0.4.56 right-hand Add controls. 0.4.57 tests an optically refractive dock.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
-- Current release workflow .github/workflows/publish-0.4.57-apk.yml pinned to 3d2ffdeead8c607d2e6f7b43d126d18ae6593581. Earlier signed release workflows are retained for provenance.
+- Current release workflow .github/workflows/publish-0.4.59-apk.yml pinned to b22057ad92b0f531df12217c4ecee97150395951. Earlier signed release workflows are retained for provenance.
 - GitHub Actions Build NavTasks Android APK run 42254823995 completed successfully on 2026-11-06. CI runs unit tests and assembles debug APK. Physical-device validation is not established by CI.
 - Main modules: Today, Plan/calendar, Tasks and recurrence, profiles, import/export, handover, Services, AMOS work orders, Works agenda, notifications and two home widgets. Implementation is Kotlin/Jetpack Compose, with RemoteViews XML widgets.
 - Notification implementation: app/src/main/java/com/navtasks/app/NavNotifications.kt; icon app/src/main/res/drawable/navtasks_notification.xml.
@@ -142,4 +142,4 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.58 release; su
 - HONOR user report on v0.4.58: the dock still looks like a transparent container, with text and cards under it visibly shimmering/jittering. v0.4.57 and v0.4.58 **failed physical visual acceptance**. Further alpha/blur/shader-strength tweaks are not justified without isolating the renderer.
 - Safe corrective action: restore `app/src/main/java/com/navtasks/app/NavGlass.kt` **byte-for-byte from the known v0.4.56 source commit `612ba1ba215e8c1871a654acda2304f5c44c678c`**, preserving the same Haze blur, selected-lens Canvas, dock dimensions, tab click behavior and theme rendering. This specifically disconnects AGSL/RenderEffect from runtime and removes the 0.4.57/0.4.58 experimental material changes. All subsequent task, Handover, AMOS, Services and data changes remain intact.
 - `NavGlassOptics.kt` and its test are retained as **inactive research files** for traceability; there is NO call to `createNavDockRefraction` in the restored `NavGlass.kt`. No model/data/profile changes or dependency upgrade.
-- VersionName 0.4.59, versionCode 81. Source CI, signed GitHub release, and user confirmation still required. Goal is stability first; do NOT advertise v0.4.59 as new 'true glass'.
+- VersionName 0.4.59, versionCode 81. Main CI 42383033196 SUCCESS; signed publisher CI 42383289163 SUCCESS. Immutable source b22057ad92b0f531df12217c4ecee97150395951, publisher workflow 28f6245873e0613cda7f17e9d3da7e9ab1ea7612. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.59-glass-beta; APK SHA-256 24dbfa7c439e95775e86abd8e064efdf119417903f2d2369390405b83090ab8e, ZIP SHA-256 454dbfd31aefe0b383d2d4ed4c1656d089fc5c079dabc2e705d8e90a1eaf1f33. HONOR visual confirmation is still pending; this release is not new refractive glass.
