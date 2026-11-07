@@ -33,3 +33,5 @@
 - v0.4.50 was signed and released 2026-11-07, source 0a3467be; previous release 0.4.49 remains available. GitHub CI is not physical-device acceptance.
 
 - 2026-11-07 (0.4.51): “Дата заявки AMOS” for an unplanned service is manually selectable, defaulting to the current day for new entries. It is historical/reference metadata, not a due/completion date; must not create reminders, recurrence, scheduled Today/Calendar entries, Soon/Overdue status, or affect actual completion date. Reuse the existing Unplanned lastDate field; old profiles must remain compatible.
+
+- 0.4.51 signed release 2026-11-07, source 651948cb0c280cd63a418d0054515f4d83102ea9: unplanned AMOS request date remains informational; it is not a deadline or the service-completion date. No change to profile JSON schema.

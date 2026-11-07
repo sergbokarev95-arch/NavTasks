@@ -1,9 +1,9 @@
 # NavTasks — Current State
 
-Reviewed 2026-11-07 against GitHub main and successful signed 0.4.50 release; subsequent documentation-only commits may advance main HEAD.
+Reviewed 2026-11-07 against GitHub main and successful signed 0.4.51 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current source under CI validation: 0.4.51, versionCode 73. Last published build: v0.4.50-glass-beta; do not install 0.4.51 until its own CI and release succeed. Debug variant adds -beta and .glass.
+- Current published and CI-verified version: 0.4.51, versionCode 73; v0.4.50 remains the prior published release. Debug variant adds -beta and .glass.
 - Previous stable source: 0.4.46 at 59f6a77 (due-only AMOS/Services and widget visibility); 0.4.47 source update pending CI: actual app icon on notifications, red missed chips, widget layout and navigation.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Current release workflow: .github/workflows/publish-0.4.48-apk.yml; release v0.4.48-glass-beta (APK and ZIP), pinned to 2968dcce377f531b4bc3a57166cb8e0b62d1e1de. Previous v0.4.47 release marked superseded.
@@ -58,10 +58,13 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.50 release; su
 - Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.50-glass-beta; APK SHA-256 63e814be42a5a9f3af44f3551bf5024ea16ed6c00aab3ccd127023cf00e6680d.
 - Real HONOR/Samsung UI and data-flow testing still pending.
 
-## 0.4.51 — editable informational AMOS request date (source stage, 2026-11-07)
+## 0.4.51 — editable informational AMOS request date (released, 2026-11-07)
 - User feedback: an unplanned AMOS requisition can have been created on an earlier/later date than the date it was entered into NavTasks.
 - ServiceEditorDialog now shows a selectable “Дата заявки AMOS” wheel date picker only for Unplanned. New drafts default to today's date; editing a saved unplanned service defaults to its existing request date.
 - Chosen date remains stored as ServiceEntry.lastDate for unplanned records, as established in 0.4.50. No new profile JSON property, conversion or migration.
 - No change to the planned service due date, last actual maintenance, recurrence, overdue/soon, calendar, notification scheduling, AMOS work orders, widgets or task logic.
 - Unit regression covers request date before/after today and confirms no due/notification effects or false schedule.
-- Source commit / CI / publisher will be recorded after completion; phone acceptance outstanding.
+- Immutable source 651948cb0c280cd63a418d0054515f4d83102ea9; publisher workflow 48c55cd46d37bb66df7d10fc57cab801e488f694.
+- Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42354150215 SUCCESS; stable-signed publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42354348234 SUCCESS.
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.51-glass-beta; APK SHA-256 ea58622fad66204e812dfdaea6ed7e8546ed98e672c6764481dd91f35ae8e4c3.
+- HONOR device validation of UI and data flow remains pending.
