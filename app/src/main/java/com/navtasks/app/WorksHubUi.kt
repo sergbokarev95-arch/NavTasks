@@ -35,14 +35,9 @@ fun WorksHubScreen(
     }
     val activeServices = services.entries.filter { it.closedAt == null }
     val overdueAmos = activeAmos.count { it.dueDate.isBefore(today) }
-    val overdue = activeServices.count {
-        it.completedAt == null && it.nextDate.isBefore(today)
-    }
-    val approaching = activeServices.count {
-        it.completedAt == null && !it.nextDate.isBefore(today) &&
-            (it.nextDate <= today.plusDays(30) ||
-                (it.remindMonths > 0 && !today.isBefore(serviceWarningStart(it))))
-    }
+    // Unplanned requests have no due date and must never inflate overdue/soon counters.
+    val overdue = filterServiceOverview(activeServices, today, WorkOverviewFilter.OVERDUE).size
+    val approaching = filterServiceOverview(activeServices, today, WorkOverviewFilter.SOON).size
 
     Column(
         Modifier.fillMaxSize().then(

@@ -163,16 +163,19 @@ object NavNotifications {
             ).getStringSet("delivered", emptySet()).orEmpty()
             val current = LocalDateTime.now()
             for (service in ServiceStore(context, profiles).entries) {
-                if (service.completedAt != null || service.remindMonths == 0 ||
-                    service.nextDate.isBefore(today)) continue
+                // AMOS requisitions without a planned date never schedule a due alarm.
+                if (service.unplanned || service.completedAt != null ||
+                    service.remindMonths == 0) continue
+                val due = service.nextDate ?: continue
+                if (due.isBefore(today)) continue
                 val notificationKey = profiles.activeId + ":service:" +
-                    service.id + ":" + service.nextDate
+                    service.id + ":" + due
                 if (notificationKey in notified) continue
                 val start = serviceWarningStart(service)
                 var alarm = (if (start.isBefore(today)) today else start).atTime(9, 0)
                 if (!alarm.isAfter(current)) alarm = current.plusMinutes(2)
-                if (alarm.toLocalDate().isAfter(service.nextDate)) continue
-                schedule(context, SERVICE, service.id + "|" + service.nextDate,
+                if (alarm.toLocalDate().isAfter(due)) continue
+                schedule(context, SERVICE, service.id + "|" + due,
                     alarm.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
             }
             // One configurable early warning per open AMOS work order and due date.
@@ -241,21 +244,22 @@ object NavNotifications {
             if (profiles.active.kind != NavProfileKind.VESSEL) return
             val service = ServiceStore(context, profiles).entries
                 .firstOrNull { it.id == serviceId } ?: return
-            if (service.completedAt != null ||
-                service.nextDate.toString() != expectedDue ||
+            if (service.unplanned || service.completedAt != null) return
+            val due = service.nextDate ?: return
+            if (due.toString() != expectedDue ||
                 service.remindMonths == 0 || LocalDate.now().isBefore(serviceWarningStart(service)) ||
-                LocalDate.now().isAfter(service.nextDate)) return
+                LocalDate.now().isAfter(due)) return
             if (!mayNotify(context)) return
             if (!alreadyNotified(context,
-                profiles.activeId + ":service:" + service.id + ":" + service.nextDate)) return
+                profiles.activeId + ":service:" + service.id + ":" + due)) return
             val heading = localized("Приближается сервис", "Maintenance due soon", settings.language)
             val detail = service.equipment + " · " +
-                localized("до ", "due ", settings.language) + service.nextDate
+                localized("до ", "due ", settings.language) + due
             val notification = notificationBuilder(context, CHANNEL_TASKS)
                 .setContentTitle(heading).setContentText(detail)
                 .setStyle(Notification.BigTextStyle().bigText(detail))
                 .setContentIntent(openTask(context)).setAutoCancel(true).build()
-            manager(context).notify(("service:" + service.id + service.nextDate).hashCode(),
+            manager(context).notify(("service:" + service.id + due).hashCode(),
                 notification)
             return
         }

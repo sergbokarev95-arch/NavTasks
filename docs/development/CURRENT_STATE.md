@@ -41,3 +41,13 @@ Reviewed 2026-11-07 against GitHub main and successful 0.4.48 release; subsequen
 - Latest release: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.49-glass-beta.
 - Published APK SHA-256: 08123ef5d64a6b7d6f1febe3725a8fe7902b47ea0ff50fc85f4b90585b5103a5.
 - Not yet visually verified on HONOR/Samsung.
+
+## 0.4.50 — planned/unplanned maintenance (source stage, 2026-11-07)
+
+- Base: main 0fa21503afcc32b9ae356388705dbf121d6d4efb (published 0.4.49 remains the verified release until 0.4.50 passes).
+- New source version: 0.4.50 / versionCode 72. **CI, release publication and device validation pending.**
+- ServiceEntry now has nullable nextDate and optional unplanned flag; missing flag in older profile JSON defaults to planned. Scheduled records retain required due date/intervals. Unplanned records cannot have a due date, cycle, or advance reminder.
+- Unplanned request date is retained in the existing lastDate field as an explicit request-date interpretation for that mode; no fake nextDate is created. Service history has an optional scheduledDate for archived unscheduled work.
+- Services editor shows Planned/Unplanned, requires AMOS request number for new unplanned records, hides due/recurrence/reminder; completed unscheduled work archives the actual request number without starting a cycle.
+- Date-based Today, Calendar, Soon, Overdue, Work Hub counters and service notifications explicitly exclude unplanned requests; completed unplanned work remains visible in completion history. Full profile JSON remains backward-compatible, and selective template export continues to scrub the vessel's actual request number.
+- Physical HONOR/Samsung verification and CI are required before calling the change finished.

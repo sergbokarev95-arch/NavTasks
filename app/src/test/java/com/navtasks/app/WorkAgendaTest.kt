@@ -143,7 +143,7 @@ class WorkAgendaTest {
         assertEquals(1, serviceCompletedOnDay(listOf(closed), now).size)
         assertFalse(serviceReminderVisibleOnDay(closed, now))
         assertFalse(serviceReminderVisibleOnDay(closed, now.plusDays(1)))
-        assertTrue(serviceReminderVisibleOnDay(closed, closed.nextDate))
+        assertTrue(serviceReminderVisibleOnDay(closed, requireNotNull(closed.nextDate)))
         assertTrue(serviceCompletedOnDay(listOf(closed), now.plusDays(1)).isEmpty())
     }
 
@@ -202,14 +202,14 @@ class WorkAgendaTest {
         val removed = finished.copy(closedAt = now)
         assertEquals("REQ-912", removed.serviceHistory.single().requestNumber)
         assertFalse(serviceVisibleOnDay(removed, now.plusDays(1)))
-        assertFalse(servicePlannedOnDay(removed, removed.nextDate))
+        assertFalse(servicePlannedOnDay(removed, requireNotNull(removed.nextDate)))
         assertTrue(serviceCompletedOnDay(listOf(removed), now).isEmpty())
         assertTrue(filterServiceOverview(listOf(removed), now, WorkOverviewFilter.ALL).isEmpty())
         assertTrue(filterServiceOverview(listOf(removed), now, WorkOverviewFilter.SOON).isEmpty())
         val restored = removed.copy(closedAt = null)
         assertEquals(finished.serviceHistory, restored.serviceHistory)
         assertEquals(finished.nextDate, restored.nextDate)
-        assertTrue(servicePlannedOnDay(restored, restored.nextDate))
+        assertTrue(servicePlannedOnDay(restored, requireNotNull(restored.nextDate)))
         assertEquals(1, serviceCompletedOnDay(listOf(restored), now).size)
     }
 

@@ -23,3 +23,9 @@
 - 2026-11-07 user-approved clarification: Today Missed is completely absent (including its reserved horizontal gap) when backlog count is zero; the dates occupy that space. When count becomes positive, show restrained red glass with animated horizontal appearance; do not change data, overdue semantics, or the widget's existing zero-count behavior.
 
 - 0.4.49 shipped on 2026-11-07: the Today missed chip has no zero state (hidden entirely), while the home widget missed badge retains its already-implemented zero-hide behavior. The date strip reclaims the width with an AnimatedVisibility horizontal transition.
+
+- 2026-11-07 (0.4.50): equipment maintenance has two distinct record modes: planned (schedule, optional recurrence, reminders) and unplanned (AMOS requisition, no scheduled next due). This is different from a planned one-off with period=0. Existing JSON with no unplanned flag means Planned.
+- Unplanned requests must not contribute to date-based Today/Calendar/Soon/Overdue or scheduled service notifications. Actual completion appears in history; request number is archived, and no next cycle is generated.
+- Reuse current local record/profile storage. For an unplanned record nextDate is nullable; the existing lastDate is interpreted as the request creation date in that mode. Do not fabricate a next due date.
+- New unplanned records require a manually entered AMOS requisition number; NavTasks does not create the request in external AMOS. The selective-template exchange removes original request numbers, leaving an unplanned draft that must have a new number before completion.
+- Prevent changing service type when service completion history exists to avoid reinterpretation of archived records.

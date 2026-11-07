@@ -83,6 +83,20 @@ class SelectiveExchangeTest {
         assertEquals("In locker", entry.notes)
     }
 
+    @Test fun unplannedRequestTemplateKeepsTypeButDoesNotLeakShipsRequestNumber() {
+        val source = ServiceEntry(id = "unplanned-1", equipment = "Ice Radar PC",
+            lastDate = day, nextDate = null, unplanned = true,
+            requestNumber = "SHIP-AMOS-123", comment = "Replace PC")
+        val scrubbed = SelectiveTransfer.clean(SelectiveBundle(services = listOf(source)))
+            .services.single()
+        assertTrue(scrubbed.unplanned)
+        assertNull(scrubbed.nextDate)
+        assertEquals("", scrubbed.requestNumber)
+        assertEquals("Replace PC", scrubbed.comment)
+        assertTrue(scrubbed.serviceHistory.isEmpty())
+        assertTrue(runCatching { completeServiceCycle(scrubbed, day) }.isFailure)
+    }
+
     @Test fun sameNameAndAmosReferenceAreAppendOnlyEvenWithDifferentCase() {
         val snapshot = ProfileSnapshot(vessel,
             templates = listOf(TaskTemplate(id = "a", title = "SEA LOG",

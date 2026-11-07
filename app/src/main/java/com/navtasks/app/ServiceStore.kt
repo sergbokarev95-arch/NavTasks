@@ -11,7 +11,7 @@ import java.util.UUID
 
 /** Immutable dated snapshot of a completed equipment service. */
 data class ServiceCompletion(
-    val scheduledDate: LocalDate,
+    val scheduledDate: LocalDate?,
     val completedAt: LocalDate,
     val requestNumber: String = "",
     val equipment: String = "",
@@ -19,7 +19,7 @@ data class ServiceCompletion(
     val intervalMonths: Int = 0,
 ) {
     fun toJson(): JSONObject = JSONObject()
-        .put("scheduledDate", scheduledDate.toString())
+        .put("scheduledDate", scheduledDate?.toString() ?: JSONObject.NULL)
         .put("completedAt", completedAt.toString())
         .put("requestNumber", requestNumber)
         .put("equipment", equipment)
@@ -28,7 +28,9 @@ data class ServiceCompletion(
 
     companion object {
         fun fromJson(json: JSONObject): ServiceCompletion = ServiceCompletion(
-            scheduledDate = LocalDate.parse(json.getString("scheduledDate")),
+            scheduledDate = json.optString("scheduledDate", "").takeUnless {
+                it.isBlank() || it == "null"
+            }?.let(LocalDate::parse),
             completedAt = LocalDate.parse(json.getString("completedAt")),
             requestNumber = json.optString("requestNumber", ""),
             equipment = json.optString("equipment", ""),
@@ -46,7 +48,7 @@ data class ServiceEntry(
     val id: String = UUID.randomUUID().toString(),
     val equipment: String,
     val lastDate: LocalDate,
-    val nextDate: LocalDate,
+    val nextDate: LocalDate?,
     val comment: String = "",
     val periodMonths: Int = 0,
     val remindMonths: Int = 0,
@@ -57,12 +59,23 @@ data class ServiceEntry(
     val completedAt: LocalDate? = null,
     /** Removed from active equipment without erasing completed cycles. */
     val closedAt: LocalDate? = null,
+    /** Unplanned work has an AMOS request, not a fabricated next-due date. */
+    val unplanned: Boolean = false,
 ) {
     init {
         require(id.isNotBlank() && id.length <= 100)
         require(equipment.isNotBlank() && equipment.length <= 200)
         require(comment.length <= 6000)
-        require(nextDate.isAfter(lastDate)) { "Next service date must follow the last date" }
+        if (unplanned) {
+            require(nextDate == null) { "Unplanned work cannot have a scheduled due date" }
+            require(periodMonths == 0 && remindMonths == 0) {
+                "Unplanned requests cannot create automatic service cycles or reminders"
+            }
+        } else {
+            require(nextDate != null && nextDate.isAfter(lastDate)) {
+                "Next service date must follow the last date"
+            }
+        }
         require(periodMonths in 0..1200) { "Service interval must be 0–1200 months" }
         require(remindMonths in 0..3) { "Lead time exceeds three months" }
         require(requestNumber.length <= 100) { "Request number too long" }
@@ -77,7 +90,8 @@ data class ServiceEntry(
         .put("id", id)
         .put("equipment", equipment)
         .put("lastDate", lastDate.toString())
-        .put("nextDate", nextDate.toString())
+        .put("nextDate", nextDate?.toString() ?: JSONObject.NULL)
+        .put("unplanned", unplanned)
         .put("comment", comment)
         .put("periodMonths", periodMonths)
         .put("remindMonths", remindMonths)
@@ -93,7 +107,9 @@ data class ServiceEntry(
             id = json.getString("id"),
             equipment = json.getString("equipment"),
             lastDate = LocalDate.parse(json.getString("lastDate")),
-            nextDate = LocalDate.parse(json.getString("nextDate")),
+            nextDate = json.optString("nextDate", "").takeUnless {
+                it.isBlank() || it == "null"
+            }?.let(LocalDate::parse),
             comment = json.optString("comment", ""),
             periodMonths = json.optInt("periodMonths", 0),
             remindMonths = json.optInt("remindMonths", 0),
@@ -110,12 +126,16 @@ data class ServiceEntry(
             closedAt = json.optString("closedAt", "").takeUnless {
                 it.isBlank() || it == "null"
             }?.let(LocalDate::parse),
+            // Missing in every pre-0.4.50 profile/export means planned.
+            unplanned = json.optBoolean("unplanned", false),
         )
     }
 }
 
-internal fun serviceWarningStart(entry: ServiceEntry): LocalDate =
-    entry.nextDate.minusMonths(entry.remindMonths.toLong())
+internal fun serviceWarningStart(entry: ServiceEntry): LocalDate {
+    require(!entry.unplanned) { "Unplanned requests have no due-date warnings" }
+    return requireNotNull(entry.nextDate).minusMonths(entry.remindMonths.toLong())
+}
 
 /**
  * Complete an equipment service. The AMOS request belongs to the archived
@@ -123,9 +143,12 @@ internal fun serviceWarningStart(entry: ServiceEntry): LocalDate =
  */
 internal fun completeServiceCycle(entry: ServiceEntry, on: LocalDate): ServiceEntry {
     require(entry.completedAt == null) { "One-off service is already completed" }
+    require(!entry.unplanned || entry.requestNumber.isNotBlank()) {
+        "An unplanned service requires its AMOS request number before completion"
+    }
     require(entry.serviceHistory.size < 500) { "Service history limit reached" }
     val snapshot = ServiceCompletion(
-        scheduledDate = entry.nextDate,
+        scheduledDate = if (entry.unplanned) null else entry.nextDate,
         completedAt = on,
         requestNumber = entry.requestNumber,
         equipment = entry.equipment,
@@ -153,7 +176,9 @@ internal fun completeServiceCycle(entry: ServiceEntry, on: LocalDate): ServiceEn
 }
 
 internal fun nextServiceFromCompletion(entry: ServiceEntry, completedAt: LocalDate): ServiceEntry {
-    require(entry.periodMonths > 0) { "A recurrence interval is required to auto-calculate next date" }
+    require(!entry.unplanned && entry.periodMonths > 0) {
+        "A planned recurrence interval is required to auto-calculate next date"
+    }
     return completeServiceCycle(entry, completedAt)
 }
 
@@ -191,7 +216,13 @@ class ServiceStore(context: Context, private val profiles: ProfileStore) {
 
     fun setRequestNumber(id: String, number: String) {
         val item = entries.firstOrNull { it.id == id } ?: error("Service not found")
-        upsert(item.copy(requestNumber = number.trim()))
+        val normalized = number.trim()
+        if (item.unplanned && item.completedAt == null) {
+            require(normalized.isNotBlank()) {
+                "Unplanned maintenance requires an AMOS request number"
+            }
+        }
+        upsert(item.copy(requestNumber = normalized))
     }
 
     /** First delete only closes this record; history is retained. */

@@ -45,7 +45,7 @@ User is testing 0.4.49 and reports a concrete issue in Services > New service: t
 - `WorkAgenda.kt`, `WorksHubUi.kt`, `NavNotifications.kt`: service dates participate in Today/Calendar, Soon/Overdue, and notification scheduling. Merely hiding nextDate will create bogus deadlines.
 - `ServiceScheduleTest.kt`: regression tests cover intervals, original request numbers, one-off service, and history. Existing services must remain compatible and retain planned recurrence.
 
-### Proposed scoped implementation — awaiting agreement on detailed behavior
+### Agreed implementation — source written, verification pending (0.4.50)
 
 1. Add an explicit Planned/Unplanned selector to the existing service editor; older records default to Planned when decoding missing new type field.
 2. **Planned**: preserve all current fields and calculations (Next date, interval presets/custom, advance warning, AMOS request number added later as today).
@@ -53,3 +53,11 @@ User is testing 0.4.49 and reports a concrete issue in Services > New service: t
 4. Preserve history, request number, completion date, deletion/restoration, and profile import/export. Keep the internal JSON backwards compatible; test conversions and unexpected switching between types with existing history.
 5. No direct AMOS API/requisition submission integration exists in the repo: the number is entered/recorded in NavTasks, it does not send a new request to the external AMOS system.
 6. When approved, implement in narrow changes and run tests, signed CI build and HONOR device checks before offering a release. **No code or version bump has been made for this issue.**
+
+## 0.4.50 build acceptance
+
+- User authorized implementation with «Собирай» on 2026-11-07.
+- Source work: new Planned/Unplanned editor toggle; mandatory AMOS number on new unplanned; no fake due date; unplanned status/request date; completion archives requisition and does not create recurrence; historical planned records default to planned.
+- Validate Kotlin compilation and all existing tests, plus unplanned due/recurrence/history/selective-template regressions. Fix failures without altering unrelated app modules.
+- Publish stable-signed v0.4.50-glass-beta APK/ZIP pinned to tested commit once CI passes; update all docs with commit, CI and SHA-256.
+- Device acceptance: editing planned old service preserves due/interval, new unplanned with AMOS number saves/edits, cannot save new unplanned blank number, no inaccurate calendar/soon/overdue or notifications, completion history and Today Completed correct, exchange unaffected.

@@ -58,7 +58,8 @@ fun ServicesScreen(
     var message by remember { mutableStateOf<String?>(null) }
     var selectedFilter by rememberSaveable { mutableStateOf(WorkOverviewFilter.ALL) }
     val activeServices = services.entries.filter { it.closedAt == null }.sortedWith(
-        compareBy<ServiceEntry> { it.completedAt != null }.thenBy { it.nextDate })
+        compareBy<ServiceEntry> { it.completedAt != null }
+            .thenBy { if (it.unplanned) LocalDate.MIN else it.nextDate ?: LocalDate.MAX })
     val closedServices = services.entries.filter { it.closedAt != null }
         .sortedByDescending { it.closedAt }
     val listState = rememberLazyListState()
@@ -190,9 +191,11 @@ fun ServicesScreen(
             } else {
                 items(filteredServices, key = { it.id }) { service ->
                 val completed = service.completedAt != null
-                val late = !completed && service.nextDate.isBefore(now)
+                val due = service.nextDate
+                val late = !completed && !service.unplanned && due?.isBefore(now) == true
                 val approaching = serviceDueSoon(service, now)
                 val accent = if (completed) p.successText
+                    else if (service.unplanned) p.blue
                     else if (late) p.dangerText
                     else if (approaching) p.warningText else p.successText
                 Column(
@@ -210,18 +213,23 @@ fun ServicesScreen(
                         NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                     }
                     Text(
-                        localized("Последнее обслуживание: ", "Last serviced: ", lang) +
+                        if (service.unplanned)
+                            localized("Заявка от: ", "Request dated: ", lang) +
+                                navDate(service.lastDate, lang, true)
+                        else localized("Последнее обслуживание: ", "Last serviced: ", lang) +
                             navDate(service.serviceHistory.lastOrNull()?.completedAt
                                 ?: service.lastDate, lang, true),
-                        color = p.successText, fontSize = 12.sp,
+                        color = if (service.unplanned) p.blue else p.successText, fontSize = 12.sp,
                     )
                     if (!completed) {
-                        Text(localized("Следующее обслуживание: ", "Next service: ", lang) +
-                            navDate(service.nextDate, lang, true),
-                            color = accent, fontSize = 12.sp)
+                        if (!service.unplanned && due != null) {
+                            Text(localized("Следующее обслуживание: ", "Next service: ", lang) +
+                                navDate(due, lang, true),
+                                color = accent, fontSize = 12.sp)
+                        }
                         ServiceOption(
                             if (service.requestNumber.isBlank())
-                                localized("Заявка создана", "Request created", lang)
+                                localized("Указать заявку AMOS", "Enter AMOS request", lang)
                             else localized("Заявка AMOS: ", "AMOS request: ", lang) +
                                 service.requestNumber,
                             p, service.requestNumber.isNotBlank(), Modifier.fillMaxWidth(),
@@ -233,10 +241,15 @@ fun ServicesScreen(
                     }
                     Text(
                         if (completed) localized("Завершено", "Completed", lang)
-                        else if (late) localized("Просрочено", "Overdue", lang)
-                        else if (approaching)
-                            localized("Осталось " + ChronoUnit.DAYS.between(now, service.nextDate) + " дн.",
-                                ChronoUnit.DAYS.between(now, service.nextDate).toString() + " days left", lang)
+                        else if (service.unplanned) {
+                            if (service.requestNumber.isNotBlank())
+                                localized("Внеплановая · заявка оформлена", "Unplanned · request filed", lang)
+                            else localized("Внеплановая · укажи номер заявки",
+                                "Unplanned · add request number", lang)
+                        } else if (late) localized("Просрочено", "Overdue", lang)
+                        else if (approaching && due != null)
+                            localized("Осталось " + ChronoUnit.DAYS.between(now, due) + " дн.",
+                                ChronoUnit.DAYS.between(now, due).toString() + " days left", lang)
                         else localized("Запланировано", "Scheduled", lang),
                         color = accent, fontSize = 12.sp,
                     )
@@ -351,7 +364,12 @@ fun ServicesScreen(
                     ) { completionDatePicker = true }
                 }
                 Text(navDate(completionDate, lang, true), color = p.blue, fontSize = 13.sp)
-                if (entry.periodMonths > 0) {
+                if (entry.unplanned) {
+                    Text(localized(
+                        "Внеплановая заявка будет завершена без следующего срока.",
+                        "The unplanned request will be completed without another due date.", lang),
+                        color = p.muted, fontSize = 12.sp)
+                } else if (entry.periodMonths > 0) {
                     Text(
                         localized("Следующий сервис: ", "Next service: ", lang) +
                             navDate(completionDate.plusMonths(entry.periodMonths.toLong()),
@@ -423,11 +441,17 @@ fun ServicesScreen(
                     entry.serviceHistory.asReversed().forEach { item ->
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(item.equipment, color = p.text, fontSize = 14.sp)
-                            Text(
-                                localized("По графику: ", "Scheduled: ", lang) +
-                                    navDate(item.scheduledDate, lang, true),
-                                color = p.muted, fontSize = 12.sp,
-                            )
+                            if (item.scheduledDate != null) {
+                                Text(
+                                    localized("По графику: ", "Scheduled: ", lang) +
+                                        navDate(item.scheduledDate, lang, true),
+                                    color = p.muted, fontSize = 12.sp,
+                                )
+                            } else {
+                                Text(localized("Внеплановое обслуживание",
+                                    "Unplanned maintenance", lang),
+                                    color = p.muted, fontSize = 12.sp)
+                            }
                             Text(
                                 localized("Проведено: ", "Completed: ", lang) +
                                     navDate(item.completedAt, lang, true),
@@ -516,8 +540,13 @@ private fun ServiceEditorDialog(
 ) {
     val context = LocalContext.current
     var equipment by remember(existing?.id) { mutableStateOf(existing?.equipment.orEmpty()) }
-    var last by remember(existing?.id) { mutableStateOf(existing?.lastDate ?: LocalDate.now()) }
-    var next by remember(existing?.id) { mutableStateOf(existing?.nextDate ?: LocalDate.now().plusMonths(12)) }
+    var unplanned by remember(existing?.id) { mutableStateOf(existing?.unplanned ?: false) }
+    var requestNumber by remember(existing?.id) {
+        mutableStateOf(existing?.requestNumber.orEmpty())
+    }
+    var next by remember(existing?.id) {
+        mutableStateOf(existing?.nextDate ?: LocalDate.now().plusMonths(12))
+    }
     var note by remember(existing?.id) { mutableStateOf(existing?.comment.orEmpty()) }
     var period by remember(existing?.id) { mutableIntStateOf(existing?.periodMonths ?: 12) }
     val presetIntervals = listOf(0, 6, 12, 18, 36, 60)
@@ -546,17 +575,49 @@ private fun ServiceEditorDialog(
                 .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(9.dp),
             ) {
+                Text(localized("Тип обслуживания", "Maintenance type", lang),
+                    color = p.muted, fontSize = 12.sp)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ServiceOption(localized("Плановое", "Planned", lang), p, !unplanned,
+                        modifier = Modifier.weight(1f)) {
+                        if (existing?.serviceHistory.isNullOrEmpty()) unplanned = false
+                    }
+                    ServiceOption(localized("Внеплановое", "Unplanned", lang), p, unplanned,
+                        modifier = Modifier.weight(1f)) {
+                        if (existing?.serviceHistory.isNullOrEmpty()) unplanned = true
+                    }
+                }
+                if (existing?.serviceHistory?.isNotEmpty() == true) {
+                    Text(localized("Тип закреплён: у записи уже есть история обслуживания.",
+                        "Type is fixed because this record already has service history.", lang),
+                        color = p.muted, fontSize = 11.sp)
+                }
                 Text(localized("Оборудование", "Equipment", lang), color = p.muted, fontSize = 12.sp)
                 ServiceInput(equipment, { equipment = it.take(200) },
                     localized("Название", "Name", lang), p, false)
-                Text(localized("Следующее обслуживание", "Next service date", lang),
-                    color = p.muted, fontSize = 12.sp)
-                ServiceOption(navDate(next, lang, true), p, false, Modifier.fillMaxWidth()) {
-                    pickingDate = "next"
+                if (unplanned) {
+                    Text(localized("Номер заявки AMOS", "AMOS request number", lang),
+                        color = p.muted, fontSize = 12.sp)
+                    ServiceInput(requestNumber, { requestNumber = it.take(100) },
+                        localized("Номер из AMOS", "Request number from AMOS", lang), p, false)
+                    Text(
+                        if (existing?.unplanned == true)
+                            localized("Дата заявки: ", "Request date: ", lang) +
+                                navDate(existing.lastDate, lang, true)
+                        else localized("Дата заявки будет установлена сегодняшним днём.",
+                            "Request date will be set to today.", lang),
+                        color = p.muted, fontSize = 11.sp)
+                } else {
+                    Text(localized("Следующее обслуживание", "Next service date", lang),
+                        color = p.muted, fontSize = 12.sp)
+                    ServiceOption(navDate(next, lang, true), p, false, Modifier.fillMaxWidth()) {
+                        pickingDate = "next"
+                    }
                 }
                 Text(localized("Комментарий", "Comment", lang), color = p.muted, fontSize = 12.sp)
                 ServiceInput(note, { note = it.take(6000) },
                     localized("Работы, расходники, примечания…", "Details and remarks…", lang), p, true)
+                if (!unplanned) {
                 Text(localized("Периодичность", "Interval", lang), color = p.muted, fontSize = 12.sp)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -644,6 +705,7 @@ private fun ServiceEditorDialog(
                         "Serviced will calculate next due from the actual completion date.", lang),
                         color = p.muted, fontSize = 11.sp)
                 }
+                } // Planned schedule fields
                 error?.let { Text(it, color = p.dangerText, fontSize = 12.sp) }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -651,7 +713,14 @@ private fun ServiceEditorDialog(
                 Spacer(Modifier.width(8.dp))
                 ServiceOption(localized("Сохранить", "Save", lang), p, true) {
                     runCatching {
-                        val total = if (customSelected) {
+                        require(existing?.serviceHistory.isNullOrEmpty() ||
+                            existing?.unplanned == unplanned) {
+                            "Cannot change the type of a service with archived history"
+                        }
+                        require(!unplanned || requestNumber.trim().isNotBlank()) {
+                            "An unplanned request needs its AMOS number"
+                        }
+                        val total = if (unplanned) 0 else if (customSelected) {
                             val years = customYears.toIntOrNull() ?: -1
                             val months = customMonths.toIntOrNull() ?: -1
                             require(years >= 0 && months in 0..11 && years * 12 + months in 1..1200)
@@ -660,21 +729,29 @@ private fun ServiceEditorDialog(
                         ServiceEntry(
                             id = existing?.id ?: UUID.randomUUID().toString(),
                             equipment = equipment.trim(),
-                            lastDate = existing?.lastDate?.takeIf { it.isBefore(next) }
+                            // For unplanned work, lastDate stores the request's creation date.
+                            lastDate = if (unplanned) {
+                                if (existing?.unplanned == true) existing.lastDate else LocalDate.now()
+                            } else existing?.lastDate?.takeIf { it.isBefore(next) }
                                 ?: next.minusDays(1),
-                            nextDate = next,
+                            nextDate = if (unplanned) null else next,
                             comment = note.trim(),
                             periodMonths = total,
-                            remindMonths = alert,
-                            requestNumber = existing?.requestNumber.orEmpty(),
+                            remindMonths = if (unplanned) 0 else alert,
+                            requestNumber = if (unplanned) requestNumber.trim()
+                                else existing?.requestNumber.orEmpty(),
                             serviceHistory = existing?.serviceHistory.orEmpty(),
                             completedAt = existing?.completedAt,
+                            unplanned = unplanned,
                         )
                     }.onSuccess { onSave(it) }
                         .onFailure {
-                            error = localized(
-                                "Проверь название и даты. Следующий срок должен быть позже последнего.",
-                                "Check name and dates. Next due must follow the last date.", lang)
+                            error = if (unplanned && requestNumber.trim().isBlank())
+                                localized("Укажи номер созданной заявки AMOS.",
+                                    "Enter the created AMOS request number.", lang)
+                            else localized(
+                                "Проверь название, даты и параметры обслуживания.",
+                                "Check equipment name, dates and service parameters.", lang)
                         }
                 }
             }

@@ -117,11 +117,66 @@ class ServiceScheduleTest {
         assertEquals(once.nextDate, result.nextDate)
         assertEquals("AMOS-57", result.serviceHistory.single().requestNumber)
         assertEquals("", result.requestNumber)
-        assertFalse(serviceVisibleOnDay(result, result.nextDate))
-        assertFalse(servicePlannedOnDay(result, result.nextDate))
+        assertFalse(serviceVisibleOnDay(result, requireNotNull(result.nextDate)))
+        assertFalse(servicePlannedOnDay(result, requireNotNull(result.nextDate)))
         assertTrue(runCatching {
             completeServiceCycle(result, LocalDate.of(2026, 12, 26))
         }.isFailure)
+    }
+
+    @Test fun unplannedRequestHasNoFakeDueDateOrAutomaticCycle() {
+        val today = LocalDate.of(2026, 11, 7)
+        val request = ServiceEntry(
+            id = "unplanned-radar", equipment = "PC FOR ICE RADAR",
+            lastDate = today, nextDate = null, comment = "Unscheduled repair",
+            periodMonths = 0, remindMonths = 0, requestNumber = "AMOS-2501",
+            unplanned = true,
+        )
+        assertEquals(null, request.nextDate)
+        assertFalse(serviceVisibleOnDay(request, today))
+        assertFalse(servicePlannedOnDay(request, today))
+        assertFalse(servicePlannedOnDay(request, today.plusYears(1)))
+        assertFalse(serviceDueSoon(request, today))
+        assertTrue(filterServiceOverview(listOf(request), today, WorkOverviewFilter.SOON).isEmpty())
+        assertTrue(filterServiceOverview(listOf(request), today.plusMonths(6),
+            WorkOverviewFilter.OVERDUE).isEmpty())
+        assertEquals(listOf(request),
+            filterServiceOverview(listOf(request), today, WorkOverviewFilter.ALL))
+        assertTrue(runCatching { serviceWarningStart(request) }.isFailure)
+    }
+
+    @Test fun unplannedCompletionPreservesRequestAndNeverGeneratesNextDue() {
+        val created = LocalDate.of(2026, 11, 7)
+        val completedOn = LocalDate.of(2026, 11, 9)
+        val entry = ServiceEntry(
+            id = "unplanned-radar", equipment = "PC FOR ICE RADAR",
+            lastDate = created, nextDate = null,
+            requestNumber = "AMOS-2501", unplanned = true,
+        )
+        val finished = completeServiceCycle(entry, completedOn)
+        assertTrue(finished.unplanned)
+        assertEquals(completedOn, finished.completedAt)
+        assertEquals(null, finished.nextDate)
+        assertEquals("", finished.requestNumber)
+        assertEquals(created, finished.lastDate)
+        assertEquals("AMOS-2501", finished.serviceHistory.single().requestNumber)
+        assertEquals(null, finished.serviceHistory.single().scheduledDate)
+        assertEquals(completedOn, finished.serviceHistory.single().completedAt)
+        assertFalse(workAgendaExistsOnDay(completedOn, emptyList(), listOf(finished)))
+        assertEquals(1, serviceCompletedOnDay(listOf(finished), completedOn).size)
+        assertTrue(runCatching { completeServiceCycle(finished, completedOn.plusDays(1)) }.isFailure)
+    }
+
+    @Test fun unplannedDraftRequiresRequestBeforeCompletingAndCannotHaveSchedule() {
+        val today = LocalDate.of(2026, 11, 7)
+        val draft = ServiceEntry(id = "unplanned-draft", equipment = "ICE RADAR",
+            lastDate = today, nextDate = null, unplanned = true)
+        assertTrue(runCatching { completeServiceCycle(draft, today) }.isFailure)
+        assertEquals(null, draft.nextDate)
+        assertTrue(runCatching { draft.copy(nextDate = today.plusDays(1)) }.isFailure)
+        assertTrue(runCatching { draft.copy(periodMonths = 12) }.isFailure)
+        assertTrue(runCatching { draft.copy(remindMonths = 1) }.isFailure)
+        assertTrue(runCatching { nextServiceFromCompletion(draft, today) }.isFailure)
     }
 
     @Test fun oldServiceRecordsHaveEmptyCompletionHistoryByDefault() {

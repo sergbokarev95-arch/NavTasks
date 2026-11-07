@@ -17,7 +17,7 @@ internal fun amosVisibleOnDay(work: WorkOrderEntry, day: LocalDate): Boolean {
 }
 
 internal fun serviceVisibleOnDay(service: ServiceEntry, day: LocalDate): Boolean =
-    service.closedAt == null && service.completedAt == null &&
+    !service.unplanned && service.closedAt == null && service.completedAt == null &&
         day == service.nextDate
 
 /** A registered AMOS service request suppresses the outstanding Today card. */
@@ -42,14 +42,16 @@ internal fun amosPlannedOnDay(work: WorkOrderEntry, date: LocalDate): Boolean {
 
 /** Service calendar markers are informative, including projected future servicing. */
 internal fun servicePlannedOnDay(service: ServiceEntry, date: LocalDate): Boolean {
-    if (service.closedAt != null || service.completedAt != null ||
-        date.isBefore(service.nextDate)) return false
-    if (date == service.nextDate) return true
+    if (service.unplanned || service.closedAt != null || service.completedAt != null)
+        return false
+    val due = service.nextDate ?: return false
+    if (date.isBefore(due)) return false
+    if (date == due) return true
     if (service.periodMonths == 0) return false
-    val months = ChronoUnit.MONTHS.between(service.nextDate.withDayOfMonth(1),
+    val months = ChronoUnit.MONTHS.between(due.withDayOfMonth(1),
         date.withDayOfMonth(1))
     return months >= 0 && months % service.periodMonths == 0L &&
-        service.nextDate.plusMonths(months) == date
+        due.plusMonths(months) == date
 }
 
 internal fun workAgendaExistsOnDay(
@@ -76,11 +78,14 @@ internal fun filterAmosOverview(
     }
 }
 
-internal fun serviceDueSoon(service: ServiceEntry, today: LocalDate): Boolean =
-    service.closedAt == null && service.completedAt == null &&
-        !service.nextDate.isBefore(today) &&
-        (service.nextDate <= today.plusDays(30) ||
+internal fun serviceDueSoon(service: ServiceEntry, today: LocalDate): Boolean {
+    if (service.unplanned || service.closedAt != null || service.completedAt != null)
+        return false
+    val due = service.nextDate ?: return false
+    return !due.isBefore(today) &&
+        (due <= today.plusDays(30) ||
             (service.remindMonths > 0 && !today.isBefore(serviceWarningStart(service))))
+}
 
 internal fun filterServiceOverview(
     services: List<ServiceEntry>, today: LocalDate, filter: WorkOverviewFilter,
@@ -89,8 +94,8 @@ internal fun filterServiceOverview(
         WorkOverviewFilter.ALL -> entry.closedAt == null
         WorkOverviewFilter.SOON -> serviceDueSoon(entry, today)
         WorkOverviewFilter.OVERDUE ->
-            entry.closedAt == null && entry.completedAt == null &&
-                entry.nextDate.isBefore(today)
+            !entry.unplanned && entry.closedAt == null && entry.completedAt == null &&
+                entry.nextDate?.isBefore(today) == true
     }
 }
 
