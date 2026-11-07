@@ -79,3 +79,6 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 
 - 2026-11-08 — standalone Glass Lab 0.1.5: fix cropped lens by making optical backing a sibling to the moving selection, rather than the parent modifier. Preserve 1.30× scale, 56dp dock and visual colors. Source ea412201936a8a178c657b77bda7a3347b878f06, CI 42393384091 SUCCESS, signed release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.5, APK SHA-256 c2e2d34e48578d189dd31238a1e04aa38137fb9d6ea022116821d7bd2c680f3f. HONOR motion acceptance pending; main 0.4.59 untouched.
+
+
+- 2026-11-08 — **preview-only** NavTasks full-app dock integration: feature branch `feature/liquid-glass-dock-preview` commit `51f04825196093b70288bc078fe0874abf1d2723`; stable 0.4.59 code unchanged, backup `backup/navtasks-0.4.59-before-liquid-glass`. New `NavLiquidGlassBottomBar` + LayerBackdrop page capture, Backdrop 1.0.6 and shapes1.2.0, preserve original NavGlassBottomBar below API33 and existing Haze floating controls. Debug package `com.navtasks.app.glasspreview` installs separately. CI `42397184202` SUCCESS all app tests + signed standalone https://github.com/sergbokarev95-arch/NavTasks/releases/tag/dockpreview-v0.4.59-r1; APK SHA-256 `84f0609f7ce37d4818dcc3e4ec66fb1d8360af21d1c93b8dfd32a9ffaba87faa`. Await HONOR on-device visual/performance acceptance.

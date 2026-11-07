@@ -83,3 +83,6 @@
 
 
 - 2026-11-08: A uniformly scaled selection must not be nested under a backdrop parent that clips its children. Lab 0.1.5 renders backing, 1.30× lens and four-tab foreground as siblings, preserves actual refraction, and protects layout architecture in CI. First/last clipping and smoothness still require HONOR test. Do not change stable 0.4.59 app before acceptance.
+
+
+- 2026-11-08 — Port HONOR-approved standalone Glass Lab 0.1.5 optics into a **separate full NavTasks preview**, NOT into stable production. Experimental branch `feature/liquid-glass-dock-preview`, original main source snapshot `backup/navtasks-0.4.59-before-liquid-glass`. Keep 56dp dock + 1.30x proportional outward-growing selection, LayerBackdrop capturing unblurred page only, four original glyphs and matte-grey settle; retain legacy Haze dock for older API and rollback. Full app test uses debug `applicationIdSuffix=".glasspreview"`, isolating all user data; CI 42397184202 passes. Only after HONOR approval progress to '+' / calendar / settings, never blanket-apply glass to all controls at once.

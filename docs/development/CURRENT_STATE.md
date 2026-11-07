@@ -174,3 +174,10 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## Lab 0.1.5 standalone compositor correction (2026-11-08)
 - HONOR v0.1.4: lens grows but top/bottom clipped. Lab 0.1.5 separates backing and lens into siblings and retains direct Backdrop, 1.30× uniform scale, 56dp outer dock and production glyphs.
 - Source `ea412201936a8a178c657b77bda7a3347b878f06`, CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42393384091 SUCCESS; signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.5. Physical user validation pending. No main NavTasks code changes.
+
+
+## 2026-11-08 — NavTasks Glass Dock Preview R1 (separate package)
+- Based on stable main NavTasks 0.4.59/versionCode 81. New experimental branch `feature/liquid-glass-dock-preview`, source `51f04825196093b70288bc078fe0874abf1d2723`, CI 42397184202 SUCCESS including complete app unit tests and APK signing.
+- Signed standalone **full app** test https://github.com/sergbokarev95-arch/NavTasks/releases/tag/dockpreview-v0.4.59-r1; app ID `com.navtasks.app.glasspreview`, APK hash `84f0609f7ce37d4818dcc3e4ec66fb1d8360af21d1c93b8dfd32a9ffaba87faa`. Preview has separate data from stable app.
+- Only primary bottom dock uses direct original-content Backdrop 1.0.6 with 0.1.5 optics and 1.30x unclipped lens. Existing Haze dock retained on Android 12/12L and as recovery. Floating buttons remain unchanged.
+- Stable production app/release 0.4.59 untouched. HONOR visual/performance acceptance of preview pending before product integration and control rollout.

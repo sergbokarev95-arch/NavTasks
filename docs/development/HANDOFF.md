@@ -222,3 +222,13 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - Lab 0.1.5 moves `drawBackdrop` backing/outline from parent to a separate background sibling. Enlarged selection (52→67.6dp) now has an unmodified parent so should render above and below dock, preserving 56dp bar, glyphs, colors, springs, card-border refraction, matte-grey resting lens.
 - Source `ea412201936a8a178c657b77bda7a3347b878f06`, CI `42393384091` SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.5. APK SHA-256 `c2e2d34e48578d189dd31238a1e04aa38137fb9d6ea022116821d7bd2c680f3f`.
 - Backup `backup/glasslab-0.1.4-before-unclipped-layer`. Physical HONOR acceptance pending; DO NOT merge production. Main app v0.4.59 unchanged.
+
+
+## 2026-11-08 — First full NavTasks Liquid Glass dock preview built; HONOR acceptance pending
+- User approved physical appearance of standalone Glass Lab 0.1.5 including proportional 1.30x active lens protruding above/below 56dp dock; requested bringing glass into full app and eventually its controls.
+- **Do not modify or merge stable main yet.** Created exact main-source backup branch `backup/navtasks-0.4.59-before-liquid-glass` at `9fcc2ee1a1a428ed4cec2a4ceae5ef1cba4c6675`; integration branch `feature/liquid-glass-dock-preview`.
+- Tested full-app preview source `51f04825196093b70288bc078fe0874abf1d2723`; signed GitHub Actions `42397184202` SUCCESS (`:app:testDebugUnitTest`, `:app:assembleDebug`).
+- Preview prerelease https://github.com/sergbokarev95-arch/NavTasks/releases/tag/dockpreview-v0.4.59-r1 ; signed APK https://github.com/sergbokarev95-arch/NavTasks/releases/download/dockpreview-v0.4.59-r1/NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk ; SHA-256 `84f0609f7ce37d4818dcc3e4ec66fb1d8360af21d1c93b8dfd32a9ffaba87faa`.
+- **Separate application** debug ID `com.navtasks.app.glasspreview` (stable debug uses `com.navtasks.app.glass`); stores/profiles NOT shared and neither installation replaces the other. Same visible launcher label/icon as NavTasks for this first preview.
+- Only dock integration: dedicated `rememberLayerBackdrop` records page content, selected 1.30x refractive lens with independent backing, 4 production NavGlassGlyphs, day/night, matte grey rest. Existing `NavGlassBottomBar` stays for API31–32 and rollback; other floating buttons still use Haze. No task, Services, AMOS, Handover, data, notification, or widget logic edited.
+- **Next:** user verifies new *full app* on HONOR: day/night, Today/Work/Handover/Tasks, real scrolling text/borders, 0↔3 quick taps, protrusion above/below dock, no shimmer or lag, grey rest. First-stage approval before extending same glass to '+', calendar and settings.
