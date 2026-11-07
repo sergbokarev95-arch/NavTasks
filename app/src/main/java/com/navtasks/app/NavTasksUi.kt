@@ -1,6 +1,7 @@
 package com.navtasks.app
 
 import android.app.DatePickerDialog
+import com.kyant.backdrop.backdrops.layerBackdrop
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
@@ -408,7 +409,20 @@ fun NavTasksApp(
                     })
             } else {
                 val hazeState = remember { dev.chrisbanes.haze.HazeState() }
+                // Dedicated capture of the UNBLURRED page. Never refract Haze's
+                // output: that caused the rejected 0.4.57/0.4.58 text shimmer.
+                val glassBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+                    com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
                 Box(Modifier.fillMaxSize()) {
+                    // Direct source capture belongs ONLY to the page content.
+                    // Floating controls and dock stay siblings, never in the
+                    // recorded layer (prevents self-sampling and feedback).
+                    Box(
+                        Modifier.fillMaxSize().then(
+                            if (glassBackdrop != null)
+                                Modifier.layerBackdrop(glassBackdrop) else Modifier
+                        )
+                    ) {
                     // Content paints to the bottom edge. Navigation is an overlay,
                     // NOT a Scaffold bottomBar which would reserve an opaque footer.
                     Column(Modifier.fillMaxSize().statusBarsPadding().hazeSource(hazeState)
@@ -515,6 +529,7 @@ fun NavTasksApp(
                             }
                         }
                     }
+                    } // End recorded page layer; floating controls stay above it.
                     if (tab == 0) {
                         Box(
                             Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
@@ -536,12 +551,22 @@ fun NavTasksApp(
                             }
                         }
                     }
-                    NavGlassBottomBar(
-                        p = palette, selected = tab, lang = lang,
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        hazeState = hazeState,
-                        onSelect = ::openPrimaryTab,
-                    )
+                    if (glassBackdrop != null) {
+                        NavLiquidGlassBottomBar(
+                            p = palette, selected = tab, lang = lang,
+                            backdrop = glassBackdrop,
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                            onSelect = ::openPrimaryTab,
+                        )
+                    } else {
+                        // Android 12/12L retains the tested original Haze dock.
+                        NavGlassBottomBar(
+                            p = palette, selected = tab, lang = lang,
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                            hazeState = hazeState,
+                            onSelect = ::openPrimaryTab,
+                        )
+                    }
                 }
 
             }

@@ -36,8 +36,8 @@ android {
             signingConfigs.findByName("betaStable")?.let { signingConfig = it }
             // A separate test package protects the installed 0.1 data when
             // the original ephemeral debug signing key is unavailable.
-            applicationIdSuffix = ".glass"
-            versionNameSuffix = "-beta"
+            applicationIdSuffix = ".glasspreview"
+            versionNameSuffix = "-dock-preview1"
         }
         release {
             isMinifyEnabled = false
@@ -68,6 +68,9 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     // Portable true backdrop blur for our floating navigation (HONOR, Samsung, etc.).
     implementation("dev.chrisbanes.haze:haze:1.7.1")
+    // Verified direct-scene Liquid Glass engine, preview variant only.
+    implementation("io.github.kyant0:backdrop:1.0.6")
+    implementation("io.github.kyant0:shapes:1.2.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
 }

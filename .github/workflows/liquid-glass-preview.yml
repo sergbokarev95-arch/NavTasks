@@ -1,0 +1,85 @@
+name: Build NavTasks full-app Glass Dock Preview
+
+on:
+  push:
+    branches:
+      - feature/liquid-glass-dock-preview
+    paths:
+      - 'app/**'
+      - 'settings.gradle.kts'
+      - '.github/workflows/liquid-glass-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore stable Beta signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify isolation and build lab
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          # The preview is a different app ID and cannot replace user data.
+          grep -Fq 'applicationIdSuffix = ".glasspreview"' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.59"' app/build.gradle.kts
+          grep -Fq 'versionCode = 81' app/build.gradle.kts
+          grep -Fq 'implementation("io.github.kyant0:backdrop:1.0.6")' app/build.gradle.kts
+          grep -Fq 'implementation("io.github.kyant0:shapes:1.2.0")' app/build.gradle.kts
+          grep -Fq 'Modifier.matchParentSize().then(backing).then(opticalEdge)' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'Modifier.layerBackdrop(glassBackdrop)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'NavGlassBottomBar(' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - name: Destroy temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify generated lab APK
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk
+          sha256sum NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NavTasks-LiquidGlass-Dock-Preview-0.4.59
+          path: NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk
+          if-no-files-found: error
+          retention-days: 60
+      - name: Publish separate prerelease (not production)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="dockpreview-v0.4.59-r1"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk --clobber
+          else
+            gh release create "$TAG" NavTasks_LiquidGlass_Dock_Preview_0.4.59.apk \
+              --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.59 Full-App Liquid Glass Dock Preview (separate install)" \
+              --notes "SEPARATE FULL-APP PREVIEW, debug applicationId com.navtasks.app.glasspreview. Installs alongside stable NavTasks without replacing profiles/data. Base production v0.4.59, app screens/data/AMOS/navigation logic unchanged; direct-scene Backdrop 1.0.6 reproduces visually approved Glass Lab 0.1.5 only in 56dp dock. Stationary 24dp glyphs, 1.30x moving capsule protrudes above/below dock, returns to matte grey; original Haze bottom bar retained as fallback for API 31/32 and all other floating buttons. Please test on HONOR light/dark, scroll, rapid tabs, widget/notifications compatibility; not merged to main." \
+              --prerelease
+          fi
