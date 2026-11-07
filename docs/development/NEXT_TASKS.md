@@ -1,6 +1,6 @@
 # NavTasks — Next Tasks
 
-## Current stage — 0.4.47 source ready for CI; no device validation yet
+## Current stage — 0.4.48 source ready for CI; no device validation yet
 
 User approved the design on 2026-11-07.
 
@@ -12,3 +12,5 @@ User approved the design on 2026-11-07.
 - After verification update CURRENT_STATE, NEXT_TASKS, DECISIONS, CHANGELOG_DEV and HANDOFF with actual commit, CI run, release/tag and outstanding device checks.
 
 No data/profile schema migration, recurrence rewrite or unrelated screen changes are authorized.
+
+- Pre-release regression fix: wide XML contained unsupported Space; removed in 0.4.48. An explicit CI RemoteViews guard was added. Supersede any 0.4.47 artifact; only distribute 0.4.48 once its own CI passes.

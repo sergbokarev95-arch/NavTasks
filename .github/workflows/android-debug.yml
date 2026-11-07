@@ -37,6 +37,12 @@ jobs:
           test -n "$KEYSTORE_B64"
           printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
           test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Validate safe RemoteViews XML
+        run: |
+          if grep -Eq '<Space([[:space:]]|>)' app/src/main/res/layout/navtasks_widget_*.xml; then
+            echo "::error::android.widget.Space is not a supported RemoteViews child"
+            exit 1
+          fi
       - name: Run unit tests
         env:
           NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12

@@ -15,3 +15,5 @@
 - 2026-11-07 approval: the notification should show the actual installed NavTasks color launcher icon (Android LargeIcon); small status-bar glyph is a monochrome translation of the existing layered-card brand, not a generic checkmark. Android OEM may suppress LargeIcon in some contexts.
 - 2026-11-07 approval: Missed is neutral when zero, restrained red glass with red count in Today when positive; widgets show a red pill only with missed tasks and open the missed backlog on tap.
 - 2026-11-07 approval: widget has localized date and progress; show pending task titles and adapt layout for width and height rather than stretching rows. Preserve task-click behavior.
+
+- Widgets are Android RemoteViews. Use only its supported layout/view classes; do not put android.widget.Space or arbitrary Compose/custom views inside widget XML. Use layout padding or margins for gaps. Include a CI guard for known forbidden classes.

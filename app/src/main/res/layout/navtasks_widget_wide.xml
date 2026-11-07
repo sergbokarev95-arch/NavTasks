@@ -29,6 +29,7 @@
             android:layout_height="wrap_content" android:orientation="horizontal"
             android:gravity="center_vertical">
             <LinearLayout android:id="@+id/nav_widget_row_one"
+                android:paddingRight="8dp"
                 android:layout_width="0dp" android:layout_weight="1"
                 android:layout_height="wrap_content" android:minHeight="27dp"
                 android:orientation="horizontal" android:gravity="center_vertical"
@@ -43,7 +44,6 @@
                     android:text="Задача" android:textColor="#F2F8FF"
                     android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
             </LinearLayout>
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
             <LinearLayout android:id="@+id/nav_widget_row_two"
                 android:layout_width="0dp" android:layout_weight="1"
                 android:layout_height="wrap_content" android:minHeight="27dp"
@@ -64,6 +64,7 @@
             android:layout_height="wrap_content" android:orientation="horizontal"
             android:gravity="center_vertical">
             <LinearLayout android:id="@+id/nav_widget_row_three"
+                android:paddingRight="8dp"
                 android:layout_width="0dp" android:layout_weight="1"
                 android:layout_height="wrap_content" android:minHeight="27dp"
                 android:orientation="horizontal" android:gravity="center_vertical"
@@ -78,7 +79,6 @@
                     android:text="Задача" android:textColor="#F2F8FF"
                     android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
             </LinearLayout>
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
             <LinearLayout android:id="@+id/nav_widget_row_four"
                 android:layout_width="0dp" android:layout_weight="1"
                 android:layout_height="wrap_content" android:minHeight="27dp"

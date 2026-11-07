@@ -3,7 +3,7 @@
 Verified against GitHub main at 211c0ac59b11e4e1cde2abe2361ffd01155bc895 (2026-11-07 review).
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Source version in new code: 0.4.47, versionCode 69, app/build.gradle.kts. Debug variant adds -beta to versionName and .glass to applicationId.
+- Source version in new code: 0.4.48, versionCode 70, app/build.gradle.kts. Debug variant adds -beta to versionName and .glass to applicationId.
 - Previous stable source: 0.4.46 at 59f6a77 (due-only AMOS/Services and widget visibility); 0.4.47 source update pending CI: actual app icon on notifications, red missed chips, widget layout and navigation.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Release workflow: .github/workflows/publish-0.4.46-apk.yml; tag v0.4.46-glass-beta and APK/ZIP names defined there. Its checkout is pinned to 59f6a77, so documentation commits do not change released code.
@@ -15,3 +15,5 @@ Verified against GitHub main at 211c0ac59b11e4e1cde2abe2361ffd01155bc895 (2026-1
 - On 2026-11-07 user approved the original-color launcher icon in notifications, useful adaptive widgets, and restrained red Missed chips. Changes implemented in source; CI and HONOR device testing still required.
 
 - 0.4.47 source touches notification icon/builder, widgets and Today presentation only; no profile or task data schema changes. Verify the GitHub main head and the next passing CI run before installing.
+
+- 0.4.48 correction (2026-11-07): wide widget no longer contains android.widget.Space, unsupported for RemoteViews; uses padding on supported LinearLayout instead. 0.4.47 compilation passed, but its unverified widget variant should not be installed. 0.4.48 is the intended deliverable, pending own CI and release.
