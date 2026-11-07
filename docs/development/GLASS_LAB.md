@@ -27,3 +27,6 @@ First lab source, pending CI and physical HONOR validation. Do NOT claim this ac
 
 ## Build attempt 1
 - Initial CI 42385094225 failed on AAR metadata: Backdrop 2.0.0 requires compileSdk 37, whereas the new lab was set to 36. The correction changes only the lab compileSdk and workflow Android SDK install to 37; production :app stays compileSdk 36. Gradle plugin 8.13.2 may warn about untested SDK 37; await CI before accepting.
+
+## Build attempt 3
+- CI 42385611901 passed Android 36 dependency metadata checks and compiled until Kotlin reported missing Capsule symbol. In the archived 1.0.6 upstream catalog, Capsule is supplied by the separately published io.github.kyant0:shapes:1.2.0 library, not exported as a transitive compile API of Backdrop. Add this direct dependency in the lab module only. No production app changes.

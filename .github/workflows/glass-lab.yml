@@ -46,6 +46,7 @@ jobs:
           set -euo pipefail
           grep -Fq 'applicationId = "com.navtasks.glasslab"' glasslab/build.gradle.kts
           grep -Fq 'implementation("io.github.kyant0:backdrop:1.0.6")' glasslab/build.gradle.kts
+          grep -Fq 'implementation("io.github.kyant0:shapes:1.2.0")' glasslab/build.gradle.kts
           grep -Fq 'include(":app")' settings.gradle.kts
           grep -Fq 'versionName = "0.4.59"' app/build.gradle.kts
           grep -Fq 'versionCode = 81' app/build.gradle.kts
