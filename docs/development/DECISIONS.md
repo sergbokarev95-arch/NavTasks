@@ -45,3 +45,5 @@
 - 0.4.53 release (2026-11-07): month cells rely on subtle fill instead of blue outline. Weekend is an informational warm-coral text accent; status-dot color retains independent meaning. Numeric position is fixed at geometric center and dot independently anchored to bottom. Keep these semantics in future calendar UI edits. Source 81cce3e29b74454f6329a124f9589570a9cb2722; no data or task logic changes.
 
 - 2026-11-07 (0.4.54): Weekend contrast must apply consistently in both Plan month calendar and Today's 7-day strip. Reuse calendarIsWeekend(date) and one shared calendarWeekendInk(p) palette (dark #E5A4A0, day #B36563), including selected weekend days; selected Today day retains its existing blue glass backdrop. Do not treat a weekend as a missed task. Avoid altering the 7-day interaction/selection or any schedule semantics.
+
+- 0.4.54 signed release (2026-11-07): Today weekend styling matches Plan's shared coral palette while the blue selected glass remains intact. No data/recurrence/calendar task logic changed. Source 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f; device validation still pending.

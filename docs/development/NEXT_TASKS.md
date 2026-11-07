@@ -1,6 +1,6 @@
 # NavTasks — Next Tasks
 
-## Current stage: 0.4.54 Today weekend styling source changes; CI and release pending
+## Current stage: 0.4.54 published and CI-verified; HONOR day/night checks pending
 
 User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above system navigation in Services and AMOS, unlike Today. User explicitly requested removal.
 
@@ -49,5 +49,11 @@ User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above syst
 - Fix implemented in NavTasksUi.kt: Today DayChip receives calendarIsWeekend(day). Both top day label and date number use exactly the same muted coral ink in night/day themes as Plan (shared calendarWeekendInk(p)).
 - Keep selected day blue glass fill/contrast, chip geometry, non-weekend colors, seven-day scrolling, missed-count animation and click behavior unchanged. Increase Today date number 15 -> 16sp.
 - Tiny PlanAndTasksUi.kt refactor only exposes the shared weekend palette; Plan appearance must not change. Regression CalendarVisualRulesTest includes the two palette colors.
-- Next: CI tests and debug build, stable-signed GitHub APK/ZIP release 0.4.54/versionCode 76 pinned to tested source, update release hashes and all five handoff docs.
+- Completed: main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42366929632 SUCCESS; stable-signed publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42367156700 SUCCESS. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.54-glass-beta, source 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f, APK SHA-256 f3b2ab0a8c74836469875ba8e0c25dd711ea3cf58f67ccee4c1f5a2325cb63ac.
 - HONOR acceptance: Saturday/Sunday coral in Today including selected weekend, non-weekdays retain existing color; Plan visuals unchanged; check RU/EN and day/night. No phone verification yet.
+
+## Latest evidence and next device acceptance
+- 0.4.54 source commit 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f; signed release workflow commit 8ff1fc48a05c00a5635e3da8ca9ce330467f8cb0; APK versionCode 76.
+- CI 42366929632 SUCCESS, publisher 42367156700 SUCCESS; latest release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.54-glass-beta; SHA-256 f3b2ab0a8c74836469875ba8e0c25dd711ea3cf58f67ccee4c1f5a2325cb63ac.
+- User HONOR acceptance pending: Today Sat/Sun coral labels/numerals with selected and unselected states (RU/EN, dark/light); other days and selected glass unchanged, horizontal scrolling and Missed chip intact. Confirm Plan calendar remains the 0.4.53 design.
+- Earlier open checks include 0.4.52 Services/AMOS lower edge, icon in notification, widgets.
