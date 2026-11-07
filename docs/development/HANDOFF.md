@@ -3,7 +3,7 @@
 1. Connect GitHub account sergbokarev95-arch; open private repo sergbokarev95-arch/NavTasks.
 2. Read all five docs/development/*.md files first. Confirm main HEAD, app/build.gradle.kts versionName/versionCode, recent commits, GitHub Releases, Actions and relevant feature branches. If GitHub is newer, update these documents before acting.
 3. Source: app/src/main/java/com/navtasks/app/; resources: app/src/main/res/; tests: app/src/test/java/com/navtasks/app/.
-4. Current stage: 0.4.51 published and CI-verified; HONOR validation of editable AMOS request date is next. 0.4.50 is prior published baseline. User still needs to visually verify notification icon and responsive widgets on HONOR. Keep 0.4.46 AMOS due-only Today logic.
+4. Current stage: 0.4.52 published and CI-verified; HONOR verification of bottom edge removal in Services and AMOS is next. 0.4.51 remains previous released baseline. User still needs to visually verify notification icon and responsive widgets on HONOR. Keep 0.4.46 AMOS due-only Today logic.
 5. Build: JDK 17, Android SDK 36, Gradle 8.13; `gradle :app:testDebugUnitTest --no-daemon` then `gradle :app:assembleDebug --no-daemon`. GitHub workflow .github/workflows/android-debug.yml uses stable beta signing secrets; do not disclose or overwrite signing keys. Signed release workflows use pinned source commits and publish APK/ZIP to GitHub Releases.
 6. Debug build uses applicationId suffix .glass and versionName suffix -beta. Avoid replacing production application or clearing user data.
 7. Preserve profiles, task recurrence, completion history, service/AMOS scheduling, notifications, import/export, existing widgets and navigation. Use small diffs and regression tests.
@@ -85,5 +85,13 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - User supplied HONOR screenshots: in Services and AMOS list cards are clipped visually above the Android gesture navigation area, unlike Today. Requested removal of the artificial bottom boundary.
 - Root cause: ServicesUi.kt and WorkOrdersUi.kt both used Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().hazeSource(...)). Remove navigationBarsPadding() ONLY from the full scrolling Column, keeping it on floating Add buttons and keeping bottom 106dp LazyColumn content padding.
 - Source version 0.4.52 / versionCode 74; no changes to data, business logic, notifications, AMOS schedule or other screens.
-- Wait for successful CI and stable-signed release before suggesting installation. After release, check on HONOR that content extends behind gesture bar with no sharp line while floating + and bottom card buttons remain accessible.
-- 0.4.51 remains the last tested and published baseline until 0.4.52 passes.
+- CI and stable-signed release SUCCESS; see verified links below. On HONOR check that content extends behind gesture bar without a sharp cutoff, while + and last-card buttons stay accessible.
+- 0.4.52 is now the latest tested-and-published release; 0.4.51 is previous release. Hardware acceptance pending.
+
+## Latest verified 0.4.52 release (2026-11-07)
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.52-glass-beta (APK and compact ZIP), versionCode 74, stable Beta signing.
+- Source commit d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d; signed publication workflow commit f448c0f5225c6415d3cf414b1edcf2dff2a3bd8f.
+- Source CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42356909189 SUCCESS; signed publish https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42357102513 SUCCESS.
+- APK SHA-256 e05d0691f0d0320c288e6b466507adc160cad2c13fd83422656daf9726eea3fb. No data/profile/schema changes and no changes to AMOS schedules, services models, notifications or widgets.
+- Await screenshots from HONOR (day/night) of final Services and AMOS cards at the bottom and floating Add buttons; user acceptance not yet established.
+- Recovery prompt: «Восстанови NavTasks из GitHub sergbokarev95-arch/NavTasks. Прочитай docs/development/HANDOFF.md, CURRENT_STATE.md и NEXT_TASKS.md, проверь main и последний релиз 0.4.52. Продолжим тест нижней границы в Сервисах и AMOS. Изменения только точечные, обновляй документацию в репозитории».

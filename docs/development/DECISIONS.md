@@ -37,3 +37,5 @@
 - 0.4.51 signed release 2026-11-07, source 651948cb0c280cd63a418d0054515f4d83102ea9: unplanned AMOS request date remains informational; it is not a deadline or the service-completion date. No change to profile JSON schema.
 
 - 2026-11-07 (0.4.52 design): for standalone Services and AMOS pages, the scroll container must be edge-to-edge like Today. No navigationBarsPadding() on the full scrolling Column; the status-bar inset stays. Keep safe navigationBarsPadding() on the bottom-left floating Add control and 106dp internal LazyColumn trailing content padding for accessible card buttons. Do not introduce opaque reserved footer/bottomBar.
+
+- 0.4.52 (2026-11-07): signed release ships edge-to-edge standalone Services and AMOS scroll containers. Maintain the decision not to re-add root navigationBarsPadding() when editing these pages; keep safe inset on floating Add buttons. Source d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d; physical HONOR verification pending.

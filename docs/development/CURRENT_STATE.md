@@ -1,12 +1,12 @@
 # NavTasks — Current State
 
-Reviewed 2026-11-07 against GitHub main and successful signed 0.4.51 release; subsequent documentation-only commits may advance main HEAD.
+Reviewed 2026-11-07 against GitHub main and successful signed 0.4.52 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current source under validation: 0.4.52 (versionCode 74); last signed published release is 0.4.51 (versionCode 73), pending 0.4.52 CI/release. Debug variant adds -beta and .glass.
-- Previous stable source: 0.4.46 at 59f6a77 (due-only AMOS/Services and widget visibility); 0.4.47 source update pending CI: actual app icon on notifications, red missed chips, widget layout and navigation.
+- Current published and CI-verified release: 0.4.52 (versionCode 74); previous signed version 0.4.51 (versionCode 73). Debug variant adds -beta and .glass.
+- Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date. Current 0.4.52 adjusts only edge-to-edge drawing.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
-- Previous release workflow: .github/workflows/publish-0.4.51-apk.yml, source 651948cb0c280cd63a418d0054515f4d83102ea9. 0.4.52 publisher will pin the tested new source commit.
+- Current release workflow .github/workflows/publish-0.4.52-apk.yml, pinned to d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d. Previous workflow .github/workflows/publish-0.4.51-apk.yml remains for historical release.
 - GitHub Actions Build NavTasks Android APK run 42254823995 completed successfully on 2026-11-06. CI runs unit tests and assembles debug APK. Physical-device validation is not established by CI.
 - Main modules: Today, Plan/calendar, Tasks and recurrence, profiles, import/export, handover, Services, AMOS work orders, Works agenda, notifications and two home widgets. Implementation is Kotlin/Jetpack Compose, with RemoteViews XML widgets.
 - Notification implementation: app/src/main/java/com/navtasks/app/NavNotifications.kt; icon app/src/main/res/drawable/navtasks_notification.xml.
@@ -69,9 +69,12 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.51 release; su
 - Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.51-glass-beta; APK SHA-256 ea58622fad66204e812dfdaea6ed7e8546ed98e672c6764481dd91f35ae8e4c3.
 - HONOR device validation of UI and data flow remains pending.
 
-## 0.4.52 — remove artificial bottom edge in Services and AMOS (source stage, 2026-11-07)
+## 0.4.52 — remove artificial bottom edge in Services and AMOS (released, 2026-11-07)
 - User reported (HONOR screenshots) that service cards and AMOS cards have a visible bottom cutoff above the system gesture navigation area; Today draws content to the screen edge.
 - Source audit verified the cause: both ServicesUi.kt and WorkOrdersUi.kt applied navigationBarsPadding() to their entire scrolling Column, unlike the root Today screen.
 - Only change: drop navigationBarsPadding() from the two scrolling Column roots, retaining statusBarsPadding() and hazeSource(). Keep navigationBarsPadding() on both separate floating Add buttons so they remain outside Android's gesture area.
 - Existing LazyColumn contentPadding bottom=106dp ensures last cards can scroll entirely clear of the bottom gesture area; no changes to card geometry, models, dates, notifications, AMOS logic, data, or profile format.
-- Need CI unit tests/compilation and physical HONOR day/night verification; no device result yet.
+- Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42356909189: SUCCESS (unit tests, APK). Signed publisher https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42357102513: SUCCESS (repeated tests, signed APK, ZIP, release).
+- Immutable source commit d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d; publisher workflow commit f448c0f5225c6415d3cf414b1edcf2dff2a3bd8f.
+- Published https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.52-glass-beta; APK SHA-256 e05d0691f0d0320c288e6b466507adc160cad2c13fd83422656daf9726eea3fb.
+- Physical HONOR day/night and gesture navigation verification remains outstanding.

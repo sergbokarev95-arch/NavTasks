@@ -1,6 +1,6 @@
 # NavTasks — Next Tasks
 
-## Current stage: 0.4.52 — edge-to-edge Services/AMOS source fix, CI pending
+## Current stage: 0.4.52 released and CI-verified; HONOR visual acceptance pending
 
 User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above system navigation in Services and AMOS, unlike Today. User explicitly requested removal.
 
@@ -9,7 +9,7 @@ User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above syst
 - ServicesUi.kt and WorkOrdersUi.kt: remove only navigationBarsPadding() on root scrolling Column. Retain statusBarsPadding() and hazeSource() and the navigationBarsPadding() on the floating + buttons.
 - Preserve LazyColumn bottom contentPadding 106dp so last cards/buttons are scrollable to a tappable position; content can draw behind the system gesture bar.
 - Version 0.4.52 / versionCode 74; no data schema changes or business logic changes.
-- Verify source CI (tests + debug APK) then signed GitHub publication from immutable source; update all five docs with commit, CI run, release URLs, SHA256 and device status.
+- Completed: main CI 42356909189 and signed publisher CI 42357102513 SUCCESS. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.52-glass-beta, immutable source d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d, published APK SHA-256 e05d0691f0d0320c288e6b466507adc160cad2c13fd83422656daf9726eea3fb.
 
 ### HONOR acceptance
 
@@ -21,3 +21,9 @@ User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above syst
 ## Previous release
 
 - 0.4.51 signed: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.51-glass-beta; source 651948cb0c280cd63a418d0054515f4d83102ea9; CI tests/build passed.
+
+## 0.4.52 release evidence
+- Source commit d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d; signed publisher workflow commit f448c0f5225c6415d3cf414b1edcf2dff2a3bd8f.
+- Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42356909189 SUCCESS; release CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42357102513 SUCCESS.
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.52-glass-beta; APK SHA-256 e05d0691f0d0320c288e6b466507adc160cad2c13fd83422656daf9726eea3fb. Hardware HONOR display and interaction acceptance NOT yet confirmed.
+- Follow up after screenshots: look for bottom-edge transition, last-card tappability, floating Add, dark/day mode and edge Back gesture before closing this stage.
