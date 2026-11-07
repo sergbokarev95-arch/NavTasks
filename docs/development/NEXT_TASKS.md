@@ -147,3 +147,11 @@
 - [ ] Before candidate 0.4.60 installation, export complete profile backup. DO NOT uninstall NavTasks. Install signed 0.4.60 candidate as an update, test look/performance/data in Day/Night.
 - [ ] If rejected, install signed Haze recovery 0.4.61 OVER 0.4.60, not as a downgrade; confirm data preserved.
 - [ ] Only after HONOR approval merge the exact material into main; action buttons follow individually. Original 0.4.59 source stays protected.
+
+
+## Priority: HONOR compare unchanged dock across three backdrops
+- [x] Create isolated diagnostic variant of full NavTasks with same Backdrop and same Glass Lab 0.1.5 dock, switch modes outside capture: ЭКРАН, БЕЗ HAZE, ЭТАЛОН.
+- [x] CI 42402960923 SUCCESS including original dock SHA gate and all app tests; small signed ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasscapture-v0.4.60-diagnostic1/NavTasks_Glass_Capture_Diagnostics_0.4.60.zip.
+- [ ] User installs separate `NavTasks Glass Check`, tests all three in night/day; scrolls text and bright card borders through dock and records screenshots at analogous positions, reports shimmer/performance.
+- [ ] Diagnose: ЭТАЛОН matches Lab → target scenes/colors; БЕЗ HAZE differs from ЭКРАН on same content → investigate source capture/Haze; ЭТАЛОН differs from Lab → investigate root composition/device density.
+- [ ] Only then design minimal controlled correction with tests. Do not merge speculative changes into production or touch existing task/card business logic.

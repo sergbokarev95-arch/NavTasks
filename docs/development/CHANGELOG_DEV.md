@@ -91,3 +91,6 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 
 - 2026-11-08 — signed 0.4.61-beta **rollback-only** APK from stable 0.4.59 Haze (versionCode84, source 8158574bfac16ab9bc7baa648c4a7a2533cb906c). Same `com.navtasks.app.glass` package, Beta key, no business/UI changes except version. CI 42400505251 SUCCESS and aapt verified ID/version; https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.61-haze-rollback; SHA256 cc2ae62b749b1873b72f3dcf8e18ffc030daae731d005e0a53e11d7b6252309a. Use to restore stable dock over 0.4.60 candidate without uninstalling. Main code unchanged.
+
+
+- 2026-11-08 — isolated `NavTasks Glass Check` 0.4.60 capture A/B/C diagnostic from commit eb504f145b8a4e0cf8612cd9e814b8c6c6a1ab8f, release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasscapture-v0.4.60-diagnostic1, CI 42402960923 SUCCESS, signed ZIP 10,865,575 bytes SHA256 969f570d1feab063be5e3ac657e18e839c8767cad30d8a9fbb4893814383d9bf. Same dock/optics, scenes live Haze vs live no Haze vs original Lab reference cards, separate app package/data. HONOR review pending, main v0.4.59 untouched.

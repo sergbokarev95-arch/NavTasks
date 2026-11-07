@@ -199,3 +199,9 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-08 — safe rollback package ready
 - Same-package signed Haze recovery APK 0.4.61-beta/versionCode84, derived from original stable 0.4.59 sources; only build version differs. CI 42400505251 SUCCESS, aapt verified `com.navtasks.app.glass` and versionCode84. https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.61-haze-rollback ; SHA256 `cc2ae62b749b1873b72f3dcf8e18ffc030daae731d005e0a53e11d7b6252309a`.
 - Can update over 0.4.60 ExactLab candidate without uninstall/data reset if candidate optics unsatisfactory. Export profile backup first. Physical glass acceptance still pending; main remains 0.4.59 Haze code.
+
+
+## Standalone diagnostics to isolate NavTasks Liquid Glass composition (2026-11-08)
+- Installed full-app 0.4.60 Beta user says refractive output less convincing than approved Lab 0.1.5. Renderer function and optics were verified identical, but background scene and Haze layer differ.
+- Independent `glasscapture-v0.4.60-diagnostic1` ZIP signed CI `42402960923` SUCCESS; package `com.navtasks.app.glassdiagnostic`, 3 modes (LIVE Haze, LIVE no Haze, Lab reference cards), unchanged dock/lens. https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasscapture-v0.4.60-diagnostic1.
+- On-device comparison pending; do not infer whether source capture or scene colors are responsible until screenshots. Main source remains stable v0.4.59.

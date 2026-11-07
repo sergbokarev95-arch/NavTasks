@@ -95,3 +95,6 @@
 
 
 - 2026-11-08 safety gate: in-place 0.4.60 exact Glass Lab experiment must have a higher-version same-ID stable fallback before user installs it. Built signed Haze recovery `0.4.61` with versionCode84 as a no-uninstall upgrade over candidate83 (CI 42400505251 successful); original 0.4.59 Haze code unchanged. Release `v0.4.61-haze-rollback`. Never instruct user to uninstall or force downgrade to versionCode81 with live local data.
+
+
+- 2026-11-08: Do NOT keep modifying Liquid Glass blur/refraction by guess. Since source renderer/lens parameters already match accepted Lab 0.1.5, first isolate whether NavTasks UI contents or Haze composition affect sampling. Use separate package `com.navtasks.app.glassdiagnostic` with three scene modes from same untouched renderer; signed CI 42402960923 SUCCESS. No production code changes until HONOR A/B/C feedback.
