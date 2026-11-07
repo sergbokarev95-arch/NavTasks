@@ -42,7 +42,7 @@ Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still p
 ## Build attempt 3
 - CI 42385611901 passed Android 36 dependency metadata checks and compiled until Kotlin reported missing Capsule symbol. In the archived 1.0.6 upstream catalog, Capsule is supplied by the separately published io.github.kyant0:shapes:1.2.0 library, not exported as a transitive compile API of Backdrop. Add this direct dependency in the lab module only. No production app changes.
 
-## 0.1.1 — card-border refraction experiment (source candidate, CI pending)
+## 0.1.1 — card-border refraction experiment (CI VERIFIED; HONOR pending)
 - HONOR screenshots of 0.1.0: strong text/glyph distortion but straight one-pixel card borders across dock; baseline blur 8dp smooths the edges before lensing.
 - Only lab code changes: capture remains direct LayerBackdrop, no experimental work in production main. Preserve 56dp bar / 52dp selection and four tabs.
 - Reduce outer pre-lens blur 8dp → 2dp and change lens height/amount 24/24dp → 12/36dp; active lens blur 4dp → 1.5dp and 18/12dp → 10/18dp. These are conservative laboratory parameters requiring HONOR acceptance, not a guarantee of optical quality.
@@ -50,3 +50,11 @@ Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still p
 - Move statusBarsPadding outside the scrolling content and follow Day/Night system icon contrast.
 - Add pure optical-bounds regression tests. 0.1.0 remains in its release and in backup/glasslab-0.1.0-before-optics. Do not merge into main.
 - Test: compare a straight 1dp card border as it *enters, crosses and exits* the top/bottom rim while scrolling, in both themes; check text does not shimmer, pill geometry and four-tab taps. Physical result pending.
+
+### Verified 0.1.1 delivery
+- Isolated source commit: f3ef5353dac9dc703bcb811c224c78e7e212fe74; versionCode 2; versionName 0.1.1; package com.navtasks.glasslab.
+- GitHub Actions: https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42388053998 SUCCESS, Gradle :glasslab:testDebugUnitTest and :glasslab:assembleDebug.
+- Separate signed prerelease: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.1; APK NavTasks_LiquidGlass_Lab_0.1.1.apk.
+- APK SHA-256: 26c5a418e395a83c1c3733e77158e501d2ba5b950a88ed2e5d59ffbd9a5f1d69 (GitHub Actions sha256sum).
+- HONOR acceptance outstanding: observe actual curvature of light card outlines under Glass ON, both themes, and check scrolling for text shimmer/jank. Compilation and unit tests do not prove visual quality.
+- main remains d2792ab504610d0ddf02738f573db0ca0206041d with production NavTasks 0.4.59 / versionCode 81; no app-module changes. Previous lab prerelease 0.1.0 and backup branch retained.
