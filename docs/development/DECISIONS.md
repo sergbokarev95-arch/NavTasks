@@ -47,3 +47,5 @@
 - 2026-11-07 (0.4.54): Weekend contrast must apply consistently in both Plan month calendar and Today's 7-day strip. Reuse calendarIsWeekend(date) and one shared calendarWeekendInk(p) palette (dark #E5A4A0, day #B36563), including selected weekend days; selected Today day retains its existing blue glass backdrop. Do not treat a weekend as a missed task. Avoid altering the 7-day interaction/selection or any schedule semantics.
 
 - 0.4.54 signed release (2026-11-07): Today weekend styling matches Plan's shared coral palette while the blue selected glass remains intact. No data/recurrence/calendar task logic changed. Source 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f; device validation still pending.
+
+- 2026-11-07 (0.4.55 UI): Floating primary creation Add (+) is anchored at BottomEnd on Tasks, Services and AMOS, aligned conceptually with the Today bottom-right calendar shortcut. Horizontal inset 19dp, original vertical insets and navigationBarsPadding() preserved. Do not move dock or alter click semantics.

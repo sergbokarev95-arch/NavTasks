@@ -527,8 +527,8 @@ fun NavTasksApp(
                     }
                     if (tab == 3) {
                         Box(
-                            Modifier.align(Alignment.BottomStart).navigationBarsPadding()
-                                .padding(start = 19.dp, bottom = 83.dp),
+                            Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
+                                .padding(end = 19.dp, bottom = 83.dp),
                         ) {
                             NavGlassAddButton(palette, hazeState) {
                                 editorTask = null

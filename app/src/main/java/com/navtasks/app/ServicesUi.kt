@@ -278,8 +278,8 @@ fun ServicesScreen(
         }
     }
     Box(
-        Modifier.align(Alignment.BottomStart).navigationBarsPadding()
-            .padding(start = 19.dp, bottom = 18.dp),
+        Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
+            .padding(end = 19.dp, bottom = 18.dp),
     ) {
         NavGlassAddButton(p, hazeState) {
             selected = null
