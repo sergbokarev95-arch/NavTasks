@@ -118,3 +118,11 @@ Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still p
 - CI workflow regression checks reject reintroduction of a parent `BoxWithConstraints(...then(backing))` and require sibling backing. No changes to task data, production `:app`, main NavTasks 0.4.59 or user profiles.
 - VersionName 0.1.5/versionCode 6, package `com.navtasks.glasslab`. Backup: `backup/glasslab-0.1.4-before-unclipped-layer`, lab 0.1.4 remains downloadable.
 - Physical HONOR acceptance still mandatory: verify actual protrusion beyond BOTH outer 56dp edges in light/dark at 0→3/3→0 taps; no shimmering of card border, stationary icons, settled neutral grey and no dock movement.
+
+
+### Verified standalone 0.1.5 delivery (2026-11-08)
+- Source commit: `ea412201936a8a178c657b77bda7a3347b878f06`. Package `com.navtasks.glasslab`, versionName 0.1.5, versionCode 6.
+- GitHub Actions https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42393384091 — SUCCESS, both `:glasslab:testDebugUnitTest` and `:glasslab:assembleDebug`, structural guard + separate Beta signing and prerelease.
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.5; signed APK https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasslab-v0.1.5/NavTasks_LiquidGlass_Lab_0.1.5.apk
+- APK SHA-256 from CI: `c2e2d34e48578d189dd31238a1e04aa38137fb9d6ea022116821d7bd2c680f3f`.
+- **Not physically verified on HONOR yet.** Focus specifically on the middle lens protruding above AND below outer bar while switching; compare to 0.1.4 cropped top/bottom; ensure smooth transition and stationary icon dimensions. Production main app still 0.4.59 / versionCode 81.
