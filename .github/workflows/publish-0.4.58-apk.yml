@@ -1,0 +1,123 @@
+name: Publish NavTasks Glass 0.4.58 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.58-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out verified 0.4.58 dock geometry and shimmer hotfix source
+        uses: actions/checkout@v4
+        with:
+          ref: 4118106265361b3e28b2f4636f5c6c17def6801c
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore stable beta signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify source and run regression tests
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "4118106265361b3e28b2f4636f5c6c17def6801c"
+          grep -q 'versionName = "0.4.58"' app/build.gradle.kts
+          grep -q 'versionCode = 80' app/build.gradle.kts
+          if grep -Fq 'Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()' \
+              app/src/main/java/com/navtasks/app/ServicesUi.kt \
+              app/src/main/java/com/navtasks/app/WorkOrdersUi.kt; then
+            echo "::error::Standalone work pages must be edge-to-edge"
+            exit 1
+          fi
+          if grep -Fq '.border(if (isToday) 2.dp else 1.dp' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt; then
+            echo "::error::Bright month-cell borders regressed"
+            exit 1
+          fi
+          # The three floating creation controls must be anchored at bottom-right.
+          grep -Fq 'Modifier.align(Alignment.BottomEnd).navigationBarsPadding()' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'Modifier.align(Alignment.BottomEnd).navigationBarsPadding()' app/src/main/java/com/navtasks/app/ServicesUi.kt
+          grep -Fq 'Modifier.align(Alignment.BottomEnd).navigationBarsPadding()' app/src/main/java/com/navtasks/app/WorkOrdersUi.kt
+          grep -Fq 'Modifier.align(Alignment.BottomEnd)' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq '.padding(end = 19.dp, bottom = if (embeddedInTab) 83.dp else 18.dp)' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          if grep -Fq 'Modifier.align(Alignment.BottomStart)' app/src/main/java/com/navtasks/app/HandoverUi.kt; then
+            echo "::error::Handover Add control is left-aligned"
+            exit 1
+          fi
+          if grep -Fq 'Modifier.align(Alignment.BottomStart).navigationBarsPadding()' app/src/main/java/com/navtasks/app/ServicesUi.kt app/src/main/java/com/navtasks/app/WorkOrdersUi.kt; then
+            echo "::error::Standalone Add controls regressed to left"
+            exit 1
+          fi
+          grep -Fq 'weekend = calendarIsWeekend(day)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'calendarWeekendInk(p)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          if grep -Eq '<Space([[:space:]]|>)' app/src/main/res/layout/navtasks_widget_*.xml; then
+            echo "::error::Unsupported Space in RemoteViews layout"
+            exit 1
+          fi
+          # Guard our tiny API33+ glass renderer and preserve fallback behaviour.
+          grep -Fq 'uniform shader blurredImage;' app/src/main/java/com/navtasks/app/NavGlassOptics.kt
+          grep -Fq 'canRenderNavGlassRefraction' app/src/main/java/com/navtasks/app/NavGlassOptics.kt
+          grep -Fq '.graphicsLayer { renderEffect = refractiveEffect }' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq '.navHazeBackdrop(p, hazeState' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'NavGlassOpticsTest' app/src/test/java/com/navtasks/app/NavGlassOpticsTest.kt
+          # 0.4.57 shrank the glass backing and warped scrolling text.
+          # Keep material full 56dp; inset ONLY Canvas and tab Row.
+          grep -Fq 'Full-size dock material' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'Modifier.matchParentSize().padding(horizontal = 1.dp, vertical = 2.dp)' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'blurRadius = if (role == GlassRole.NAVIGATION) 30.dp else 17.dp' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'NAV_DOCK_OPTICAL_RIM_DP = 5f' app/src/main/java/com/navtasks/app/NavGlassOptics.kt
+          grep -Fq 'NAV_DOCK_OPTICAL_BEND_DP = 1.2f' app/src/main/java/com/navtasks/app/NavGlassOptics.kt
+          gradle :app:testDebugUnitTest --no-daemon
+      - name: Build stable-signed debug APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: gradle :app:assembleDebug --no-daemon
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Package compact ZIP directly from build
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p upload
+          cp app/build/outputs/apk/debug/app-debug.apk upload/NavTasks_Glass_0.4.58_Beta.apk
+          sha256sum upload/NavTasks_Glass_0.4.58_Beta.apk
+          cd upload
+          zip -q NavTasks_Glass_0.4.58_Build.zip NavTasks_Glass_0.4.58_Beta.apk
+          unzip -t NavTasks_Glass_0.4.58_Build.zip
+          cd ..
+      - name: Publish 0.4.58 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.58-glass-beta \
+            upload/NavTasks_Glass_0.4.58_Beta.apk \
+            upload/NavTasks_Glass_0.4.58_Build.zip \
+            --repo "${{ github.repository }}" \
+            --target 4118106265361b3e28b2f4636f5c6c17def6801c \
+            --prerelease \
+            --title "NavTasks Glass 0.4.58 Beta · Stable Glass Geometry" \
+            --notes "NavTasks 0.4.58 visual-regression hotfix for experimental 0.4.57 dock. HONOR testing reported moving text beneath the dock shimmering/highlighting and the glass bar looking smaller. Restored the full 56dp glass background; moved its 1dp/2dp layout padding back to the animated lens/interactive tabs only. Increased Haze navigation blur to 30dp and slightly strengthened translucent material to suppress readable moving letters; narrowed the API33+ optical rim to 5dp and bend to 1.2dp. Kept live Haze on Android 12, all four-tab geometry, clicks, gestures, icons, haptics, Services, AMOS, Handover, data, profiles, widgets and notifications unchanged. Immutable source 4118106265361b3e28b2f4636f5c6c17def6801c; unit tests and stable-beta signed APK/ZIP rebuilt. Physical visual and performance acceptance on HONOR is still required. Earlier 0.4.56 and 0.4.57 releases remain available; back up profiles before upgrading."
