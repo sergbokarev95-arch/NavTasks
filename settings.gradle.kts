@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "NavTasks"
 include(":app")
+include(":glasslab")
