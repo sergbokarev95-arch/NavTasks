@@ -3,7 +3,7 @@
 Reviewed 2026-11-07 against GitHub main and successful signed 0.4.57 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current GitHub signed and CI-verified release is v0.4.57 (versionCode 79), **experimental refractive dock**, with HONOR visual acceptance pending. v0.4.56 (versionCode 78) is the last previous release baseline. Debug variant adds -beta and .glass.
+- Current source stage: **0.4.58 (versionCode 80) visual-regression hotfix; CI/release pending.** Last published signed version is v0.4.57 (versionCode 79), which user found has a smaller dock and shimmering text under its edge. v0.4.56 remains pre-optics rollback reference. Debug variant adds -beta and .glass.
 - Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date; 0.4.52 edge-to-edge standalone screens; 0.4.53–0.4.54 calendar/Today weekend refinement; 0.4.55–0.4.56 right-hand Add controls. 0.4.57 tests an optically refractive dock.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Current release workflow .github/workflows/publish-0.4.57-apk.yml pinned to 3d2ffdeead8c607d2e6f7b43d126d18ae6593581. Earlier signed release workflows are retained for provenance.
@@ -128,3 +128,10 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.57 release; su
 - GitHub main CI 42376895012 SUCCESS; signed publisher CI 42377117640 SUCCESS. Immutable source 3d2ffdeead8c607d2e6f7b43d126d18ae6593581; publishing workflow commit f41dc24810e0c8ce4e90b36cf72927b6cf4f8fc9.
 - Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.57-glass-beta; stable-signed APK SHA-256 b8de98ae598396405ac4145e007a4ca1de629146ea14e394dd41f32200db354c; compact ZIP SHA-256 63430ee5388d5e6cf7548802f332f9a02c32dbcb13519f7f9ffd1925356d911c.
 - **Not physically tested:** HONOR day/night/scroll/gesture/GPU frame-time acceptance remains pending; do not call the experimental optics visually verified.
+
+## 0.4.58 — HONOR-reported dock size and shimmer regression (2026-11-08, source stage)
+- User screenshot of v0.4.57 Handover: text behind the glass is too visible, appears to glow/shimmer while scrolling; dock background appears smaller.
+- Root cause identified in NavGlass.kt: 0.4.57 moved the former padding(horizontal=1dp, vertical=2dp) **before** the backdrop/face layers. As a result, the 56dp outer container's glass was actually rendered in the 52dp inner area. 0.4.57 additionally reduced Haze blur 34dp→15dp and set a large rim 13dp/bend 5.5dp, distorting lettering over scrolling cards.
+- Scoped fix: keep full-size 56dp Haze/optics/face material with 30dp round clipping; apply 1dp/2dp padding **only to the active-lens Canvas and four-tab Row**, restoring earlier selection geometry/hit targets. Haze nav blur increased to 30dp, navigation background tints slightly strengthened for legibility; non-nav floating control material unchanged.
+- New AGSL params: refraction limited to a 5dp rim with maximum 1.2dp bend. Compatibility: current Haze fallback on API <33 remains. Tests enforce conservative optics values; source checks verify geometry.
+- No changes to task/AMOS/service/Handover business logic, profiles, data, notifications or widgets. Source build/release/device confirmation pending. Do not claim flicker eliminated until HONOR tests it.

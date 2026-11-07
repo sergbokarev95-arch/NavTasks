@@ -159,12 +159,12 @@ private fun Modifier.navHazeBackdrop(
             // Keep the live content visible THROUGH the glass. Two former
             // overlapping ~50% overlays were making it look like matte plastic.
             backgroundColor = when {
-                p.dark && role == GlassRole.NAVIGATION -> Color(0x36172739)
+                p.dark && role == GlassRole.NAVIGATION -> Color(0x49172739)
                 p.dark -> Color(0x43172739)
-                role == GlassRole.NAVIGATION -> Color(0x3CF3F3F3)
+                role == GlassRole.NAVIGATION -> Color(0x48F3F3F3)
                 else -> Color(0x50EDF5FA)
             },
-            blurRadius = if (role == GlassRole.NAVIGATION) 15.dp else 17.dp,
+            blurRadius = if (role == GlassRole.NAVIGATION) 30.dp else 17.dp,
             tints = listOf(HazeTint(
                 if (p.dark) Color(0x14141E2B) else Color(0x0DFFFFFF)
             )),
@@ -238,9 +238,10 @@ fun NavGlassBottomBar(
     ) {
         BoxWithConstraints(
             Modifier.fillMaxWidth().height(56.dp)
-                .clip(RoundedCornerShape(30.dp))
-                // Preserve existing selected-lens / tab geometry exactly.
-                .padding(horizontal = 1.dp, vertical = 2.dp),
+                // Full-size dock material. Only the foreground controls
+                // are inset: the 0.4.57 layout accidentally shrank the
+                // *entire glass surface* by 2dp x 4dp.
+                .clip(RoundedCornerShape(30.dp)),
         ) {
             // The refraction is limited to the Haze background layer. Its input
             // never includes the selected capsule, tab labels, or touch targets.
@@ -286,7 +287,9 @@ fun NavGlassBottomBar(
                 animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
                 label = "navLensStretch",
             )
-            Canvas(Modifier.matchParentSize()) {
+            Canvas(
+                Modifier.matchParentSize().padding(horizontal = 1.dp, vertical = 2.dp),
+            ) {
                 val cell = size.width / 4f
                 val inset = 1.dp.toPx()
                 val stretch = liquidStretch.coerceIn(0f, 1f) *
@@ -383,7 +386,12 @@ fun NavGlassBottomBar(
                     )
                 }
             }
-            Row(Modifier.fillMaxSize().selectableGroup(), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxSize()
+                    .padding(horizontal = 1.dp, vertical = 2.dp)
+                    .selectableGroup(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 val names = listOf(
                     localized("Сегодня", "Today", lang),
                     localized("Работы", "Work", lang),

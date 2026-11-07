@@ -7,6 +7,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.asComposeRenderEffect
 
+/** Bound the optical bend to avoid 0.4.57's moving-text shimmer. */
+internal const val NAV_DOCK_OPTICAL_RIM_DP = 5f
+internal const val NAV_DOCK_OPTICAL_BEND_DP = 1.2f
+
 /**
  * Pure capability gate. Older Android versions keep the existing Haze glass,
  * and invalid / zero-sized render layers never attempt to allocate a shader.
@@ -37,8 +41,8 @@ internal fun createNavDockRefraction(
     return try {
         val shader = RuntimeShader(DOCK_OPTICS_AGSL)
         shader.setFloatUniform("viewport", widthPx, heightPx)
-        shader.setFloatUniform("rimWidth", 13f * density.coerceAtLeast(0.5f))
-        shader.setFloatUniform("bendAmount", 5.5f * density.coerceAtLeast(0.5f))
+        shader.setFloatUniform("rimWidth", NAV_DOCK_OPTICAL_RIM_DP * density.coerceAtLeast(0.5f))
+        shader.setFloatUniform("bendAmount", NAV_DOCK_OPTICAL_BEND_DP * density.coerceAtLeast(0.5f))
         AndroidRenderEffect.createRuntimeShaderEffect(shader, "blurredImage")
             .asComposeRenderEffect()
     } catch (_: RuntimeException) {
@@ -50,7 +54,9 @@ internal fun createNavDockRefraction(
 /**
  * Capsule-shaped refraction, independently authored for NavTasks.
  * Signed distance to a pill and its local gradient define an inward sampling
- * bend in a thin peripheral band. Center pixels stay untouched for clarity.
+ * bend in a thin peripheral band (5dp, up to 1.2dp displacement).
+ * This limits the moving-letter highlight distortion observed in 0.4.57.
+ * Center pixels stay untouched for legibility.
  */
 private const val DOCK_OPTICS_AGSL = """
 uniform shader blurredImage;

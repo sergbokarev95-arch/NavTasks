@@ -1,8 +1,8 @@
 # NavTasks — Next Tasks
 
-## Current stage — 0.4.57 refractive dock published and CI verified; HONOR glass/performance acceptance pending
+## Current stage — 0.4.58 correction of 0.4.57 visual regressions, source CI pending
 
-**Highest priority now:** verify real refraction on HONOR with scrolling cards behind the dock, both Day and Night, and check stable frame pacing/rapid navigation. See the 0.4.57 section below; older Add-button tasks are historical and remain subject to user device feedback.
+**Highest priority now:** user reported v0.4.57 makes text below dock shimmer/glow and dock background smaller. Fix those two defects in 0.4.58 before continuing visual glass enhancements; protect navigation and data.
 
 2026-11-07 user observed that the floating Add (+) controls should sit on the right edge consistently. In the repo, Today calendar is on the right but Tasks, Services and AMOS Add buttons were on the left.
 
@@ -52,3 +52,11 @@
 - Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42376895012 SUCCESS; publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42377117640 SUCCESS.
 - APK SHA-256 b8de98ae598396405ac4145e007a4ca1de629146ea14e394dd41f32200db354c; ZIP SHA-256 63430ee5388d5e6cf7548802f332f9a02c32dbcb13519f7f9ffd1925356d911c.
 - User should make full profile backup first. Install over existing Beta without deleting data. Screenshots/video requested: scrolling colourful cards under dock in daylight, dark with contrasting cards, rapid tab movement; check no white/blue flash, frame drops, frozen source texture or icon distortion. If poor, issue higher-version targeted optics-only hotfix; do not delete user data or downgrade by uninstalling.
+
+## 0.4.58 hotfix (2026-11-08)
+- [x] Audit 0.4.56 ↔ 0.4.57 geometry: outer glass incorrectly shrunk to 52dp by material-before-content padding. Restore material at 56dp, move 1dp horizontal/2dp vertical inset onto selection Canvas and Row only.
+- [x] Source stage: blur nav background 15→30dp with modest extra tint to suppress sharp scrolling text; restrict optical rim 13→5dp and inward bend 5.5→1.2dp. Keep refractive feature on API33+ and fallback on older devices.
+- [x] Regression unit test bounds refractive rim and bend; no dependencies updated; version 0.4.58/versionCode 80.
+- [ ] Main CI test, compile and APK; signed publisher success and verifiable release URL/digest. Record immutable source commit and CI evidence in all docs.
+- [ ] HONOR visual test: Handover scrolls behind dock without bright flickering letters; dock outer height/width and active-pill spacing matches 0.4.56; check rapid taps, both themes and empty/content-heavy backgrounds.
+- Preserve 0.4.56 and 0.4.57 GitHub releases; avoid uninstall/downgrade of data-bearing app. If optical distortion persists after 0.4.58, disable only shader in a higher-version hotfix and keep safe Haze, rather than rewriting navigation.
