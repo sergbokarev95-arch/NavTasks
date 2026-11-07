@@ -1,6 +1,6 @@
 # NavTasks — Glass Rendering Technical Audit (2026-11-07)
 
-**Status:** research only; **no application source, version, release, or signing change**. This report compares the current Android NavTasks dock with the public Telegram Android implementation. **Do not implement a new rendering engine without a separate scoped proposal and approval.**
+**Status:** original comparative research was read-only; following explicit user approval an independently authored, bounded 0.4.57 optical prototype has now been published. See the dated release evidence below. This report compares the historical baseline with the Telegram Android reference; do not treat the baseline description as the current 0.4.57 source.
 
 ## Verified baselines
 - NavTasks GitHub: `sergbokarev95-arch/NavTasks`, main `f6cb1eb0d9a4a11072f11cc964a4d534416cb9bc`; latest app version `0.4.56` / versionCode `78`; `dev.chrisbanes.haze:haze:1.7.1`, Jetpack Compose. Signed release `v0.4.56-glass-beta`.
@@ -65,3 +65,8 @@
 ## First approved prototype — 0.4.57 (2026-11-07; pending CI/physical verification)
 The user asked to move beyond translucency and achieve actual glass. Rather than importing GPL-2.0 Telegram code or upgrading all existing Haze 1.x usages to Haze 2, we introduced an independently written API33+ capsule-distance AGSL sampler (`NavGlassOptics.kt`). It applies a narrow inward texture-coordinate bend to a separate already-blurred Haze layer. The final face/edge, selected Canvas and all glyphs are drawn afterwards, so UI controls are not distorted. Existing API31/32 Haze fallback remains; construction failures fall back to it.
 A small material adjustment also reduces previously stacked high-opacity tints and shortens blur. Preserve original 56dp layout, critically-damped selection and four-tab navigation. **No runtime appearance or performance claim is warranted until testing on HONOR.**
+
+## 0.4.57 experiment publication and next evaluation
+- Code implementation: `NavGlass.kt` split blurred Haze source and crisp foreground; new `NavGlassOptics.kt` samples the **already-blurred** dock background through a local capsule-distance API33+ shader with Haze fallback; no Telegram source copied, no Haze dependency upgrade.
+- Source 3d2ffdeead8c607d2e6f7b43d126d18ae6593581; publishing workflow f41dc24810e0c8ce4e90b36cf72927b6cf4f8fc9; main CI 42376895012 SUCCESS, release CI 42377117640 SUCCESS. Signed release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.57-glass-beta; APK SHA-256 b8de98ae598396405ac4145e007a4ca1de629146ea14e394dd41f32200db354c.
+- All statements about optical quality remain provisional until actual HONOR screenshot/scroll/frame-performance acceptance; a black background cannot show meaningful refraction. If necessary, prototype smaller edge strength or improved active-lens optics after real testing, not an unreviewed full library replacement.

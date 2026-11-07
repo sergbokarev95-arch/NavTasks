@@ -1,12 +1,12 @@
 # NavTasks — Current State
 
-Reviewed 2026-11-07 against GitHub main and successful signed 0.4.56 release; subsequent documentation-only commits may advance main HEAD.
+Reviewed 2026-11-07 against GitHub main and successful signed 0.4.57 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current signed and published release is v0.4.56 (versionCode 78), following successful CI and release workflow. v0.4.55 (versionCode 77) remains the previous released baseline. Debug variant adds -beta and .glass.
-- Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date. Current 0.4.52 adjusts only edge-to-edge drawing.
+- Current GitHub signed and CI-verified release is v0.4.57 (versionCode 79), **experimental refractive dock**, with HONOR visual acceptance pending. v0.4.56 (versionCode 78) is the last previous release baseline. Debug variant adds -beta and .glass.
+- Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date; 0.4.52 edge-to-edge standalone screens; 0.4.53–0.4.54 calendar/Today weekend refinement; 0.4.55–0.4.56 right-hand Add controls. 0.4.57 tests an optically refractive dock.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
-- Current release workflow .github/workflows/publish-0.4.54-apk.yml pinned to 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f. Earlier signed release workflows are retained for provenance.
+- Current release workflow .github/workflows/publish-0.4.57-apk.yml pinned to 3d2ffdeead8c607d2e6f7b43d126d18ae6593581. Earlier signed release workflows are retained for provenance.
 - GitHub Actions Build NavTasks Android APK run 42254823995 completed successfully on 2026-11-06. CI runs unit tests and assembles debug APK. Physical-device validation is not established by CI.
 - Main modules: Today, Plan/calendar, Tasks and recurrence, profiles, import/export, handover, Services, AMOS work orders, Works agenda, notifications and two home widgets. Implementation is Kotlin/Jetpack Compose, with RemoteViews XML widgets.
 - Notification implementation: app/src/main/java/com/navtasks/app/NavNotifications.kt; icon app/src/main/res/drawable/navtasks_notification.xml.
@@ -125,4 +125,6 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.56 release; su
 - API 33+ attempts local signed-distance capsule edge refraction using RenderEffect/RuntimeShader on the **blurred Haze layer only**; API 31-32, invalid layers or known shader-construction failures fall back to Haze without refraction. No content outside the app is sampled.
 - NavGlass's overly opaque stacked navigation/control overlays are reduced and blur softened to let actual content shine through, maintaining the 56dp dock, 4 tabs, 19dp right-side FABs and original critically-damped selection spring. Active capsule uses more translucent materials.
 - No profile/task/service/AMOS/scheduling/notification/widget/storage changes. Unit coverage checks API/size feature gating only, not actual shader visual quality.
-- **Do not call this glass visually verified:** GitHub compilation, signed release and physical HONOR dark/light/scroll/gesture/frame-time validation are all pending at source stage.
+- GitHub main CI 42376895012 SUCCESS; signed publisher CI 42377117640 SUCCESS. Immutable source 3d2ffdeead8c607d2e6f7b43d126d18ae6593581; publishing workflow commit f41dc24810e0c8ce4e90b36cf72927b6cf4f8fc9.
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.57-glass-beta; stable-signed APK SHA-256 b8de98ae598396405ac4145e007a4ca1de629146ea14e394dd41f32200db354c; compact ZIP SHA-256 63430ee5388d5e6cf7548802f332f9a02c32dbcb13519f7f9ffd1925356d911c.
+- **Not physically tested:** HONOR day/night/scroll/gesture/GPU frame-time acceptance remains pending; do not call the experimental optics visually verified.
