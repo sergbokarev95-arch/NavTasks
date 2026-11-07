@@ -26,7 +26,7 @@ jobs:
           gradle-version: '8.13'
       - name: Restore Beta signing key for separately installed app
         env:
-          KEYSTORE_B64: \${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
         run: |
           set -euo pipefail
           test -n "$KEYSTORE_B64"
@@ -34,8 +34,8 @@ jobs:
           test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
       - name: Confirm isolation and original Lab shader; run regression suite
         env:
-          NAVTASKS_BETA_KEYSTORE_PATH: \${{ github.workspace }}/navtasks-beta-sign.p12
-          NAVTASKS_BETA_SIGN_PASSWORD: \${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
         run: |
           set -euo pipefail
           grep -Fq 'applicationIdSuffix = ".glassdiagnostic"' app/build.gradle.kts
@@ -70,7 +70,7 @@ jobs:
           retention-days: 60
       - name: Publish diagnostic prerelease
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           TAG=glasscapture-v0.4.60-diagnostic1
