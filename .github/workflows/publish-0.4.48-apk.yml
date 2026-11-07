@@ -1,0 +1,93 @@
+name: Publish NavTasks Glass 0.4.48 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.48-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out reviewed 0.4.48 RemoteViews-safe widget source
+        uses: actions/checkout@v4
+        with:
+          ref: 2968dcce377f531b4bc3a57166cb8e0b62d1e1de
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore stable beta signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify source and run regression tests
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "2968dcce377f531b4bc3a57166cb8e0b62d1e1de"
+          grep -q 'versionName = "0.4.48"' app/build.gradle.kts
+          grep -q 'versionCode = 70' app/build.gradle.kts
+          if grep -Eq '<Space([[:space:]]|>)' app/src/main/res/layout/navtasks_widget_*.xml; then
+            echo "::error::Unsupported Space in RemoteViews layout"
+            exit 1
+          fi
+          gradle :app:testDebugUnitTest --no-daemon
+      - name: Build stable-signed debug APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: gradle :app:assembleDebug --no-daemon
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Package compact ZIP directly from build
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p upload
+          cp app/build/outputs/apk/debug/app-debug.apk upload/NavTasks_Glass_0.4.48_Beta.apk
+          sha256sum upload/NavTasks_Glass_0.4.48_Beta.apk
+          cd upload
+          zip -q NavTasks_Glass_0.4.48_Build.zip NavTasks_Glass_0.4.48_Beta.apk
+          unzip -t NavTasks_Glass_0.4.48_Build.zip
+          cd ..
+      - name: Publish 0.4.48 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.48-glass-beta \
+            upload/NavTasks_Glass_0.4.48_Beta.apk \
+            upload/NavTasks_Glass_0.4.48_Build.zip \
+            --repo "${{ github.repository }}" \
+            --target 2968dcce377f531b4bc3a57166cb8e0b62d1e1de \
+            --prerelease \
+            --title "NavTasks Glass 0.4.48 Beta · Polished Notifications and Safe Widgets" \
+            --notes "NavTasks 0.4.48 supersedes 0.4.47 (which had an unsupported Space element in a wide widget). Safe RemoteViews-only layout; initial Missed warning hidden until actual count; original colored installed NavTasks launcher icon supplied in notifications with branded monochrome status icon. Today missed count is softly red when nonzero, widgets show date, progress and 2-4 tasks with a red Missed link. No data or profile schema changes. Source pinned to 2968dcce377f531b4bc3a57166cb8e0b62d1e1de; tests/build repeated by this workflow. On-device MagicOS visual confirmation still needed."
+      - name: Mark obsolete 0.4.47 as superseded
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit v0.4.47-glass-beta \
+            --repo "${{ github.repository }}" \
+            --title "Superseded: NavTasks Glass 0.4.47 Beta (do not install)" \
+            --notes "Superseded by 0.4.48. The earlier 0.4.47 APK had an unsupported Space child in a RemoteViews wide widget, so it must not be installed. Use v0.4.48-glass-beta for the corrected signed version."
