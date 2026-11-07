@@ -49,3 +49,5 @@
 - 0.4.54 signed release (2026-11-07): Today weekend styling matches Plan's shared coral palette while the blue selected glass remains intact. No data/recurrence/calendar task logic changed. Source 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f; device validation still pending.
 
 - 2026-11-07 (0.4.55 UI): Floating primary creation Add (+) is anchored at BottomEnd on Tasks, Services and AMOS, aligned conceptually with the Today bottom-right calendar shortcut. Horizontal inset 19dp, original vertical insets and navigationBarsPadding() preserved. Do not move dock or alter click semantics.
+
+- 0.4.55 published on 2026-11-07 from 401564269c574271b1e3c22c356989fe2d94eb58; all floating Add (+) controls in Tasks, Services and AMOS consistently use right-side placement and retain safe insets. CI success does not replace real-device acceptance.

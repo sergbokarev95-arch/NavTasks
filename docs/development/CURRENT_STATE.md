@@ -1,9 +1,9 @@
 # NavTasks — Current State
 
-Reviewed 2026-11-07 against GitHub main and successful signed 0.4.54 release; subsequent documentation-only commits may advance main HEAD.
+Reviewed 2026-11-07 against GitHub main and successful signed 0.4.55 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current source stage 0.4.55 (versionCode 77) pending CI/release; latest published and CI-verified release is 0.4.54 (versionCode 76). Debug variant adds -beta and .glass.
+- Current signed and published release is 0.4.55 (versionCode 77), after successful main CI and publisher tests; 0.4.54 (versionCode 76) is previous baseline. Debug variant adds -beta and .glass.
 - Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date. Current 0.4.52 adjusts only edge-to-edge drawing.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Current release workflow .github/workflows/publish-0.4.54-apk.yml pinned to 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f. Earlier signed release workflows are retained for provenance.
@@ -96,8 +96,10 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.54 release; su
 - Source 7e04c01a67b5979ae2b02dbf9ad1be6ccf21d16f, publisher workflow 8ff1fc48a05c00a5635e3da8ca9ce330467f8cb0. Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42366929632 SUCCESS and signed publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42367156700 SUCCESS.
 - Published https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.54-glass-beta; APK SHA-256 f3b2ab0a8c74836469875ba8e0c25dd711ea3cf58f67ccee4c1f5a2325cb63ac. Physical HONOR verification is still outstanding.
 
-## 0.4.55 — align floating Add buttons on right (source stage, 2026-11-07)
+## 0.4.55 — align floating Add buttons on right (released, 2026-11-07)
 - User requested “плюсики должны быть с правой части экрана”. Source audit found Add at BottomStart in Tasks (NavTasksUi.kt), Services (ServicesUi.kt) and AMOS (WorkOrdersUi.kt), while the Today calendar action was already BottomEnd.
 - Exact UI-only change: use BottomEnd and end=19dp instead of BottomStart/start=19dp in these three overlays. Preserve navigationBarsPadding(), existing bottom offsets (Tasks 83dp above dock; Services/AMOS 18dp), glass component, click handlers, scrolling, screen layout and all business logic.
 - Build versionName 0.4.55, versionCode 77; no data schema or migrations.
-- Pending regression compilation, signed release and HONOR/Samsung visual checks.
+- Immutable source 401564269c574271b1e3c22c356989fe2d94eb58; publisher workflow commit aa4ed6b8f4140e7f78364819a8a8f1998e0ab279.
+- Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42369659340 SUCCESS (unit tests, APK). Signed publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42369873080 SUCCESS (repeated tests, signed APK/ZIP, publication).
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.55-glass-beta; APK SHA-256 156b24d04dcbb496e8480ce463423e430651d40fe412e42b2f9202ace07229be. Actual HONOR visual/tap acceptance remains outstanding.

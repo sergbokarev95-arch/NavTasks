@@ -3,7 +3,7 @@
 1. Connect GitHub account sergbokarev95-arch; open private repo sergbokarev95-arch/NavTasks.
 2. Read all five docs/development/*.md files first. Confirm main HEAD, app/build.gradle.kts versionName/versionCode, recent commits, GitHub Releases, Actions and relevant feature branches. If GitHub is newer, update these documents before acting.
 3. Source: app/src/main/java/com/navtasks/app/; resources: app/src/main/res/; tests: app/src/test/java/com/navtasks/app/.
-4. Current stage: 0.4.54 published and CI-verified; HONOR confirmation of matching Today/Plan weekend colors is next. 0.4.53 remains previous signed baseline. User still needs to visually verify notification icon and responsive widgets on HONOR. Keep 0.4.46 AMOS due-only Today logic.
+4. Current stage: 0.4.55 published and CI-verified; HONOR verification of right-side Add (+) controls is next. 0.4.54 is previous signed baseline. User still needs to visually verify notification icon and responsive widgets on HONOR. Keep 0.4.46 AMOS due-only Today logic.
 5. Build: JDK 17, Android SDK 36, Gradle 8.13; `gradle :app:testDebugUnitTest --no-daemon` then `gradle :app:assembleDebug --no-daemon`. GitHub workflow .github/workflows/android-debug.yml uses stable beta signing secrets; do not disclose or overwrite signing keys. Signed release workflows use pinned source commits and publish APK/ZIP to GitHub Releases.
 6. Debug build uses applicationId suffix .glass and versionName suffix -beta. Avoid replacing production application or clearing user data.
 7. Preserve profiles, task recurrence, completion history, service/AMOS scheduling, notifications, import/export, existing widgets and navigation. Use small diffs and regression tests.
@@ -122,4 +122,11 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 ## Current stage — 0.4.55 right-side Add buttons (2026-11-07)
 - User stated the + buttons should be on the right. Actual code had Tasks bottom-left above dock (NavTasksUi.kt), Services bottom-left (ServicesUi.kt), AMOS bottom-left (WorkOrdersUi.kt), with Today calendar already bottom-right.
 - Source implementation strictly changes BottomStart/start 19dp -> BottomEnd/end 19dp in those three Add wrappers; keeps bottom 83dp for Tasks and 18dp for Services/AMOS, plus existing navigationBarsPadding() and callbacks. App 0.4.55/versionCode 77. No data modifications.
-- Do NOT claim ready for installation until source CI/tests and signed GitHub release finish. Last verified published version 0.4.54. On HONOR test right-aligned + in all three views and opening of add dialogs, safe-area layout, day/night and gesture navigation.
+- CI and signed GitHub release SUCCESS, see evidence below. On HONOR verify right-side + in all three screens, proper Add editor opening, safe-area layout, day/night and gesture navigation. Physical tests not yet performed.
+
+## Latest verified release — 0.4.55 (2026-11-07)
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.55-glass-beta, versionCode 77, signed APK+ZIP with stable Beta key. Immutable source commit 401564269c574271b1e3c22c356989fe2d94eb58; publisher workflow commit aa4ed6b8f4140e7f78364819a8a8f1998e0ab279.
+- Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42369659340 SUCCESS; signed release CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42369873080 SUCCESS.
+- APK SHA-256 156b24d04dcbb496e8480ce463423e430651d40fe412e42b2f9202ace07229be. No data/profile/schema/task/service/AMOS logic changes; only right-side Add (+) placements in Tasks, Services and AMOS.
+- Next HONOR acceptance: screenshots/tap on Tasks, Services and AMOS + controls in dark/light themes. Check last-card tap/swipe and bottom safe area. Calendar icon in Today must remain right-aligned. Device test pending.
+- Restart instruction: «Продолжим NavTasks через GitHub sergbokarev95-arch/NavTasks. Прочитай docs/development/HANDOFF.md, CURRENT_STATE.md, NEXT_TASKS.md, проверь main и релиз 0.4.55. Текущий этап — тест плюсов справа на HONOR. Все изменения точечные, сохраняй функциональность и обновляй документацию».
