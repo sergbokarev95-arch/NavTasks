@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.navtasks.glasslab"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.navtasks.glasslab"
@@ -56,7 +56,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
-    implementation("io.github.kyant0:backdrop:2.0.0")
+    implementation("io.github.kyant0:backdrop:1.0.6")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
 }
