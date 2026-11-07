@@ -1,9 +1,9 @@
 # NavTasks — Current State
 
-Reviewed 2026-11-07 against GitHub main and successful 0.4.48 release; subsequent documentation-only commits may advance main HEAD.
+Reviewed 2026-11-07 against GitHub main and successful signed 0.4.50 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current published and CI-verified source version: 0.4.49, versionCode 71, app/build.gradle.kts. GitHub release: v0.4.49-glass-beta. Debug variant adds -beta and .glass.
+- Current published and CI-verified source version: 0.4.50, versionCode 72, app/build.gradle.kts. GitHub release: v0.4.50-glass-beta. Debug variant adds -beta and .glass.
 - Previous stable source: 0.4.46 at 59f6a77 (due-only AMOS/Services and widget visibility); 0.4.47 source update pending CI: actual app icon on notifications, red missed chips, widget layout and navigation.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Current release workflow: .github/workflows/publish-0.4.48-apk.yml; release v0.4.48-glass-beta (APK and ZIP), pinned to 2968dcce377f531b4bc3a57166cb8e0b62d1e1de. Previous v0.4.47 release marked superseded.
@@ -42,12 +42,18 @@ Reviewed 2026-11-07 against GitHub main and successful 0.4.48 release; subsequen
 - Published APK SHA-256: 08123ef5d64a6b7d6f1febe3725a8fe7902b47ea0ff50fc85f4b90585b5103a5.
 - Not yet visually verified on HONOR/Samsung.
 
-## 0.4.50 — planned/unplanned maintenance (source stage, 2026-11-07)
+## 0.4.50 — planned/unplanned maintenance (released, 2026-11-07)
 
-- Base: main 0fa21503afcc32b9ae356388705dbf121d6d4efb (published 0.4.49 remains the verified release until 0.4.50 passes).
-- New source version: 0.4.50 / versionCode 72. **CI, release publication and device validation pending.**
+- Base: main 0fa21503afcc32b9ae356388705dbf121d6d4efb (v0.4.49 remains the previous verified release).
+- New source version: 0.4.50 / versionCode 72. **CI unit tests and signed release verified; on-device validation pending.**
 - ServiceEntry now has nullable nextDate and optional unplanned flag; missing flag in older profile JSON defaults to planned. Scheduled records retain required due date/intervals. Unplanned records cannot have a due date, cycle, or advance reminder.
 - Unplanned request date is retained in the existing lastDate field as an explicit request-date interpretation for that mode; no fake nextDate is created. Service history has an optional scheduledDate for archived unscheduled work.
 - Services editor shows Planned/Unplanned, requires AMOS request number for new unplanned records, hides due/recurrence/reminder; completed unscheduled work archives the actual request number without starting a cycle.
 - Date-based Today, Calendar, Soon, Overdue, Work Hub counters and service notifications explicitly exclude unplanned requests; completed unplanned work remains visible in completion history. Full profile JSON remains backward-compatible, and selective template export continues to scrub the vessel's actual request number.
-- Physical HONOR/Samsung verification and CI are required before calling the change finished.
+- GitHub CI verified unit tests and signed APK. Physical HONOR/Samsung acceptance is outstanding.
+
+### Verified 0.4.50 delivery
+- Source: 0a3467be369d889774b653d111917d7a6606a520; publisher workflow: c12e0000d04aa427fa36cb600cdd29fb10216a74.
+- Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42350648226 SUCCESS; signed publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42350831779 SUCCESS.
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.50-glass-beta; APK SHA-256 63e814be42a5a9f3af44f3551bf5024ea16ed6c00aab3ccd127023cf00e6680d.
+- Real HONOR/Samsung UI and data-flow testing still pending.

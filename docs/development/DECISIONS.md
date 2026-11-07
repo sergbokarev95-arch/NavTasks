@@ -29,3 +29,5 @@
 - Reuse current local record/profile storage. For an unplanned record nextDate is nullable; the existing lastDate is interpreted as the request creation date in that mode. Do not fabricate a next due date.
 - New unplanned records require a manually entered AMOS requisition number; NavTasks does not create the request in external AMOS. The selective-template exchange removes original request numbers, leaving an unplanned draft that must have a new number before completion.
 - Prevent changing service type when service completion history exists to avoid reinterpretation of archived records.
+
+- v0.4.50 was signed and released 2026-11-07, source 0a3467be; previous release 0.4.49 remains available. GitHub CI is not physical-device acceptance.

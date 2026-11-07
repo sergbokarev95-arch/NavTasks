@@ -1,6 +1,6 @@
 # NavTasks — Next Tasks
 
-## Current stage — 0.4.49 released; device visual verification pending
+## Current stage — 0.4.50 published and CI-verified; HONOR acceptance pending
 
 User approved the design on 2026-11-07.
 
@@ -52,12 +52,16 @@ User is testing 0.4.49 and reports a concrete issue in Services > New service: t
 3. **Unplanned**: show Equipment, AMOS request number, Comment (and an explicit request creation date if needed). Do **not** require a next-service date or recurrence; show an open request in Services until marked completed. Do not put it in scheduled Today/Calendar or Soon/Overdue based on a fabricated due date.
 4. Preserve history, request number, completion date, deletion/restoration, and profile import/export. Keep the internal JSON backwards compatible; test conversions and unexpected switching between types with existing history.
 5. No direct AMOS API/requisition submission integration exists in the repo: the number is entered/recorded in NavTasks, it does not send a new request to the external AMOS system.
-6. When approved, implement in narrow changes and run tests, signed CI build and HONOR device checks before offering a release. **No code or version bump has been made for this issue.**
+6. Implemented and released in 0.4.50. Unit tests and signed publication passed, device acceptance still needed.
 
 ## 0.4.50 build acceptance
 
 - User authorized implementation with «Собирай» on 2026-11-07.
 - Source work: new Planned/Unplanned editor toggle; mandatory AMOS number on new unplanned; no fake due date; unplanned status/request date; completion archives requisition and does not create recurrence; historical planned records default to planned.
-- Validate Kotlin compilation and all existing tests, plus unplanned due/recurrence/history/selective-template regressions. Fix failures without altering unrelated app modules.
-- Publish stable-signed v0.4.50-glass-beta APK/ZIP pinned to tested commit once CI passes; update all docs with commit, CI and SHA-256.
+- Completed: Kotlin compilation, existing tests plus unplanned due/recurrence/history/selective-template regression tests passed in CI.
+- Completed: stable-signed v0.4.50-glass-beta APK/ZIP published from immutable source 0a3467be; CI 42350648226 and 42350831779 SUCCESS.
 - Device acceptance: editing planned old service preserves due/interval, new unplanned with AMOS number saves/edits, cannot save new unplanned blank number, no inaccurate calendar/soon/overdue or notifications, completion history and Today Completed correct, exchange unaffected.
+
+### 0.4.50 release proof and next tests
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.50-glass-beta; versionCode 72, APK SHA-256 63e814be42a5a9f3af44f3551bf5024ea16ed6c00aab3ccd127023cf00e6680d.
+- Verify on HONOR: older planned services still show due/period and alert; new unplanned requires AMOS request and has no next date; does not appear as overdue/soon/calendar/Today due; completion archives request without recurrence; search, full profile and selective template exchange remain intact. Capture screenshots and bugs before further changes.
