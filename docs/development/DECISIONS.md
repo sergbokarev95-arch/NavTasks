@@ -55,3 +55,5 @@
 - 2026-11-07 (0.4.56): Handover floating Add (+) follows the same BottomEnd placement and 19dp right inset as Tasks, Services and AMOS. Retain 83dp bottom gap when Handover embedded in main tab dock, 18dp when standalone, platform navigation safe inset, and original Add action. This completes the intended consistent primary-creation placement.
 
 - 0.4.56 signed release 2026-11-07: Handover Add is now right-aligned and has the same safe area and original section-creation action. Source 612ba1ba215e8c1871a654acda2304f5c44c678c. No schema or business changes; do not treat CI as visual-device acceptance.
+
+- 2026-11-07 architecture audit (no implementation approval): Telegram's Liquid Glass uses API33+ RuntimeShader/RenderEffect for optical refraction while NavTasks uses genuine Haze 1.7.1 backdrop blur and a gradient-based active lens. Preserve the existing NavGlass pipeline by default; prefer low-risk stacked-opacity/material tuning before a new GPU shader. No copying Telegram GPL-2.0 implementation into NavTasks without license review. See GLASS_TECH_AUDIT.md.

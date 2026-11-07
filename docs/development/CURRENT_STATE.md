@@ -112,3 +112,8 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.56 release; su
 - Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42373593478 SUCCESS (unit tests and APK). Publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42373854191 SUCCESS (repeated tests, stable-signed APK, ZIP and release).
 - Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.56-glass-beta; APK SHA-256 f01d6f88729a9227ee7813e281f733c711cfab42b621f9f9a557eb3e244cb69b.
 - Physical HONOR test of final alignment and section-creation tap remains outstanding.
+
+## Liquid Glass architecture audit (2026-11-07, documentation only)
+- Reviewed NavGlass.kt + NavTasksUi.kt at f6cb1eb0d9a4a11072f11cc964a4d534416cb9bc versus Telegram Android master 3de37c8cfb039452be7398909461da6288babf15. Audit: docs/development/GLASS_TECH_AUDIT.md.
+- Current Haze 1.7.1 genuinely blurs the background; it does not have Telegram-style AGSL refraction. Multiple tinted fill layers can make the dock appear matte. No NavTasks application source changed, no version bump; latest signed release remains 0.4.56.
+- Proposed Stage 0 device baseline and Stage 1 material opacity/edge review are **not yet approved implementation**; Stage 2 optional API33+ shader would require separately tested, license-safe code.

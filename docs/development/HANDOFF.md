@@ -142,3 +142,7 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - Only app behavior modified since 0.4.55: Handover floating Add placement from left to right; no data or logic modifications. On-device testing still outstanding.
 - Test: from Handover tab, + sits bottom-right above dock; opens 'New section' and does not overlap gesture bar, in both themes. If user confirms, close the task.
 - Recovery prompt: «Продолжай NavTasks из GitHub sergbokarev95-arch/NavTasks. Прочитай docs/development/HANDOFF.md и CURRENT_STATE.md, проверь main и релиз 0.4.56. Следующий этап — HONOR-проверка кнопки + в Handover справа. Работаем точечно, не ломаем существующие функции и обновляем документацию».
+
+## Glass rendering research (2026-11-07, no source changes)
+- Read docs/development/GLASS_TECH_AUDIT.md before proposing further Liquid Glass changes. NavTasks baseline 0.4.56 uses Haze 1.7.1 blur + gradient active lens; Telegram Android master 3de37c8cfb039452be7398909461da6288babf15 uses API33+ AGSL refractive shader in an optional graphics pipeline. This was an audit only: no code or app version changed.
+- Recommended first: obtain HONOR day/night screenshots over real scrolling content, then, **only with user approval**, prototype minimal opacity/edge tuning in NavGlass.kt. Do not introduce a full RenderNode/shader port or copy GPL-2.0 Telegram code. Keep all four tabs, active indicator geometry, gestures and data paths intact. Previous 0.4.56 device acceptance remains pending.
