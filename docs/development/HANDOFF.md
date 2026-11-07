@@ -250,3 +250,10 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - GitHub Actions https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42399961454 SUCCESS (all app unit tests, signed APK). Download https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.60-exactlab-candidate/NavTasks_Glass_0.4.60_ExactLab_Beta.apk ; SHA-256 `f360f897619c71df90eacdf52ad22db426ad17d404fabb02c270a193bd35004a`.
 - **Physical HONOR acceptance NOT YET established.** Lab's colorful/high-contrast demo cards differ from live NavTasks dark content; even equal shader/material code cannot guarantee pixel-identical appearance. Test live text/card edges with scrolling, day/night, lens protrusion, repeated 0↔3 switches and legibility before merging/publishing as stable.
 - `main` source remains stable 0.4.59, and `backup/navtasks-0.4.59-before-liquid-glass` preserves pre-port baseline. R1/R2 remain as separate preview releases. Next: HONOR screenshot/feedback and targeted material/scene-composition investigation only if still different.
+
+
+## 2026-11-08 — Signed SAFE Haze rollback 0.4.61 prepared
+- To avoid Android downgrade restrictions after testing signed in-place v0.4.60 (versionCode83), prebuilt a recovery APK using byte-stable 0.4.59 Haze sources with ONLY versionCode84/versionName0.4.61-beta.
+- Isolated recovery branch `feature/navtasks-0.4.61-haze-rollback`, source `8158574bfac16ab9bc7baa648c4a7a2533cb906c`, CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42400505251 SUCCESS. Tested full app unit suite and aapt-verified actual `com.navtasks.app.glass` versionCode84; stable NavGlass and MainActivity blob SHA gates passed.
+- Signed APK https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.61-haze-rollback/NavTasks_Stable_Haze_Rollback_0.4.61.apk ; SHA256 `cc2ae62b749b1873b72f3dcf8e18ffc030daae731d005e0a53e11d7b6252309a`.
+- If 0.4.60 ExactLab material is rejected on HONOR, install 0.4.61 **as an update over it without uninstalling** to restore stable Haze while preserving local data. Export complete profile before *any* installation. New glass NOT merged; stable main application source 0.4.59 untouched.

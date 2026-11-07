@@ -194,3 +194,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Candidate feature `feature/navtasks-liquid-glass-0.4.60-candidate` source `c3cd12e37c91d789e54ae32e1b61d6d03f46ab79`, CI `42399961454` SUCCESS. Same installed Beta `com.navtasks.app.glass`, same signing key, versionCode83/versionName0.4.60-beta; full-app tests passed; no data/business changes.
 - Signed release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.60-exactlab-candidate, APK SHA256 `f360f897619c71df90eacdf52ad22db426ad17d404fabb02c270a193bd35004a`. Backup profiles before upgrade and **do not uninstall**.
 - Real-device user review of exact optical look still required. Different page content/contrast naturally changes refraction visibility; no claims of pixel identity yet. Stable `main` app/release remains 0.4.59 unmodified.
+
+
+## 2026-11-08 — safe rollback package ready
+- Same-package signed Haze recovery APK 0.4.61-beta/versionCode84, derived from original stable 0.4.59 sources; only build version differs. CI 42400505251 SUCCESS, aapt verified `com.navtasks.app.glass` and versionCode84. https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.61-haze-rollback ; SHA256 `cc2ae62b749b1873b72f3dcf8e18ffc030daae731d005e0a53e11d7b6252309a`.
+- Can update over 0.4.60 ExactLab candidate without uninstall/data reset if candidate optics unsatisfactory. Export profile backup first. Physical glass acceptance still pending; main remains 0.4.59 Haze code.

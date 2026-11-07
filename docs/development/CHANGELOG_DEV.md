@@ -88,3 +88,6 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 
 - 2026-11-08 — **candidate only** NavTasks Beta v0.4.60 Exact Lab 0.1.5 integration: replace rejected full-app preview blur/spacing changes with Lab 0.1.5 original Backdrop material, spring motion and 15dp/8dp offset; bind to original app colors, glyphs and tabs, retain Haze API31/32 fallback. In-place signed package `com.navtasks.app.glass` code83; CI 42399961454 SUCCESS with full app tests; source c3cd12e37c91d789e54ae32e1b61d6d03f46ab79, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.60-exactlab-candidate; APK SHA256 f360f897619c71df90eacdf52ad22db426ad17d404fabb02c270a193bd35004a. Do NOT uninstall previous app, export profile backup first. On-device visual acceptance pending. Main source remains stable 0.4.59.
+
+
+- 2026-11-08 — signed 0.4.61-beta **rollback-only** APK from stable 0.4.59 Haze (versionCode84, source 8158574bfac16ab9bc7baa648c4a7a2533cb906c). Same `com.navtasks.app.glass` package, Beta key, no business/UI changes except version. CI 42400505251 SUCCESS and aapt verified ID/version; https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.61-haze-rollback; SHA256 cc2ae62b749b1873b72f3dcf8e18ffc030daae731d005e0a53e11d7b6252309a. Use to restore stable dock over 0.4.60 candidate without uninstalling. Main code unchanged.
