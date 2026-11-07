@@ -1,6 +1,8 @@
 package com.navtasks.glasslab
 
+import android.app.Activity
 import android.os.Bundle
+import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateDpAsState
@@ -29,6 +31,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -73,6 +77,15 @@ private fun GlassLabScreen() {
     var optical by remember { mutableStateOf(true) }
     var selected by remember { mutableIntStateOf(0) }
     val backdrop = rememberLayerBackdrop()
+    val activity = LocalContext.current as? Activity
+    SideEffect {
+        // Follow the experimental Day/Night switch so system icons remain legible.
+        val flags = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+        activity?.window?.insetsController?.setSystemBarsAppearance(
+            if (dark) 0 else flags, flags
+        )
+    }
     val bg = if (dark) Color(0xFF050A10) else Color(0xFFF3F6FB)
     val text = if (dark) Color(0xFFF2F5FA) else Color(0xFF142233)
     val muted = if (dark) Color(0xFFA9B6C7) else Color(0xFF627287)
@@ -83,8 +96,8 @@ private fun GlassLabScreen() {
         // The glass below is a sibling and must never capture itself.
         Box(Modifier.fillMaxSize().layerBackdrop(backdrop)) {
             Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                    .statusBarsPadding().padding(horizontal = 20.dp)
+                Modifier.fillMaxSize().statusBarsPadding()
+                    .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)
             ) {
                 Spacer(Modifier.height(21.dp))
                 Text("NAVTASKS  /  GLASS LAB", color = accent, fontSize = 13.sp)
@@ -234,6 +247,19 @@ private fun GlassLabDock(
     val textColor = if (dark) Color(0xFFE3EBF4) else Color(0xFF142B3F)
     val blue = if (dark) Color(0xFF4BABFF) else Color(0xFF057DD2)
     val fallback = if (dark) Color(0xDC1D2A38) else Color(0xEAE4EDF3)
+    // A faint *surface* reflection stays visible over flat colors; the optics
+    // beneath it must still refract actual card outlines rather than wash them out.
+    val surfaceSheen = Brush.verticalGradient(
+        if (dark) listOf(
+            Color.White.copy(alpha = .08f),
+            Color(0xFF9FCBED).copy(alpha = .025f),
+            Color.Black.copy(alpha = .045f)
+        ) else listOf(
+            Color.White.copy(alpha = .12f),
+            Color.White.copy(alpha = .035f),
+            Color(0xFF8CACCB).copy(alpha = .035f)
+        )
+    )
 
     val backing = if (optical) {
         Modifier.drawBackdrop(
@@ -241,18 +267,39 @@ private fun GlassLabDock(
             shape = { Capsule() },
             effects = {
                 vibrancy()
-                blur(with(density) { 8.dp.toPx() })
-                lens(with(density) { 24.dp.toPx() }, with(density) { 24.dp.toPx() })
+                // Preserve thin card borders before bending them at the glass rim.
+                blur(with(density) { GlassLabOptics.bar.blurDp.dp.toPx() })
+                lens(
+                    with(density) { GlassLabOptics.bar.refractionHeightDp.dp.toPx() },
+                    with(density) { GlassLabOptics.bar.refractionAmountDp.dp.toPx() }
+                )
             },
-            highlight = { Highlight.Default.copy(alpha = .8f) },
+            highlight = { Highlight.Default.copy(alpha = .85f) },
             shadow = { Shadow(alpha = .22f) },
-            onDrawSurface = { drawRect(ambient) }
+            onDrawSurface = {
+                drawRect(ambient)
+                drawRect(surfaceSheen)
+            }
         )
     } else {
         Modifier.clip(RoundedCornerShape(30.dp)).background(fallback)
     }
 
-    BoxWithConstraints(modifier.fillMaxWidth().height(56.dp).then(backing)) {
+    val opticalEdge = if (optical) {
+        Modifier.border(
+            width = .75.dp,
+            brush = Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = if (dark) .36f else .49f),
+                    Color(0xFF8FAFCB).copy(alpha = .12f),
+                    Color.White.copy(alpha = if (dark) .17f else .28f)
+                )
+            ),
+            shape = RoundedCornerShape(30.dp)
+        )
+    } else Modifier
+
+    BoxWithConstraints(modifier.fillMaxWidth().height(56.dp).then(backing).then(opticalEdge)) {
         val cellWidth = maxWidth / 4
         val offset by animateDpAsState(
             targetValue = cellWidth * selected,
@@ -265,8 +312,11 @@ private fun GlassLabDock(
                 shape = { Capsule() },
                 effects = {
                     vibrancy()
-                    blur(with(density) { 4.dp.toPx() })
-                    lens(with(density) { 18.dp.toPx() }, with(density) { 12.dp.toPx() })
+                    blur(with(density) { GlassLabOptics.selection.blurDp.dp.toPx() })
+                    lens(
+                        with(density) { GlassLabOptics.selection.refractionHeightDp.dp.toPx() },
+                        with(density) { GlassLabOptics.selection.refractionAmountDp.dp.toPx() }
+                    )
                 },
                 highlight = { Highlight.Default.copy(alpha = .75f) },
                 innerShadow = { InnerShadow(radius = 8.dp, alpha = .18f) },
