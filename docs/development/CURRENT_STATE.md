@@ -3,7 +3,7 @@
 Reviewed 2026-11-07 against GitHub main and successful signed 0.4.53 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current published and CI-verified release is 0.4.53 (versionCode 75). The previous signed release is 0.4.52 (versionCode 74). Debug variant adds -beta and .glass.
+- Current source stage is 0.4.54 (versionCode 76), pending CI and signed release. Last published and CI-verified release remains 0.4.53 (versionCode 75). Debug variant adds -beta and .glass.
 - Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date. Current 0.4.52 adjusts only edge-to-edge drawing.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Current release workflow .github/workflows/publish-0.4.53-apk.yml pinned to 81cce3e29b74454f6329a124f9589570a9cb2722. Earlier signed release workflows are retained for provenance.
@@ -88,3 +88,9 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.53 release; su
 - Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42365740578 SUCCESS (unit tests and APK).
 - Publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42365940441 SUCCESS (repeated tests, stable-signed APK and ZIP).
 - Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.53-glass-beta, APK SHA-256 c7dd50a87bd36e9efaf7ddfcdc4ef55c40dff7be645314e536f7b373e16d7b73. On-device HONOR layout checks still pending.
+
+## 0.4.54 — weekend tint in Today week strip (source stage, 2026-11-07)
+- After 0.4.53 calendar update, user pointed out Today seven-day strip still lacked weekend distinction. Correct: Today has its own private DayChip in NavTasksUi.kt and was not covered by the Plan month-grid change.
+- Code changes: Today DayChip accepts a weekend flag from the same calendarIsWeekend(date) helper as Plan. Both screens use shared calendarWeekendInk(p), so dark/light muted-coral hues cannot drift. Weekend labels and dates are tinted whether or not the day is selected; selected glass/pill, scroll and data logic remain unchanged. Date number increased 15sp -> 16sp.
+- Pure CalendarVisualRulesTest confirms shared palette weekend colors and weekend detection. No schedule, history, task behavior, notifications, widgets, profile schemas, or AMOS changes.
+- Next: CI tests/build and signed GitHub APK/ZIP from immutable source, then HONOR visual verification in both themes. 0.4.53 remains published while 0.4.54 is unverified.

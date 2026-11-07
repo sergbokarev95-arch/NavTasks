@@ -701,7 +701,8 @@ private fun TodayScreenV2(
                         if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH)
                     DayChip(
                         label, "${day.dayOfMonth}", !showMissed && selectedDay == day,
-                        p.blue, p, modifier = Modifier.width(55.dp).fillMaxHeight(),
+                        p.blue, p, weekend = calendarIsWeekend(day),
+                        modifier = Modifier.width(55.dp).fillMaxHeight(),
                     ) {
                         showMissed = false
                         onSelectDay(day)
@@ -953,6 +954,7 @@ private fun TodayFrequencyHeader(
 @Composable
 private fun DayChip(
     top: String, bottom: String, selected: Boolean, accent: Color, p: NavPalette,
+    weekend: Boolean = false,
     modifier: Modifier = Modifier, action: () -> Unit,
 ) {
     Column(
@@ -961,8 +963,11 @@ private fun DayChip(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(top, color = if (selected) p.blue else p.muted, fontSize = 11.sp, maxLines = 1)
-        Text(bottom, color = if (selected) p.blue else p.text, fontSize = 15.sp,
+        // Weekend ink is independent of selection; blue selected glass stays intact.
+        val topColor = if (weekend) calendarWeekendInk(p) else if (selected) accent else p.muted
+        val bottomColor = if (weekend) calendarWeekendInk(p) else if (selected) accent else p.text
+        Text(top, color = topColor, fontSize = 11.sp, maxLines = 1)
+        Text(bottom, color = bottomColor, fontSize = 16.sp,
             fontWeight = FontWeight.Medium)
     }
 }

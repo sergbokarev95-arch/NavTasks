@@ -1,5 +1,7 @@
 package com.navtasks.app
 
+import androidx.compose.ui.graphics.Color
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -12,6 +14,12 @@ class CalendarVisualRulesTest {
         assertTrue(calendarIsWeekend(LocalDate.of(2026, 12, 6)))  // Sunday
         assertFalse(calendarIsWeekend(LocalDate.of(2026, 12, 4))) // Friday
         assertFalse(calendarIsWeekend(LocalDate.of(2026, 12, 7))) // Monday
+    }
+
+    @Test fun todayAndPlanShareTheSameRestrainedWeekendColors() {
+        // Today calls calendarWeekendInk as well as Plan, avoiding theme drift.
+        assertEquals(Color(0xFFE5A4A0), calendarWeekendInk(navPalette(true)))
+        assertEquals(Color(0xFFB36563), calendarWeekendInk(navPalette(false)))
     }
 
     @Test fun aStatusDotStillMarksOutcomesButNotPlainScheduledDays() {

@@ -106,3 +106,9 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - No profile/schema/schedule changes; only month grid presentation and pure tests. APK SHA-256 c7dd50a87bd36e9efaf7ddfcdc4ef55c40dff7be645314e536f7b373e16d7b73.
 - Next: HONOR screenshots of Plan month with/without dots, including weekends in day and night themes. Verify calendar swipe/tap, Today highlight, no harsh borders. Continue pending 0.4.52 lower-edge acceptance separately.
 - Recovery prompt: «Продолжим NavTasks из GitHub sergbokarev95-arch/NavTasks. Сначала прочитай docs/development/HANDOFF.md, CURRENT_STATE.md и NEXT_TASKS.md; сверь main и последний релиз 0.4.53. Текущая задача — проверить календарь на HONOR: выходные коралловым, без синих рамок, числа по центру, точки снизу. Меняй код точечно, обновляй docs/development после этапа».
+
+## Current 0.4.54 task — Today weekend styling (2026-11-07)
+- User noticed 0.4.53 Plan-only calendar refinements did not also color Sat/Sun inside Today 7-day horizontal chips. Today has separate NavTasksUi.kt DayChip.
+- Minimal implementation under CI: pass calendarIsWeekend(day) to DayChip; render top caption and number in shared calendarWeekendInk(p), which is defined in PlanAndTasksUi.kt and used by Plan too; increase Today number 15sp to 16sp. Selected blue glass, unselected weekdays, layout, dates/scroll and missed behavior stay unchanged.
+- Code changes: NavTasksUi.kt, PlanAndTasksUi.kt (extract same pre-existing color into shared pure helper), CalendarVisualRulesTest.kt, app/build.gradle.kts (0.4.54, versionCode 76). No data/schema/business-logic modifications.
+- Last published 0.4.53; do not distribute 0.4.54 before tests and signed release. Then update docs with actual tested source commit, publication SHA and links. HONOR light/dark screenshot test pending.

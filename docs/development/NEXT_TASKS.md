@@ -1,6 +1,6 @@
 # NavTasks — Next Tasks
 
-## Current stage: 0.4.53 monthly calendar released; HONOR day/night visual checks pending
+## Current stage: 0.4.54 Today weekend styling source changes; CI and release pending
 
 User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above system navigation in Services and AMOS, unlike Today. User explicitly requested removal.
 
@@ -43,3 +43,11 @@ User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above syst
 - Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.53-glass-beta, APK SHA-256 c7dd50a87bd36e9efaf7ddfcdc4ef55c40dff7be645314e536f7b373e16d7b73. On-device HONOR layout checks still pending.
 - On HONOR: compare month view in day/night, with and without status dots; check Saturdays/Sundays colored subtly, all numerals center-aligned, no bright month-date borders, and Today is still clearly visible. Confirm day selection/swipe and marker meaning unchanged.
 - Other open visual checks: 0.4.52 edge-to-edge Services/AMOS, notification icon and home widget appearance; no user feedback has conclusively closed all of them.
+
+## 0.4.54 — Apply weekend accent to Today (2026-11-07)
+- User asked «А почему в сегодня не поменял?» with HONOR screenshot: previous 0.4.53 had updated only Plan, leaving the Today seven-day strip untouched.
+- Fix implemented in NavTasksUi.kt: Today DayChip receives calendarIsWeekend(day). Both top day label and date number use exactly the same muted coral ink in night/day themes as Plan (shared calendarWeekendInk(p)).
+- Keep selected day blue glass fill/contrast, chip geometry, non-weekend colors, seven-day scrolling, missed-count animation and click behavior unchanged. Increase Today date number 15 -> 16sp.
+- Tiny PlanAndTasksUi.kt refactor only exposes the shared weekend palette; Plan appearance must not change. Regression CalendarVisualRulesTest includes the two palette colors.
+- Next: CI tests and debug build, stable-signed GitHub APK/ZIP release 0.4.54/versionCode 76 pinned to tested source, update release hashes and all five handoff docs.
+- HONOR acceptance: Saturday/Sunday coral in Today including selected weekend, non-weekdays retain existing color; Plan visuals unchanged; check RU/EN and day/night. No phone verification yet.

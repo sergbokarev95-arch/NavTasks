@@ -56,6 +56,10 @@ import kotlin.math.abs
 internal fun calendarIsWeekend(date: LocalDate): Boolean =
     date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
 
+/** Shared warm weekend ink for both Plan and the Today week strip. */
+internal fun calendarWeekendInk(p: NavPalette): Color =
+    if (p.dark) Color(0xFFE5A4A0) else Color(0xFFB36563)
+
 /** Preserve existing status-dot meaning independently of its layout position. */
 internal fun calendarHasOutcomeDot(state: CalendarDayState, hasWork: Boolean): Boolean =
     hasWork || (state != CalendarDayState.EMPTY && state != CalendarDayState.SCHEDULED)
@@ -185,7 +189,7 @@ fun PlanScreenV2(
                     }
                 }
                 1 -> Column {
-                    val weekendInk = if (p.dark) Color(0xFFE5A4A0) else Color(0xFFB36563)
+                    val weekendInk = calendarWeekendInk(p)
                     Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                         NavGlassIconAction(
                             "chevron-left", p.blue, localized("Предыдущий месяц", "Previous month", lang),
