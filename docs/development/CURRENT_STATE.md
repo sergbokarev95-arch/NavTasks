@@ -187,3 +187,10 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Preview R1 confirmed real glass in full NavTasks, but user feedback: background text too sharp under lower dock. Experimentally blur only at outer bar 5dp (was 2dp), moving/selected lens 4dp (was 1.5dp), preserve all lens() parameters and geometry.
 - Preview branch `feature/liquid-glass-dock-preview`, source `0a5e91f2d5b10b811f4a763d922a683115b0a1cb`; GitHub Actions 42398375900 SUCCESS; signed standalone https://github.com/sergbokarev95-arch/NavTasks/releases/tag/dockpreview-v0.4.59-r2. APK SHA256 `f8380c7b492220a79256fcc71bfe95e9e5fa217ecd5ad13eb9002c945202f236`.
 - Test package `com.navtasks.app.glasspreview`, versionCode82. Old R1 preserved. User visual acceptance pending. Main production code/version v0.4.59 remains untouched.
+
+
+## v0.4.60 in-place Exact-Lab candidate (2026-11-08)
+- Latest user feedback: full-app dock previews R1/R2 do NOT look like accepted Glass Lab 0.1.5; altering blur from 2/1.5 to 5/4dp was a mistake, and positioning varied. Correct approach is exact lab visual recipe with only production bindings and original-page capture.
+- Candidate feature `feature/navtasks-liquid-glass-0.4.60-candidate` source `c3cd12e37c91d789e54ae32e1b61d6d03f46ab79`, CI `42399961454` SUCCESS. Same installed Beta `com.navtasks.app.glass`, same signing key, versionCode83/versionName0.4.60-beta; full-app tests passed; no data/business changes.
+- Signed release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.60-exactlab-candidate, APK SHA256 `f360f897619c71df90eacdf52ad22db426ad17d404fabb02c270a193bd35004a`. Backup profiles before upgrade and **do not uninstall**.
+- Real-device user review of exact optical look still required. Different page content/contrast naturally changes refraction visibility; no claims of pixel identity yet. Stable `main` app/release remains 0.4.59 unmodified.

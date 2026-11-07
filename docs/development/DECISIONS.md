@@ -89,3 +89,6 @@
 
 
 - 2026-11-08 — User requires NavTasks Liquid Glass dock to blur underlying **text slightly more** so names such as "Check ECDIS License" do not compete with navigation labels. Tune only pre-lens blur (outer bar 2→5dp, selected lens 1.5→4dp) in isolated full-app Preview R2. Preserve existing refraction displacement/height, 1.30x proportional grow, grey rest, original glyphs and fallback Haze. CI 42398375900 SUCCESS; physical HONOR acceptance outstanding. No main app changes.
+
+
+- 2026-11-08: User rejected R1/R2 full-app glass because it looked unlike HONOR-approved Lab 0.1.5. Do **not** tune numbers speculatively or equate bigger blur with better glass. Transplant the complete Lab 0.1.5 optical structure, materials, shadows, lens geometry, background/foreground sibling layers and 15dp/8dp insets exactly, substituting only live-app bindings. In-place signed Beta candidate `0.4.60`/versionCode83 uses same `com.navtasks.app.glass` ID, preserves profiles if updated, and requires backup before install plus real-device approval. Commit c3cd12e37c91d789e54ae32e1b61d6d03f46ab79, CI 42399961454 SUCCESS. Stable main remains 0.4.59.

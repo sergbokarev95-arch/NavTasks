@@ -132,3 +132,11 @@
 - [x] Backup R1 `backup/dockpreview-r1-before-soft-blur` and signed R2 https://github.com/sergbokarev95-arch/NavTasks/releases/download/dockpreview-v0.4.59-r2/NavTasks_LiquidGlass_Dock_Preview_R2.apk; CI 42398375900 SUCCESS.
 - [ ] User HONOR test in day/night with task titles and card borders scrolling under dock: text should be sufficiently blurred so the four button captions stay easy to read; no new ghosting/shimmer; lens growth 1.30x and grey rest unchanged.
 - [ ] After approval, plan integration + reusable glass for circular '+' / calendar / settings one at a time, preserving all existing controls/data. Main stays stable 0.4.59 until signed migration approved.
+
+
+## Immediate — HONOR verification of full-app 0.4.60 Exact-Lab candidate (2026-11-08)
+- [x] Preserve stable `backup/navtasks-0.4.59-before-liquid-glass`; port approved Glass Lab 0.1.5 material/lens/body and exact dock spacing without R2 blur edits to feature `feature/navtasks-liquid-glass-0.4.60-candidate`.
+- [x] Keep original 0.4.59 Beta package/signing, bump code 81→83 to allow in-place upgrade; CI 42399961454 SUCCESS including app tests; signed candidate https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.60-exactlab-candidate/NavTasks_Glass_0.4.60_ExactLab_Beta.apk.
+- [ ] **User must export complete profile backup before upgrading existing NavTasks**; do NOT uninstall the installed app. Confirm task/profile data remain on upgrade.
+- [ ] Test on HONOR: glass look vs accepted Lab 0.1.5, card-border refraction (different dark UI background will affect apparent strength), text not competing with button labels, dark/light, smooth scroll/no shimmer, proportional active lens overhang, all tab/navigation/back and bottom FABs.
+- [ ] Only after visual and functional acceptance, consider merging into `main` and then making other action buttons use a reusable material one by one. Stable 0.4.59 release is unchanged.
