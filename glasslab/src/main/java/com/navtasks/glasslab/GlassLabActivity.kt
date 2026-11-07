@@ -312,7 +312,12 @@ private fun GlassLabDock(
         )
     } else Modifier
 
-    BoxWithConstraints(modifier.fillMaxWidth().height(56.dp).then(backing).then(opticalEdge)) {
+    // Crucial: the refractive bar must NOT be a drawing modifier on the
+    // parent of the moving lens. Its own clipping graphics layer would mask
+    // the top and bottom protrusion, even with unbounded lens measurement.
+    // A separate background sibling keeps backdrop capture and rim unchanged.
+    BoxWithConstraints(modifier.fillMaxWidth().height(56.dp)) {
+        Box(Modifier.matchParentSize().then(backing).then(opticalEdge))
         val cellWidth = maxWidth / GlassLabDockTabs.items.size
         val target = selected.coerceIn(0, GlassLabDockTabs.items.lastIndex).toFloat()
         // Follow the working NavTasks 0.4.59 movement: quick, interruptible spring,
@@ -347,6 +352,9 @@ private fun GlassLabDock(
             .coerceIn(2.dp, (maxWidth - 2.dp - lensWidth).coerceAtLeast(2.dp))
         val lensY = (GlassLabDockTabs.dockHeightDp.dp - lensHeight) / 2f
 
+        // Selection is a sibling of the opaque/refractive BACKING, not its child.
+        // The outer BoxWithConstraints has no clip() / graphicsLayer clip; the
+        // lens draws in true window coordinates beyond the 56dp bar.
         // Exactly one moving lens. While travelling it is optically refractive;
         // after it lands, its own face fades into neutral graphite/grey.
         val selection = if (optical) {

@@ -49,8 +49,15 @@ jobs:
           grep -Fq 'include(":app")' settings.gradle.kts
           grep -Fq 'versionName = "0.4.59"' app/build.gradle.kts
           grep -Fq 'versionCode = 81' app/build.gradle.kts
-          grep -Fq 'versionName = "0.1.4"' glasslab/build.gradle.kts
-          grep -Fq 'versionCode = 5' glasslab/build.gradle.kts
+          grep -Fq 'versionName = "0.1.5"' glasslab/build.gradle.kts
+          grep -Fq 'versionCode = 6' glasslab/build.gradle.kts
+          # Parent must not host the Backdrop clip: tall lens is a sibling.
+          grep -Fq 'BoxWithConstraints(modifier.fillMaxWidth().height(56.dp)) {' glasslab/src/main/java/com/navtasks/glasslab/GlassLabActivity.kt
+          grep -Fq 'Box(Modifier.matchParentSize().then(backing).then(opticalEdge))' glasslab/src/main/java/com/navtasks/glasslab/GlassLabActivity.kt
+          if grep -Fq 'BoxWithConstraints(modifier.fillMaxWidth().height(56.dp).then(backing)' glasslab/src/main/java/com/navtasks/glasslab/GlassLabActivity.kt; then
+            echo "Clipped parent regression: glass material must be a sibling of moving lens"
+            exit 1
+          fi
           gradle :glasslab:testDebugUnitTest :glasslab:assembleDebug --no-daemon
       - name: Destroy temporary signing key
         if: always()
@@ -59,12 +66,12 @@ jobs:
         run: |
           set -euo pipefail
           test -s glasslab/build/outputs/apk/debug/glasslab-debug.apk
-          cp glasslab/build/outputs/apk/debug/glasslab-debug.apk NavTasks_LiquidGlass_Lab_0.1.4.apk
-          sha256sum NavTasks_LiquidGlass_Lab_0.1.4.apk
+          cp glasslab/build/outputs/apk/debug/glasslab-debug.apk NavTasks_LiquidGlass_Lab_0.1.5.apk
+          sha256sum NavTasks_LiquidGlass_Lab_0.1.5.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: NavTasks-LiquidGlass-Lab-0.1.4
-          path: NavTasks_LiquidGlass_Lab_0.1.4.apk
+          name: NavTasks-LiquidGlass-Lab-0.1.5
+          path: NavTasks_LiquidGlass_Lab_0.1.5.apk
           if-no-files-found: error
           retention-days: 60
       - name: Publish separate prerelease (not production)
@@ -72,13 +79,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="glasslab-v0.1.4"
+          TAG="glasslab-v0.1.5"
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" NavTasks_LiquidGlass_Lab_0.1.4.apk --clobber
+            gh release upload "$TAG" NavTasks_LiquidGlass_Lab_0.1.5.apk --clobber
           else
-            gh release create "$TAG" NavTasks_LiquidGlass_Lab_0.1.4.apk \
+            gh release create "$TAG" NavTasks_LiquidGlass_Lab_0.1.5.apk \
               --target "$GITHUB_SHA" \
-              --title "NavTasks Liquid Glass Lab 0.1.4 (standalone experiment)" \
-              --notes "SEPARATE TEST APP, package com.navtasks.glasslab. This is NOT a NavTasks update and cannot access or alter profiles, data, notifications or AMOS. Uses Apache-2.0 Backdrop 1.0.6 with separately captured scene content. Preserves v0.1.1 card-border refraction and adds pixel-exact production NavTasks vector dock glyphs/colors. Active lens now grows proportionally by 1.30x in BOTH width and height while travelling; its 67.6dp height extends above and below the 56dp bar. Horizontal edge containment and neutral matte resting lens remain. Outer dock keeps proven Backdrop refraction. Glass OFF is the existing matte control. Toggle glass on/off and Day/Night; scroll cards under the 56dp dock and rapidly switch tabs. Physical HONOR visual/performance acceptance pending. Do not judge glass only on a flat black background." \
+              --title "NavTasks Liquid Glass Lab 0.1.5 (standalone experiment)" \
+              --notes "SEPARATE TEST APP, package com.navtasks.glasslab. This is NOT a NavTasks update and cannot access or alter profiles, data, notifications or AMOS. Uses Apache-2.0 Backdrop 1.0.6 with separately captured scene content. Preserves v0.1.1 card-border refraction and adds pixel-exact production NavTasks vector dock glyphs/colors. Active lens scales uniformly by 1.30x in X/Y and now renders OUTSIDE the 56dp bar: separate backing sibling fixes the clipping seen on HONOR in Lab 0.1.4. Resting grey selection, icons and proven Backdrop refraction remain. HONOR retest required. Glass OFF is the existing matte control. Toggle glass on/off and Day/Night; scroll cards under the 56dp dock and rapidly switch tabs. Physical HONOR visual/performance acceptance pending. Do not judge glass only on a flat black background." \
               --prerelease
           fi
