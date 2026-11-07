@@ -66,3 +66,13 @@ Lab v0.1.0 **compiled, signed and published**, physical HONOR validation still p
 - Lens animation follows the stable NavTasks critically damped positional spring (stiffness 550), material spring (700), and up-to-10dp horizontal stretch (600); keep a 2dp selected capsule inset and 52dp baseline height. During travel glass stays optically visible, after settling the active lens becomes matte neutral grey. The full dock keeps the approved Backdrop optics.
 - Preserve existing Glass ON/OFF, Day/Night, direct source capture, scrollable cards, and no access to production data. Add model regression tests for tab identities and bounded stretch.
 - Release signed isolated Glass Lab 0.1.2 only after GitHub CI success. **Do not merge into main yet**: first verify live switching on HONOR, rapid retargeting, light/dark, border refraction during scroll, clip/overflow at first and last tabs and that the resting selection is neutral grey.
+
+
+### Verified 0.1.2 lab publication (2026-11-08)
+- Isolated source: `049836c2bd05bbd3378162e174a46f2ae249c240`; lab versionName 0.1.2, versionCode 3, same independent `com.navtasks.glasslab` package and Beta signing.
+- Main GitHub Actions: https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42389729911 SUCCESS — `:glasslab:testDebugUnitTest` and `:glasslab:assembleDebug`; sign/publish SUCCESS.
+- Separate pre-release: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasslab-v0.1.2
+- Signed APK: https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasslab-v0.1.2/NavTasks_LiquidGlass_Lab_0.1.2.apk
+- Signed APK SHA-256: `fdeb481c91252db2c1e39f7ed02acba4541b2488f3a94bcc6d640b4f64a785c9` from CI log.
+- Physical HONOR test still pending for new moving-and-grey lens; previous 0.1.1 optics received positive screenshot feedback. Check day/night, four tab icons/contrast, 0→3 and 3→0 rapid taps, dynamic stretch, settling into matte grey, border refraction and shimmering on scroll.
+- Source backup before UI changes: `backup/glasslab-0.1.1-before-nav-animation`. Production `main` still NavTasks 0.4.59; no app code migration yet. Preserve staged acceptance before integration.
