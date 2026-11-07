@@ -1,12 +1,12 @@
 # NavTasks — Current State
 
-Reviewed 2026-11-07 against GitHub main and successful signed 0.4.52 release; subsequent documentation-only commits may advance main HEAD.
+Reviewed 2026-11-07 against GitHub main and successful signed 0.4.53 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current source stage 0.4.53 (versionCode 75), awaiting CI and signed release. Last published and CI-verified release remains 0.4.52 (versionCode 74). Debug variant adds -beta and .glass.
+- Current published and CI-verified release is 0.4.53 (versionCode 75). The previous signed release is 0.4.52 (versionCode 74). Debug variant adds -beta and .glass.
 - Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date. Current 0.4.52 adjusts only edge-to-edge drawing.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
-- Current release workflow .github/workflows/publish-0.4.52-apk.yml, pinned to d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d. Previous workflow .github/workflows/publish-0.4.51-apk.yml remains for historical release.
+- Current release workflow .github/workflows/publish-0.4.53-apk.yml pinned to 81cce3e29b74454f6329a124f9589570a9cb2722. Earlier signed release workflows are retained for provenance.
 - GitHub Actions Build NavTasks Android APK run 42254823995 completed successfully on 2026-11-06. CI runs unit tests and assembles debug APK. Physical-device validation is not established by CI.
 - Main modules: Today, Plan/calendar, Tasks and recurrence, profiles, import/export, handover, Services, AMOS work orders, Works agenda, notifications and two home widgets. Implementation is Kotlin/Jetpack Compose, with RemoteViews XML widgets.
 - Notification implementation: app/src/main/java/com/navtasks/app/NavNotifications.kt; icon app/src/main/res/drawable/navtasks_notification.xml.
@@ -79,9 +79,12 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.52 release; su
 - Published https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.52-glass-beta; APK SHA-256 e05d0691f0d0320c288e6b466507adc160cad2c13fd83422656daf9726eea3fb.
 - Physical HONOR day/night and gesture navigation verification remains outstanding.
 
-## 0.4.53 — calm monthly calendar cells (source stage, 2026-11-07)
+## 0.4.53 — calm monthly calendar cells (released, 2026-11-07)
 - User tested 0.4.52 on HONOR and reported highly saturated blue outlines around all dates in the monthly Plan calendar, uneven day-number positions when a dot is present, small numerals, and no distinction between weekends and weekdays.
 - Planned targeted implementation in PlanAndTasksUi.kt, month zoom only: remove all blue calendar-cell borders; use subtle neutral/day-status fills and a restrained blue-tinted Today fill. Weekend header labels and in-month Saturday/Sunday numerals use muted coral (dark/light variants), with no change to semantic missed/completed dot colors.
 - Calendar month day numerals increased 14sp → 16sp, now centered in a 54dp Box regardless of dot; marker anchored to bottom center with 6dp padding. Dot conditions unchanged. Outside-month dates remain dimmed.
 - Added pure unit tests for weekend detection and status-dot inclusion. No changes to navigation, task scheduling, completion, AMOS, service data, profiles, widgets, or persisted calendar state.
-- CI/signed APK and HONOR visual acceptance pending. Prior release 0.4.52 remains available.
+- Immutable source commit: 81cce3e29b74454f6329a124f9589570a9cb2722; publisher workflow commit: e556ab3b4993d7a877e8885bf6d5045bae136505.
+- Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42365740578 SUCCESS (unit tests and APK).
+- Publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42365940441 SUCCESS (repeated tests, stable-signed APK and ZIP).
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.53-glass-beta, APK SHA-256 c7dd50a87bd36e9efaf7ddfcdc4ef55c40dff7be645314e536f7b373e16d7b73. On-device HONOR layout checks still pending.

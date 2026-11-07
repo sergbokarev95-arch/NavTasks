@@ -1,6 +1,6 @@
 # NavTasks — Next Tasks
 
-## Current stage: 0.4.53 monthly-calendar visual update; CI and release pending
+## Current stage: 0.4.53 monthly calendar released; HONOR day/night visual checks pending
 
 User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above system navigation in Services and AMOS, unlike Today. User explicitly requested removal.
 
@@ -34,4 +34,12 @@ User sent HONOR screenshots 2026-11-07 showing a straight cutoff line above syst
 - Numerals should be a little larger (14sp→16sp) and always stay dead-center whether a bottom status dot is shown or not.
 - Keep status dots, their existing color meanings, month navigation, swipe, year/day zoom, and task-business logic unchanged.
 - Implemented in PlanAndTasksUi.kt; CalendarVisualRulesTest.kt added to assert weekend and dot semantics. Version 0.4.53 / versionCode 75.
-- Next: CI test+build, stable-signed GitHub APK/ZIP from immutable source, update all docs with actual commit/runs/assets, then receive HONOR screenshots in both themes.
+- Completed CI and signed publication: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.53-glass-beta, source 81cce3e29b74454f6329a124f9589570a9cb2722; CI 42365740578 and publisher 42365940441 SUCCESS. Device visual check still outstanding.
+
+## 0.4.53 completion evidence and current acceptance
+- Immutable source commit: 81cce3e29b74454f6329a124f9589570a9cb2722; publisher workflow commit: e556ab3b4993d7a877e8885bf6d5045bae136505.
+- Main CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42365740578 SUCCESS (unit tests and APK).
+- Publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42365940441 SUCCESS (repeated tests, stable-signed APK and ZIP).
+- Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.53-glass-beta, APK SHA-256 c7dd50a87bd36e9efaf7ddfcdc4ef55c40dff7be645314e536f7b373e16d7b73. On-device HONOR layout checks still pending.
+- On HONOR: compare month view in day/night, with and without status dots; check Saturdays/Sundays colored subtly, all numerals center-aligned, no bright month-date borders, and Today is still clearly visible. Confirm day selection/swipe and marker meaning unchanged.
+- Other open visual checks: 0.4.52 edge-to-edge Services/AMOS, notification icon and home widget appearance; no user feedback has conclusively closed all of them.

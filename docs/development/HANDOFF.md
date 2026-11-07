@@ -3,7 +3,7 @@
 1. Connect GitHub account sergbokarev95-arch; open private repo sergbokarev95-arch/NavTasks.
 2. Read all five docs/development/*.md files first. Confirm main HEAD, app/build.gradle.kts versionName/versionCode, recent commits, GitHub Releases, Actions and relevant feature branches. If GitHub is newer, update these documents before acting.
 3. Source: app/src/main/java/com/navtasks/app/; resources: app/src/main/res/; tests: app/src/test/java/com/navtasks/app/.
-4. Current stage: 0.4.52 published and CI-verified; HONOR verification of bottom edge removal in Services and AMOS is next. 0.4.51 remains previous released baseline. User still needs to visually verify notification icon and responsive widgets on HONOR. Keep 0.4.46 AMOS due-only Today logic.
+4. Current stage: 0.4.53 published and CI-verified; HONOR confirmation of the calm Plan calendar design is next. 0.4.52 remains previous released baseline. User still needs to visually verify notification icon and responsive widgets on HONOR. Keep 0.4.46 AMOS due-only Today logic.
 5. Build: JDK 17, Android SDK 36, Gradle 8.13; `gradle :app:testDebugUnitTest --no-daemon` then `gradle :app:assembleDebug --no-daemon`. GitHub workflow .github/workflows/android-debug.yml uses stable beta signing secrets; do not disclose or overwrite signing keys. Signed release workflows use pinned source commits and publish APK/ZIP to GitHub Releases.
 6. Debug build uses applicationId suffix .glass and versionName suffix -beta. Avoid replacing production application or clearing user data.
 7. Preserve profiles, task recurrence, completion history, service/AMOS scheduling, notifications, import/export, existing widgets and navigation. Use small diffs and regression tests.
@@ -96,7 +96,13 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - Await screenshots from HONOR (day/night) of final Services and AMOS cards at the bottom and floating Add buttons; user acceptance not yet established.
 - Recovery prompt: «Восстанови NavTasks из GitHub sergbokarev95-arch/NavTasks. Прочитай docs/development/HANDOFF.md, CURRENT_STATE.md и NEXT_TASKS.md, проверь main и последний релиз 0.4.52. Продолжим тест нижней границы в Сервисах и AMOS. Изменения только точечные, обновляй документацию в репозитории».
 
-## Pending 0.4.53 monthly calendar update (2026-11-07)
+## Released 0.4.53 monthly calendar update (2026-11-07)
 - User sent December 2026 dark-mode calendar screenshot with harsh neon-blue outlines, inconsistent vertical day-number centering due to status dots, and too-small same-color weekend numerals. Requested softer minimalist appearance, slightly larger digits and weekend distinction.
 - Source stage 0.4.53/versionCode 75: PlanAndTasksUi.kt removes month cell borders, uses subtle fills, muted coral Sat/Sun in month and header, fixes numeral at Box center with status dot independently at bottom, increases 14→16sp. Status-dot inclusion and colors preserved; year/day views and task calculation unchanged. CalendarVisualRulesTest.kt covers weekend and status semantics.
-- Source CI/signed release not yet verified. Last released 0.4.52. Next step: check CI, publish signed APK and compact ZIP pinned to tested commit, document hashes/runs, then verify on HONOR in day/night and with/without dots.
+- Source CI and signed release verified: 81cce3e29b74454f6329a124f9589570a9cb2722; publisher workflow e556ab3b4993d7a877e8885bf6d5045bae136505; main CI 42365740578 SUCCESS; publisher 42365940441 SUCCESS. https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.53-glass-beta, APK SHA-256 c7dd50a87bd36e9efaf7ddfcdc4ef55c40dff7be645314e536f7b373e16d7b73. HONOR day/night visual acceptance pending.
+
+## Latest handoff (0.4.53)
+- Stable-signed Beta release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.53-glass-beta; versionCode 75. Immutable source 81cce3e29b74454f6329a124f9589570a9cb2722; publisher e556ab3b4993d7a877e8885bf6d5045bae136505. Main test/build https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42365740578 SUCCESS; publisher https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42365940441 SUCCESS.
+- No profile/schema/schedule changes; only month grid presentation and pure tests. APK SHA-256 c7dd50a87bd36e9efaf7ddfcdc4ef55c40dff7be645314e536f7b373e16d7b73.
+- Next: HONOR screenshots of Plan month with/without dots, including weekends in day and night themes. Verify calendar swipe/tap, Today highlight, no harsh borders. Continue pending 0.4.52 lower-edge acceptance separately.
+- Recovery prompt: «Продолжим NavTasks из GitHub sergbokarev95-arch/NavTasks. Сначала прочитай docs/development/HANDOFF.md, CURRENT_STATE.md и NEXT_TASKS.md; сверь main и последний релиз 0.4.53. Текущая задача — проверить календарь на HONOR: выходные коралловым, без синих рамок, числа по центру, точки снизу. Меняй код точечно, обновляй docs/development после этапа».
