@@ -21,3 +21,5 @@
 - 2026-11-07: version 0.4.48 is the first deliverable of this notification/widget update; v0.4.47 was automatically published then superseded due to unsupported widget XML. Do not recommend v0.4.47.
 
 - 2026-11-07 user-approved clarification: Today Missed is completely absent (including its reserved horizontal gap) when backlog count is zero; the dates occupy that space. When count becomes positive, show restrained red glass with animated horizontal appearance; do not change data, overdue semantics, or the widget's existing zero-count behavior.
+
+- 0.4.49 shipped on 2026-11-07: the Today missed chip has no zero state (hidden entirely), while the home widget missed badge retains its already-implemented zero-hide behavior. The date strip reclaims the width with an AnimatedVisibility horizontal transition.

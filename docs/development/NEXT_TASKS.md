@@ -1,6 +1,6 @@
 # NavTasks — Next Tasks
 
-## Current stage — 0.4.49 Today chip change; source validation pending
+## Current stage — 0.4.49 released; device visual verification pending
 
 User approved the design on 2026-11-07.
 
@@ -28,3 +28,8 @@ No data/profile schema migration, recurrence rewrite or unrelated screen changes
 - If the user finishes the last missed task while viewing the Missed backlog, return to the ordinary selected-day view automatically.
 - Add unit regression checks for 0, negative (defensive) and positive counts; run all CI tests, build signed APK, and verify on HONOR.
 - The home widgets already hide their missed pill at 0; do not modify them for this task.
+
+## 0.4.49 completion evidence
+- Source commit 41ae92386e1459099a6c1c3c069a987c5de04203; CI 42335111965 SUCCESS.
+- Release workflow commit 5dedee07a6f14d95f4730e52ee5fef62da6f8096; CI 42335349500 SUCCESS; APK/ZIP in v0.4.49-glass-beta.
+- Next: verify on HONOR that empty Missed chip leaves **no gap**, 0→1 slides in red, 1→0 hides automatically, dates scroll normally in both themes, and no unexpected changes to other task flows. Do not claim device validation before the user tests it.

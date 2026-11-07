@@ -3,7 +3,7 @@
 Reviewed 2026-11-07 against GitHub main and successful 0.4.48 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current source under validation: 0.4.49, versionCode 71, app/build.gradle.kts. Last published and CI-verified release remains 0.4.48 until the 0.4.49 publisher succeeds. Debug variant adds -beta and .glass.
+- Current published and CI-verified source version: 0.4.49, versionCode 71, app/build.gradle.kts. GitHub release: v0.4.49-glass-beta. Debug variant adds -beta and .glass.
 - Previous stable source: 0.4.46 at 59f6a77 (due-only AMOS/Services and widget visibility); 0.4.47 source update pending CI: actual app icon on notifications, red missed chips, widget layout and navigation.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Current release workflow: .github/workflows/publish-0.4.48-apk.yml; release v0.4.48-glass-beta (APK and ZIP), pinned to 2968dcce377f531b4bc3a57166cb8e0b62d1e1de. Previous v0.4.47 release marked superseded.
@@ -27,8 +27,17 @@ Reviewed 2026-11-07 against GitHub main and successful 0.4.48 release; subsequen
 - Asset SHA-256 (APK): 55f1b97fb7c31fefc990ef3904efb4bf617aaf06eecc0538275e914728b52c04.
 - Device testing has NOT been completed.
 
-## 0.4.49 Today Missed chip (source stage)
+## 0.4.49 Today Missed chip (released)
 - User requested on 2026-11-07: the Today Missed tile must occupy **zero width at count=0** and appear as red only at count>0; weekday strip expands left automatically.
 - Implementation: conditional AnimatedVisibility with 180 ms horizontal expansion/shrinkage; includes both 105 dp tile and 7 dp gap so there is no residual spacing. An empty backlog closes the Missed view automatically.
 - Scope: NavTasksUi.kt, existing Today grouping unit-test file, version bump. No change to home widgets, notification logic, storage, profiles, AMOS, or schedules.
-- Pending: source CI, signed release, and HONOR device verification.
+- CI and signed release completed successfully; HONOR device verification remains pending.
+
+## Verified 0.4.49 delivery
+- Source commit: 41ae92386e1459099a6c1c3c069a987c5de04203.
+- Publisher-workflow commit: 5dedee07a6f14d95f4730e52ee5fef62da6f8096.
+- Main CI (unit tests, safe RemoteViews and APK): https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42335111965 — SUCCESS.
+- Signed release CI: https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42335349500 — SUCCESS, APK+ZIP published.
+- Latest release: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.49-glass-beta.
+- Published APK SHA-256: 08123ef5d64a6b7d6f1febe3725a8fe7902b47ea0ff50fc85f4b90585b5103a5.
+- Not yet visually verified on HONOR/Samsung.
