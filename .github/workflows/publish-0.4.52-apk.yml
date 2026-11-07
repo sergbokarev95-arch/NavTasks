@@ -1,0 +1,90 @@
+name: Publish NavTasks Glass 0.4.52 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-0.4.52-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out verified 0.4.52 edge-to-edge Services/AMOS source
+        uses: actions/checkout@v4
+        with:
+          ref: d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore stable beta signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify source and run regression tests
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d"
+          grep -q 'versionName = "0.4.52"' app/build.gradle.kts
+          grep -q 'versionCode = 74' app/build.gradle.kts
+          if grep -Fq 'Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()' \
+              app/src/main/java/com/navtasks/app/ServicesUi.kt \
+              app/src/main/java/com/navtasks/app/WorkOrdersUi.kt; then
+            echo "::error::Standalone work pages must be edge-to-edge"
+            exit 1
+          fi
+          if grep -Eq '<Space([[:space:]]|>)' app/src/main/res/layout/navtasks_widget_*.xml; then
+            echo "::error::Unsupported Space in RemoteViews layout"
+            exit 1
+          fi
+          gradle :app:testDebugUnitTest --no-daemon
+      - name: Build stable-signed debug APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: gradle :app:assembleDebug --no-daemon
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Package compact ZIP directly from build
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p upload
+          cp app/build/outputs/apk/debug/app-debug.apk upload/NavTasks_Glass_0.4.52_Beta.apk
+          sha256sum upload/NavTasks_Glass_0.4.52_Beta.apk
+          cd upload
+          zip -q NavTasks_Glass_0.4.52_Build.zip NavTasks_Glass_0.4.52_Beta.apk
+          unzip -t NavTasks_Glass_0.4.52_Build.zip
+          cd ..
+      - name: Publish 0.4.52 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.4.52-glass-beta \
+            upload/NavTasks_Glass_0.4.52_Beta.apk \
+            upload/NavTasks_Glass_0.4.52_Build.zip \
+            --repo "${{ github.repository }}" \
+            --target d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d \
+            --prerelease \
+            --title "NavTasks Glass 0.4.52 Beta · Edge-to-edge Services and AMOS" \
+            --notes "NavTasks 0.4.52: Services and AMOS scrolling content extends to the Android gesture navigation edge, matching Today. Removed the unnecessary navigation-bar inset on those two scrolling screens while keeping floating Add (+) buttons safely above system navigation. Existing 106dp bottom list content padding lets the final card scroll into a tappable position. No changes to data, profiles, AMOS/business logic, service dates, notifications, widgets, or the previous request-date selector. Source pinned to d38aa26ddeb8ac3fe5f568dddb1c551463fc5a4d; CI tests and signed build repeated by the release workflow. HONOR screenshot verification still needed."
