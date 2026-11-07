@@ -76,3 +76,7 @@ A small material adjustment also reduces previously stacked high-opacity tints a
 - Confirmed geometry bug in source: `.padding(horizontal=1.dp, vertical=2.dp)` was applied on BoxWithConstraints before full backdrop instead of only on foreground Canvas/Row. This reduced the glass area inside 56dp to 52dp. The new 0.4.58 code returns full-size backing and keeps foreground placement unchanged.
 - Too little Haze blur (15dp) made text readable while optical displacement (up to 5.5dp) accentuated moving character boundaries. New opt-in sampling limited to 5dp rim and 1.2dp bend, with nav blur restored to 30dp. These values are hypotheses until HONOR accepts the result.
 - No structural refactor of Haze or gestures. If refraction remains distracting, prefer turning off the shader for this dock while retaining a clean Haze material rather than stacking more filters.
+
+## 0.4.58 hotfix release evidence
+- Source 4118106265361b3e28b2f4636f5c6c17def6801c, publisher workflow 6abcfc23221872ab021f38d60725d88b159f6b2f; main CI 42381839037 SUCCESS, publisher CI 42382154553 SUCCESS. Stable signed release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.58-glass-beta; APK sha256:340e1851179f1ef2a1350638df3454cfdde1d279ed6bccfc15fac82a187a1914.
+- Physical HONOR acceptance pending. A full 56dp material restores geometry; 30dp Haze blur and <=1.2dp edge bend are conservative adjustments, not guarantees that dynamic text shimmer is eliminated. Avoid escalating effects until real device data arrives.

@@ -1,9 +1,9 @@
 # NavTasks — Current State
 
-Reviewed 2026-11-07 against GitHub main and successful signed 0.4.57 release; subsequent documentation-only commits may advance main HEAD.
+Reviewed 2026-11-07 against GitHub main and successful signed 0.4.58 release; subsequent documentation-only commits may advance main HEAD.
 
 - Repository: sergbokarev95-arch/NavTasks (private); default and current integration branch: main.
-- Current source stage: **0.4.58 (versionCode 80) visual-regression hotfix; CI/release pending.** Last published signed version is v0.4.57 (versionCode 79), which user found has a smaller dock and shimmering text under its edge. v0.4.56 remains pre-optics rollback reference. Debug variant adds -beta and .glass.
+- Current signed and CI-verified release: **v0.4.58 (versionCode 80), corrective glass prototype; HONOR visual acceptance still pending.** v0.4.57 (versionCode 79) is known visually regressed, and v0.4.56 is the pre-optics rollback reference. Debug variant adds -beta and .glass.
 - Historical milestones: 0.4.46 due-only AMOS/Services; 0.4.48 notification/widget update; 0.4.50 planned/unplanned Services; 0.4.51 informational AMOS request date; 0.4.52 edge-to-edge standalone screens; 0.4.53–0.4.54 calendar/Today weekend refinement; 0.4.55–0.4.56 right-hand Add controls. 0.4.57 tests an optically refractive dock.
 - Last pre-documentation main commit: 211c0ac — publication workflow for 0.4.46.
 - Current release workflow .github/workflows/publish-0.4.57-apk.yml pinned to 3d2ffdeead8c607d2e6f7b43d126d18ae6593581. Earlier signed release workflows are retained for provenance.
@@ -134,4 +134,6 @@ Reviewed 2026-11-07 against GitHub main and successful signed 0.4.57 release; su
 - Root cause identified in NavGlass.kt: 0.4.57 moved the former padding(horizontal=1dp, vertical=2dp) **before** the backdrop/face layers. As a result, the 56dp outer container's glass was actually rendered in the 52dp inner area. 0.4.57 additionally reduced Haze blur 34dp→15dp and set a large rim 13dp/bend 5.5dp, distorting lettering over scrolling cards.
 - Scoped fix: keep full-size 56dp Haze/optics/face material with 30dp round clipping; apply 1dp/2dp padding **only to the active-lens Canvas and four-tab Row**, restoring earlier selection geometry/hit targets. Haze nav blur increased to 30dp, navigation background tints slightly strengthened for legibility; non-nav floating control material unchanged.
 - New AGSL params: refraction limited to a 5dp rim with maximum 1.2dp bend. Compatibility: current Haze fallback on API <33 remains. Tests enforce conservative optics values; source checks verify geometry.
-- No changes to task/AMOS/service/Handover business logic, profiles, data, notifications or widgets. Source build/release/device confirmation pending. Do not claim flicker eliminated until HONOR tests it.
+- No changes to task/AMOS/service/Handover business logic, profiles, data, notifications or widgets. Source CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42381839037 SUCCESS; publisher CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42382154553 SUCCESS.
+- Immutable source 4118106265361b3e28b2f4636f5c6c17def6801c, publisher workflow commit 6abcfc23221872ab021f38d60725d88b159f6b2f. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.58-glass-beta; APK SHA-256 340e1851179f1ef2a1350638df3454cfdde1d279ed6bccfc15fac82a187a1914, ZIP SHA-256 382e4ce9b3cb4a3b7aac244fbf009df6a7b19ed5620c561d8997ab25337eaa42.
+- **On-device HONOR test still pending:** do not claim flicker eliminated before user confirms it.
