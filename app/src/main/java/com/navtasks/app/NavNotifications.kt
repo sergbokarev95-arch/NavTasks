@@ -9,6 +9,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import java.time.Instant
@@ -30,6 +32,21 @@ object NavNotifications {
     private const val CHANNEL_MISSED = "navtasks-missed"
 
     private fun manager(context: Context) = context.getSystemService(NotificationManager::class.java)
+
+    /** Original installed app icon, not a surrogate checkmark, in notification cards. */
+    private fun appIconBitmap(context: Context): Bitmap {
+        val size = (64f * context.resources.displayMetrics.density).toInt().coerceAtLeast(64)
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val drawable = context.packageManager.getApplicationIcon(context.applicationInfo)
+        drawable.setBounds(0, 0, size, size)
+        drawable.draw(Canvas(bitmap))
+        return bitmap
+    }
+
+    private fun notificationBuilder(context: Context, channel: String): Notification.Builder =
+        Notification.Builder(context, channel)
+            .setSmallIcon(R.drawable.navtasks_notification)
+            .setLargeIcon(appIconBitmap(context))
 
     fun createChannels(context: Context) {
         manager(context).createNotificationChannel(NotificationChannel(
@@ -76,6 +93,19 @@ object NavNotifications {
         }
         return PendingIntent.getActivity(context, ("open:" + profileId + ":" + runKey).hashCode(), intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    }
+
+    /** Open the overdue backlog from the widget's red missed-count chip. */
+    fun openMissed(context: Context): PendingIntent {
+        val profileId = ProfileStore(context).activeId
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            data = Uri.parse("navtasks://open-missed/" + Uri.encode(profileId))
+            putExtra("profileId", profileId)
+            putExtra("openMissed", true)
+        }
+        return PendingIntent.getActivity(context, ("open-missed:" + profileId).hashCode(),
+            intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
     private fun openWorkOrder(context: Context, id: String): PendingIntent {
@@ -194,8 +224,7 @@ object NavNotifications {
                     val heading = localized("Пропущенные задачи: ${overdue.size}",
                         "Missed tasks: ${overdue.size}", settings.language)
                     val details = overdue.take(4).joinToString(" · ") { it.first.title }
-                    val notification = Notification.Builder(context, CHANNEL_MISSED)
-                        .setSmallIcon(R.drawable.navtasks_notification)
+                    val notification = notificationBuilder(context, CHANNEL_MISSED)
                         .setContentTitle(heading).setContentText(details)
                         .setStyle(Notification.BigTextStyle().bigText(details))
                         .setContentIntent(openTask(context)).setAutoCancel(true).build()
@@ -222,8 +251,7 @@ object NavNotifications {
             val heading = localized("Приближается сервис", "Maintenance due soon", settings.language)
             val detail = service.equipment + " · " +
                 localized("до ", "due ", settings.language) + service.nextDate
-            val notification = Notification.Builder(context, CHANNEL_TASKS)
-                .setSmallIcon(R.drawable.navtasks_notification)
+            val notification = notificationBuilder(context, CHANNEL_TASKS)
                 .setContentTitle(heading).setContentText(detail)
                 .setStyle(Notification.BigTextStyle().bigText(detail))
                 .setContentIntent(openTask(context)).setAutoCancel(true).build()
@@ -248,8 +276,7 @@ object NavNotifications {
                     order.id + ":" + order.dueDate + ":" + order.remindDaysBefore)) return
             val detail = order.reference + " · " + order.title + " · " +
                 localized("до ", "due ", settings.language) + order.dueDate
-            val notification = Notification.Builder(context, CHANNEL_TASKS)
-                .setSmallIcon(R.drawable.navtasks_notification)
+            val notification = notificationBuilder(context, CHANNEL_TASKS)
                 .setContentTitle(localized("AMOS: срок работы", "AMOS: work due", settings.language))
                 .setContentText(detail)
                 .setStyle(Notification.BigTextStyle().bigText(detail))
@@ -283,8 +310,7 @@ object NavNotifications {
         else if (isMissed)
             localized("Срок прошёл. Задача добавлена в пропущенные.", "Deadline passed. Added to Missed.", settings.language)
         else localized("Скоро срок выполнения", "Due soon", settings.language)
-        val builder = Notification.Builder(context, if (isMissed) CHANNEL_MISSED else CHANNEL_TASKS)
-            .setSmallIcon(R.drawable.navtasks_notification)
+        val builder = notificationBuilder(context, if (isMissed) CHANNEL_MISSED else CHANNEL_TASKS)
             .setContentTitle(task.title).setContentText(message)
             .setContentIntent(openTask(context, runKey)).setAutoCancel(true)
         if (task.checklist.isEmpty()) {

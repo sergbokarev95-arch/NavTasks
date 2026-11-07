@@ -1,13 +1,14 @@
 # NavTasks — Next Tasks
 
-## Current stage: analysis / awaiting design approval
+## Current stage — 0.4.47 source ready for CI; no device validation yet
 
-1. Notification icon: replace checkmark-centric small notification glyph with a recognizable monochrome NavTasks brand mark. Current drawable is a rounded square with a large checkmark; all inspected notification builders reference R.drawable.navtasks_notification. Preserve Android small-icon tint behavior. **Not implemented.**
-2. Widgets: improve information hierarchy, fit, useful daily summary, overdue/missed visibility, click targets and resizing across compact/wide layouts. Current RemoteViews shows 2–4 pending tasks based on height, progress fraction, overflow text and optional missed count in footer. **Not implemented.**
-3. Missed tasks: propose a restrained red count/pill only when missedCount > 0; verify legibility and no overflow in narrow layouts. **Not implemented.**
-4. AMOS and Services Today: regression-test that only due-date items appear in Today; early alerts and Soon remain independent. 0.4.46 source change claims fix; **device verification pending**.
-5. After approval: small scoped code change, tests, signed CI build, device checks, GitHub APK/ZIP publication; update all docs together with code changes.
+User approved the design on 2026-11-07.
 
-## Constraints
+- Notification: full-color original installed app launcher icon as LargeIcon and layered-card monochrome NavTasks glyph as Android SmallIcon. Android/HONOR controls which notification surfaces display LargeIcon; test on phone.
+- Widgets: localized date, progress, compact pending-task list; wide two-column layout only at >=350dp, otherwise preserve readable single-column rows. Titles open tasks; simple toggles and checklist actions unchanged.
+- Missed tasks: red Today count only for backlog > 0; neutral at zero. Widget red pill hidden at zero and linked to Today missed section.
+- AMOS/Service: 0.4.46 due-date-only Today logic unchanged, WorkAgendaTest already covers Nov 7/13; confirm on HONOR.
+- Next: run GitHub Actions unit tests/build, fix compile or regression failures, then publish stable-signed APK/ZIP from pinned tested commit. Do NOT claim the device UI is tested until checked on HONOR.
+- After verification update CURRENT_STATE, NEXT_TASKS, DECISIONS, CHANGELOG_DEV and HANDOFF with actual commit, CI run, release/tag and outstanding device checks.
 
-No rewrite, no data/profile schema migration unless explicitly approved, preserve recurrence, reminders, task history, settings, profile import/export and existing interactions. User must approve proposed notification/widget design before code edits.
+No data/profile schema migration, recurrence rewrite or unrelated screen changes are authorized.

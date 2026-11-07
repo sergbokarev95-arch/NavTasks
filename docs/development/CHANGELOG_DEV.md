@@ -11,3 +11,5 @@ This log records confirmed GitHub commits, not a reconstructed full history.
 - 2026-11-07 — documentation bootstrap: this docs/development directory; no application code changed. See Git history for resulting documentation commit(s).
 
 Do not infer version numbers from old README.md or past chats. Check app/build.gradle.kts, branch HEAD, releases and CI first.
+
+- 2026-11-07 — 0.4.47 source stage: original colored installed launcher icon in notification LargeIcon; stacked-card monochrome small icon; widget date/size-responsive rows and red backlog pill; Today missed red chip; widget deep-link to missed list; capacity/visibility/date regression tests. CI/release evidence pending.

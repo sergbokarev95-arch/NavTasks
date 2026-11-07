@@ -11,3 +11,7 @@
 - For closing a work item on a different date, preserve the distinction between actual completion date and whether future occurrences retain or shift their schedule.
 - No unverified APK may be described as device-tested. Build, unit tests and on-device checks are distinct milestones.
 - Every completed stage must update docs/development files in GitHub alongside the implementation. Record exact commit IDs and CI links when available.
+
+- 2026-11-07 approval: the notification should show the actual installed NavTasks color launcher icon (Android LargeIcon); small status-bar glyph is a monochrome translation of the existing layered-card brand, not a generic checkmark. Android OEM may suppress LargeIcon in some contexts.
+- 2026-11-07 approval: Missed is neutral when zero, restrained red glass with red count in Today when positive; widgets show a red pill only with missed tasks and open the missed backlog on tap.
+- 2026-11-07 approval: widget has localized date and progress; show pending task titles and adapt layout for width and height rather than stretching rows. Preserve task-click behavior.

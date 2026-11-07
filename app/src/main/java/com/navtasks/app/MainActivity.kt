@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
     private val appSettings by lazy { NavSettings(this) }
     private var requestedRunKey by mutableStateOf<String?>(null)
     private var requestedWorkOrderId by mutableStateOf<String?>(null)
+    private var requestedMissed by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +40,7 @@ class MainActivity : ComponentActivity() {
         ))
         requestedRunKey = intent.getStringExtra("runKey")
         requestedWorkOrderId = intent.getStringExtra("workOrderId")
+        requestedMissed = intent.getBooleanExtra("openMissed", false)
         setContent {
             // Sync status/navigation icon foregrounds to the actual selected app
             // theme, not only to Android's global Day/Night setting.
@@ -72,6 +74,8 @@ class MainActivity : ComponentActivity() {
                 onRequestHandled = { requestedRunKey = null },
                 requestedWorkOrderId = requestedWorkOrderId,
                 onWorkOrderRequestHandled = { requestedWorkOrderId = null },
+                requestedMissed = requestedMissed,
+                onMissedRequestHandled = { requestedMissed = false },
             )
         }
         if (Build.VERSION.SDK_INT >= 33 &&
@@ -86,6 +90,7 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         requestedRunKey = intent.getStringExtra("runKey")
         requestedWorkOrderId = intent.getStringExtra("workOrderId")
+        requestedMissed = intent.getBooleanExtra("openMissed", false)
     }
 
     override fun onResume() {

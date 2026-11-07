@@ -12,8 +12,20 @@ import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private const val WIDGET_TOGGLE = "com.navtasks.app.WIDGET_TOGGLE"
+
+/** Two columns only if the launcher grants enough width for readable task names. */
+internal fun widgetUsesColumns(widthDp: Int): Boolean = widthDp >= 350
+internal fun widgetMissedVisible(count: Int): Boolean = count > 0
+
+internal fun widgetHeaderDate(date: LocalDate, language: UiLanguage): String {
+    val locale = if (language == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
+    return date.format(DateTimeFormatter.ofPattern(
+        if (language == UiLanguage.RU) "d MMM" else "MMM d", locale))
+}
 
 /**
  * Capacity uses the space actually available for the task list, not a fixed
@@ -114,6 +126,9 @@ object NavWidgetUpdater {
                     AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, if (wide) 120 else 110)
                 val maxHeight = options.getInt(
                     AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, minHeight)
+                val availableWidth = options.getInt(
+                    AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, if (wide) 300 else 180)
+                val useColumns = wide && widgetUsesColumns(availableWidth)
                 // On portrait phones, maxHeight reflects the portrait cell
                 // geometry. In landscape use the smaller bound to avoid clipping.
                 val availableHeight = if (context.resources.configuration.orientation ==
@@ -122,10 +137,12 @@ object NavWidgetUpdater {
                 val count = if (pending.isEmpty()) 1 else minOf(capacity, pending.size)
 
                 val view = RemoteViews(context.packageName,
-                    if (wide) R.layout.navtasks_widget_wide else R.layout.navtasks_widget_compact)
+                    if (useColumns) R.layout.navtasks_widget_wide else R.layout.navtasks_widget_compact)
                 view.setInt(R.id.nav_widget_root, "setBackgroundResource",
                     if (dark) R.drawable.navtasks_widget_bg else R.drawable.navtasks_widget_bg_light)
-                view.setTextViewText(R.id.nav_widget_title, localized("Сегодня", "Today", language))
+                view.setTextViewText(R.id.nav_widget_title,
+                    localized("Сегодня", "Today", language) + " · " +
+                        widgetHeaderDate(LocalDate.now(), language))
                 view.setTextViewText(R.id.nav_widget_progress, "$completed/${rows.size}")
                 view.setTextColor(R.id.nav_widget_title, textColor)
                 view.setTextColor(R.id.nav_widget_progress, accent)
@@ -167,10 +184,10 @@ object NavWidgetUpdater {
                 val status = when {
                     rows.isEmpty() -> localized("Добавить задачи", "Add tasks", language)
                     pending.isEmpty() -> localized("Все выполнено", "All done", language)
-                    hidden > 0 -> localized("Ещё $hidden · Все задачи", "$hidden more · All tasks", language)
-                    else -> localized("Открыть список", "Open task list", language)
+                    hidden > 0 -> localized("Ещё $hidden", "$hidden more", language)
+                    else -> localized("Все задачи", "All tasks", language)
                 }
-                val secondary = if (missedCount > 0)
+                val secondary = if (widgetMissedVisible(missedCount))
                     localized("Пропущено: $missedCount", "Missed: $missedCount", language)
                 else ""
                 view.setTextViewText(R.id.nav_widget_status, status)
@@ -178,9 +195,16 @@ object NavWidgetUpdater {
                 view.setTextColor(R.id.nav_widget_status, accent)
                 view.setOnClickPendingIntent(R.id.nav_widget_status, NavNotifications.openTask(context))
                 view.setTextColor(R.id.nav_widget_secondary,
-                    if (missedCount > 0) 0xFFF0B493.toInt() else muted)
+                    if (dark) 0xFFFFB1A6.toInt() else 0xFFB13B32.toInt())
+                view.setInt(R.id.nav_widget_secondary, "setBackgroundResource",
+                    if (dark) R.drawable.navtasks_widget_missed_dark
+                    else R.drawable.navtasks_widget_missed_light)
                 view.setViewVisibility(R.id.nav_widget_secondary,
-                    if (secondary.isEmpty()) View.GONE else View.VISIBLE)
+                    if (widgetMissedVisible(missedCount)) View.VISIBLE else View.GONE)
+                if (widgetMissedVisible(missedCount)) {
+                    view.setOnClickPendingIntent(R.id.nav_widget_secondary,
+                        NavNotifications.openMissed(context))
+                }
                 manager.updateAppWidget(id, view)
             }
         }

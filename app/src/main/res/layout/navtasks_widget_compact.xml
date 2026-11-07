@@ -10,8 +10,8 @@
         <TextView android:id="@+id/nav_widget_title"
             android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Сегодня" android:textColor="#F2F8FF"
-            android:textSize="15sp" android:textStyle="bold"
+            android:text="Сегодня · 7 ноя" android:textColor="#F2F8FF"
+            android:textSize="13sp" android:textStyle="bold"
             android:maxLines="1" android:ellipsize="end" />
         <TextView android:id="@+id/nav_widget_progress"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -98,7 +98,10 @@
             android:textColor="#AFC4D8" android:textSize="11sp" />
         <TextView android:id="@+id/nav_widget_secondary"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:maxLines="1" android:textColor="#AFC4D8"
-            android:textSize="11sp" android:text="" />
+            android:maxLines="1" android:textColor="#FFB1A6"
+            android:textSize="10sp" android:text="Пропущено: 2"
+            android:paddingLeft="7dp" android:paddingRight="7dp"
+            android:paddingTop="3dp" android:paddingBottom="3dp"
+            android:background="@drawable/navtasks_widget_missed_dark" />
     </LinearLayout>
 </LinearLayout>

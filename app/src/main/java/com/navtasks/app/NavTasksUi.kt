@@ -181,6 +181,8 @@ fun NavTasksApp(
     onRequestHandled: () -> Unit = {},
     requestedWorkOrderId: String? = null,
     onWorkOrderRequestHandled: () -> Unit = {},
+    requestedMissed: Boolean = false,
+    onMissedRequestHandled: () -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     // Four dock tabs: 0=Today, 1=Work, 2=Handover, 3=Tasks.
@@ -262,6 +264,22 @@ fun NavTasksApp(
                 expandedRun = requestedRunKey
             }
             onRequestHandled()
+        }
+    }
+
+    LaunchedEffect(requestedMissed) {
+        if (requestedMissed) {
+            tab = 0
+            tabHistory = ""
+            selectedDate = LocalDate.now()
+            editorOpen = false
+            showSettings = false
+            showProfiles = false
+            showServices = false
+            showWorks = false
+            showCalendar = false
+            showWorkOrders = false
+            expandedRun = null
         }
     }
 
@@ -471,7 +489,9 @@ fun NavTasksApp(
                                             focusServiceId = id
                                             showWorks = true
                                             showServices = true
-                                        })
+                                        },
+                                        openMissed = requestedMissed,
+                                        onOpenMissedHandled = onMissedRequestHandled)
                                     1 -> WorksHubScreen(
                                         serviceStore, workOrderStore, palette, lang,
                                         onBack = { openPrimaryTab(0) },
@@ -575,9 +595,17 @@ private fun TodayScreenV2(
     onAmos: (String) -> Unit,
     onAmosHistory: (String) -> Unit,
     onServices: (String) -> Unit,
+    openMissed: Boolean = false,
+    onOpenMissedHandled: () -> Unit = {},
 ) {
     var showMissed by rememberSaveable { mutableStateOf(false) }
     var showCompleted by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(openMissed) {
+        if (openMissed) {
+            showMissed = true
+            onOpenMissedHandled()
+        }
+    }
     // Prefer stepping out of open checklists and sections before switching tabs.
     BackHandler(enabled = expandedRun != null || showMissed || showCompleted) {
         when {
@@ -638,13 +666,20 @@ private fun TodayScreenV2(
                 .height(62.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            DayChip(
-                localized("Пропущенные", "Missed", lang), "${missed.size}", showMissed,
-                if (missed.isEmpty()) p.muted else Color(0xFFF0AE85), p,
-                modifier = Modifier.width(105.dp).fillMaxHeight(),
-            ) {
-                showMissed = true
-                onExpanded(null)
+            if (missed.isNotEmpty()) {
+                MissedCountChip(missed.size, showMissed, p, lang,
+                    modifier = Modifier.width(105.dp).fillMaxHeight()) {
+                    showMissed = true
+                    onExpanded(null)
+                }
+            } else {
+                DayChip(
+                    localized("Пропущенные", "Missed", lang), "0", showMissed,
+                    p.muted, p, modifier = Modifier.width(105.dp).fillMaxHeight(),
+                ) {
+                    showMissed = true
+                    onExpanded(null)
+                }
             }
             Spacer(Modifier.width(7.dp))
             LazyRow(
@@ -923,6 +958,32 @@ private fun DayChip(
         Text(top, color = if (selected) p.blue else p.muted, fontSize = 11.sp, maxLines = 1)
         Text(bottom, color = if (selected) p.blue else p.text, fontSize = 15.sp,
             fontWeight = FontWeight.Medium)
+    }
+}
+
+/** Red missed-count control while backlog > 0; zero retains the neutral glass. */
+@Composable
+private fun MissedCountChip(
+    count: Int, selected: Boolean, p: NavPalette, lang: UiLanguage,
+    modifier: Modifier = Modifier, action: () -> Unit,
+) {
+    val shape = RoundedCornerShape(13.dp)
+    Column(
+        modifier.clip(shape)
+            .background(if (p.dark) Color(0x843B1C29) else Color(0xFFFFE9E9), shape)
+            .border(1.dp,
+                if (p.dark) Color(0xD0E97A83)
+                else if (selected) Color(0xFFCF565B) else Color(0xFFEDA8A8),
+                shape)
+            .glassClickable(onClick = action)
+            .padding(horizontal = 4.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(localized("Пропущенные", "Missed", lang),
+            color = p.dangerText, fontSize = 11.sp, maxLines = 1)
+        Text(count.toString(), color = p.dangerText, fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold)
     }
 }
 
