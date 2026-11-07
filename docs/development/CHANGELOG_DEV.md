@@ -15,3 +15,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-07 — 0.4.47 source stage: original colored installed launcher icon in notification LargeIcon; stacked-card monochrome small icon; widget date/size-responsive rows and red backlog pill; Today missed red chip; widget deep-link to missed list; capacity/visibility/date regression tests. CI/release evidence pending.
 
 - 2026-11-07 — 0.4.48 safety correction: remove unsupported android.widget.Space from wide widget in favor of supported LinearLayout padding; add GitHub CI guard for RemoteViews, versionCode 70. Supersedes 0.4.47 before user installation. CI/release pending.
+
+- 2026-11-07 — 0.4.48 widget initialization follow-up: initial XML hides Missed pill and uses neutral Today placeholder; live RemoteViews update alone supplies real localized date and overdue count. No data changes.
