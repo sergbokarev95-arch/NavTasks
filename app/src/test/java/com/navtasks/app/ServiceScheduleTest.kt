@@ -145,6 +145,39 @@ class ServiceScheduleTest {
         assertTrue(runCatching { serviceWarningStart(request) }.isFailure)
     }
 
+    @Test fun unplannedRequestDateIsEditableButNeverBecomesDueDate() {
+        val today = LocalDate.of(2026, 11, 7)
+        val entry = ServiceEntry(
+            id = "ice-radar-req",
+            equipment = "PC FOR ICE RADAR",
+            lastDate = today,
+            nextDate = null,
+            requestNumber = "252-03515",
+            unplanned = true,
+        )
+        val earlier = entry.copy(lastDate = today.minusDays(15))
+        val later = entry.copy(lastDate = today.plusDays(15))
+        for (request in listOf(earlier, later)) {
+            assertEquals(null, request.nextDate)
+            assertEquals(0, request.periodMonths)
+            assertEquals(0, request.remindMonths)
+            assertEquals("252-03515", request.requestNumber)
+            assertFalse(serviceVisibleOnDay(request, request.lastDate))
+            assertFalse(servicePlannedOnDay(request, request.lastDate))
+            assertFalse(serviceReminderVisibleOnDay(request, request.lastDate))
+            assertFalse(serviceDueSoon(request, today))
+            assertTrue(filterServiceOverview(listOf(request), today.plusYears(1),
+                WorkOverviewFilter.OVERDUE).isEmpty())
+            assertTrue(filterServiceOverview(listOf(request), today,
+                WorkOverviewFilter.SOON).isEmpty())
+            val done = completeServiceCycle(request, today.plusDays(20))
+            assertEquals(request.lastDate, done.lastDate)
+            assertEquals(today.plusDays(20), done.completedAt)
+            assertEquals(null, done.serviceHistory.single().scheduledDate)
+            assertEquals("252-03515", done.serviceHistory.single().requestNumber)
+        }
+    }
+
     @Test fun unplannedCompletionPreservesRequestAndNeverGeneratesNextDue() {
         val created = LocalDate.of(2026, 11, 7)
         val completedOn = LocalDate.of(2026, 11, 9)

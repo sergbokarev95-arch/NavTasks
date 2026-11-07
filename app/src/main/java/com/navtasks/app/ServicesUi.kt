@@ -544,6 +544,10 @@ private fun ServiceEditorDialog(
     var requestNumber by remember(existing?.id) {
         mutableStateOf(existing?.requestNumber.orEmpty())
     }
+    // Informational date only: never used as a service deadline or reminder.
+    var requestDate by remember(existing?.id) {
+        mutableStateOf(existing?.takeIf { it.unplanned }?.lastDate ?: LocalDate.now())
+    }
     var next by remember(existing?.id) {
         mutableStateOf(existing?.nextDate ?: LocalDate.now().plusMonths(12))
     }
@@ -600,12 +604,14 @@ private fun ServiceEditorDialog(
                         color = p.muted, fontSize = 12.sp)
                     ServiceInput(requestNumber, { requestNumber = it.take(100) },
                         localized("Номер из AMOS", "Request number from AMOS", lang), p, false)
-                    Text(
-                        if (existing?.unplanned == true)
-                            localized("Дата заявки: ", "Request date: ", lang) +
-                                navDate(existing.lastDate, lang, true)
-                        else localized("Дата заявки будет установлена сегодняшним днём.",
-                            "Request date will be set to today.", lang),
+                    Text(localized("Дата заявки AMOS", "AMOS request date", lang),
+                        color = p.muted, fontSize = 12.sp)
+                    ServiceOption(navDate(requestDate, lang, true), p, false,
+                        Modifier.fillMaxWidth()) {
+                        pickingDate = "request"
+                    }
+                    Text(localized("Только для информации — не влияет на сроки и уведомления.",
+                        "For reference only — no effect on due dates or reminders.", lang),
                         color = p.muted, fontSize = 11.sp)
                 } else {
                     Text(localized("Следующее обслуживание", "Next service date", lang),
@@ -729,11 +735,11 @@ private fun ServiceEditorDialog(
                         ServiceEntry(
                             id = existing?.id ?: UUID.randomUUID().toString(),
                             equipment = equipment.trim(),
-                            // For unplanned work, lastDate stores the request's creation date.
-                            lastDate = if (unplanned) {
-                                if (existing?.unplanned == true) existing.lastDate else LocalDate.now()
-                            } else existing?.lastDate?.takeIf { it.isBefore(next) }
-                                ?: next.minusDays(1),
+                            // For unplanned work, lastDate is the user-selected
+                            // informational request date, never a due date.
+                            lastDate = if (unplanned) requestDate
+                                else existing?.lastDate?.takeIf { it.isBefore(next) }
+                                    ?: next.minusDays(1),
                             nextDate = if (unplanned) null else next,
                             comment = note.trim(),
                             periodMonths = total,
@@ -758,10 +764,14 @@ private fun ServiceEditorDialog(
         }
     }
     if (pickingDate != null) {
+        val forRequest = pickingDate == "request"
         NavDateWheelDialog(
-            initial = next, p = p, lang = lang,
+            initial = if (forRequest) requestDate else next, p = p, lang = lang,
             onDismiss = { pickingDate = null },
-            onSelected = { chosen -> next = chosen; pickingDate = null },
+            onSelected = { chosen ->
+                if (forRequest) requestDate = chosen else next = chosen
+                pickingDate = null
+            },
         )
     }
 }
