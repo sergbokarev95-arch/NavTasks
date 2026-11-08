@@ -62,27 +62,10 @@ fun NavGlassBackdrop(p: NavPalette) {
             drawRect(Color.Black)
             return@Canvas
         }
-        drawRect(Brush.verticalGradient(listOf(p.backgroundEnd, p.background)))
-        val glow = 0.075f
-        val cx = size.width * 0.92f
-        val cy = size.height * 0.17f
-        val radius = size.width * 0.95f
-        drawCircle(
-            brush = Brush.radialGradient(
-                listOf(p.blue.copy(alpha = glow), Color.Transparent),
-                center = Offset(cx, cy), radius = radius,
-            ),
-            center = Offset(cx, cy), radius = radius,
-        )
-        val low = Offset(size.width * 0.03f, size.height * 0.93f)
-        val lowRadius = size.width * 0.73f
-        drawCircle(
-            brush = Brush.radialGradient(
-                listOf(p.mint.copy(alpha = glow * 0.52f), Color.Transparent),
-                center = low, radius = lowRadius,
-            ),
-            center = low, radius = lowRadius,
-        )
+        // Flat neutral backdrop matches the user's Notes reference pixel #F4F5F7.
+        // Do not tint the captured content with unrelated cyan/mint glows.
+        // Dock optics, materials, animation, and its active blue are unchanged.
+        drawRect(p.background)
     }
 }
 
