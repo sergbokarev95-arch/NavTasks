@@ -1,6 +1,7 @@
 package com.navtasks.app
 
 import dev.chrisbanes.haze.hazeSource
+import com.kyant.backdrop.backdrops.layerBackdrop
 
 import android.app.DatePickerDialog
 import androidx.compose.animation.AnimatedVisibility
@@ -57,6 +58,9 @@ fun HandoverScreen(
     embeddedInTab: Boolean = false,
 ) {
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
+    // Page content only: floating buttons stay sibling to the recorder.
+    val actionBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+        com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
     val query = searchText.trim()
@@ -91,6 +95,7 @@ fun HandoverScreen(
     Column(
         Modifier.fillMaxSize().hazeSource(hazeState)
             .then(if (embeddedInTab) Modifier else Modifier.statusBarsPadding().navigationBarsPadding())
+            .then(if (actionBackdrop != null) Modifier.layerBackdrop(actionBackdrop) else Modifier)
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -100,7 +105,8 @@ fun HandoverScreen(
                 Text(localized("Разделы передачи дел", "Handover sections", lang),
                     color = p.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
             } else {
-                NavGlassCircleButton(p, "back", onClick = onBack)
+                if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
+                else NavGlassCircleButton(p, "back", onClick = onBack)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(if (personalMode) localized("ЛИЧНОЕ", "PERSONAL", lang) else "HANDOVER",
@@ -110,7 +116,8 @@ fun HandoverScreen(
                         color = p.text, fontSize = 22.sp)
                 }
             }
-            NavGlassCircleButton(p, "search") {
+            if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
+            else NavGlassCircleButton(p, "search") {
                 searchOpen = !searchOpen
                 if (!searchOpen) searchText = ""
             }
@@ -258,12 +265,32 @@ fun HandoverScreen(
             }
         }
     }
+    if (actionBackdrop != null) {
+        if (!embeddedInTab) {
+            Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
+                .padding(start = 16.dp, top = 8.dp)) {
+                NavLiquidGlassCircleButton(p, actionBackdrop, "back", onBack)
+            }
+        }
+        Box(Modifier.align(Alignment.TopEnd)
+            .then(if (embeddedInTab) Modifier else Modifier.statusBarsPadding())
+            .padding(end = 16.dp, top = 8.dp)) {
+            NavLiquidGlassCircleButton(p, actionBackdrop, "search") {
+                searchOpen = !searchOpen
+                if (!searchOpen) searchText = ""
+            }
+        }
+    }
     Box(
         Modifier.align(Alignment.BottomEnd)
             .navigationBarsPadding()
             .padding(end = 19.dp, bottom = if (embeddedInTab) 83.dp else 18.dp),
     ) {
-        NavGlassAddButton(p, hazeState) { openSectionEditor(null) }
+        if (actionBackdrop != null) {
+            NavLiquidGlassAddButton(p, actionBackdrop) { openSectionEditor(null) }
+        } else {
+            NavGlassAddButton(p, hazeState) { openSectionEditor(null) }
+        }
     }
     } // Content and floating Add button share the same glass source.
 
