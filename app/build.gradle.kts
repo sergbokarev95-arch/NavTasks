@@ -74,4 +74,6 @@ dependencies {
     implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc14")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
+    // Real JSON parser for local JVM profile serialization regression tests.
+    testImplementation("org.json:json:20250517")
 }
