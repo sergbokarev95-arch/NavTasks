@@ -75,6 +75,7 @@ fun HandoverScreen(
     var editEntry by remember { mutableStateOf<Pair<String, String?>?>(null) }
     var entryTitle by remember { mutableStateOf("") }
     var entryNotes by remember { mutableStateOf("") }
+    var entryNotesHtml by remember { mutableStateOf("") }
     var selectedEntry by remember { mutableStateOf<Pair<String, String>?>(null) }
     var completingWithDate by remember { mutableStateOf<Triple<String, String, LocalDate>?>(null) }
     var confirmDelete by remember { mutableStateOf<Pair<String, String?>?>(null) }
@@ -89,6 +90,7 @@ fun HandoverScreen(
         editEntry = sectionId to entry?.id
         entryTitle = entry?.title.orEmpty()
         entryNotes = entry?.notes.orEmpty()
+        entryNotesHtml = entry?.notesHtml.orEmpty()
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -243,8 +245,8 @@ fun HandoverScreen(
                                         fontSize = 14.sp,
                                         textDecoration = if (finished) TextDecoration.LineThrough else TextDecoration.None)
                                     if (entry.notes.isNotBlank()) {
-                                        Text(entry.notes, color = p.muted, fontSize = 11.sp,
-                                            maxLines = 2)
+                                        NavRichNoteText(entry.notes, entry.notesHtml, p,
+                                            fontSize = 11.sp, modifier = Modifier.heightIn(max = 46.dp))
                                     }
                                     if (entry.mark == HandoverMark.COMPLETED) {
                                         Text(entry.completedDate?.let {
@@ -345,18 +347,24 @@ fun HandoverScreen(
                         p = p, placeholder = localized("Название", "Title", lang),
                         modifier = Modifier.fillMaxWidth()
                     )
-                    HandoverGlassInput(
-                        value = entryNotes, onValueChange = { entryNotes = it.take(4000) },
-                        p = p, placeholder = localized("Комментарий", "Notes", lang),
-                        modifier = Modifier.fillMaxWidth(), multiline = true
+                    NavRichNoteEditor(
+                        initialPlain = handover.sections.firstOrNull { it.id == sectionId }
+                            ?.entries?.firstOrNull { it.id == entryId }?.notes.orEmpty(),
+                        initialHtml = handover.sections.firstOrNull { it.id == sectionId }
+                            ?.entries?.firstOrNull { it.id == entryId }?.notesHtml.orEmpty(),
+                        entryKey = "handover:" + sectionId + ":" + (entryId ?: "new"),
+                        p = p, lang = lang, maxCharacters = 4000,
+                        placeholder = localized("Комментарий", "Notes", lang),
+                        onChange = { plain, html -> entryNotes = plain; entryNotesHtml = html },
                     )
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
-                    handover.saveEntry(sectionId, entryTitle, entryNotes, entryId)
+                    handover.saveEntry(sectionId, entryTitle, entryNotes, entryId, entryNotesHtml)
                     editEntry = null
-                }, enabled = entryTitle.isNotBlank()) {
+                }, enabled = entryTitle.isNotBlank() &&
+                    navRichNoteAllowed(entryNotes, entryNotesHtml, 4000)) {
                     Text(localized("Сохранить", "Save", lang))
                 }
             },
@@ -394,7 +402,8 @@ fun HandoverScreen(
                 text = {
                     Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 380.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        if (item.notes.isNotBlank()) Text(item.notes, color = p.muted, fontSize = 13.sp)
+                        if (item.notes.isNotBlank()) NavRichNoteText(item.notes, item.notesHtml, p,
+                            fontSize = 13.sp)
                         if (item.mark == HandoverMark.COMPLETED) {
                             Text(item.completedDate?.toString() ?: localized("Дата не указана", "No date", lang),
                                 color = p.successText, fontSize = 13.sp)
