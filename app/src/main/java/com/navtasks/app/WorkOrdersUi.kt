@@ -610,8 +610,8 @@ private fun WorkOrderCard(
             )
         }
         if (order.comment.isNotBlank()) {
-            Text(order.comment, color = p.muted, fontSize = 12.sp,
-                maxLines = 2, overflow = TextOverflow.Ellipsis)
+            NavRichNoteText(order.comment, order.commentHtml, p, fontSize = 12.sp,
+                modifier = Modifier.fillMaxWidth().heightIn(max = 49.dp))
         }
         Text(
             when (status) {
@@ -673,6 +673,7 @@ private fun WorkOrderEditorDialog(
         mutableStateOf(existing?.startDate ?: existing?.dueDate ?: LocalDate.now())
     }
     var comment by remember(existing?.id) { mutableStateOf(existing?.comment.orEmpty()) }
+    var commentHtml by remember(existing?.id) { mutableStateOf(existing?.commentHtml.orEmpty()) }
     var checklist by remember(existing?.id) { mutableStateOf(existing?.checklist.orEmpty()) }
     var remindDays by remember(existing?.id) { mutableIntStateOf(existing?.remindDaysBefore ?: 0) }
     var repeatDays by remember(existing?.id) { mutableIntStateOf(existing?.repeatDays ?: 0) }
@@ -781,25 +782,13 @@ private fun WorkOrderEditorDialog(
                 }
                 Text(localized("Комментарий", "Notes", lang),
                     color = p.muted, fontSize = 12.sp)
-                BasicTextField(
-                    value = comment,
-                    onValueChange = { comment = it.take(6000) },
-                    singleLine = false,
-                    maxLines = 6,
-                    textStyle = TextStyle(color = p.text, fontSize = 14.sp),
-                    cursorBrush = SolidColor(p.blue),
-                    modifier = Modifier.fillMaxWidth().height(90.dp)
-                        .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL),
-                    decorationBox = { input ->
-                        Box(Modifier.fillMaxSize().padding(12.dp),
-                            contentAlignment = Alignment.TopStart) {
-                            if (comment.isBlank()) {
-                                Text(localized("Детали, замечания…", "Details and remarks…", lang),
-                                    color = p.muted, fontSize = 12.sp)
-                            }
-                            input()
-                        }
-                    },
+                NavRichNoteEditor(
+                    initialPlain = existing?.comment.orEmpty(),
+                    initialHtml = existing?.commentHtml.orEmpty(),
+                    entryKey = existing?.id ?: "new-amos",
+                    p = p, lang = lang, maxCharacters = 6000,
+                    placeholder = localized("Детали, замечания…", "Details and remarks…", lang),
+                    onChange = { text, html -> comment = text; commentHtml = html },
                 )
                 if (existing?.completedAt != null) {
                     Text(
@@ -815,6 +804,7 @@ private fun WorkOrderEditorDialog(
                 Spacer(Modifier.width(8.dp))
                 WorkOrderChip(localized("Сохранить", "Save", lang), true, p) {
                     val candidate = runCatching {
+                        require(navRichNoteAllowed(comment, commentHtml, 6000))
                         if (customInterval) {
                             require(customMonths.toIntOrNull()?.let { it in 1..1200 } == true) {
                                 "Choose 1 to 1200 months"
@@ -833,6 +823,7 @@ private fun WorkOrderEditorDialog(
                             createdAt = existing?.createdAt ?: LocalDate.now(),
                             completedAt = existing?.completedAt,
                             comment = comment.trim(),
+                            commentHtml = commentHtml,
                             checklist = checklist.filter { it.title.isNotBlank() },
                             checkedItemIds = existing?.checkedItemIds.orEmpty().intersect(
                                 checklist.filter { it.title.isNotBlank() }.map { it.id }.toSet()),
