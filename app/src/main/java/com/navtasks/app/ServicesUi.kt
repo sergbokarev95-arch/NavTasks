@@ -660,7 +660,8 @@ private fun ServiceEditorDialog(
                     Text(localized("Номер заявки AMOS", "AMOS request number", lang),
                         color = p.muted, fontSize = 12.sp)
                     ServiceInput(requestNumber, { requestNumber = it.take(100) },
-                        localized("Номер из AMOS", "Request number from AMOS", lang), p, false)
+                        localized("Номер из AMOS", "Request number from AMOS", lang), p, false,
+                        identifier = true)
                     Text(localized("Дата заявки AMOS", "AMOS request date", lang),
                         color = p.muted, fontSize = 12.sp)
                     ServiceOption(navDate(requestDate, lang, true), p, false,
@@ -835,11 +836,13 @@ private fun ServiceEditorDialog(
 
 @Composable
 private fun ServiceInput(
-    value: String, onChange: (String) -> Unit, hint: String, p: NavPalette, multiline: Boolean,
+    value: String, onChange: (String) -> Unit, hint: String, p: NavPalette,
+    multiline: Boolean, identifier: Boolean = false,
 ) {
     BasicTextField(
         value = value, onValueChange = onChange, singleLine = !multiline,
         maxLines = if (multiline) 5 else 1,
+        keyboardOptions = if (identifier) NavIdentifierKeyboard else NavSentenceKeyboard,
         textStyle = TextStyle(color = p.text, fontSize = 14.sp),
         cursorBrush = SolidColor(p.blue),
         modifier = Modifier.fillMaxWidth().height(if (multiline) 86.dp else 44.dp)
