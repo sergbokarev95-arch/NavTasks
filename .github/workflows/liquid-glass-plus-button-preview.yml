@@ -1,0 +1,82 @@
+name: NavTasks Liquid Glass Plus Button Preview2
+on:
+  push:
+    branches: [feature/liquid-glass-plus-button-preview]
+    paths:
+      - 'app/**'
+      - '.github/workflows/liquid-glass-plus-button-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore existing Beta key for isolated app
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Check scope and run full app regression suite
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          grep -Fq 'applicationIdSuffix = ".glassquick"' app/build.gradle.kts
+          grep -Fq 'versionCode = 88' app/build.gradle.kts
+          grep -Fq 'NavLiquidGlassAddButton(palette, glassBackdrop)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'NavGlassAddButton(palette, hazeState)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt)" = '53e713f4272f7be6db75e3cfdb65b22d5f55b702'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt)" = 'ee7c0f4388164d05490f89a2e63ae461fc9dfbf8'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavGlass.kt)" = 'e3ac00c1f555205bce0f8b59b6faf2c817ffe034'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavQuickProfileUi.kt)" = '43adbfa9f50229a7ec532b0f6332a3aca160331e'
+          gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - name: Remove temporary key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify preview app and pack signed APK as ZIP
+        run: |
+          set -euo pipefail
+          APK=NavTasks_Glass_Plus_Button_Preview2.apk
+          ZIP=NavTasks_Glass_Plus_Button_Preview2.zip
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glassquick' versionCode='88'"
+          cp app/build/outputs/apk/debug/app-debug.apk "$APK"
+          zip -9 -X "$ZIP" "$APK"
+          unzip -t "$ZIP"
+          test "$(sha256sum "$APK" | cut -d ' ' -f 1)" = "$(unzip -p "$ZIP" "$APK" | sha256sum | cut -d ' ' -f 1)"
+          echo "ZIP bytes: $(stat -c %s "$ZIP")"
+          sha256sum "$ZIP"
+      # Actions artifact storage quota is full; publish validated ZIP directly.
+      - name: Publish separate visual-test prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=glassplus-preview2
+          ZIP=NavTasks_Glass_Plus_Button_Preview2.zip
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+          else
+            gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
+              --title "NavTasks Glass Plus Button Preview 2" \
+              --notes "Independent preview update com.navtasks.app.glassquick, code88, builds over previous Quick Profile Preview1 without losing its test data. Only Tasks floating '+' uses the new direct Backdrop Liquid Glass material identical to dock optics. Existing circular 54dp size, glyph, placement and editor-click preserved; API31/32 retains Haze fallback. Calendar, settings, main dock/card materials and profile code untouched. Unzip signed APK, install on top of separate preview. HONOR visual test required before real NavTasks integration." \
+              --prerelease
+          fi

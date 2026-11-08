@@ -574,9 +574,19 @@ fun NavTasksApp(
                             Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
                                 .padding(end = 19.dp, bottom = 83.dp),
                         ) {
-                            NavGlassAddButton(palette, hazeState) {
-                                editorTask = null
-                                editorOpen = true
+                            // API 33+: share the same exact direct-scene Backdrop
+                            // as the approved Liquid Glass dock. Older Android
+                            // retains its existing, tested Haze button.
+                            if (glassBackdrop != null) {
+                                NavLiquidGlassAddButton(palette, glassBackdrop) {
+                                    editorTask = null
+                                    editorOpen = true
+                                }
+                            } else {
+                                NavGlassAddButton(palette, hazeState) {
+                                    editorTask = null
+                                    editorOpen = true
+                                }
                             }
                         }
                     }

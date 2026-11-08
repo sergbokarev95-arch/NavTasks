@@ -15,7 +15,7 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 87
+        versionCode = 88
         versionName = "0.4.62"
     }
 
@@ -34,10 +34,10 @@ android {
     buildTypes {
         debug {
             signingConfigs.findByName("betaStable")?.let { signingConfig = it }
-            // Same app ID and betaStable signing as installed NavTasks;
-            // versionCode 85 updates 0.4.60/0.4.61 without uninstalling.
+            // Standalone preview package com.navtasks.app.glassquick.
+            // VersionCode 88 updates isolated Quick Profile Preview1 only.
             applicationIdSuffix = ".glassquick"
-            versionNameSuffix = "-quickprofile-preview1"
+            versionNameSuffix = "-glassplus-preview2"
         }
         release {
             isMinifyEnabled = false
