@@ -98,6 +98,6 @@ jobs:
           else
             gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
               --title "NavTasks 0.4.74 Beta - unified Apple accent and Notes gray background" \
-              --notes "Same-package signed visual candidate versionCode99 based on v0.4.72 Handover fix. Apple HIG blue accents 0088FF Day / 0091FF Night, semantic orange FF8D28 / FF9230 with readable Day warning text, exact Notes light background F4F5F7 and no color glow. Text palette neutral, no changes to dock optical pipeline or opaque card materials, business data, Handover, TaskStore, profiles or recurrence. Actual SF Pro is NOT bundled due to Apple license, typeface remains unchanged pending choice of legal alternative. Export FULL profiles first, install over existing Beta, never uninstall. HONOR approval pending." \\
+              --notes "Same-package signed visual candidate versionCode99 based on v0.4.72 Handover fix. Apple HIG blue accents 0088FF Day / 0091FF Night, semantic orange FF8D28 / FF9230 with readable Day warning text, exact Notes light background F4F5F7 and no color glow. Text palette neutral, no changes to dock optical pipeline or opaque card materials, business data, Handover, TaskStore, profiles or recurrence. Actual SF Pro is NOT bundled due to Apple license, typeface remains unchanged pending choice of legal alternative. Export FULL profiles first, install over existing Beta, never uninstall. HONOR approval pending." \
               --prerelease
           fi
