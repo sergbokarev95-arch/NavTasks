@@ -152,6 +152,7 @@ object NavNotifications {
 
     fun reschedule(context: Context, store: TaskStore, settings: NavSettings) {
         createChannels(context)
+        migrateOldServiceNotificationMarkers(context)
         if (!settings.notificationsEnabled) return
         val today = LocalDate.now()
         // Keep the AlarmManager queue bounded; independent ROLL extends the horizon.
@@ -235,6 +236,23 @@ object NavNotifications {
     private fun mayNotify(context: Context): Boolean =
         Build.VERSION.SDK_INT < 33 ||
             context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Older releases incorrectly marked a first-time Service notification
+     * as delivered and then returned without showing it. Repair only those
+     * notification delivery markers once; never modify ServiceStore records.
+     */
+    private fun migrateOldServiceNotificationMarkers(context: Context) {
+        val prefs = context.getSharedPreferences(
+            "navtasks-delivered-notifications", Context.MODE_PRIVATE
+        )
+        if (prefs.getBoolean("service_delivery_guard_086", false)) return
+        val old = prefs.getStringSet("delivered", emptySet()).orEmpty()
+        prefs.edit()
+            .putStringSet("delivered", old.filterNot { ":service:" in it }.toSet())
+            .putBoolean("service_delivery_guard_086", true)
+            .apply()
+    }
 
     private fun alreadyNotified(context: Context, key: String): Boolean {
         val prefs = context.getSharedPreferences("navtasks-delivered-notifications", Context.MODE_PRIVATE)
