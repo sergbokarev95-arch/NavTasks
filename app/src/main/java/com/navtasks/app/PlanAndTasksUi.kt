@@ -1082,14 +1082,18 @@ fun SettingsScreen(
             },
         )
     }
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+    // System navigation inset is for scroll content, not an artificial footer.
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             NavGlassCircleButton(p, "back", onClick = onBack)
             Spacer(Modifier.width(12.dp))
             Text(localized("Настройки", "Settings", lang), color = p.text, fontSize = 23.sp)
         }
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            Modifier.weight(1f).verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             NavPanel(p) {
                 FormLabel("Язык", "Language", lang, p)
                 OptionLine(listOf("RU" to "Русский", "EN" to "English"), settings.language.name, p) {
@@ -1149,6 +1153,8 @@ fun SettingsScreen(
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
+            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
         }
     }
 
