@@ -58,9 +58,10 @@ import kotlin.math.abs
 internal fun calendarIsWeekend(date: LocalDate): Boolean =
     date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
 
-/** Shared warm weekend ink for both Plan and the Today week strip. */
-internal fun calendarWeekendInk(p: NavPalette): Color =
-    if (p.dark) Color(0xFFE5A4A0) else Color(0xFFB36563)
+/** One Apple system red for Saturdays/Sundays in Plan and Today's date strip.
+ * Keep status dots independent: completed=green, partial=orange, missed=red.
+ */
+internal fun calendarWeekendInk(p: NavPalette): Color = p.systemRed
 
 /** Preserve existing status-dot meaning independently of its layout position. */
 internal fun calendarHasOutcomeDot(state: CalendarDayState, hasWork: Boolean): Boolean =
@@ -228,7 +229,7 @@ fun PlanScreenV2(
                                 val statusColor = if (status == CalendarDayState.EMPTY && hasWork) p.blue else when (status) {
                                     CalendarDayState.COMPLETE -> p.mint
                                     CalendarDayState.PARTIAL -> p.systemOrange
-                                    CalendarDayState.INCOMPLETE -> Color(0xFFE98881)
+                                    CalendarDayState.INCOMPLETE -> p.systemRed
                                     CalendarDayState.SCHEDULED -> p.blue
                                     CalendarDayState.EMPTY -> p.border
                                 }
