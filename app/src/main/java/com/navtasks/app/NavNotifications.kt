@@ -173,7 +173,13 @@ object NavNotifications {
                 // "At time" (0 minutes) must schedule a real alarm.
                 schedule(context, REMINDER, run.key, reminderAt.toEpochMilli())
             }
-            if (deadline.isAfter(Instant.now())) schedule(context, MISSED, run.key, deadline.toEpochMilli())
+            // A timed task with "At time" would otherwise produce BOTH due
+            // and missed alerts at the exact same second. Let the due alert
+            // arrive first, and warn as missed an hour later if still open.
+            val missedAlertAt = if (task.deadlineTime != null && task.remindMinutesBefore == 0)
+                deadline.plusSeconds(3600) else deadline
+            if (missedAlertAt.isAfter(Instant.now()))
+                schedule(context, MISSED, run.key, missedAlertAt.toEpochMilli())
         }
         // A single early warning per maintenance due date, scoped to the
         // currently selected ship. Save no photos or certificate contents.
@@ -473,7 +479,9 @@ object NavNotifications {
         val originalDeadline = (if (task.deadlineTime == null) run.dueDate.plusDays(1).atStartOfDay()
             else run.dueDate.atTime(task.deadlineTime)).atZone(ZoneId.systemDefault()).toInstant()
         val autoMoved = kind == MISSED && run.autoTransferred && !now.isBefore(originalDeadline)
-        if (kind == MISSED && now.isBefore(deadline) && !autoMoved) return
+        val missedAlertAt = if (task.deadlineTime != null && task.remindMinutesBefore == 0)
+            deadline.plusSeconds(3600) else deadline
+        if (kind == MISSED && now.isBefore(missedAlertAt) && !autoMoved) return
         if (kind == REMINDER && now.isBefore(reminder)) return
         if (kind == REMINDER && now.isAfter(deadline) &&
             task.remindMinutesBefore > 0) return
