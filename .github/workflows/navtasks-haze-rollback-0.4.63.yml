@@ -1,7 +1,7 @@
 name: Signed NavTasks stable Haze 0.4.63 rollback
 on:
   push:
-    branches: [feature/navtasks-0.4.63-haze-rollback]
+    branches: [feature/navtasks-0.4.63-haze-recovery]
     paths:
       - 'app/build.gradle.kts'
       - '.github/workflows/navtasks-haze-rollback-0.4.63.yml'
