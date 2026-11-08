@@ -45,6 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
@@ -197,6 +198,8 @@ fun NavTasksApp(
     val tabStateHolder = rememberSaveableStateHolder()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showProfiles by rememberSaveable { mutableStateOf(false) }
+    // Root-only temporary quick switch, independent of full profile management.
+    var quickProfileOpen by rememberSaveable { mutableStateOf(false) }
     var showServices by rememberSaveable { mutableStateOf(false) }
     var showWorks by rememberSaveable { mutableStateOf(false) }
     var showCalendar by rememberSaveable { mutableStateOf(false) }
@@ -302,11 +305,31 @@ fun NavTasksApp(
         tab = next
     }
 
+    // Same full store-switch contract used in ProfilesScreen, without data edits.
+    fun activateQuickProfile(id: String) {
+        if (id != profiles.activeId) {
+            profiles.select(id)
+            store.switchProfile()
+            handoverStore.switchProfile()
+            serviceStore.switchProfile()
+            workOrderStore.switchProfile()
+            tab = 0
+            tabHistory = ""
+            selectedDate = LocalDate.now()
+            templateFilter = Frequency.DAILY
+            expandedRun = null
+        }
+        quickProfileOpen = false
+    }
+    val pinchEligible = !editorOpen && !showSettings && !showProfiles &&
+        !showServices && !showWorks && !showWorkOrders && !showCalendar
+
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
-    BackHandler(enabled = editorOpen || showSettings || showProfiles || showServices || showWorks || showWorkOrders || showCalendar ||
+    BackHandler(enabled = quickProfileOpen || editorOpen || showSettings || showProfiles || showServices || showWorks || showWorkOrders || showCalendar ||
             profiles.active.kind == NavProfileKind.PERSONAL || tabHistory.isNotEmpty() || tab != 0) {
         when {
+            quickProfileOpen -> quickProfileOpen = false
             editorOpen -> editorOpen = false
             showProfiles -> showProfiles = false
             showSettings -> showSettings = false
@@ -328,7 +351,16 @@ fun NavTasksApp(
     }
 
     MaterialTheme(colorScheme = scheme) {
+        // Popup is outside the blurred app root so profile choices stay sharp.
         Box(Modifier.fillMaxSize()) {
+        Box(
+            Modifier.fillMaxSize()
+                .quickProfilePinchGesture(
+                    enabled = pinchEligible && !quickProfileOpen,
+                    onDetected = { quickProfileOpen = true },
+                )
+                .blur(if (quickProfileOpen) 12.dp else 0.dp)
+        ) {
             NavGlassBackdrop(palette)
             if (editorOpen) {
                 TaskEditorScreen(
@@ -573,6 +605,17 @@ fun NavTasksApp(
                 }
 
             }
+        }
+        if (quickProfileOpen) {
+            NavQuickProfilePicker(
+                profiles = profiles.profiles,
+                activeId = profiles.activeId,
+                p = palette,
+                lang = lang,
+                onDismiss = { quickProfileOpen = false },
+                onSelect = ::activateQuickProfile,
+            )
+        }
         }
     }
 }
