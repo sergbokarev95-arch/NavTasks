@@ -1361,7 +1361,9 @@ fun RunTileV2(
             if (note.isNotBlank()) {
                 ChecklistReferenceDialog(
                     p = p, lang = lang, title = item.title,
-                    note = note, editable = false,
+                    note = note,
+                    noteHtml = checklistReferenceHtml(task, run, item),
+                    editable = false,
                     onDismiss = { openedReferenceId = null },
                 )
             }
