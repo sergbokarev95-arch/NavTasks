@@ -135,7 +135,8 @@ fun HandoverScreen(
             )
         }
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize()
+                .dismissSearchImeOnResultsGesture(searchOpen),
             contentPadding = PaddingValues(
                 start = 16.dp, end = 16.dp, top = 10.dp,
                 bottom = if (embeddedInTab) 126.dp else 32.dp,
