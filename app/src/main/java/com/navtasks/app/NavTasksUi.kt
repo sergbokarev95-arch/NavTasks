@@ -403,12 +403,20 @@ fun NavTasksApp(
                     focusWorkOrderId = focusWorkOrderId,
                     focusHistoryWorkOrderId = focusHistoryWorkOrderId)
             } else if (showCalendar) {
-                Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+                // A fresh Backdrop records the Plan page; the Back button is a
+                // sibling ABOVE that capture, avoiding self-refraction.
+                val planBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+                    com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
+                Box(Modifier.fillMaxSize()) {
+                Column(Modifier.fillMaxSize().then(
+                    if (planBackdrop != null) Modifier.layerBackdrop(planBackdrop) else Modifier
+                ).statusBarsPadding().navigationBarsPadding()) {
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        NavGlassCircleButton(palette, "back") { showCalendar = false }
+                        if (planBackdrop != null) Spacer(Modifier.size(44.dp))
+                        else NavGlassCircleButton(palette, "back") { showCalendar = false }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text("NAVTASKS", color = palette.blue, fontSize = 12.sp)
@@ -429,6 +437,15 @@ fun NavTasksApp(
                             )
                         }
                     }
+                }
+                if (planBackdrop != null) {
+                    Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
+                        .padding(start = 16.dp, top = 9.dp)) {
+                        NavLiquidGlassCircleButton(palette, planBackdrop, "back") {
+                            showCalendar = false
+                        }
+                    }
+                }
                 }
             } else if (showWorks) {
                 WorksHubScreen(serviceStore, workOrderStore, palette, lang,
@@ -489,7 +506,8 @@ fun NavTasksApp(
                                     }, fontSize = 26.sp, color = palette.text, fontWeight = FontWeight.Medium,
                                 )
                             }
-                            NavGlassCircleButton(palette, "settings") { showSettings = true }
+                            if (glassBackdrop != null) Spacer(Modifier.size(44.dp))
+                            else NavGlassCircleButton(palette, "settings") { showSettings = true }
                         }
                         AnimatedContent(
                             targetState = tab,
@@ -559,13 +577,27 @@ fun NavTasksApp(
                         }
                     }
                     } // End original page capture before any floating glass.
+                    if (glassBackdrop != null) {
+                        Box(Modifier.align(Alignment.TopEnd).statusBarsPadding()
+                            .padding(end = 14.dp, top = 14.dp)) {
+                            NavLiquidGlassCircleButton(palette, glassBackdrop, "settings") {
+                                showSettings = true
+                            }
+                        }
+                    }
                     if (tab == 0) {
                         Box(
                             Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
                                 .padding(end = 19.dp, bottom = 83.dp),
                         ) {
-                            NavGlassCalendarButton(palette, hazeState) {
-                                showCalendar = true
+                            if (glassBackdrop != null) {
+                                NavLiquidGlassCalendarButton(palette, glassBackdrop) {
+                                    showCalendar = true
+                                }
+                            } else {
+                                NavGlassCalendarButton(palette, hazeState) {
+                                    showCalendar = true
+                                }
                             }
                         }
                     }
