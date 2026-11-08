@@ -68,7 +68,7 @@ class NavSettings(context: Context) {
             .putInt("reminder_minute", reminderMinute).apply()
     }
 
-    fun setGroupSimultaneousReminders(value: Boolean) {
+    fun updateReminderGrouping(value: Boolean) {
         groupSimultaneousReminders = value
         prefs.edit().putBoolean("group_reminders", value).apply()
     }
