@@ -26,6 +26,8 @@ object NavNotifications {
     private const val REMINDER = "reminder"
     private const val MISSED = "missed"
     private const val DIGEST = "digest"
+    // Independent midnight horizon refresh, separate from missed-task digest.
+    private const val ROLL = "roll"
     private const val SERVICE = "service"
     private const val AMOS = "amos"
     private const val CHANNEL_TASKS = "navtasks-reminders"
@@ -137,11 +139,22 @@ object NavNotifications {
         if (task.deadlineTime == null) run.displayDate.plusDays(1).atStartOfDay()
         else run.displayDate.atTime(task.deadlineTime)
 
+    private fun referenceTime(settings: NavSettings): LocalTime =
+        LocalTime.of(settings.reminderHour, settings.reminderMinute)
+
+    private fun reminderTime(
+        task: TaskTemplate, run: TaskRun, settings: NavSettings,
+    ): LocalDateTime = SmartReminderTiming.trigger(task, run, referenceTime(settings))
+
+    private fun cancelAlarm(context: Context, kind: String, key: String) {
+        context.getSystemService(AlarmManager::class.java).cancel(pending(context, kind, key))
+    }
+
     fun reschedule(context: Context, store: TaskStore, settings: NavSettings) {
         createChannels(context)
         if (!settings.notificationsEnabled) return
         val today = LocalDate.now()
-        // Keep the AlarmManager queue bounded; the daily digest rolls the horizon forward.
+        // Keep the AlarmManager queue bounded; independent ROLL extends the horizon.
         val horizon = today.plusDays(7)
         store.refresh(today, horizon)
         for (run in store.runs.values) {
@@ -149,9 +162,16 @@ object NavNotifications {
             val task = store.templates.firstOrNull { it.id == run.taskId && it.enabled && it.notificationsEnabled }
                 ?: continue
             val deadline = dueTime(task, run).atZone(ZoneId.systemDefault()).toInstant()
-            val reminderAt = deadline.minusSeconds(task.remindMinutesBefore.toLong() * 60)
-            if (task.remindMinutesBefore > 0 && reminderAt.isAfter(Instant.now()))
+            // Replace the old midnight-based PendingIntent when the global
+            // reference clock or the task's reminder interval changes.
+            cancelAlarm(context, REMINDER, run.key)
+            val reminderAt = reminderTime(task, run, settings)
+                .atZone(ZoneId.systemDefault()).toInstant()
+            if (SmartReminderTiming.isAtOrBeforeDeadline(task, run, referenceTime(settings)) &&
+                reminderAt.isAfter(Instant.now())) {
+                // "At time" (0 minutes) must schedule a real alarm.
                 schedule(context, REMINDER, run.key, reminderAt.toEpochMilli())
+            }
             if (deadline.isAfter(Instant.now())) schedule(context, MISSED, run.key, deadline.toEpochMilli())
         }
         // A single early warning per maintenance due date, scoped to the
@@ -172,7 +192,8 @@ object NavNotifications {
                     service.id + ":" + due
                 if (notificationKey in notified) continue
                 val start = serviceWarningStart(service)
-                var alarm = (if (start.isBefore(today)) today else start).atTime(9, 0)
+                var alarm = (if (start.isBefore(today)) today else start)
+                    .atTime(referenceTime(settings))
                 if (!alarm.isAfter(current)) alarm = current.plusMinutes(2)
                 if (alarm.toLocalDate().isAfter(due)) continue
                 schedule(context, SERVICE, service.id + "|" + due,
@@ -187,7 +208,8 @@ object NavNotifications {
                     order.dueDate + ":" + order.remindDaysBefore
                 if (key in notified) continue
                 val start = workOrderWarningStart(order)
-                var alarm = (if (start.isBefore(today)) today else start).atTime(9, 0)
+                var alarm = (if (start.isBefore(today)) today else start)
+                    .atTime(referenceTime(settings))
                 if (!alarm.isAfter(current)) alarm = current.plusMinutes(2)
                 if (alarm.toLocalDate().isAfter(order.dueDate)) continue
                 schedule(context, AMOS,
@@ -200,7 +222,14 @@ object NavNotifications {
             var next = today.atTime(clock)
             if (!next.isAfter(LocalDateTime.now())) next = next.plusDays(1)
             schedule(context, DIGEST, "daily", next.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+        } else {
+            cancelAlarm(context, DIGEST, "daily")
         }
+        // Reminders must extend beyond the seven-day window even when
+        // the separate daily MISSED digest is disabled.
+        val nextRoll = today.plusDays(1).atTime(0, 5)
+        schedule(context, ROLL, "next-day",
+            nextRoll.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
     }
 
     private fun mayNotify(context: Context): Boolean =
@@ -220,6 +249,10 @@ object NavNotifications {
         if (!settings.notificationsEnabled) return
         val store = TaskStore(context)
         createChannels(context)
+        if (kind == ROLL) {
+            reschedule(context, store, settings)
+            return
+        }
         if (kind == DIGEST) {
             if (settings.dailyDigestEnabled) {
                 val overdue = store.missed()
@@ -294,7 +327,8 @@ object NavNotifications {
         val task = store.templates.firstOrNull { it.id == run.taskId } ?: return
         if (run.completed || run.skipped || !task.enabled || !task.notificationsEnabled) return
         val deadline = dueTime(task, run).atZone(ZoneId.systemDefault()).toInstant()
-        val reminder = deadline.minusSeconds(task.remindMinutesBefore.toLong() * 60)
+        val reminder = reminderTime(task, run, settings)
+            .atZone(ZoneId.systemDefault()).toInstant()
         val now = Instant.now()
         // Ignore an obsolete alarm for a rescheduled occurrence or changed time zone.
         val originalDeadline = (if (task.deadlineTime == null) run.dueDate.plusDays(1).atStartOfDay()
@@ -302,7 +336,8 @@ object NavNotifications {
         val autoMoved = kind == MISSED && run.autoTransferred && !now.isBefore(originalDeadline)
         if (kind == MISSED && now.isBefore(deadline) && !autoMoved) return
         if (kind == REMINDER && now.isBefore(reminder)) return
-        if (kind == REMINDER && !now.isBefore(deadline)) return
+        if (kind == REMINDER && now.isAfter(deadline) &&
+            task.remindMinutesBefore > 0) return
         if (kind == MISSED && !store.isOverdue(task, run) && !autoMoved) return
         if (!mayNotify(context)) return
         if (alreadyNotified(context, ProfileStore(context).activeId + ":" + kind + ":" + runKey + ":" + run.displayDate)) return
