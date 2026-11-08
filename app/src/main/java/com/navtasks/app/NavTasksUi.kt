@@ -1426,7 +1426,8 @@ fun RunTileV2(
             onDismissRequest = { closeDialog = false },
             title = { Text(localized("Закрыть задачу", "Close task", lang)) },
             text = {
-                OutlinedTextField(closeReason, { closeReason = it }, modifier = Modifier.fillMaxWidth(),
+                OutlinedTextField(closeReason, { closeReason = it },
+                    keyboardOptions = NavSentenceKeyboard, modifier = Modifier.fillMaxWidth(),
                     label = { Text(localized("Причина", "Reason", lang)) },
                     placeholder = { Text(localized("Например: отменено капитаном", "E.g. cancelled by Captain", lang)) })
             },
