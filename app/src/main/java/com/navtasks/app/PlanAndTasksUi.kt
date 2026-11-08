@@ -102,10 +102,10 @@ fun PlanScreenV2(
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { level = 0 }) { Text("$year", color = p.blue) }
+            TextButton(onClick = { level = 0 }) { Text("$year", color = p.blueText) }
             Text("/", color = p.muted)
             TextButton(onClick = { level = 1 }) {
-                Text(YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase() }, color = p.blue)
+                Text(YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase() }, color = p.blueText)
             }
             Spacer(Modifier.weight(1f))
             TextButton(onClick = { year = today.year; month = today.monthValue; selectedDay = today; level = 2 }) {
@@ -507,7 +507,7 @@ fun TasksScreenV2(
                             }, color = p.muted, fontSize = 11.sp,
                         )
                     }
-                    if (task.checklist.isNotEmpty()) Text("${task.checklist.size}", color = p.blue, fontSize = 12.sp)
+                    if (task.checklist.isNotEmpty()) Text("${task.checklist.size}", color = p.blueText, fontSize = 12.sp)
                     Spacer(Modifier.width(5.dp))
                     NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                     }
@@ -782,7 +782,7 @@ fun TaskEditorScreen(
                         FormLabel("Ближайшие выполнения", "Upcoming executions", lang, p)
                         Text(
                             upcoming.joinToString("  ·  ") { navDate(it, lang, true) },
-                            color = p.blue, fontSize = 12.sp,
+                            color = p.blueText, fontSize = 12.sp,
                         )
                     }
                 }
@@ -907,7 +907,7 @@ fun TaskEditorScreen(
                                 if (initial.frequency == Frequency.EXTRA)
                                     localized("Отключить задачу", "Disable task", lang)
                                 else localized("Прекратить повторения", "Stop repeating", lang),
-                                color = p.blue,
+                                color = p.blueText,
                             )
                         }
                     }
