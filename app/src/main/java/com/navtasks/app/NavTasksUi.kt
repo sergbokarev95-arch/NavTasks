@@ -552,10 +552,13 @@ fun NavTasksApp(
                         NavLiquidGlassBottomBar(
                             p = palette, selected = tab, lang = lang,
                             backdrop = glassBackdrop,
-                            // EXACT Lab 0.1.5 positioning, including 8dp on both axes.
+                            // Keep the laboratory's 15dp horizontal clearance and 56dp
+                            // bar. Lower the whole dock by 4dp, leaving more
+                            // balanced separation from Android's gesture pill.
                             modifier = Modifier.align(Alignment.BottomCenter)
                                 .navigationBarsPadding()
-                                .padding(horizontal = 15.dp, vertical = 8.dp),
+                                .padding(horizontal = 15.dp)
+                                .padding(top = 8.dp, bottom = 4.dp),
                             onSelect = ::openPrimaryTab,
                         )
                     } else {

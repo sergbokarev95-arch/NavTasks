@@ -211,7 +211,9 @@ fun NavLiquidGlassBottomBar(
                 onDrawSurface = {
                     val traveling = if (dark) Color(0xFF75B8F0).copy(alpha = .13f)
                         else Color.White.copy(alpha = .19f)
-                    val resting = if (dark) Color(0xFF616B77).copy(alpha = .86f)
+                    // Slightly deeper neutral graphite in Night so the unchanged blue
+                    // active glyph stays legible, without tinting the glass blue.
+                    val resting = if (dark) Color(0xFF3F4B58).copy(alpha = .82f)
                         else Color(0xFFD7D8DA).copy(alpha = .87f)
                     drawRect(lerp(traveling, resting, matte.coerceIn(0f, 1f)))
                 }
