@@ -354,7 +354,7 @@ private fun PlanReadOnlyTile(
     Row(
         Modifier.fillMaxWidth().navGlass(p, radius = 15.dp,
             role = if (run.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
-            .padding(horizontal = 14.dp, vertical = 11.dp),
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Status icon, not a checkbox: the calendar cannot mark any task complete.
@@ -491,7 +491,7 @@ fun TasksScreenV2(
                     Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp,
                     role = if (task.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
                     .glassClickable { onEdit(task) }
-                    .padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
+                    .padding(horizontal = 13.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     // Templates are not executable, so no fake empty checkbox or checkbox icon here.
                     Spacer(Modifier.width(1.dp))
                     Column(Modifier.weight(1f)) {
