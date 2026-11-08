@@ -623,9 +623,15 @@ fun TaskEditorScreen(
     var unsupportedFrequencyEdit by remember(initial?.id) { mutableStateOf(false) }
     val valid = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 && (interval.toIntOrNull() ?: 0) > 0
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+    val editorBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+        com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
+    Box(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().then(
+        if (editorBackdrop != null) Modifier.layerBackdrop(editorBackdrop) else Modifier
+    ).statusBarsPadding().navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            NavGlassCircleButton(p, "back", onClick = onBack)
+            if (editorBackdrop != null) Spacer(Modifier.size(44.dp))
+            else NavGlassCircleButton(p, "back", onClick = onBack)
             Spacer(Modifier.width(12.dp))
             Text(localized(if (initial == null) "Новая задача" else "Редактировать задачу",
                 if (initial == null) "New task" else "Edit task", lang),
@@ -852,6 +858,13 @@ fun TaskEditorScreen(
             }
             Spacer(Modifier.height(28.dp))
         }
+    }
+    if (editorBackdrop != null) {
+        Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
+            .padding(start = 14.dp, top = 10.dp)) {
+            NavLiquidGlassCircleButton(p, editorBackdrop, "back", onBack)
+        }
+    }
     }
 
     if (showTaskDeletionOptions && initial != null) {
