@@ -939,7 +939,7 @@ private fun TodayScreenV2(
         }
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 125.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp),
         ) {
             if (showMissed) {
                 item { Text(localized("Незакрытые пропуски", "Unfinished overdue tasks", lang),
@@ -1291,7 +1291,8 @@ fun RunTileV2(
             )
             .background(p.mint.copy(alpha = flash.value * 0.36f), RoundedCornerShape(15.dp)),
     ) {
-        Row(Modifier.padding(start = 11.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+        // Preserve 44dp control hit targets while reducing dead vertical space.
+        Row(Modifier.padding(start = 11.dp, end = 6.dp, top = 3.dp, bottom = 3.dp),
             verticalAlignment = Alignment.CenterVertically) {
             if (run.checklist.isNotEmpty()) {
                 Box(
@@ -1353,13 +1354,14 @@ fun RunTileV2(
                 shrinkTowards = Alignment.Top,
             ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
         ) {
-            Column(Modifier.padding(start = 51.dp, end = 13.dp, bottom = 13.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.padding(start = 51.dp, end = 13.dp, bottom = 9.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 HorizontalDivider(color = p.border)
                 run.checklist.forEach { item ->
                     Row(verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth().navGlass(p, radius = 10.dp,
-                            role = GlassRole.CONTROL, elevation = 0.dp).padding(8.dp)) {
+                            role = GlassRole.CONTROL, elevation = 0.dp)
+                            .padding(horizontal = 8.dp, vertical = 5.dp)) {
                         RoundCheck(item.id in run.checkedIds || (confirming && run.checklist.all { it.id == item.id || it.id in run.checkedIds }), p,
                             onClick = {
                                 val checking = item.id !in run.checkedIds
