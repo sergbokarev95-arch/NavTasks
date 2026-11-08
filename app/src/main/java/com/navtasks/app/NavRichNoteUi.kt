@@ -93,7 +93,7 @@ internal fun NavRichNoteEditor(
         val size = state.annotatedString.text.length
         Text(
             if (navRichNoteAllowed(state.annotatedString.text, state.toHtml(), maxCharacters))
-                "$" + "size / $" + "maxCharacters"
+                "$size / $maxCharacters"
             else localized("Комментарий слишком длинный", "Note is too long", lang),
             color = if (navRichNoteAllowed(state.annotatedString.text, state.toHtml(), maxCharacters))
                 p.muted else p.dangerText, fontSize = 11.sp)
