@@ -459,7 +459,7 @@ fun TasksScreenV2(
                     role = if (filter == freq) GlassRole.SELECTED else GlassRole.CONTROL, elevation = 0.dp)
                     .glassClickable { onFilter(freq) }.padding(vertical = 11.dp),
                     contentAlignment = Alignment.Center) {
-                    Text(labels[i], color = if (filter == freq) p.blue else p.text, fontSize = 11.sp, maxLines = 1)
+                    Text(labels[i], color = if (filter == freq) Color.White else p.text, fontSize = 11.sp, maxLines = 1)
                 }
             }
         }
@@ -539,7 +539,7 @@ private fun OptionLine(options: List<Pair<String, String>>, selected: String, p:
                     .padding(horizontal = 13.dp, vertical = 11.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, color = if (active) p.blue else p.text, fontSize = 12.sp)
+                Text(label, color = if (active) Color.White else p.text, fontSize = 12.sp)
             }
         }
     }
