@@ -636,7 +636,8 @@ private fun WorkOrderCard(
         }
     }
     selectedNote?.let { item ->
-        ChecklistReferenceDialog(p, lang, item.title, item.comment, editable = false,
+        ChecklistReferenceDialog(p, lang, item.title, item.comment,
+            noteHtml = item.commentHtml, editable = false,
             onDismiss = { selectedNote = null })
     }
 }
@@ -856,10 +857,11 @@ private fun WorkOrderEditorDialog(
         val item = checklist.firstOrNull { it.id == id }
         if (item != null) {
             ChecklistReferenceDialog(
-                p = p, lang = lang, title = item.title, note = item.comment, editable = true,
+                p = p, lang = lang, title = item.title, note = item.comment,
+                noteHtml = item.commentHtml, editable = true,
                 onDismiss = { noteItemId = null },
-                onSave = { note ->
-                    checklist = checklist.map { if (it.id == id) it.copy(comment = note) else it }
+                onSave = { note, html ->
+                    checklist = checklist.map { if (it.id == id) it.copy(comment = note, commentHtml = html) else it }
                     noteItemId = null
                 },
             )
