@@ -47,7 +47,7 @@ fun ServicesScreen(
     var selected by remember { mutableStateOf<ServiceEntry?>(null) }
     var confirmingDelete by remember { mutableStateOf<ServiceEntry?>(null) }
     var confirmingPurge by remember { mutableStateOf<ServiceEntry?>(null) }
-    var showClosed by rememberSaveable { mutableStateOf(false) }
+    var selectedView by rememberSaveable { mutableStateOf(ServiceListView.WORKS) }
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
@@ -66,15 +66,21 @@ fun ServicesScreen(
             .thenBy { if (it.unplanned) LocalDate.MIN else it.nextDate ?: LocalDate.MAX })
     val closedServices = services.entries.filter { it.closedAt != null }
         .sortedByDescending { it.closedAt }
+    // A request is a CURRENT uncompleted service with an AMOS reference:
+    // both planned and unplanned, never historical or closed records.
+    val activeRequests = currentServiceRequests(activeServices)
     val listState = rememberLazyListState()
     val filteredServices = searchServiceTitles(
-        filterServiceOverview(activeServices, now, selectedFilter), searchText)
+        filterServiceOverview(
+            if (selectedView == ServiceListView.REQUESTS) activeRequests else activeServices,
+            now, selectedFilter,
+        ), searchText)
     val filteredClosed = searchServiceTitles(closedServices, searchText)
     LaunchedEffect(focusServiceId) {
         if (focusServiceId != null) {
             searchText = ""
             searchOpen = false
-            showClosed = false
+            selectedView = ServiceListView.WORKS
             selectedFilter = WorkOverviewFilter.ALL
             withFrameNanos { }
             val index = activeServices.indexOfFirst { it.id == focusServiceId }
@@ -126,21 +132,24 @@ fun ServicesScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ServiceCount(
                             localized("Всего", "All", lang), activeServices.size, p.blue, p,
-                            selected = !showClosed && selectedFilter == WorkOverviewFilter.ALL,
+                            selected = selectedView == ServiceListView.WORKS &&
+                                selectedFilter == WorkOverviewFilter.ALL,
                             modifier = Modifier.weight(1f),
-                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.ALL }
+                        ) { selectedView = ServiceListView.WORKS; selectedFilter = WorkOverviewFilter.ALL }
                         ServiceCount(
                             localized("Скоро", "Soon", lang), soon,
                             if (soon > 0) p.warningText else p.muted, p,
-                            selected = !showClosed && selectedFilter == WorkOverviewFilter.SOON,
+                            selected = selectedView == ServiceListView.WORKS &&
+                                selectedFilter == WorkOverviewFilter.SOON,
                             modifier = Modifier.weight(1f),
-                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.SOON }
+                        ) { selectedView = ServiceListView.WORKS; selectedFilter = WorkOverviewFilter.SOON }
                         ServiceCount(
                             localized("Просрочены", "Overdue", lang), overdue,
                             if (overdue > 0) p.dangerText else p.muted, p,
-                            selected = !showClosed && selectedFilter == WorkOverviewFilter.OVERDUE,
+                            selected = selectedView == ServiceListView.WORKS &&
+                                selectedFilter == WorkOverviewFilter.OVERDUE,
                             modifier = Modifier.weight(1f),
-                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.OVERDUE }
+                        ) { selectedView = ServiceListView.WORKS; selectedFilter = WorkOverviewFilter.OVERDUE }
                     }
                     Text(localized("Оборудование, даты, комментарии. Без вложений.",
                         "Equipment, dates and notes. No attachments.", lang),
@@ -154,18 +163,32 @@ fun ServicesScreen(
                 ) {
                     ServiceOption(
                         localized("Работы · ${activeServices.size}", "Work · ${activeServices.size}", lang),
-                        p, !showClosed, modifier = Modifier.weight(1f),
-                    ) { showClosed = false }
+                        p, selectedView == ServiceListView.WORKS, modifier = Modifier.weight(1f),
+                    ) {
+                        selectedView = ServiceListView.WORKS
+                        selectedFilter = WorkOverviewFilter.ALL
+                    }
+                    ServiceOption(
+                        localized("Заявки · ${activeRequests.size}", "Requests · ${activeRequests.size}", lang),
+                        p, selectedView == ServiceListView.REQUESTS, modifier = Modifier.weight(1f),
+                    ) {
+                        selectedView = ServiceListView.REQUESTS
+                        selectedFilter = WorkOverviewFilter.ALL
+                    }
                     ServiceOption(
                         localized("Закрытые · ${closedServices.size}", "Closed · ${closedServices.size}", lang),
-                        p, showClosed, modifier = Modifier.weight(1f),
-                    ) { showClosed = true }
+                        p, selectedView == ServiceListView.CLOSED, modifier = Modifier.weight(1f),
+                    ) {
+                        selectedView = ServiceListView.CLOSED
+                        selectedFilter = WorkOverviewFilter.ALL
+                    }
                 }
             }
             message?.let { msg ->
                 item { Text(msg, color = p.muted, fontSize = 12.sp) }
             }
-            val visible = if (showClosed) filteredClosed else filteredServices
+            val visible = if (selectedView == ServiceListView.CLOSED)
+                filteredClosed else filteredServices
             if (visible.isEmpty()) {
                 item {
                     NavPanel(p) {
@@ -173,8 +196,11 @@ fun ServicesScreen(
                             if (searchText.isNotBlank())
                                 localized("Нет работ с таким названием.",
                                     "No maintenance names match.", lang)
-                            else if (showClosed)
+                            else if (selectedView == ServiceListView.CLOSED)
                                 localized("Закрытых сервисов пока нет.", "No closed services yet.", lang)
+                            else if (selectedView == ServiceListView.REQUESTS)
+                                localized("Текущих заявок AMOS пока нет.",
+                                    "No current AMOS requests.", lang)
                             else if (selectedFilter == WorkOverviewFilter.ALL)
                                 localized("Нет сервисов. Добавь оборудование кнопкой +.",
                                     "No records. Add equipment with +.", lang)
@@ -185,7 +211,7 @@ fun ServicesScreen(
                     }
                 }
             }
-            if (showClosed) {
+            if (selectedView == ServiceListView.CLOSED) {
                 items(filteredClosed, key = { it.id }) { service ->
                     ServiceClosedCard(service, p, lang,
                         onHistory = { viewingHistory = service },
