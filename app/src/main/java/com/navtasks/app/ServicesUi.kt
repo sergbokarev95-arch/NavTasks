@@ -1,6 +1,7 @@
 package com.navtasks.app
 
 import dev.chrisbanes.haze.hazeSource
+import com.kyant.backdrop.backdrops.layerBackdrop
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.background
@@ -50,6 +51,9 @@ fun ServicesScreen(
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
+    // Page content only: floating buttons stay sibling to the recorder.
+    val actionBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+        com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
     var requestTarget by remember { mutableStateOf<ServiceEntry?>(null) }
     var confirmingComplete by remember { mutableStateOf<ServiceEntry?>(null) }
     var completionDate by remember { mutableStateOf(LocalDate.now()) }
@@ -85,18 +89,21 @@ fun ServicesScreen(
     Box(Modifier.fillMaxSize()) {
     // Edge-to-edge scroll content, matching Today; keep only the Add FAB inset.
     Column(Modifier.fillMaxSize().statusBarsPadding()
-        .hazeSource(hazeState)) {
+        .hazeSource(hazeState)
+        .then(if (actionBackdrop != null) Modifier.layerBackdrop(actionBackdrop) else Modifier)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NavGlassCircleButton(p, "back", onClick = onBack)
+            if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
+            else NavGlassCircleButton(p, "back", onClick = onBack)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
                 Text(localized("Сервисы", "Maintenance", lang), color = p.text, fontSize = 23.sp)
             }
-            NavGlassCircleButton(p, "search") {
+            if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
+            else NavGlassCircleButton(p, "search") {
                 searchOpen = !searchOpen
                 if (!searchOpen) searchText = ""
             }
@@ -277,13 +284,33 @@ fun ServicesScreen(
             }
         }
     }
+    if (actionBackdrop != null) {
+        Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
+            .padding(start = 16.dp, top = 9.dp)) {
+            NavLiquidGlassCircleButton(p, actionBackdrop, "back", onBack)
+        }
+        Box(Modifier.align(Alignment.TopEnd).statusBarsPadding()
+            .padding(end = 16.dp, top = 9.dp)) {
+            NavLiquidGlassCircleButton(p, actionBackdrop, "search") {
+                searchOpen = !searchOpen
+                if (!searchOpen) searchText = ""
+            }
+        }
+    }
     Box(
         Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
             .padding(end = 19.dp, bottom = 18.dp),
     ) {
-        NavGlassAddButton(p, hazeState) {
+        if (actionBackdrop != null) {
+            NavLiquidGlassAddButton(p, actionBackdrop) {
             selected = null
             showEditor = true
+            }
+        } else {
+            NavGlassAddButton(p, hazeState) {
+            selected = null
+            showEditor = true
+            }
         }
     }
     } // End maintenance screen and floating Add overlay.
