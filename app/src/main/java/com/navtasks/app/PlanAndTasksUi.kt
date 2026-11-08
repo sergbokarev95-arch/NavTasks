@@ -1060,11 +1060,11 @@ fun TaskEditorScreen(
         checklist.firstOrNull { it.id == itemId }?.let { item ->
             ChecklistReferenceDialog(
                 p = p, lang = lang, title = item.title,
-                note = item.comment, editable = true,
+                note = item.comment, noteHtml = item.commentHtml, editable = true,
                 onDismiss = { editingChecklistNote = null },
-                onSave = { text ->
+                onSave = { text, html ->
                     checklist = checklist.map { existing ->
-                        if (existing.id == itemId) existing.copy(comment = text) else existing
+                        if (existing.id == itemId) existing.copy(comment = text, commentHtml = html) else existing
                     }
                     editingChecklistNote = null
                 },
