@@ -244,6 +244,123 @@ object NavNotifications {
         return false
     }
 
+    private data class DueReminder(
+        val deliveryKey: String,
+        val title: String,
+        val taskRunKey: String? = null,
+        val amosId: String? = null,
+    )
+
+    private fun previouslyDelivered(context: Context, key: String): Boolean =
+        key in context.getSharedPreferences(
+            "navtasks-delivered-notifications", Context.MODE_PRIVATE
+        ).getStringSet("delivered", emptySet()).orEmpty()
+
+    /**
+     * One Android notification for everything that resolves to the SAME
+     * scheduled local instant. Individual PendingIntents remain in place;
+     * the first receiver builds and marks the whole group, later receivers
+     * see the already-delivered keys and do not duplicate it.
+     *
+     * No task state or recurrence is changed. AMOS/Service are still
+     * one warning per due date, not a new daily repeating reminder.
+     */
+    private fun tryGroupedReminders(
+        context: Context, store: TaskStore, settings: NavSettings,
+        kind: String, key: String,
+    ): Boolean {
+        if (!settings.groupSimultaneousReminders || !mayNotify(context)) return false
+        if (kind != REMINDER && kind != SERVICE && kind != AMOS) return false
+        val zone = ZoneId.systemDefault()
+        val clock = referenceTime(settings)
+        val active = ProfileStore(context)
+        val target = if (kind == REMINDER) {
+            val run = store.runs[key] ?: return false
+            val task = store.templates.firstOrNull { it.id == run.taskId } ?: return false
+            reminderTime(task, run, settings)
+        } else {
+            LocalDate.now().atTime(clock)
+        }
+        val targetInstant = target.atZone(zone).toInstant()
+        val now = Instant.now()
+        if (now.isBefore(targetInstant) || now.isAfter(targetInstant.plusSeconds(4L * 3600)))
+            return false
+
+        val events = mutableListOf<DueReminder>()
+        val tasksById = store.templates.associateBy { it.id }
+        for (run in store.runs.values) {
+            val task = tasksById[run.taskId] ?: continue
+            if (run.completed || run.skipped || !task.enabled || !task.notificationsEnabled) continue
+            if (!SmartReminderTiming.isAtOrBeforeDeadline(task, run, clock)) continue
+            if (reminderTime(task, run, settings).atZone(zone).toInstant() != targetInstant) continue
+            val eventKey = active.activeId + ":" + REMINDER + ":" + run.key + ":" + run.displayDate
+            if (!previouslyDelivered(context, eventKey)) {
+                events += DueReminder(eventKey, task.title, taskRunKey = run.key)
+            }
+        }
+        // The existing maintenance warnings have dates, not exact task hours.
+        // They therefore use the shared default time, but keep their own
+        // months/days-before windows and current enabled/completed rules.
+        if (active.active.kind == NavProfileKind.VESSEL &&
+            target.toLocalTime() == clock && target.toLocalDate() == LocalDate.now()) {
+            val today = LocalDate.now()
+            for (service in ServiceStore(context, active).entries) {
+                if (service.unplanned || service.completedAt != null || service.remindMonths == 0)
+                    continue
+                val due = service.nextDate ?: continue
+                if (today.isBefore(serviceWarningStart(service)) || today.isAfter(due)) continue
+                val eventKey = active.activeId + ":service:" + service.id + ":" + due
+                if (!previouslyDelivered(context, eventKey)) {
+                    events += DueReminder(eventKey, service.equipment)
+                }
+            }
+            for (order in WorkOrderStore(context, active).entries) {
+                if (order.completed || order.remindDaysBefore == 0 ||
+                    today.isBefore(workOrderWarningStart(order)) ||
+                    today.isAfter(order.dueDate)) continue
+                val eventKey = active.activeId + ":amos:" + order.id + ":" +
+                    order.dueDate + ":" + order.remindDaysBefore
+                if (!previouslyDelivered(context, eventKey)) {
+                    events += DueReminder(eventKey, order.title, amosId = order.id)
+                }
+            }
+        }
+
+        if (events.size < 2) return false
+        // Broadcasts for multiple same-minute alarms are serialized on the
+        // receiver's main thread; this durable key gate also covers restarts.
+        val newlyMarked = events.filter { !alreadyNotified(context, it.deliveryKey) }
+        if (newlyMarked.size < 2) return newlyMarked.isNotEmpty()
+        val heading = localized(
+            "Предстоящие события: ${newlyMarked.size}",
+            "Upcoming events: ${newlyMarked.size}", settings.language
+        )
+        val lines = newlyMarked.take(5).map { it.title }
+        val description = lines.joinToString(" · ") +
+            if (newlyMarked.size > lines.size)
+                localized(" и ещё ${newlyMarked.size - lines.size}",
+                    " and ${newlyMarked.size - lines.size} more", settings.language)
+            else ""
+        val style = Notification.InboxStyle()
+        for (line in lines) style.addLine(line)
+        if (newlyMarked.size > lines.size)
+            style.setSummaryText(localized(
+                "И ещё ${newlyMarked.size - lines.size}",
+                "And ${newlyMarked.size - lines.size} more",
+                settings.language,
+            ))
+        val notification = notificationBuilder(context, CHANNEL_TASKS)
+            .setContentTitle(heading)
+            .setContentText(description)
+            .setStyle(style)
+            .setContentIntent(openTask(context, newlyMarked.firstNotNullOfOrNull { it.taskRunKey }))
+            .setAutoCancel(true)
+            .build()
+        manager(context).notify(("group:" + active.activeId + ":" + targetInstant.toEpochMilli()).hashCode(),
+            notification)
+        return true
+    }
+
     fun receiveAlarm(context: Context, kind: String, runKey: String) {
         val settings = NavSettings(context)
         if (!settings.notificationsEnabled) return
@@ -270,6 +387,7 @@ object NavNotifications {
             reschedule(context, store, settings)
             return
         }
+        if (tryGroupedReminders(context, store, settings, kind, runKey)) return
         if (kind == SERVICE) {
             val serviceId = runKey.substringBefore("|")
             val expectedDue = runKey.substringAfter("|", "")
@@ -283,7 +401,7 @@ object NavNotifications {
                 service.remindMonths == 0 || LocalDate.now().isBefore(serviceWarningStart(service)) ||
                 LocalDate.now().isAfter(due)) return
             if (!mayNotify(context)) return
-            if (!alreadyNotified(context,
+            if (alreadyNotified(context,
                 profiles.activeId + ":service:" + service.id + ":" + due)) return
             val heading = localized("Приближается сервис", "Maintenance due soon", settings.language)
             val detail = service.equipment + " · " +
