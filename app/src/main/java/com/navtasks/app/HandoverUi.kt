@@ -31,6 +31,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -398,7 +400,28 @@ fun HandoverScreen(
             HandoverGlassDialog(
             p = p, 
                 onDismissRequest = { selectedEntry = null },
-                title = { Text(item.title) },
+                title = {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            item.title, modifier = Modifier.weight(1f),
+                            maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        )
+                        IconButton(
+                            onClick = {
+                                openEntryEditor(sectionId, item)
+                                selectedEntry = null
+                            },
+                            modifier = Modifier.size(44.dp).semantics {
+                                contentDescription = localized("Редактировать пункт", "Edit item", lang)
+                            },
+                        ) {
+                            NavGlassGlyph("edit", p.blue, Modifier.size(21.dp))
+                        }
+                    }
+                },
                 text = {
                     Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 380.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -428,10 +451,6 @@ fun HandoverScreen(
                                 selectedEntry = null
                             }) { Text(localized("Вернуть в работу", "Reopen", lang)) }
                         }
-                        TextButton(onClick = {
-                            openEntryEditor(sectionId, item)
-                            selectedEntry = null
-                        }) { Text(localized("Редактировать", "Edit", lang)) }
                     }
                 },
                 confirmButton = {
