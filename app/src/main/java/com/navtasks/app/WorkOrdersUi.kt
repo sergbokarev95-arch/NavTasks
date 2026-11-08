@@ -552,8 +552,8 @@ private fun WorkOrderCount(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(number.toString(), color = color, fontSize = 21.sp)
-        Text(label, color = if (selected) p.blue else p.muted, fontSize = 11.sp,
+        Text(number.toString(), color = if (selected) p.selectionContent else color, fontSize = 21.sp)
+        Text(label, color = if (selected) p.selectionContent else p.muted, fontSize = 11.sp,
             maxLines = 1)
     }
 }
@@ -656,7 +656,7 @@ private fun WorkOrderChip(
             .padding(horizontal = 9.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (selected) p.blue else p.text,
+        Text(label, color = if (selected) p.selectionContent else p.text,
             fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
