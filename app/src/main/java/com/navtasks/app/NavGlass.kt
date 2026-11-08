@@ -646,7 +646,7 @@ fun NavGlassInput(
     p: NavPalette,
     placeholder: String = "",
     modifier: Modifier = Modifier,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardOptions: KeyboardOptions = NavTitleKeyboard,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     BasicTextField(
