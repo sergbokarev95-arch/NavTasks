@@ -307,3 +307,17 @@
 - [ ] Export full profiles; install 0.4.84 OVER existing NavTasks on HONOR. Verify active Today scroll from deep list/future chip animates to current day and first task; Works, Tasks, Handover active taps also smooth; cross-tab swipe/Back unaffected.
 - [ ] In Handover/AMOS/Services type search and then touch/drag results: caret loses focus/keyboard hides immediately but query remains and list works; tapping search field again focuses. Test Day/Night weekends and Plan incomplete dot in Apple red; question-mark note icon/ring orange. Confirm all data/glass preserved.
 - [ ] Only after explicit physical acceptance consider merging tested sources; main still unchanged. If recovery code110 used, future package builds must use versionCode >=111. Tiny-popup genuine optical glass lab and SF Pro/font licensing remain separate work.
+
+## NEXT — physically validate smart reminders 0.4.86 before next feature
+- [x] Protect approved 0.4.84 SHA and isolate new Beta branch.
+- [x] Separate reference reminder time from missed digest time; preserve existing digest hour as migration seed. Add simultaneous grouping switch.
+- [x] Schedule 0-minute At time, 15min/60min/1440min from reference if deadlineTime null, else explicit task hour; do not alter TaskStore overdue definition.
+- [x] Replace AMOS/Service fixed 09:00 warning hour with reference time; preserve lead windows and request-only exclusions, group same-instant eligible Tasks/AMOS/Services into one notification with count/titles and per-event dedup.
+- [x] Fix inverted first Service warning notification guard and repair former silently marked delivered keys once, without changing ServiceStore records.
+- [x] Decouple seven-day rolling reminder horizon from optional missed digest using separate 00:05 ROLL AlarmManager trigger.
+- [x] Unit tests for end-of-day anchor, all 4 intervals, explicit time priority, postponed date and minute grouping; final Android CI 42509116834 success. Same package signed code111: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.86-smart-reminders-verified/NavTasks_Smart_Reminders_0.4.86_Beta_Update.zip.
+- [x] Prepare optional exact prior 0.4.84 recovery code112 CI42508828509 success: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.87-smart-reminders-recovery/NavTasks_Reminders_Restore_0.4.87_Beta_Update.zip. Do not install unless 0.4.86 rejected.
+- [ ] Export FULL profiles and install 0.4.86 in place on HONOR, never uninstall. Validate reference clock migrated from old digest setting, selected clock adjustable, digest independently adjustable/disableable, grouping toggle, task reminders independent of missed digest.
+- [ ] For a practical test set reference to 2–5 minutes ahead, create 2 uncompleted tasks due end of day with At time notifications: expect exactly one grouped 2-event notification; check clicking, timestamps and duplicate suppression. Then test explicit task time overrides reference, offsets 15min/hour/day, per-task disabled switch, service/AMOS warning if available. Restore preferred clock afterward.
+- [ ] Verify delivery when app is backgrounded and after reboot/time-zone change. Android exact alarms require permission; system idle may delay inexact events.
+- [ ] No main app merge until user approval. If rollback v0.4.87 installed, versionCode must exceed112. True optical little-popup glass/SF Pro licensing remain separate.
