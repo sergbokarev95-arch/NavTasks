@@ -141,7 +141,7 @@ fun WorkOrdersScreen(
             else NavGlassCircleButton(p, "back", onBack)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
+                Text("NAVTASKS", color = p.blueText, fontSize = 12.sp)
                 Text("AMOS · Work Orders", color = p.text, fontSize = 22.sp)
             }
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
@@ -517,7 +517,7 @@ private fun WorkOrderClosedCard(
     ) {
         Column(Modifier.fillMaxWidth().glassClickable(onClick = onHistory)
             .padding(vertical = 3.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text("AMOS", color = p.blue, fontSize = 11.sp)
+            Text("AMOS", color = p.blueText, fontSize = 11.sp)
             Text(order.title, color = p.text, fontSize = 15.sp)
             order.closedAt?.let {
                 Text(localized("Закрыта: ", "Closed: ", lang) +
@@ -583,7 +583,7 @@ private fun WorkOrderCard(
                 Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text("AMOS", color = p.blue, fontSize = 12.sp)
+                Text("AMOS", color = p.blueText, fontSize = 12.sp)
                 Text(order.title, color = p.text, fontSize = 15.sp,
                     maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
@@ -906,7 +906,7 @@ private fun WorkOrderHistoryCard(
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text("AMOS", color = p.blue, fontSize = 12.sp)
+        Text("AMOS", color = p.blueText, fontSize = 12.sp)
         Text(archive.order.title, color = p.text, fontSize = 15.sp)
         Text(localized("Срок: ", "Due: ", lang) +
             navDate(completion.dueDate, lang, true),
