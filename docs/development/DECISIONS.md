@@ -101,3 +101,7 @@
 
 
 - 2026-11-08: User selected option 1 after controlled diagnostic: change common static panel/card surfaces to a stronger, more opaque Apple-HIG-like tone/gradient system for all regular roles, NOT the actual refractive dock shader and NOT task layout/data. In first preview role-specific static PANEL/TASK/NESTED_TASK/CONTROL are opaque; NAVIGATION and SELECTED stay translucent. Enforce source hash stability of `NavTasksUi.kt`, `NavLiquidGlassDock.kt`, `NavLiquidDockOptics.kt` in CI. Preview release glasssurfaces-preview1 succeeded, physical HONOR acceptance pending.
+
+
+- 2026-11-08: User approved the preview's **opaque static gradient system** for PANEL/TASK/NESTED_TASK/CONTROL, along with true Liquid Glass dock. Final requested adjustments: darken ONLY the settled selected capsule in night to #3F4B58 alpha.82 (from #616B77 alpha.86), and move dock 4dp lower by reducing bottom padding 8→4dp, preserving top8 and horizontal15. Original refraction, lens scale, day palette, task/card geometry, business logic untouched.
+- Safety decision: keep `main` source untouched until HONOR approval of Preview2. Same-package signed 0.4.62-beta code85 prepared separately for in-place upgrade, with stable Haze code86 recovery 0.4.63-beta ready. No uninstall; backup full profile before installation; future code ≥87. CI passes are necessary but not sufficient for visual acceptance.

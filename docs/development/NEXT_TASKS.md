@@ -162,3 +162,13 @@
 - [x] Preserve original `NavLiquidGlassDock.kt`, `NavLiquidDockOptics.kt`, `NavTasksUi.kt`; isolated `feature/liquid-glass-surface-preview` CI 42404664493 SUCCESS; signed compact ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasssurfaces-preview1/NavTasks_LiquidGlass_Surfaces_Preview1.zip.
 - [ ] User installs separate `NavTasks Glass Surface` (no production data mutation); if needed imports copy of profile; checks Today, monthly task list under dock, nested tasks, calendar, Works/AMOS/Services/Handover and profiles for attractive Day/Night surfaces, labels/status contrast, scrolling, refracted borders and absence of flickering.
 - [ ] If accepted, plan safe in-place signed update (versionCode > current candidate83, and rollback with higher version), without modifying business logic. If not, tune just tokens centrally. Do not roll out optical glass to all inputs/cards.
+
+
+## Next: verify and promote Liquid Glass + opaque gradient surfaces
+- [x] User accepted static card materials `glasssurfaces-preview1` in both themes; requested darker settled grey lens in Night and dock lowered 4dp.
+- [x] Isolated Preview2 with exactly two scoped tweaks; full app CI 42438614953 SUCCESS, signed ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/glasssurfaces-preview2/NavTasks_LiquidGlass_Surfaces_Preview2.zip; same separate package `com.navtasks.app.glasssurface`.
+- [x] Prepared signed in-place 0.4.62-beta code85 candidate with Preview2 exact UI; CI 42438818985 SUCCESS, ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.62-liquid-glass-surfaces-candidate/NavTasks_LiquidGlass_0.4.62_Beta_Update.zip.
+- [x] Prepared signed no-uninstall Haze recovery 0.4.63-beta code86 from stable 0.4.59 code, CI 42438923548 SUCCESS, ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.63-haze-rollback/NavTasks_Stable_Haze_Rollback_0.4.63.zip.
+- [ ] User visually tests Preview2 on HONOR: Day/Night, darker graphite lens improves active blue, 4dp lower dock spacing to Android gesture bar, proportional lens overflow and card-edge refraction. This must be checked on device (CI does not establish visual acceptance).
+- [ ] After user approval, export full profile first; user can install candidate 0.4.62 over existing 0.4.60, without uninstall. Verify all profiles/tasks/AMOS/Services/widgets/notifications and swipes. If rejected, recovery v0.4.63 code86 upgrades over it to stable Haze (without uninstall). Any future in-place app version code ≥87.
+- [ ] Merge into main only after app acceptance; continue glass material to '+' / calendar / settings one component at a time, do not globally convert ordinary cards into expensive shader surfaces.

@@ -211,3 +211,10 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - User chose richer **static card materials** rather than speculative changes to approved 0.1.5 glass. Common `navGlass` now has separate opaque gradient tokens for PANEL/TASK/NESTED_TASK/CONTROL in isolated feature; selected navigation and true optical dock preserved.
 - Signed standalone https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glasssurfaces-preview1, CI 42404664493 SUCCESS, source 9d210be7d0dc5d4e5f3bcaa24a49a17ad0f920f7; ZIP SHA256 1c0df6d2c3aa28eeac80ef525cd94999f393af05a3173fcfc4d895a4c17739ac. Separate app `com.navtasks.app.glasssurface`, no shared user data.
 - Real HONOR design acceptance pending. Other overlay/dialog surfaces not rewritten. Production main app source remains v0.4.59 and in-place 0.4.60 candidate unchanged.
+
+
+## 2026-11-08 — ready signed NavTasks Liquid Glass surface candidates
+- User visually approved opaque-gradient Surfaces Preview1 on HONOR (light and night), requested Night selection darker graphite and dock lower by 4dp. Preview2 `feature/liquid-glass-surface-preview2` CI 42438614953 SUCCESS, signed ZIP tag `glasssurfaces-preview2`. Visual evaluation of tweaks pending.
+- Same Preview2 UI ported unchanged into in-place signed Beta candidate `0.4.62-beta` code85, package `com.navtasks.app.glass`, feature source `7bea5101e051774d4fe82a74a2395d8d184ce27e`, CI `42438818985` SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.62-liquid-glass-surfaces-candidate. ZIP SHA256 `c2c2246e2e7aa3afe1b7dc7ac455bb03c895d35a9739e013df3f670823aa1e1a`.
+- Recovery: exact stable Haze sources, same ID & signing, `0.4.63-beta` code86 signed ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.63-haze-rollback, CI 42438923548 SUCCESS, SHA256 `1663e9c472ce26635a93d4171e5e9329ac6ee7db98ea2830e3339bc762036780`. Export full profile before updates; never uninstall.
+- `main` production source remains v0.4.59 Haze with documentation-only changes; user currently has 0.4.60 ExactLab candidate installed. Final signed release pending on-device acceptance; next live versionCode must exceed 86.
