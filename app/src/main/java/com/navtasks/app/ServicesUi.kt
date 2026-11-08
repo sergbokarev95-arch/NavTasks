@@ -105,7 +105,7 @@ fun ServicesScreen(
             else NavGlassCircleButton(p, "back", onClick = onBack)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
+                Text("NAVTASKS", color = p.blueText, fontSize = 12.sp)
                 Text(localized("Сервисы", "Maintenance", lang), color = p.text, fontSize = 23.sp)
             }
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
@@ -420,7 +420,7 @@ fun ServicesScreen(
                         completionDate != LocalDate.now(), Modifier.weight(1f),
                     ) { completionDatePicker = true }
                 }
-                Text(navDate(completionDate, lang, true), color = p.blue, fontSize = 13.sp)
+                Text(navDate(completionDate, lang, true), color = p.blueText, fontSize = 13.sp)
                 if (entry.unplanned) {
                     Text(localized(
                         "Внеплановая заявка будет завершена без следующего срока.",
@@ -431,7 +431,7 @@ fun ServicesScreen(
                         localized("Следующий сервис: ", "Next service: ", lang) +
                             navDate(completionDate.plusMonths(entry.periodMonths.toLong()),
                                 lang, true),
-                        color = p.blue, fontSize = 13.sp,
+                        color = p.blueText, fontSize = 13.sp,
                     )
                 } else {
                     Text(localized("Без повтора — запись перейдёт в завершённые.",
@@ -518,7 +518,7 @@ fun ServicesScreen(
                                 Text(
                                     localized("Заявка AMOS: ", "AMOS request: ", lang) +
                                         item.requestNumber,
-                                    color = p.blue, fontSize = 12.sp,
+                                    color = p.blueText, fontSize = 12.sp,
                                 )
                             }
                         }
