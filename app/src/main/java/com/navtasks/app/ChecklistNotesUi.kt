@@ -55,11 +55,13 @@ fun ChecklistReferenceDialog(
     lang: UiLanguage,
     title: String,
     note: String,
+    noteHtml: String = "",
     editable: Boolean,
     onDismiss: () -> Unit,
-    onSave: (String) -> Unit = {},
+    onSave: (String, String) -> Unit = { _, _ -> },
 ) {
     var draft by remember(title, note) { mutableStateOf(note) }
+    var draftHtml by remember(title, noteHtml) { mutableStateOf(noteHtml) }
     var copied by remember(title, note) { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
     Dialog(onDismissRequest = onDismiss) {
@@ -85,28 +87,12 @@ fun ChecklistReferenceDialog(
                     ),
                     color = p.muted, fontSize = 12.sp,
                 )
-                BasicTextField(
-                    value = draft,
-                    onValueChange = { draft = it.take(6000) },
-                    textStyle = TextStyle(color = p.text, fontSize = 14.sp, lineHeight = 21.sp),
-                    cursorBrush = SolidColor(p.blue),
-                    singleLine = false,
-                    modifier = Modifier.fillMaxWidth()
-                        .heightIn(min = 120.dp, max = 225.dp)
-                        .navGlass(p, radius = 13.dp, role = GlassRole.CONTROL),
-                    decorationBox = { inner ->
-                        Box(
-                            Modifier.fillMaxWidth().padding(13.dp),
-                            contentAlignment = Alignment.TopStart,
-                        ) {
-                            if (draft.isEmpty())
-                                Text(
-                                    localized("Текст подсказки…", "Reference note…", lang),
-                                    color = p.muted, fontSize = 13.sp,
-                                )
-                            inner()
-                        }
-                    },
+                NavRichNoteEditor(
+                    initialPlain = note, initialHtml = noteHtml,
+                    entryKey = title + ":" + note.hashCode(),
+                    p = p, lang = lang, maxCharacters = 6000,
+                    placeholder = localized("Текст подсказки…", "Reference note…", lang),
+                    onChange = { text, html -> draft = text; draftHtml = html },
                 )
             } else {
                 SelectionContainer {
@@ -116,7 +102,7 @@ fun ChecklistReferenceDialog(
                             .verticalScroll(rememberScrollState())
                             .padding(14.dp),
                     ) {
-                        Text(note, color = p.text, fontSize = 14.sp, lineHeight = 21.sp)
+                        NavRichNoteText(note, noteHtml, p, fontSize = 14.sp)
                     }
                 }
             }
@@ -142,7 +128,10 @@ fun ChecklistReferenceDialog(
                     else localized("Копировать", "Copy", lang),
                     accent = true,
                     onClick = {
-                        if (editable) onSave(draft.trim())
+                        if (editable) {
+                            if (navRichNoteAllowed(draft, draftHtml, 6000))
+                                onSave(draft.trim(), draftHtml)
+                        }
                         else {
                             clipboard.setText(AnnotatedString(note))
                             copied = true
