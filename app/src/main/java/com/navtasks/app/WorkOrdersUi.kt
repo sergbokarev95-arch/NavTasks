@@ -141,7 +141,7 @@ fun WorkOrdersScreen(
             else NavGlassCircleButton(p, "back", onBack)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("NAVTASKS", color = p.blueText, fontSize = 12.sp)
+                NavBrandLabel(p)
                 Text("AMOS · Work Orders", color = p.text, fontSize = 22.sp)
             }
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
