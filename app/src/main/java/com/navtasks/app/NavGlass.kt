@@ -13,6 +13,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.graphicsLayer
 import android.view.HapticFeedbackConstants
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -661,6 +666,15 @@ fun NavGlassSearchField(
     lang: UiLanguage,
     placeholder: String = localized("Поиск", "Search", lang),
 ) {
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    // Newly opened search must be immediately ready for typing, without
+    // a second tap. Wait for the BasicTextField's focus target to attach.
+    LaunchedEffect(Unit) {
+        withFrameNanos { }
+        focusRequester.requestFocus()
+        keyboard?.show()
+    }
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -668,7 +682,8 @@ fun NavGlassSearchField(
         NavGlassGlyph("search", p.blue, Modifier.size(20.dp))
         NavGlassInput(
             value = value, onValueChange = { onValueChange(it.take(120)) }, p = p,
-            placeholder = placeholder, modifier = Modifier.weight(1f),
+            placeholder = placeholder,
+            modifier = Modifier.weight(1f).focusRequester(focusRequester),
         )
         if (value.isNotEmpty()) {
             NavGlassIconAction("x", p.muted,
