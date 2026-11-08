@@ -123,8 +123,13 @@ val NavPalette.selectionFill: Color
 val NavPalette.selectionContent: Color
     get() = Color.White
 
+/** Exact Apple semantic systemRed; use for destructive action labels and icons. */
+val NavPalette.systemRed: Color
+    get() = if (dark) Color(0xFFFF453A) else Color(0xFFFF3B30)
+
+/** Higher-contrast light-mode red for small overdue/error status text. */
 val NavPalette.dangerText: Color
-    get() = if (dark) Color(0xFFFFB1A6) else Color(0xFFB13B32)
+    get() = if (dark) systemRed else Color(0xFFC9342D)
 
 /** A dock tap resets only its target tab; other tabs still restore via Back/swipe. */
 internal fun primaryTabResetStateKey(profileId: String, tab: Int, epoch: Int): String =
