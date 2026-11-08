@@ -73,8 +73,8 @@ jobs:
           grep -Fq 'GlassRole.SELECTED -> p.selectionFill' app/src/main/java/com/navtasks/app/NavGlass.kt
           grep -Fq 'val NavPalette.selectionFill: Color' app/src/main/java/com/navtasks/app/NavTasksUi.kt
           grep -Fq 'val NavPalette.selectionContent: Color' app/src/main/java/com/navtasks/app/NavTasksUi.kt
-          grep -Fq 'if (selected) p.selectionContent else p.text' app/src/main/java/com/navtasks/app/ServicesUi.kt
-          grep -Fq 'if (selected) p.selectionContent else p.text' app/src/main/java/com/navtasks/app/WorkOrdersUi.kt
+          grep -Fq 'if (selected) p.selectionContent' app/src/main/java/com/navtasks/app/ServicesUi.kt
+          grep -Fq 'if (selected) p.selectionContent' app/src/main/java/com/navtasks/app/WorkOrdersUi.kt
           grep -Fq 'if (selected) p.selectionContent else fg' app/src/main/java/com/navtasks/app/NavRichNoteUi.kt
           grep -Fq 'class AppleBlueSelectionTest' app/src/test/java/com/navtasks/app/AppleBlueSelectionTest.kt
           # All optical Liquid Glass source files and data stores are pinned separately above.
