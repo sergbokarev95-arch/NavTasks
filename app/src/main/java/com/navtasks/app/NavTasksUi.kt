@@ -247,6 +247,11 @@ fun NavTasksApp(
     var worksDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     var handoverDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     var tasksDockEpoch by rememberSaveable { mutableIntStateOf(0) }
+    // Active dock re-taps scroll without recreating the destination screen.
+    var todayReturnTick by rememberSaveable { mutableIntStateOf(0) }
+    var worksReturnTick by rememberSaveable { mutableIntStateOf(0) }
+    var handoverReturnTick by rememberSaveable { mutableIntStateOf(0) }
+    var tasksReturnTick by rememberSaveable { mutableIntStateOf(0) }
     // A former tab snapshot is not reused after an intentional dock reset.
     // Clear inactive generations so repeated taps do not accumulate saved UI state.
     LaunchedEffect(
@@ -380,11 +385,22 @@ fun NavTasksApp(
         } else if (next == 3) {
             templateFilter = Frequency.DAILY
         }
-        when (next) {
-            0 -> todayDockEpoch++
-            1 -> worksDockEpoch++
-            2 -> handoverDockEpoch++
-            3 -> tasksDockEpoch++
+        if (next == tab) {
+            // Avoid remount: keep LazyColumn state alive while it animates.
+            when (next) {
+                0 -> todayReturnTick++
+                1 -> worksReturnTick++
+                2 -> handoverReturnTick++
+                3 -> tasksReturnTick++
+            }
+        } else {
+            // Cross-tab changes already use the existing horizontal transition.
+            when (next) {
+                0 -> todayDockEpoch++
+                1 -> worksDockEpoch++
+                2 -> handoverDockEpoch++
+                3 -> tasksDockEpoch++
+            }
         }
         openPrimaryTab(next)
     }
@@ -647,7 +663,7 @@ fun NavTasksApp(
                                         },
                                         openMissed = requestedMissed,
                                         onOpenMissedHandled = onMissedRequestHandled,
-                                        dockTapEpoch = todayDockEpoch)
+                                        smoothReturnTick = todayReturnTick)
                                     1 -> WorksHubScreen(
                                         serviceStore, workOrderStore, palette, lang,
                                         onBack = { openPrimaryTab(0) },
@@ -658,13 +674,16 @@ fun NavTasksApp(
                         showWorkOrders = true
                     },
                                         embeddedInTab = true,
+                                        smoothReturnTick = worksReturnTick,
                                     )
                                     2 -> HandoverScreen(
                                         handoverStore, store, palette, lang,
                                         onBack = { openPrimaryTab(0) }, embeddedInTab = true,
+                                        smoothReturnTick = handoverReturnTick,
                                     )
                                     else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                        onEdit = { editorTask = it; editorOpen = true })
+                                        onEdit = { editorTask = it; editorOpen = true },
+                                        smoothReturnTick = tasksReturnTick)
                                 }
                             }
                         }
@@ -805,7 +824,7 @@ private fun TodayScreenV2(
     onServices: (String) -> Unit,
     openMissed: Boolean = false,
     onOpenMissedHandled: () -> Unit = {},
-    dockTapEpoch: Int = 0,
+    smoothReturnTick: Int = 0,
 ) {
     var showMissed by rememberSaveable { mutableStateOf(false) }
     var showCompleted by rememberSaveable { mutableStateOf(false) }
@@ -845,10 +864,14 @@ private fun TodayScreenV2(
 
     val daysScroll = rememberLazyListState()
     val taskListScroll = rememberLazyListState()
-    LaunchedEffect(dockTapEpoch) {
-        if (dockTapEpoch > 0) {
-            daysScroll.scrollToItem(0)
-            taskListScroll.scrollToItem(0)
+    // Animate both independent axes on an active-tab retap. Initial entry
+    // still starts at item zero without an unnecessary scroll.
+    LaunchedEffect(smoothReturnTick) {
+        if (smoothReturnTick > 0) {
+            kotlinx.coroutines.coroutineScope {
+                launch { daysScroll.animateScrollToItem(0) }
+                launch { taskListScroll.animateScrollToItem(0) }
+            }
         }
     }
     Column {
