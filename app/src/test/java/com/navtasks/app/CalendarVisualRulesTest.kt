@@ -16,10 +16,11 @@ class CalendarVisualRulesTest {
         assertFalse(calendarIsWeekend(LocalDate.of(2026, 12, 7))) // Monday
     }
 
-    @Test fun todayAndPlanShareTheSameRestrainedWeekendColors() {
+    @Test fun todayAndPlanUseAppleSystemRedOnWeekends() {
         // Today calls calendarWeekendInk as well as Plan, avoiding theme drift.
-        assertEquals(Color(0xFFE5A4A0), calendarWeekendInk(navPalette(true)))
-        assertEquals(Color(0xFFB36563), calendarWeekendInk(navPalette(false)))
+        // No muted-pink leftovers from pre-0.4.84 presentation.
+        assertEquals(Color(0xFFFF453A), calendarWeekendInk(navPalette(true)))
+        assertEquals(Color(0xFFFF3B30), calendarWeekendInk(navPalette(false)))
     }
 
     @Test fun aStatusDotStillMarksOutcomesButNotPlainScheduledDays() {
