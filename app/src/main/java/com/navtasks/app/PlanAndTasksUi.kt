@@ -424,7 +424,7 @@ private fun PlanReadOnlyTile(
         text = { Text(localized("Удаляется только это выполнение. Шаблон повторяющейся задачи останется.",
             "Only this occurrence is removed. The recurring task template remains.", lang)) },
         confirmButton = { TextButton(onClick = { store.skip(run.key); deleteDialog = false }) {
-            Text(localized("Удалить", "Remove", lang), color = p.dangerText)
+            Text(localized("Удалить", "Remove", lang), color = p.systemRed)
         } },
         dismissButton = { TextButton(onClick = { deleteDialog = false }) {
             Text(localized("Отмена", "Cancel", lang))
@@ -850,7 +850,7 @@ fun TaskEditorScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(localized("Удалить задачу", "Delete task", lang),
-                        color = p.dangerText, fontSize = 14.sp)
+                        color = p.systemRed, fontSize = 14.sp)
                 }
                 taskDeletionError?.let { error ->
                     Text(error, color = p.dangerText, fontSize = 12.sp)
@@ -919,7 +919,7 @@ fun TaskEditorScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(localized("Удалить полностью", "Delete permanently", lang),
-                            color = p.dangerText)
+                            color = p.systemRed)
                     }
                 }
             },
@@ -960,7 +960,7 @@ fun TaskEditorScreen(
                         }
                 }) {
                     Text(localized("Удалить полностью", "Delete permanently", lang),
-                        color = p.dangerText)
+                        color = p.systemRed)
                 }
             },
             dismissButton = {
