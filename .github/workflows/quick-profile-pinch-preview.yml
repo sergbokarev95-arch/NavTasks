@@ -1,0 +1,80 @@
+name: Build NavTasks Glass Quick Profile + Settings Preview
+on:
+  push:
+    branches: [feature/quick-profile-pinch-settings-footer-preview]
+    paths:
+      - 'app/**'
+      - '.github/workflows/quick-profile-pinch-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore signing only for isolated preview
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Guard stable materials and full unit test suite
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          grep -Fq 'applicationIdSuffix = ".glassquick"' app/build.gradle.kts
+          grep -Fq 'versionCode = 87' app/build.gradle.kts
+          grep -Fq 'quickProfilePinchGesture(' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars)' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt)" = '53e713f4272f7be6db75e3cfdb65b22d5f55b702'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt)" = 'ee7c0f4388164d05490f89a2e63ae461fc9dfbf8'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavGlass.kt)" = 'e3ac00c1f555205bce0f8b59b6faf2c817ffe034'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
+          gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - name: Remove temporary signing material
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify separate Android package and compress ZIP
+        run: |
+          set -euo pipefail
+          APK=NavTasks_Glass_QuickProfiles_Preview1.apk
+          ZIP=NavTasks_Glass_QuickProfiles_Preview1.zip
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glassquick' versionCode='87'"
+          cp app/build/outputs/apk/debug/app-debug.apk "$APK"
+          zip -9 -X "$ZIP" "$APK"
+          unzip -t "$ZIP"
+          test "$(sha256sum "$APK" | cut -d ' ' -f 1)" = "$(unzip -p "$ZIP" "$APK" | sha256sum | cut -d ' ' -f 1)"
+          echo "ZIP bytes: $(stat -c %s "$ZIP")"
+          sha256sum "$ZIP"
+      - name: Publish separate prerelease directly (Actions artifact quota full)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=glassquick-preview1
+          ZIP=NavTasks_Glass_QuickProfiles_Preview1.zip
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+          else
+            gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
+              --title "NavTasks Glass Quick Profiles - pinch + Settings footer preview" \
+              --notes "SEPARATE test application com.navtasks.app.glassquick. Does not update installed NavTasks or access its data. On main Today/Work/Handover/Tasks, pinch two fingers inward to open centered profile picker with blurred background; switch profile by tapping. Back/tap outside dismisses. Settings footer no longer reserves a clipped navigation bar area; last panel remains scrollable. All other Liquid Glass dock/card materials and task/AMOS/Services/profile persistence logic unchanged. Create test profiles inside this isolated app to test switching. ZIP contains the signed APK. Full HONOR visual/touch acceptance pending." \
+              --prerelease
+          fi

@@ -15,7 +15,7 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 85
+        versionCode = 87
         versionName = "0.4.62"
     }
 
@@ -36,8 +36,8 @@ android {
             signingConfigs.findByName("betaStable")?.let { signingConfig = it }
             // Same app ID and betaStable signing as installed NavTasks;
             // versionCode 85 updates 0.4.60/0.4.61 without uninstalling.
-            applicationIdSuffix = ".glass"
-            versionNameSuffix = "-beta"
+            applicationIdSuffix = ".glassquick"
+            versionNameSuffix = "-quickprofile-preview1"
         }
         release {
             isMinifyEnabled = false
