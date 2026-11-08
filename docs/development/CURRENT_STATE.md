@@ -243,3 +243,9 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Direct-scene same-lab material on main '+' / Calendar / Settings, Back/Search across Plan/Settings/Task editor/Profiles/Services/Handover/AMOS/standalone Works, '+' on Services/Handover/AMOS. Only DAY rim softened on dock/action glass. Shader/refraction/lens movement and all static card/data material untouched. Feature commit 8040ff34abad71b2700b79af41c46f4b90a45726.
 - Tested no-uninstall Haze recovery code90 `0.4.65-beta`, CI42444287505 SUCCESS, ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.65-haze-rollback; SHA256 db0748c7d7dbffc9637cf9f49e57924a288ba73281db5389725bd624cebb762e. User must export FULL profile first; never uninstall main app.
 - User acceptance on HONOR pending. Main production source remains stable code; docs only updated. Future versionCode>=91 after recovery.
+
+
+## 2026-11-08 — new 0.4.66 Beta ready: shorter one-green completion animation
+- User accepted 0.4.64 glass controls and requested faster check motion. `0.4.66-beta` code91 same installed ID and Beta signature, isolated feature `feature/task-completion-single-green-0.4.66-beta` CI42445806856 SUCCESS. ZIP 10.9MB https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.66-completion-motion-candidate, SHA256 d17dd0945f733a68d1bc2379cd0bedc8398fb41ca14cd275edfb8f24672c6a7d.
+- RunTileV2 only: full solid green 190ms, 250ms downward fade without rebound/stretch; both ordinary and final checklist, same completed state/dates. All optical material and data code blob hashes frozen in CI. Device visual acceptance pending, stable main source still unchanged.
+- Backup signed original Haze 0.4.67-beta code92, CI42445698166 SUCCESS, ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.67-haze-rollback, SHA256 3adcb68baf94d2a546fb2171f9c5aa592007316a8142207a8ba1a7aab84a5d2d.

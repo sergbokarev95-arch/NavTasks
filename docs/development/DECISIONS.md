@@ -117,3 +117,6 @@
 
 
 - 2026-11-08 user directive: **all remaining appropriate circular/floating buttons in ONE small update; absolutely preserve approved Liquid Glass effect and motion.** Only DAY outline should be less white; use a shared .75dp grey-blue rim brush for dock and round actions. Preserve original Backdrop/shader/lens/Highlight/shadows/1.30x/56dp and night border. Provide signed same-ID 0.4.64 code89 with tested fallback Haze code90; prior user liked Glass Plus, Quick Profile gesture and Settings footer. Main not merged until actual HONOR device acceptance; export full backup, never uninstall.
+
+
+- 2026-11-08: After user approval of 0.4.64 glass, change **ONLY task completion animation** to one solid green state before exit. Freeze entire glass optical pipeline and other animations. Timing: immediate `flash.snapTo(1)`, green hold190ms, straightforward downward fade250ms over48dp, no bounce or scale. Share for ordinary and final checklist check; keep other-day confirmation, TaskStore persistence, profile/history and all other code unchanged. One signed same-ID Beta0.4.66 code91 ZIP; safe higher-code Haze recovery0.4.67 code92; full profile backup and no uninstall; HONOR acceptance pending.

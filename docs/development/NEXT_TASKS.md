@@ -208,3 +208,11 @@
 - [ ] User exports FULL profile first, installs signed 0.4.64 update over installed NavTasks without uninstalling. Check task/profile/AMOS/Services/Handover/history, settings/footer, pinch, all buttons action semantics, Day/Night border contrast and scrolling refraction/no flicker.
 - [ ] If rejected, install 0.4.65 recovery over 0.4.64 without uninstalling. Future in-place app code >=91 after code90 rollback.
 - [ ] Upon HONOR approval only, promote accepted feature source to stable `main` and archive tagged release. Continue refining inline controls only as needed, preserving design, not adding shader to every text/row control.
+
+
+## Next: HONOR verify 0.4.66 new single-green check (no additional features)
+- [x] User approved complete Liquid Glass circular button rollout in 0.4.64.
+- [x] Build 0.4.66-beta code91 same-ID: solid green190ms then 250ms downward 48dp fade, eliminate double flashes/up-kick/stretch; CI 42445806856 SUCCESS. https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.66-completion-motion-candidate/NavTasks_Completion_Check_0.4.66_Beta_Update.zip
+- [x] Emergency stable Haze same-ID recovery 0.4.67-beta code92, CI 42445698166 SUCCESS. https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.67-haze-rollback/NavTasks_Stable_Haze_Rollback_0.4.67.zip
+- [ ] User exports full profile and installs 0.4.66 over 0.4.64 without uninstall. Test ordinary task check and last subcheck, other-date confirmation, visual green first and downward motion after, no duplicate flash. Test smooth day/night and original Liquid Glass.
+- [ ] If accepted, promote verified feature source to stable main; update documentation and version policy. If regression, recovery Haze code92 can upgrade without uninstall but returns to older non-Liquid-Glass interface. Future same-package version code>=93 after recovery.
