@@ -273,8 +273,8 @@ fun ServicesScreen(
                         ) { requestTarget = service }
                     }
                     if (service.comment.isNotBlank()) {
-                        Text(service.comment, color = p.muted, fontSize = 12.sp, maxLines = 2,
-                            overflow = TextOverflow.Ellipsis)
+                        NavRichNoteText(service.comment, service.commentHtml, p, fontSize = 12.sp,
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 50.dp))
                     }
                     Text(
                         if (completed) localized("Завершено", "Completed", lang)
@@ -609,6 +609,7 @@ private fun ServiceEditorDialog(
         mutableStateOf(existing?.nextDate ?: LocalDate.now().plusMonths(12))
     }
     var note by remember(existing?.id) { mutableStateOf(existing?.comment.orEmpty()) }
+    var noteHtml by remember(existing?.id) { mutableStateOf(existing?.commentHtml.orEmpty()) }
     var period by remember(existing?.id) { mutableIntStateOf(existing?.periodMonths ?: 12) }
     val presetIntervals = listOf(0, 6, 12, 18, 36, 60)
     var customSelected by remember(existing?.id) {
@@ -679,8 +680,15 @@ private fun ServiceEditorDialog(
                     }
                 }
                 Text(localized("Комментарий", "Comment", lang), color = p.muted, fontSize = 12.sp)
-                ServiceInput(note, { note = it.take(6000) },
-                    localized("Работы, расходники, примечания…", "Details and remarks…", lang), p, true)
+                NavRichNoteEditor(
+                    initialPlain = existing?.comment.orEmpty(),
+                    initialHtml = existing?.commentHtml.orEmpty(),
+                    entryKey = existing?.id ?: "new-service", p = p, lang = lang,
+                    maxCharacters = 6000,
+                    placeholder = localized("Работы, расходники, примечания…",
+                        "Details and remarks…", lang),
+                    onChange = { text, html -> note = text; noteHtml = html },
+                )
                 if (!unplanned) {
                 Text(localized("Периодичность", "Interval", lang), color = p.muted, fontSize = 12.sp)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -784,6 +792,7 @@ private fun ServiceEditorDialog(
                         require(!unplanned || requestNumber.trim().isNotBlank()) {
                             "An unplanned request needs its AMOS number"
                         }
+                        require(navRichNoteAllowed(note, noteHtml, 6000))
                         val total = if (unplanned) 0 else if (customSelected) {
                             val years = customYears.toIntOrNull() ?: -1
                             val months = customMonths.toIntOrNull() ?: -1
@@ -800,6 +809,7 @@ private fun ServiceEditorDialog(
                                     ?: next.minusDays(1),
                             nextDate = if (unplanned) null else next,
                             comment = note.trim(),
+                            commentHtml = noteHtml,
                             periodMonths = total,
                             remindMonths = if (unplanned) 0 else alert,
                             requestNumber = if (unplanned) requestNumber.trim()
