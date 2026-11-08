@@ -329,8 +329,10 @@ object NavNotifications {
         if (events.size < 2) return false
         // Broadcasts for multiple same-minute alarms are serialized on the
         // receiver's main thread; this durable key gate also covers restarts.
-        val newlyMarked = events.filter { !alreadyNotified(context, it.deliveryKey) }
-        if (newlyMarked.size < 2) return newlyMarked.isNotEmpty()
+        // Only mark delivered after we know that one combined notification
+        // will be emitted. A single remaining item belongs to its legacy path.
+        val newlyMarked = events.filter { !previouslyDelivered(context, it.deliveryKey) }
+        if (newlyMarked.size < 2) return false
         val heading = localized(
             "Предстоящие события: ${newlyMarked.size}",
             "Upcoming events: ${newlyMarked.size}", settings.language
@@ -356,6 +358,7 @@ object NavNotifications {
             .setContentIntent(openTask(context, newlyMarked.firstNotNullOfOrNull { it.taskRunKey }))
             .setAutoCancel(true)
             .build()
+        for (event in newlyMarked) alreadyNotified(context, event.deliveryKey)
         manager(context).notify(("group:" + active.activeId + ":" + targetInstant.toEpochMilli()).hashCode(),
             notification)
         return true
