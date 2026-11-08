@@ -376,10 +376,9 @@ fun NavGlassBottomBar(
                                 interactionSource = interaction,
                                 indication = null,
                             ) {
-                                if (!active) {
-                                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                                    onSelect(index)
-                                }
+                                // Dispatch even when selected; parent handles root reset.
+                                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                                onSelect(index)
                             },
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
