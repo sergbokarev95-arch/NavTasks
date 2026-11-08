@@ -83,6 +83,13 @@ fun Modifier.navGlass(
     elevation: Dp = 0.dp, // Kept for existing call sites; material draws NO shadow.
 ): Modifier {
     val shape = RoundedCornerShape(radius)
+    // Selection is a solid, accessible system-blue control in both themes.
+    // This does not affect the separate optical navigation dock or floating buttons.
+    if (role == GlassRole.SELECTED) {
+        return this.clip(shape)
+            .background(Color(0xFF007AFF), shape)
+            .border(1.dp, Color(0xFF007AFF), shape)
+    }
     // Non-floating panels have no dynamic content behind them; a half-
     // transparent fill only flattens the source image sampled by Liquid Glass.
     // Keep the original NAVIGATION and SELECTED material byte-for-byte.
