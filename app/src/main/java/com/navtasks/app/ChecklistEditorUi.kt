@@ -88,7 +88,7 @@ internal fun ChecklistEditorPanel(
                     p = p,
                     placeholder = localized("Название пункта", "Checklist item", lang),
                     modifier = Modifier.weight(1f).focusRequester(focusRequester),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardOptions = NavTitleKeyboard.copy(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { appendItem() }),
                 )
                 ChecklistReferenceButton(p, item.comment.isNotBlank()) {
