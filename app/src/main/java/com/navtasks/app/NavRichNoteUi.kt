@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,21 +60,23 @@ internal fun NavRichNoteEditor(
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            NavRichTool("B", p) { state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) }
-            NavRichTool("I", p) { state.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) }
-            NavRichTool("U̲", p) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline)) }
-            NavRichTool("S̶", p) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) }
-            NavRichTool("◉", p) { showColors = !showColors }
-            NavRichTool("▰", p) {
+            NavRichTool("B", p, selected = state.currentSpanStyle.fontWeight == FontWeight.Bold) { state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) }
+            NavRichTool("I", p, selected = state.currentSpanStyle.fontStyle == FontStyle.Italic) { state.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) }
+            NavRichTool("U̲", p, selected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.Underline) == true) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline)) }
+            NavRichTool("S̶", p, selected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) }
+            NavRichTool("◉", p, selected = showColors) { showColors = !showColors }
+            NavRichTool("▰", p, selected = state.currentSpanStyle.background != Color.Unspecified) {
                 state.toggleSpanStyle(SpanStyle(background = Color(0xFFFFD86B).copy(alpha = .55f)))
             }
         }
         if (showColors) Row(Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(p.text, Color(0xFF2377B7), Color(0xFFC04949),
+            listOf(Color.Unspecified, Color(0xFF2377B7), Color(0xFFC04949),
                 Color(0xFF2B9069), Color(0xFFBE852D)).forEach { color ->
-                NavRichTool("●", p, color) {
-                    state.addSpanStyle(SpanStyle(color = color))
+                NavRichTool("●", p, fg = if (color == Color.Unspecified) p.text else color) {
+                    if (color == Color.Unspecified)
+                        state.removeSpanStyle(SpanStyle(color = state.currentSpanStyle.color))
+                    else state.addSpanStyle(SpanStyle(color = color))
                     showColors = false
                 }
             }
@@ -100,8 +103,10 @@ internal fun NavRichNoteEditor(
     }
 }
 @Composable
-private fun NavRichTool(label: String, p: NavPalette, fg: Color = p.text, onClick: () -> Unit) {
-    Box(Modifier.size(42.dp).navGlass(p, radius = 11.dp, role = GlassRole.CONTROL)
+private fun NavRichTool(label: String, p: NavPalette, fg: Color = p.text,
+    selected: Boolean = false, onClick: () -> Unit) {
+    Box(Modifier.size(42.dp).navGlass(p, radius = 11.dp,
+            role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
         .glassClickable(onClick), contentAlignment = Alignment.Center) {
         Text(label, color = fg, fontSize = 20.sp,
             fontWeight = if (label == "B") FontWeight.Bold else FontWeight.Normal)
@@ -116,7 +121,9 @@ internal fun NavRichNoteText(plain: String, html: String, p: NavPalette,
         val state = rememberRichTextState()
         var valid by remember(html) { mutableStateOf(false) }
         LaunchedEffect(html) { valid = runCatching { state.setHtml(html) }.isSuccess }
-        if (valid) RichText(state = state, modifier = modifier)
+        if (valid) ProvideTextStyle(TextStyle(color = p.muted, fontSize = fontSize)) {
+            RichText(state = state, modifier = modifier)
+        }
         else Text(plain, color = p.muted, fontSize = fontSize, modifier = modifier)
     }
 }
