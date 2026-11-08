@@ -44,7 +44,7 @@ jobs:
           grep -Fq 'versionName = "0.4.64"' app/build.gradle.kts
           # Shader/animation source; only DAY border brush is newly adjusted.
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
-          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockTabs.kt)" = 'a250983d54035b2b28cc891efc782c19b73d8d89'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockTabs.kt)" = 'a30dbb3dd6e80b2531b826ddc0873bdd5ec5a412'
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt)" = 'ee7c0f4388164d05490f89a2e63ae461fc9dfbf8'
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavQuickProfileUi.kt)" = '43adbfa9f50229a7ec532b0f6332a3aca160331e'
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavGlass.kt)" = 'e3ac00c1f555205bce0f8b59b6faf2c817ffe034'
