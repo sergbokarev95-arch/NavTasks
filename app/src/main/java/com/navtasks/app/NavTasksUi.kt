@@ -769,7 +769,7 @@ private fun TodayScreenV2(
                         color = p.text, fontSize = 15.sp,
                     )
                 }
-                Text("${complete.size}/${rows.size}", color = p.blue, fontSize = 23.sp,
+                Text("${complete.size}/${rows.size}", color = p.blueText, fontSize = 23.sp,
                     fontWeight = FontWeight.SemiBold)
             }
             Spacer(Modifier.height(10.dp))
@@ -904,7 +904,7 @@ private fun TodayScreenV2(
                 if (missed.isEmpty()) item { NavPanel(p) { Text(localized("Пропущенных задач нет", "No missed tasks", lang), color = p.successText) } }
                 missed.groupBy { it.second.dueDate }.forEach { (originalDate, group) ->
                     item(key = "missed-date-$originalDate") {
-                        Text(navDate(originalDate, lang, true), color = p.blue, fontSize = 12.sp,
+                        Text(navDate(originalDate, lang, true), color = p.blueText, fontSize = 12.sp,
                             modifier = Modifier.padding(top = 7.dp, bottom = 2.dp))
                     }
                     groupTodayByFrequency(group).forEach { (frequency, duties) ->
@@ -1276,7 +1276,7 @@ fun RunTileV2(
                     textDecoration = if (run.completed || confirming) TextDecoration.LineThrough else null)
                 Spacer(Modifier.height(2.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (run.checklist.isNotEmpty()) Text("${run.checkedCount}/${run.checklist.size}", color = p.blue, fontSize = 11.sp)
+                    if (run.checklist.isNotEmpty()) Text("${run.checkedCount}/${run.checklist.size}", color = p.blueText, fontSize = 11.sp)
                     if (run.transferred) Text(localized("Перенесено", "Moved", lang), color = p.successText, fontSize = 11.sp)
                     if (overdue) Text(navDate(run.dueDate, lang), color = p.dangerText, fontSize = 11.sp)
                     if (task.deadlineTime != null) Text(task.deadlineTime.toString(), color = p.muted, fontSize = 11.sp)
@@ -1423,7 +1423,7 @@ fun RunTileV2(
                         }
                         .padding(horizontal = 15.dp, vertical = 11.dp)) {
                         Text(localized("Подтвердить", "Confirm", lang),
-                            color = p.blue, fontSize = 13.sp)
+                            color = p.blueText, fontSize = 13.sp)
                     }
                 }
             }
