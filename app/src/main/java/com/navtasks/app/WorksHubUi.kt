@@ -58,7 +58,7 @@ fun WorksHubScreen(
                 else NavGlassCircleButton(p, "back", onBack)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
+                    Text("NAVTASKS", color = p.blueText, fontSize = 12.sp)
                     Text(localized("Работы", "Work", lang), color = p.text, fontSize = 23.sp)
                 }
             }
