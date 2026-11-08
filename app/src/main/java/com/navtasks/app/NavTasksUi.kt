@@ -239,6 +239,21 @@ fun NavTasksApp(
     var worksDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     var handoverDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     var tasksDockEpoch by rememberSaveable { mutableIntStateOf(0) }
+    // A former tab snapshot is not reused after an intentional dock reset.
+    // Clear inactive generations so repeated taps do not accumulate saved UI state.
+    LaunchedEffect(
+        profiles.activeId, todayDockEpoch, worksDockEpoch,
+        handoverDockEpoch, tasksDockEpoch,
+    ) {
+        listOf(todayDockEpoch, worksDockEpoch, handoverDockEpoch, tasksDockEpoch)
+            .forEachIndexed { page, epoch ->
+                if (epoch > 0) {
+                    tabStateHolder.removeState(
+                        primaryTabResetStateKey(profiles.activeId, page, epoch - 1)
+                    )
+                }
+            }
+    }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showProfiles by rememberSaveable { mutableStateOf(false) }
     // Root-only temporary quick switch, independent of full profile management.
