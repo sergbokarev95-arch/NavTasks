@@ -123,6 +123,19 @@ val NavPalette.selectionContent: Color
 val NavPalette.dangerText: Color
     get() = if (dark) Color(0xFFFFB1A6) else Color(0xFFB13B32)
 
+/** One prominent, consistent NavTasks wordmark, independent of the app's business screens. */
+@Composable
+fun NavBrandLabel(p: NavPalette, fontSize: androidx.compose.ui.unit.TextUnit = 19.sp) {
+    Text(
+        "NavTasks",
+        color = p.blueText,
+        fontSize = fontSize,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = (-0.35).sp,
+        maxLines = 1,
+    )
+}
+
 fun localized(ru: String, en: String, lang: UiLanguage) = if (lang == UiLanguage.RU) ru else en
 
 fun navDate(date: LocalDate, lang: UiLanguage, includeYear: Boolean = false): String {
@@ -438,7 +451,7 @@ fun NavTasksApp(
                         else NavGlassCircleButton(palette, "back") { showCalendar = false }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("NAVTASKS", color = palette.blue, fontSize = 12.sp)
+                            NavBrandLabel(palette)
                             Text(localized("План", "Plan", lang),
                                 color = palette.text, fontSize = 23.sp)
                         }
@@ -498,8 +511,7 @@ fun NavTasksApp(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("NAVTASKS", color = palette.blue, fontSize = 17.sp,
-                                        letterSpacing = 1.6.sp)
+                                    NavBrandLabel(palette, 20.sp)
                                     Spacer(Modifier.width(9.dp))
                                     Row(
                                         Modifier.glassClickable { showProfiles = true }
