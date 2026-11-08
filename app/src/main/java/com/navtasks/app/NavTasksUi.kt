@@ -86,20 +86,23 @@ data class NavPalette(
 fun navPalette(dark: Boolean) = if (dark) NavPalette(
     true, Color.Black, Color.Black, Color(0xE021344F),
     Color(0xE01A304B), Color(0xE021415E), Color(0xFF36536B),
-    Color(0xFFF2F8FF), Color(0xFFAFC4D8), Color(0xFF44C4FF), Color(0xFF68CE77),
+    Color(0xFFF5F5F7), Color(0xFFABABB3), Color(0xFF0091FF), Color(0xFF68CE77),
 ) else NavPalette(
-    false, Color(0xFFEAF3FA), Color(0xFFF9FBFF), Color(0xF9FFFFFF),
+    false, Color(0xFFF4F5F7), Color(0xFFF4F5F7), Color(0xF9FFFFFF),
     Color(0xFFF8FCFF), Color(0xFFE1F0FA), Color(0xFFC9DFED),
-    Color(0xFF172B42), Color(0xFF5F768D), Color(0xFF2377AA), Color(0xFF60C569),
+    Color(0xFF1C1C1E), Color(0xFF77777B), Color(0xFF0088FF), Color(0xFF60C569),
 )
 
 /** HONOR-style success green, with readable contrast for text in Day mode. */
 val NavPalette.successText: Color
     get() = if (dark) mint else Color(0xFF24834B)
 
-/** Text-safe alert accents: decorative fills and dock colors remain untouched. */
+/** Apple HIG semantic orange; foreground gets increased-contrast orange in Day. */
+val NavPalette.systemOrange: Color
+    get() = if (dark) Color(0xFFFF9230) else Color(0xFFFF8D28)
+
 val NavPalette.warningText: Color
-    get() = if (dark) Color(0xFFFFC78E) else Color(0xFF986012)
+    get() = if (dark) systemOrange else Color(0xFFC55300)
 
 val NavPalette.dangerText: Color
     get() = if (dark) Color(0xFFFFB1A6) else Color(0xFFB13B32)
@@ -864,7 +867,7 @@ private fun TodayScreenV2(
             enter = fadeIn(animationSpec = tween(180)) + expandVertically(animationSpec = tween(180)),
             exit = fadeOut(animationSpec = tween(160)) + shrinkVertically(animationSpec = tween(160)),
         ) {
-            val amber = if (p.dark) Color(0xFFFFC77F) else Color(0xFFAB651D)
+            val amber = p.warningText
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
                     .navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
@@ -1042,7 +1045,7 @@ private fun todayFrequencyColor(frequency: Frequency, p: NavPalette): Color = wh
     Frequency.DAILY -> p.muted
     Frequency.WEEKLY -> p.blue
     Frequency.MONTHLY -> p.mint
-    Frequency.EXTRA -> if (p.dark) Color(0xFFFFC77F) else Color(0xFFAA6D30)
+    Frequency.EXTRA -> p.warningText
 }
 
 @Composable
@@ -1133,7 +1136,7 @@ fun RunTileV2(
     today: LocalDate = LocalDate.now(),
 ) {
     val isOtherDay = requiresDayConfirmation(viewingDate, today, overdue)
-    val otherDayAccent = if (p.dark) Color(0xFFFFC77F) else Color(0xFFAB651D)
+    val otherDayAccent = p.warningText
     var pendingChange by remember(run.key, viewingDate) {
         mutableStateOf<Pair<String?, Boolean>?>(null)
     }
