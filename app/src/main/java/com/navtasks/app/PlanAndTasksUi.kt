@@ -424,7 +424,7 @@ private fun PlanReadOnlyTile(
         text = { Text(localized("Удаляется только это выполнение. Шаблон повторяющейся задачи останется.",
             "Only this occurrence is removed. The recurring task template remains.", lang)) },
         confirmButton = { TextButton(onClick = { store.skip(run.key); deleteDialog = false }) {
-            Text(localized("Удалить", "Remove", lang))
+            Text(localized("Удалить", "Remove", lang), color = p.dangerText)
         } },
         dismissButton = { TextButton(onClick = { deleteDialog = false }) {
             Text(localized("Отмена", "Cancel", lang))
