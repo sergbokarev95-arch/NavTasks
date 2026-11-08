@@ -1084,8 +1084,8 @@ private fun DayChip(
         verticalArrangement = Arrangement.Center,
     ) {
         // Weekend ink is independent of selection; blue selected glass stays intact.
-        val topColor = if (weekend) calendarWeekendInk(p) else if (selected) accent else p.muted
-        val bottomColor = if (weekend) calendarWeekendInk(p) else if (selected) accent else p.text
+        val topColor = if (selected) Color.White else if (weekend) calendarWeekendInk(p) else p.muted
+        val bottomColor = if (selected) Color.White else if (weekend) calendarWeekendInk(p) else p.text
         Text(top, color = topColor, fontSize = 11.sp, maxLines = 1)
         Text(bottom, color = bottomColor, fontSize = 16.sp,
             fontWeight = FontWeight.Medium)
