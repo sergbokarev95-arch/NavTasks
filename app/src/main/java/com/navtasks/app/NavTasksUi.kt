@@ -123,6 +123,11 @@ val NavPalette.selectionContent: Color
 val NavPalette.dangerText: Color
     get() = if (dark) Color(0xFFFFB1A6) else Color(0xFFB13B32)
 
+/** A dock tap resets only its target tab; other tabs still restore via Back/swipe. */
+internal fun primaryTabResetStateKey(profileId: String, tab: Int, epoch: Int): String =
+    profileId + "/main-tab-" + (if (tab == 1) "works" else tab.toString()) +
+        "/dock-" + epoch
+
 /** One prominent, consistent NavTasks wordmark, independent of the app's business screens. */
 @Composable
 fun NavBrandLabel(p: NavPalette, fontSize: androidx.compose.ui.unit.TextUnit = 19.sp) {
@@ -230,7 +235,10 @@ fun NavTasksApp(
     val tabStateHolder = rememberSaveableStateHolder()
     // Only explicit bottom-dock taps reset transient scroll/expansion state.
     // Back, editors, full-screen Calendar and swipe gestures retain their old contract.
-    var dockTapGeneration by rememberSaveable { mutableIntStateOf(0) }
+    var todayDockEpoch by rememberSaveable { mutableIntStateOf(0) }
+    var worksDockEpoch by rememberSaveable { mutableIntStateOf(0) }
+    var handoverDockEpoch by rememberSaveable { mutableIntStateOf(0) }
+    var tasksDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showProfiles by rememberSaveable { mutableStateOf(false) }
     // Root-only temporary quick switch, independent of full profile management.
@@ -349,7 +357,12 @@ fun NavTasksApp(
         } else if (next == 3) {
             templateFilter = Frequency.DAILY
         }
-        dockTapGeneration++
+        when (next) {
+            0 -> todayDockEpoch++
+            1 -> worksDockEpoch++
+            2 -> handoverDockEpoch++
+            3 -> tasksDockEpoch++
+        }
         openPrimaryTab(next)
     }
 
@@ -578,9 +591,15 @@ fun NavTasksApp(
                             tabStateHolder.SaveableStateProvider(
                                 // Every dock tap starts a fresh visible page instead
                                 // of resurrecting an old scrolled SaveableStateProvider.
-                                profiles.activeId + "/main-tab-" +
-                                    (if (page == 1) "works" else page.toString()) +
-                                    "/dock-" + dockTapGeneration
+                                primaryTabResetStateKey(
+                                    profiles.activeId, page,
+                                    when (page) {
+                                        0 -> todayDockEpoch
+                                        1 -> worksDockEpoch
+                                        2 -> handoverDockEpoch
+                                        else -> tasksDockEpoch
+                                    },
+                                )
                             ) {
                                 when (page) {
                                     0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
