@@ -228,6 +228,9 @@ fun NavTasksApp(
     // Keep the selected calendar zoom/day and tab-specific scroll state intact
     // when Back closes Settings, the editor, or returns to a previous tab.
     val tabStateHolder = rememberSaveableStateHolder()
+    // Only explicit bottom-dock taps reset transient scroll/expansion state.
+    // Back, editors, full-screen Calendar and swipe gestures retain their old contract.
+    var dockTapGeneration by rememberSaveable { mutableIntStateOf(0) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showProfiles by rememberSaveable { mutableStateOf(false) }
     // Root-only temporary quick switch, independent of full profile management.
@@ -335,6 +338,19 @@ fun NavTasksApp(
         if (next == tab) return
         tabHistory = (tabHistory + tab.toString()).takeLast(12)
         tab = next
+    }
+
+    fun onDockTabTap(next: Int) {
+        // Re-tapping the active tab and switching via dock both open its root.
+        // Never clear stored tasks, completion state, profile or scroll in dialogs.
+        if (next == 0) {
+            selectedDate = LocalDate.now()
+            expandedRun = null
+        } else if (next == 3) {
+            templateFilter = Frequency.DAILY
+        }
+        dockTapGeneration++
+        openPrimaryTab(next)
     }
 
     // Same full store-switch contract used in ProfilesScreen, without data edits.
@@ -562,6 +578,9 @@ fun NavTasksApp(
                             tabStateHolder.SaveableStateProvider(
                                 if (page == 1) profiles.activeId + "/main-tab-works"
                                 else profiles.activeId + "/main-tab-" + page
+                                // Every dock tap starts a fresh visible page instead
+                                // of resurrecting an old scrolled SaveableStateProvider.
+                                + "/dock-" + dockTapGeneration
                             ) {
                                 when (page) {
                                     0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
@@ -664,7 +683,7 @@ fun NavTasksApp(
                                 .navigationBarsPadding()
                                 .padding(horizontal = 15.dp)
                                 .padding(top = 8.dp, bottom = 4.dp),
-                            onSelect = ::openPrimaryTab,
+                            onSelect = ::onDockTabTap,
                         )
                     } else {
                         // Android API 31/32 keeps the original, fully tested dock.
@@ -672,7 +691,7 @@ fun NavTasksApp(
                             p = palette, selected = tab, lang = lang,
                             modifier = Modifier.align(Alignment.BottomCenter),
                             hazeState = hazeState,
-                            onSelect = ::openPrimaryTab,
+                            onSelect = ::onDockTabTap,
                         )
                     }
                 }
