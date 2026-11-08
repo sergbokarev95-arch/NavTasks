@@ -4,6 +4,8 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +32,12 @@ fun WorksHubScreen(
     onServices: () -> Unit,
     onAmos: () -> Unit,
     embeddedInTab: Boolean = false,
+    smoothReturnTick: Int = 0,
 ) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(smoothReturnTick) {
+        if (smoothReturnTick > 0) listState.animateScrollToItem(0)
+    }
     val today = LocalDate.now()
     val activeAmos = workOrders.entries.filter {
         it.closedAt == null && !it.completed
@@ -64,7 +71,7 @@ fun WorksHubScreen(
             }
         }
         LazyColumn(
-            Modifier.fillMaxSize(),
+            Modifier.fillMaxSize(), state = listState,
             contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp, bottom = if (embeddedInTab) 125.dp else 40.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
