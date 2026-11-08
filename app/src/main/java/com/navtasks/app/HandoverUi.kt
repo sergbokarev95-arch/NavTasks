@@ -516,6 +516,7 @@ private fun HandoverGlassInput(
         onValueChange = onValueChange,
         singleLine = !multiline,
         maxLines = if (multiline) 5 else 1,
+        keyboardOptions = NavSentenceKeyboard,
         textStyle = TextStyle(color = p.text, fontSize = 14.sp),
         cursorBrush = SolidColor(p.blue),
         modifier = modifier.height(if (multiline) 100.dp else 46.dp)
