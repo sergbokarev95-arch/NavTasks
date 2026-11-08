@@ -16,6 +16,7 @@ data class ServiceCompletion(
     val requestNumber: String = "",
     val equipment: String = "",
     val comment: String = "",
+    val commentHtml: String = "",
     val intervalMonths: Int = 0,
 ) {
     fun toJson(): JSONObject = JSONObject()
@@ -24,6 +25,7 @@ data class ServiceCompletion(
         .put("requestNumber", requestNumber)
         .put("equipment", equipment)
         .put("comment", comment)
+        .put("commentHtml", commentHtml)
         .put("intervalMonths", intervalMonths)
 
     companion object {
@@ -35,6 +37,7 @@ data class ServiceCompletion(
             requestNumber = json.optString("requestNumber", ""),
             equipment = json.optString("equipment", ""),
             comment = json.optString("comment", ""),
+            commentHtml = json.optString("commentHtml", ""),
             intervalMonths = json.optInt("intervalMonths", 0),
         )
     }
@@ -50,6 +53,7 @@ data class ServiceEntry(
     val lastDate: LocalDate,
     val nextDate: LocalDate?,
     val comment: String = "",
+    val commentHtml: String = "",
     val periodMonths: Int = 0,
     val remindMonths: Int = 0,
     /** AMOS requisition created for this service; empty means not requested. */
@@ -65,7 +69,7 @@ data class ServiceEntry(
     init {
         require(id.isNotBlank() && id.length <= 100)
         require(equipment.isNotBlank() && equipment.length <= 200)
-        require(comment.length <= 6000)
+        require(comment.length <= 6000 && commentHtml.length <= 24000)
         if (unplanned) {
             require(nextDate == null) { "Unplanned work cannot have a scheduled due date" }
             require(periodMonths == 0 && remindMonths == 0) {
@@ -92,7 +96,7 @@ data class ServiceEntry(
         .put("lastDate", lastDate.toString())
         .put("nextDate", nextDate?.toString() ?: JSONObject.NULL)
         .put("unplanned", unplanned)
-        .put("comment", comment)
+        .put("comment", comment).put("commentHtml", commentHtml)
         .put("periodMonths", periodMonths)
         .put("remindMonths", remindMonths)
         .put("requestNumber", requestNumber)
@@ -111,6 +115,7 @@ data class ServiceEntry(
                 it.isBlank() || it == "null"
             }?.let(LocalDate::parse),
             comment = json.optString("comment", ""),
+            commentHtml = json.optString("commentHtml", ""),
             periodMonths = json.optInt("periodMonths", 0),
             remindMonths = json.optInt("remindMonths", 0),
             requestNumber = json.optString("requestNumber", ""),
@@ -153,6 +158,7 @@ internal fun completeServiceCycle(entry: ServiceEntry, on: LocalDate): ServiceEn
         requestNumber = entry.requestNumber,
         equipment = entry.equipment,
         comment = entry.comment,
+        commentHtml = entry.commentHtml,
         intervalMonths = entry.periodMonths,
     )
     val history = entry.serviceHistory + snapshot

@@ -33,10 +33,11 @@ data class CheckItem(
     val required: Boolean = true,
     /** User-authored journal wording or reference, not completion notes. */
     val comment: String = "",
+    val commentHtml: String = "",
 ) {
     fun toJson() = JSONObject()
         .put("id", id).put("title", title).put("required", required)
-        .put("comment", comment)
+        .put("comment", comment).put("commentHtml", commentHtml)
 
     companion object {
         fun fromJson(json: JSONObject) = CheckItem(
@@ -44,6 +45,7 @@ data class CheckItem(
             title = json.optString("title"),
             required = json.optBoolean("required", true),
             comment = json.optString("comment", ""),
+            commentHtml = json.optString("commentHtml", ""),
         )
     }
 }
@@ -70,6 +72,18 @@ internal fun checklistReferenceComment(
     if (sameInRun != 1) return item.comment
     val sameInTemplate = task.checklist.filter { it.title.trim().equals(name, ignoreCase = true) }
     return if (sameInTemplate.size == 1) sameInTemplate.single().comment else item.comment
+}
+
+/** Styled checklist reference follows the exact same snapshot/unique-title resolution. */
+internal fun checklistReferenceHtml(task: TaskTemplate, run: TaskRun, item: CheckItem): String {
+    if (run.completed || run.skipped) return item.commentHtml
+    task.checklist.firstOrNull { it.id == item.id }?.let { return it.commentHtml }
+    val name = item.title.trim()
+    if (name.isEmpty() || run.checklist.count {
+            it.title.trim().equals(name, ignoreCase = true)
+        } != 1) return item.commentHtml
+    val candidates = task.checklist.filter { it.title.trim().equals(name, ignoreCase = true) }
+    return if (candidates.size == 1) candidates.single().commentHtml else item.commentHtml
 }
 
 /**

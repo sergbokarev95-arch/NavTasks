@@ -15,11 +15,13 @@ data class HandoverEntry(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
     val notes: String = "",
+    val notesHtml: String = "",
     val mark: HandoverMark = HandoverMark.OPEN,
     val completedDate: LocalDate? = null,
 ) {
     fun toJson() = JSONObject()
         .put("id", id).put("title", title).put("notes", notes)
+        .put("notesHtml", notesHtml)
         .put("mark", mark.name).put("completedDate", completedDate?.toString() ?: "")
 
     companion object {
@@ -30,6 +32,7 @@ data class HandoverEntry(
                 id = json.optString("id").takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString(),
                 title = json.optString("title").trim().take(200),
                 notes = json.optString("notes").take(4000),
+                notesHtml = json.optString("notesHtml", "").take(24000),
                 mark = mark,
                 completedDate = runCatching { LocalDate.parse(json.optString("completedDate")) }.getOrNull(),
             )
@@ -107,7 +110,7 @@ class HandoverStore(context: Context, private val profiles: ProfileStore = Profi
 
     fun deleteSection(id: String) = commit(sections.filterNot { it.id == id })
 
-    fun saveEntry(sectionId: String, title: String, notes: String, existingId: String? = null) {
+    fun saveEntry(sectionId: String, title: String, notes: String, existingId: String? = null, notesHtml: String = "") {
         val clean = title.trim().take(200)
         if (clean.isBlank()) return
         commit(sections.map { section ->
@@ -115,6 +118,7 @@ class HandoverStore(context: Context, private val profiles: ProfileStore = Profi
                 val entry = section.entries.firstOrNull { it.id == existingId }
                 val updated = (entry ?: HandoverEntry(title = clean)).copy(
                     title = clean, notes = notes.trim().take(4000),
+                    notesHtml = notesHtml.take(24000),
                 )
                 section.copy(entries = if (entry == null) section.entries + updated
                     else section.entries.map { if (it.id == existingId) updated else it })
@@ -161,7 +165,7 @@ class HandoverStore(context: Context, private val profiles: ProfileStore = Profi
                 val additions = imported.entries.filter { remote ->
                     local.entries.none { item ->
                         item.id == remote.id || (item.title.equals(remote.title, ignoreCase = true) &&
-                            item.notes == remote.notes)
+                            item.notes == remote.notes && item.notesHtml == remote.notesHtml)
                     }
                 }.map { it.copy(id = UUID.randomUUID().toString()) }
                 merged[index] = local.copy(entries = local.entries + additions)

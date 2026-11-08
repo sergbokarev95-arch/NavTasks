@@ -19,6 +19,7 @@ data class WorkOrderEntry(
     val createdAt: LocalDate = LocalDate.now(),
     val completedAt: LocalDate? = null,
     val comment: String = "",
+    val commentHtml: String = "",
     val checklist: List<CheckItem> = emptyList(),
     val checkedItemIds: Set<String> = emptySet(),
     val remindDaysBefore: Int = 0,
@@ -34,7 +35,7 @@ data class WorkOrderEntry(
         require(id.isNotBlank() && id.length <= 100)
         require(reference.length <= 80)
         require(title.isNotBlank() && title.length <= 200)
-        require(comment.length <= 6000)
+        require(comment.length <= 6000 && commentHtml.length <= 24000)
         require(remindDaysBefore in 0..90)
         require(repeatDays in 0..3650 && repeatMonths in 0..1200)
         require(repeatDays == 0 || repeatMonths == 0)
@@ -60,6 +61,7 @@ data class WorkOrderEntry(
         .put("completedAt", completedAt?.toString() ?: JSONObject.NULL)
         .put("closedAt", closedAt?.toString() ?: JSONObject.NULL)
         .put("comment", comment)
+        .put("commentHtml", commentHtml)
         .put("checklist", JSONArray().apply { checklist.forEach { put(it.toJson()) } })
         .put("checkedItemIds", JSONArray().apply { checkedItemIds.forEach { put(it) } })
         .put("remindDaysBefore", remindDaysBefore)
@@ -84,6 +86,7 @@ data class WorkOrderEntry(
                     it.isBlank() || it == "null"
                 }?.let(LocalDate::parse),
                 comment = json.optString("comment", ""),
+                commentHtml = json.optString("commentHtml", ""),
                 checklist = (json.optJSONArray("checklist") ?: JSONArray()).let { a ->
                     (0 until a.length()).map { CheckItem.fromJson(a.getJSONObject(it)) }
                 },
