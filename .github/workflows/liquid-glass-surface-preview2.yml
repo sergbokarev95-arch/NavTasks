@@ -66,12 +66,8 @@ jobs:
           test "$(sha256sum "$APK" | cut -d ' ' -f 1)" = "$(unzip -p "$ZIP" "$APK" | sha256sum | cut -d ' ' -f 1)"
           echo "ZIP bytes: $(stat -c %s "$ZIP")"
           sha256sum "$ZIP"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: NavTasks-LiquidGlass-Surfaces-Preview2
-          path: NavTasks_LiquidGlass_Surfaces_Preview2.zip
-          if-no-files-found: error
-          retention-days: 60
+      # Release assets are not subject to the full GitHub Actions artifacts
+      # storage quota. Publish the already validated ZIP directly below.
       - name: Publish separate preview prerelease
         env:
           GH_TOKEN: ${{ github.token }}
