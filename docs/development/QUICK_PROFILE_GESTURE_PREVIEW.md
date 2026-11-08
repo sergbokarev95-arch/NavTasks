@@ -8,3 +8,11 @@
 - User needs to create one or two disposable vessel profiles in this **isolated test app** before trying switching; real NavTasks data not shared.
 - HONOR acceptance: Settings last item visible and no blue clipped footer, two-finger pinch in Today/Work/Handover/Tasks, normal one-finger scrolling and swipe navigation unaffected, smooth full-screen blur only with dialog, current profile selection works, personal/vessel isolation preserved, dark/day.
 - Next stage: real optical buttons (+, Calendar, Settings) one by one after user approves. Not merged to main.
+
+
+## GitHub Actions verification
+- Tested source commit `cc1abcbac68e3efb4801ab8685167fbdc2715344`; CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42441508734 SUCCESS, all app unit tests and signed `:app:assembleDebug`.
+- Published separate prerelease https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glassquick-preview1.
+- Signed ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/glassquick-preview1/NavTasks_Glass_QuickProfiles_Preview1.zip, 10,869,116 bytes; SHA256 `97bf5ed69bded324d7dfe27e8f2150bd14e7a3f06d49c93caba78ccaf650f8d6`.
+- AAPT verified package `com.navtasks.app.glassquick` versionCode 87. Inner APK byte-for-byte archive check passed.
+- Device gesture, popup blur, footer visuals and profile switch still require physical HONOR acceptance. Stable main source and installed user's 0.4.62 remain unchanged. Buttons phase not yet started.
