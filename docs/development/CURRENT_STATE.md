@@ -256,3 +256,10 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - New v0.4.68-beta code93 same-ID signed ZIP 10,897,386B SHA256 f5ae1dabbc36aa795c70ffa0b0afe93ad3ad62e8bb7987aa54edb69292d24290, CI42447897901 SUCCESS, release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.68-service-requests-candidate.
 - Prior Glass v0.4.66 exact-source recovery v0.4.69-beta code94 CI42447985380 SUCCESS, ZIP SHA256 34e9d23234d679e13b42b074dcf60007bd5e22e5a5b09d74ea893d85d2a39f41, release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.69-glass-recovery. Separate optional only if needed, full data preservation on in-place upgrade.
 - Device HONOR validation still pending; main app source unchanged, main documentation-only updates.
+
+
+## 2026-11-08 — signed orthography and WYSIWYG notes candidate 0.4.70
+- Source `a20ac5476084c72c51e37d10a9cb2b4f782dc07d`, branch `feature/rich-notes-ime-0.4.70-beta`; from previous v0.4.68 signed working source.
+- IME sentence capitalization/autocorrect hints for prose and titles/search, exact AMOS ID/number exempt. Rich editor (B/I/U/S/color/highlight) on notes of Services, AMOS, Handover, checklist, with optional HTML field alongside unmodified plain comment. CI42455684933 SUCCESS, signed same-ID code95 ZIP 12,617,451 bytes SHA256 0f9de50ce81ab479e171af4234ee156e503b09841f7aa830daa503e870b6428a https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.70-rich-notes-ime-candidate.
+- Recovery v0.4.71 code96 exact prior 0.4.68 Glass signed, CI42455220247 SUCCESS, SHA256 f57aa1ea1e524d3a8f4916cffe3db142aa9049db3d04a087cf852e3042b0cb82 https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.71-glass-recovery.
+- Device checks still pending. Stable main app CODE unchanged; main is docs-only continuation.

@@ -224,3 +224,11 @@
 - [x] Safe signed recovery of previous v0.4.66 Liquid Glass (not Haze!) as code94 v0.4.69 CI42447985380 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.69-glass-recovery/NavTasks_Glass_Restore_0.4.69_Beta.zip.
 - [ ] User exports full profile, installs v0.4.68 code93 over working app (never uninstall), verifies `Работы` count unchanged, `Заявки` correctly counts both work types with numbers, `Закрытые` unchanged, search and button actions work, updates after serviced/closed, Night/Day Liquid Glass stable.
 - [ ] If approved promote tested feature to production main and tag; if regression, install v0.4.69 code94 over it. Future same package versionCode>=95 after recovery.
+
+
+## Next: HONOR accept rich text editor 0.4.70 / keyboard inputs
+- [x] Preserve all Liquid Glass source/material/optics and TaskStore; isolate branch, freeze 0.4.68 baseline, add IME sentence auto-capitalization/autocorrect in text and explicitly disable in AMOS identifiers.
+- [x] Add compact WYSIWYG B/I/U/S/colors/marker for notes Services/AMOS/Handover/checklists and optional HTML with existing plain fields; full JSON history/export regression tests. Signed v0.4.70 code95 CI42455684933 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.70-rich-notes-ime-candidate/NavTasks_RichNotes_IME_0.4.70_Beta_Update.zip.
+- [x] Signed same-Glass original 0.4.68 recovery as v0.4.71 code96 CI42455220247 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.71-glass-recovery/NavTasks_RichNotes_Restore_0.4.71_Beta_Update.zip.
+- [ ] User exports full profiles first and installs code95 without uninstall. Test HONOR keyboard with Russian/English after ". " and initial entry, selection & B/I/U/S/color/highlight, saved/reopen/backup preserving formatting, long-text scrolling, dark/day styling, dialog keyboard and search; all prior Glass/check/Handover/Services Requests functional regression.
+- [ ] Only if accepted merge app source into main and mark stable. If rejected, install code96 over it; avoid editing styled notes while old editor installed; future code>=97 if rollback was used.
