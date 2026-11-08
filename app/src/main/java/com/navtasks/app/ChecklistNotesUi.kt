@@ -31,7 +31,8 @@ fun ChecklistReferenceButton(
     hasNote: Boolean,
     onClick: () -> Unit,
 ) {
-    val accent = if (hasNote) p.blue else p.muted
+    // Reference/help is informational, not a primary blue action.
+    val accent = if (hasNote) p.systemOrange else p.muted
     Box(
         Modifier.size(44.dp).clip(CircleShape)
             .glassClickable(onClick = onClick),
