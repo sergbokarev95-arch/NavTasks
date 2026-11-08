@@ -23,6 +23,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -58,7 +59,9 @@ fun HandoverScreen(
     onBack: () -> Unit,
     personalMode: Boolean = false,
     embeddedInTab: Boolean = false,
+    smoothReturnTick: Int = 0,
 ) {
+    val listState = rememberLazyListState()
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
     // Page content only: floating buttons stay sibling to the recorder.
     val actionBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
@@ -81,6 +84,15 @@ fun HandoverScreen(
     var selectedEntry by remember { mutableStateOf<Pair<String, String>?>(null) }
     var completingWithDate by remember { mutableStateOf<Triple<String, String, LocalDate>?>(null) }
     var confirmDelete by remember { mutableStateOf<Pair<String, String?>?>(null) }
+    LaunchedEffect(smoothReturnTick) {
+        if (smoothReturnTick > 0) {
+            listState.animateScrollToItem(0)
+            // A fresh Handover starts with its sections folded.
+            expandedSectionId = null
+            searchOpen = false
+            searchText = ""
+        }
+    }
 
     fun openSectionEditor(section: HandoverSection?) {
         editSectionId = section?.id
@@ -135,6 +147,7 @@ fun HandoverScreen(
             )
         }
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize()
                 .dismissSearchImeOnResultsGesture(searchOpen),
             contentPadding = PaddingValues(
