@@ -113,7 +113,7 @@ fun ProfilesScreen(
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(localized("Удалить", "Delete", lang),
-                                color = p.dangerText, fontSize = 12.sp)
+                                color = p.systemRed, fontSize = 12.sp)
                         }
                     }
                 }
@@ -201,7 +201,7 @@ fun ProfilesScreen(
                     deleteTarget = null
                 }) {
                     Text(localized("Удалить навсегда", "Delete permanently", lang),
-                        color = p.dangerText)
+                        color = p.systemRed)
                 }
             },
             dismissButton = {
@@ -357,7 +357,7 @@ fun ProfileExchangePanel(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(localized("Удалить выбранный профиль", "Delete selected profile", lang),
-                    color = p.dangerText,
+                    color = p.systemRed,
                     fontSize = 13.sp)
             }
         } else {
@@ -398,7 +398,7 @@ fun ProfileExchangePanel(
                     deleteTarget = null
                 }) {
                     Text(localized("Удалить навсегда", "Delete permanently", lang),
-                        color = p.dangerText)
+                        color = p.systemRed)
                 }
             },
             dismissButton = {
