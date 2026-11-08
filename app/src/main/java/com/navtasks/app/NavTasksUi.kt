@@ -108,6 +108,16 @@ val NavPalette.warningText: Color
 val NavPalette.blueText: Color
     get() = if (dark) Color(0xFF5CB8FF) else Color(0xFF0071E3)
 
+/**
+ * Opaque Apple-blue selection in both themes. Slightly deeper than system blue
+ * so white 11sp labels pass WCAG AA. Not used by the Liquid Glass dock.
+ */
+val NavPalette.selectionFill: Color
+    get() = Color(0xFF0071E3)
+
+val NavPalette.selectionContent: Color
+    get() = Color.White
+
 val NavPalette.dangerText: Color
     get() = if (dark) Color(0xFFFFB1A6) else Color(0xFFB13B32)
 
@@ -1083,9 +1093,10 @@ private fun DayChip(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // Weekend ink is independent of selection; blue selected glass stays intact.
-        val topColor = if (weekend) calendarWeekendInk(p) else if (selected) accent else p.muted
-        val bottomColor = if (weekend) calendarWeekendInk(p) else if (selected) accent else p.text
+        // Selected date chips use one solid Apple blue and white labels.
+        // Unselected weekends retain their distinct calendar ink.
+        val topColor = if (selected) p.selectionContent else if (weekend) calendarWeekendInk(p) else p.muted
+        val bottomColor = if (selected) p.selectionContent else if (weekend) calendarWeekendInk(p) else p.text
         Text(top, color = topColor, fontSize = 11.sp, maxLines = 1)
         Text(bottom, color = bottomColor, fontSize = 16.sp,
             fontWeight = FontWeight.Medium)
