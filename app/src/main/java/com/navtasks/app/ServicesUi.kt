@@ -906,7 +906,7 @@ private fun ServiceOption(
         .padding(horizontal = if (compact) 5.dp else 10.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center) {
         Text(label, color = if (selected) p.selectionContent
-            else if (destructive) p.dangerText else p.text,
+            else if (destructive) p.systemRed else p.text,
             fontSize = if (compact) 11.sp else 12.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
