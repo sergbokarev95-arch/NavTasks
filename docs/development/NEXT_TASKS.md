@@ -180,3 +180,13 @@
 - [ ] In Settings, scroll all the way to last panel; it should clear the system gesture line without black/coloured cut-off rectangle or persistent empty footer. Android OS gesture line itself is NOT hidden.
 - [ ] Check floating '+' and Calendar now use direct-scene optical Liquid Glass with unchanged action semantics on Android13+; dark/day and fast scroll have no flicker.
 - [ ] After device approval, progressively adapt header circle buttons, other shared button families, dialogs and popovers, one family at a time; keep same signed Beta package for later in-place migration with incremented versionCode and tested recovery. Do not edit existing app data or stable main prior to acceptance.
+
+
+## Highest priority: HONOR test quick profile gesture + Settings footer Preview1
+- [x] Add non-consuming, root-only two-finger pinch and centered profile selector using original five-store select/switch contract.
+- [x] Fix Settings layout's extra navigation footer with bounded scroll + bottom-only system navigation safe-area.
+- [x] Signed isolated ZIP CI `42441508734` SUCCESS; https://github.com/sergbokarev95-arch/NavTasks/releases/download/glassquick-preview1/NavTasks_Glass_QuickProfiles_Preview1.zip.
+- [ ] User installs separate `NavTasks Glass Quick`, creates 1-2 disposable vessel profiles, tests two-finger pinch in Today/Work/Handover/Tasks, switch to/from Personal and another vessel, checks one-finger scrolling/swipe tabs and Back/outside dismissal.
+- [ ] User tests Settings bottom/footer in Day and Night: last panel remains scrollable, no clipped navy region above Android gesture bar.
+- [ ] After approval create same-ID signed in-place version with code greater than all installed/recovery versions (existing 0.4.63 code86 recovery, preview separate code87); prepare higher-code stable Haze fallback, full profile export first, never uninstall.
+- [ ] Then adapt each circular '+' / Calendar / Settings action to reusable true Liquid Glass in its own incremental tests. Do not blanket change all buttons or profile logic.

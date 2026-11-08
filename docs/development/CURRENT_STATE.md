@@ -225,3 +225,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Built separate package `com.navtasks.app.glassux` branch `feature/liquid-glass-controls-quick-profiles-preview`, commit `ce0b76df9aa5dfc2550bfd56ef044e1037f8037b`. CI 42440578629 SUCCESS.
 - Signed ZIP (10,876,570 bytes) https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glassux-preview1 ; SHA256 `7f129658e517e3cfacb259249f6bb087101e91fe9284cdcf47b96d6e472a8c6b`.
 - Direct Backdrop for floating '+' / Calendar; Settings scrollbar safe end inset; guarded two-finger pinch >=100dp start, >=52dp shrink, >=25% shrink, modal with blurred background and identical existing profile switching. Stable production source not merged; HONOR device feedback pending. Header buttons/remaining controls still not migrated.
+
+
+## 2026-11-08 — pinch profile and Settings footer isolated Preview1 ready
+- Preview branch `feature/quick-profile-pinch-settings-footer-preview` compiled and signed CI `42441508734` SUCCESS, from accepted Surfaces 0.4.62 code. Separate package `com.navtasks.app.glassquick` versionCode87, ZIP 10.9MB https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glassquick-preview1.
+- Only main root handler/blur/modal and bounded Settings scrolling changed. Original LiquidGlass dock, gradient card tokens, Task/Service/Handover/AMOS logic unchanged. Plain swipe tabs not modified. Device HONOR testing pending; no main production source merge.
