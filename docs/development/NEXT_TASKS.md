@@ -216,3 +216,11 @@
 - [x] Emergency stable Haze same-ID recovery 0.4.67-beta code92, CI 42445698166 SUCCESS. https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.67-haze-rollback/NavTasks_Stable_Haze_Rollback_0.4.67.zip
 - [ ] User exports full profile and installs 0.4.66 over 0.4.64 without uninstall. Test ordinary task check and last subcheck, other-date confirmation, visual green first and downward motion after, no duplicate flash. Test smooth day/night and original Liquid Glass.
 - [ ] If accepted, promote verified feature source to stable main; update documentation and version policy. If regression, recovery Haze code92 can upgrade without uninstall but returns to older non-Liquid-Glass interface. Future same-package version code>=93 after recovery.
+
+
+## Next: verify Services Requests filter in v0.4.68 on HONOR
+- [x] Add compact third tab `Заявки · N` showing both planned and unplanned with current saved AMOS number, excluding planned without, completed/historical/closed. Keep Works and Closed, all service card actions/search/counters.
+- [x] Unit tests for planned/unplanned, blank, closed, completed, historical and restored; full CI 42447897901 SUCCESS. Small signed same-app ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.68-service-requests-candidate/NavTasks_Services_Requests_0.4.68_Beta_Update.zip.
+- [x] Safe signed recovery of previous v0.4.66 Liquid Glass (not Haze!) as code94 v0.4.69 CI42447985380 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.69-glass-recovery/NavTasks_Glass_Restore_0.4.69_Beta.zip.
+- [ ] User exports full profile, installs v0.4.68 code93 over working app (never uninstall), verifies `Работы` count unchanged, `Заявки` correctly counts both work types with numbers, `Закрытые` unchanged, search and button actions work, updates after serviced/closed, Night/Day Liquid Glass stable.
+- [ ] If approved promote tested feature to production main and tag; if regression, install v0.4.69 code94 over it. Future same package versionCode>=95 after recovery.

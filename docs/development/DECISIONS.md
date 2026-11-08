@@ -120,3 +120,6 @@
 
 
 - 2026-11-08: After user approval of 0.4.64 glass, change **ONLY task completion animation** to one solid green state before exit. Freeze entire glass optical pipeline and other animations. Timing: immediate `flash.snapTo(1)`, green hold190ms, straightforward downward fade250ms over48dp, no bounce or scale. Share for ordinary and final checklist check; keep other-day confirmation, TaskStore persistence, profile/history and all other code unchanged. One signed same-ID Beta0.4.66 code91 ZIP; safe higher-code Haze recovery0.4.67 code92; full profile backup and no uninstall; HONOR acceptance pending.
+
+
+- 2026-11-08: User's precise Services filter semantics: `Заявки` is NOT a service type or separate AMOS work-order module. It is a view over existing active planned+unplanned services with entered nonblank AMOS request number, excludes unsent planned work, finished and closed work. `Работы` continues all; `Закрытые` continues archive. No data migration, no changes to AMOS stores or completion semantics. Three compact equally sized controls are better than replacing two existing tabs. Same signed 0.4.68 code93 candidate, tested 0.4.69 code94 rollback to previous exact Liquid Glass source. Never uninstall or skip full-profile backup. Device acceptance pending; do not modify stable app code in main without confirmation.

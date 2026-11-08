@@ -249,3 +249,10 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - User accepted 0.4.64 glass controls and requested faster check motion. `0.4.66-beta` code91 same installed ID and Beta signature, isolated feature `feature/task-completion-single-green-0.4.66-beta` CI42445806856 SUCCESS. ZIP 10.9MB https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.66-completion-motion-candidate, SHA256 d17dd0945f733a68d1bc2379cd0bedc8398fb41ca14cd275edfb8f24672c6a7d.
 - RunTileV2 only: full solid green 190ms, 250ms downward fade without rebound/stretch; both ordinary and final checklist, same completed state/dates. All optical material and data code blob hashes frozen in CI. Device visual acceptance pending, stable main source still unchanged.
 - Backup signed original Haze 0.4.67-beta code92, CI42445698166 SUCCESS, ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.67-haze-rollback, SHA256 3adcb68baf94d2a546fb2171f9c5aa592007316a8142207a8ba1a7aab84a5d2d.
+
+
+## 2026-11-08 — Requests filter for Services signed v0.4.68 candidate
+- User wants third `Заявки` filter in Services alongside Works and Closed. It is only active, not completed `ServiceEntry` with `requestNumber.isNotBlank()`, regardless of planned/unplanned. Existing store & history untouched.
+- New v0.4.68-beta code93 same-ID signed ZIP 10,897,386B SHA256 f5ae1dabbc36aa795c70ffa0b0afe93ad3ad62e8bb7987aa54edb69292d24290, CI42447897901 SUCCESS, release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.68-service-requests-candidate.
+- Prior Glass v0.4.66 exact-source recovery v0.4.69-beta code94 CI42447985380 SUCCESS, ZIP SHA256 34e9d23234d679e13b42b074dcf60007bd5e22e5a5b09d74ea893d85d2a39f41, release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.69-glass-recovery. Separate optional only if needed, full data preservation on in-place upgrade.
+- Device HONOR validation still pending; main app source unchanged, main documentation-only updates.
