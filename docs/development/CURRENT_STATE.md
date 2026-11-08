@@ -236,3 +236,10 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - User reports Quick Profile Preview1 works correctly on HONOR. Accepted behavior: inward 2-finger gesture, central blurred picker, store switching, Settings footer.
 - New isolated APK Preview2 code88 `com.navtasks.app.glassquick`: exact-dock Backdrop optical recipe on Tasks floating '+' only, original dimensions/click and Android12 fallback. CI 42442451411 SUCCESS. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glassplus-preview2; SHA256 `bd721d3d1d668972b279513a4d6be7afb5239065ef99e221bd48566b675ee4e6`.
 - On-device screenshot/acceptance for plus glass pending; no production app changes. Do not treat a successful build as visual acceptance. Existing main code remains stable baseline.
+
+
+## 2026-11-08 — same-ID 0.4.64 Beta candidate with all primary circular actions, HONOR pending
+- Full preview-derived `0.4.64-beta` code89 app `com.navtasks.app.glass` signed and zipped (10,896,190 bytes, SHA256 f046815b1f0e41d3cf93ce56c0a148ca68b0520d27d9bc3dcdeb1cdd5c3c6a8e) https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.64-liquid-glass-actions-candidate; Actions 42444219901 SUCCESS.
+- Direct-scene same-lab material on main '+' / Calendar / Settings, Back/Search across Plan/Settings/Task editor/Profiles/Services/Handover/AMOS/standalone Works, '+' on Services/Handover/AMOS. Only DAY rim softened on dock/action glass. Shader/refraction/lens movement and all static card/data material untouched. Feature commit 8040ff34abad71b2700b79af41c46f4b90a45726.
+- Tested no-uninstall Haze recovery code90 `0.4.65-beta`, CI42444287505 SUCCESS, ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.65-haze-rollback; SHA256 db0748c7d7dbffc9637cf9f49e57924a288ba73281db5389725bd624cebb762e. User must export FULL profile first; never uninstall main app.
+- User acceptance on HONOR pending. Main production source remains stable code; docs only updated. Future versionCode>=91 after recovery.

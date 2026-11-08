@@ -114,3 +114,6 @@
 
 
 - 2026-11-08: Quick Profile Preview1 two-finger pinch and Settings footer approved on HONOR. Begin glass action migration carefully: first '+' button only on Tasks, same `NavLiquidDockOptics.bar` Backdrop source, same 54dp target and click, API31/32 Haze fallback; preserve dock, button placement, task data and calendar/settings unchanged. Separate Preview2 `com.navtasks.app.glassquick` code88, CI42442451411 SUCCESS, device acceptance pending. Do not promote to stable or broaden button migration until reviewed.
+
+
+- 2026-11-08 user directive: **all remaining appropriate circular/floating buttons in ONE small update; absolutely preserve approved Liquid Glass effect and motion.** Only DAY outline should be less white; use a shared .75dp grey-blue rim brush for dock and round actions. Preserve original Backdrop/shader/lens/Highlight/shadows/1.30x/56dp and night border. Provide signed same-ID 0.4.64 code89 with tested fallback Haze code90; prior user liked Glass Plus, Quick Profile gesture and Settings footer. Main not merged until actual HONOR device acceptance; export full backup, never uninstall.

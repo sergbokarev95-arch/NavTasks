@@ -199,3 +199,12 @@
 - [ ] Test on HONOR: scroll Task card title/border under '+', compare refractive rim and blue glyph with dock in day/night; tap opens editor, normal scrolling and Quick Profile gestures unaffected.
 - [ ] Only after success, adapt calendar circular shortcut, then Settings icons, dialogs/other controls in small independent changes. Do not globally mutate task UI, profile stores or existing workflows.
 - [ ] Later prepare signed same-package upgrade to installed NavTasks, back up full profile first, maintain rollback with higher version code, never uninstall or merge unverified code.
+
+
+## Next: HONOR acceptance of ONE full 0.4.64 ZIP (no repeated preview downloads)
+- [x] User liked Glass Plus Day; requested all relevant round/floating buttons in one app and only softer white day rim.
+- [x] Freeze exact shader/lens/animation and data sources; share original Backdrop across circle buttons, soften DAY rim only. Signed in-place 0.4.64 code89 ZIP, CI 42444219901 SUCCESS: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.64-liquid-glass-actions-candidate/NavTasks_LiquidGlass_0.4.64_Beta_Update.zip.
+- [x] Same-ID no-uninstall Haze recovery 0.4.65 code90 ZIP, CI42444287505 SUCCESS: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.65-haze-rollback/NavTasks_Stable_Haze_Rollback_0.4.65.zip.
+- [ ] User exports FULL profile first, installs signed 0.4.64 update over installed NavTasks without uninstalling. Check task/profile/AMOS/Services/Handover/history, settings/footer, pinch, all buttons action semantics, Day/Night border contrast and scrolling refraction/no flicker.
+- [ ] If rejected, install 0.4.65 recovery over 0.4.64 without uninstalling. Future in-place app code >=91 after code90 rollback.
+- [ ] Upon HONOR approval only, promote accepted feature source to stable `main` and archive tagged release. Continue refining inline controls only as needed, preserving design, not adding shader to every text/row control.
