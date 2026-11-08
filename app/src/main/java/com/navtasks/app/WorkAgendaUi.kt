@@ -234,6 +234,7 @@ internal fun ServiceRequestDialog(
                     p = p,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = localized("Номер из AMOS", "Number from AMOS", lang),
+                    keyboardOptions = NavIdentifierKeyboard,
                 )
                 if (service.requestNumber.isNotBlank()) {
                     Text(localized("Очисти поле, чтобы убрать номер заявки.",
