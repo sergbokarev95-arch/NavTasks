@@ -35,14 +35,17 @@ fun NavPopoverMenu(
         modifier = modifier.widthIn(min = 215.dp, max = 310.dp)
             .border(
                 1.dp,
-                if (p.dark) Color.White.copy(alpha = 0.16f)
-                else Color(0xFF9BA8B4).copy(alpha = 0.34f),
+                if (p.dark) Color(0xFF4A5058)
+                else Color(0xFFBDC5CE),
                 shape,
             ),
         shape = shape,
-        containerColor = if (p.dark) Color(0xF52E2F32) else Color(0xF9F8FAFC),
+        // A native DropdownMenu is rendered in a separate popup window;
+        // use the same neutral palette, but do not mistake transparency for
+        // actual refracting Liquid Glass from the page's separate backdrop.
+        containerColor = if (p.dark) Color(0xFF25292E) else Color(0xFFF9FAFC),
         tonalElevation = 0.dp,
-        shadowElevation = 14.dp,
+        shadowElevation = 8.dp,
         content = content,
     )
 }
@@ -88,10 +91,12 @@ fun NavPopoverDivider(p: NavPalette) {
 fun Modifier.navDialogSurface(p: NavPalette, radius: Dp = 24.dp): Modifier {
     val shape = RoundedCornerShape(radius)
     return clip(shape)
-        .background(if (p.dark) Color(0xF42A2D32) else Color(0xFAF8FAFD), shape)
+        // Large modal editors follow the Night09 matte graphite materials.
+        // Opaque backgrounds avoid the former muddy reddish/gray alpha blend.
+        .background(if (p.dark) Color(0xFF25292E) else Color(0xFFF9FAFC), shape)
         .border(1.dp,
-            if (p.dark) Color.White.copy(alpha = 0.19f)
-            else Color(0xFFB8C6D2).copy(alpha = 0.68f),
+            if (p.dark) Color(0xFF454B53)
+            else Color(0xFFC4CBD3),
             shape)
 }
 
