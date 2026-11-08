@@ -164,7 +164,7 @@ fun HandoverScreen(
                 )
                 Column(
                     Modifier.fillMaxWidth().navGlass(p, radius = 19.dp, role = GlassRole.PANEL)
-                        .padding(11.dp),
+                        .padding(9.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Row(
@@ -221,7 +221,7 @@ fun HandoverScreen(
                     ) {
                         Column(
                             Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             Spacer(Modifier.height(1.dp))
                             if (section.entries.isEmpty()) {
@@ -238,7 +238,7 @@ fun HandoverScreen(
                                     .navGlass(p, radius = 13.dp,
                                         role = if (finished) GlassRole.CONTROL else GlassRole.TASK)
                                     .glassClickable { selectedEntry = section.id to entry.id }
-                                    .padding(horizontal = 10.dp, vertical = 12.dp),
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(if (entry.mark == HandoverMark.COMPLETED) "✓" else if (finished) "–" else "○",
