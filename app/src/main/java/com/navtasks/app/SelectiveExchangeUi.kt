@@ -28,7 +28,7 @@ private fun ShareOption(
         .glassClickable(onClick = onClick).heightIn(min = 44.dp)
         .padding(horizontal = 8.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center) {
-        Text(label, color = if (selected) p.blue else p.text, fontSize = 12.sp,
+        Text(label, color = if (selected) p.selectionContent else p.text, fontSize = 12.sp,
             maxLines = 1)
     }
 }
