@@ -100,5 +100,4 @@ jobs:
               --title "NavTasks 0.4.66 Beta — fast single-green check completion" \
               --notes "IN-PLACE Beta update com.navtasks.app.glass v0.4.66-beta code91, original stable Beta signing key; export FULL profiles first, NEVER uninstall. ONLY Today task completion motion changed: on check, one SOLID green card+tick for 190ms (no double flash), then 250ms straight downward fade (no up-kick or stretch). Same for final checklist item. TaskStore and calendar confirmation logic untouched, same complete date and history. All approved Liquid Glass dock/optics/action/button sources and card design have immutable CI hash guards. No other changes. HONOR validation pending; production main branch untouched." \
               --prerelease
-              --prerelease
           fi
