@@ -172,3 +172,11 @@
 - [ ] User visually tests Preview2 on HONOR: Day/Night, darker graphite lens improves active blue, 4dp lower dock spacing to Android gesture bar, proportional lens overflow and card-edge refraction. This must be checked on device (CI does not establish visual acceptance).
 - [ ] After user approval, export full profile first; user can install candidate 0.4.62 over existing 0.4.60, without uninstall. Verify all profiles/tasks/AMOS/Services/widgets/notifications and swipes. If rejected, recovery v0.4.63 code86 upgrades over it to stable Haze (without uninstall). Any future in-place app version code ≥87.
 - [ ] Merge into main only after app acceptance; continue glass material to '+' / calendar / settings one component at a time, do not globally convert ordinary cards into expensive shader surfaces.
+
+
+## Next device test: Glass UX Preview 1 (2026-11-08)
+- [x] Prepare separately installed signed `NavTasks Glass UX` APK and compact ZIP, CI 42440578629 SUCCESS: https://github.com/sergbokarev95-arch/NavTasks/releases/download/glassux-preview1/NavTasks_Glass_UX_Preview1.zip.
+- [ ] On HONOR create ≥2 TEMPORARY profiles in separate app, use two-finger inward pinch from regular Today/Tasks tab, ensure popup appears centered with background blurred; tap changes profile and restores corresponding tasks/Handover/Services/AMOS. Back/tap outside dismisses; one-finger swipes still work; no false openings while scrolling.
+- [ ] In Settings, scroll all the way to last panel; it should clear the system gesture line without black/coloured cut-off rectangle or persistent empty footer. Android OS gesture line itself is NOT hidden.
+- [ ] Check floating '+' and Calendar now use direct-scene optical Liquid Glass with unchanged action semantics on Android13+; dark/day and fast scroll have no flicker.
+- [ ] After device approval, progressively adapt header circle buttons, other shared button families, dialogs and popovers, one family at a time; keep same signed Beta package for later in-place migration with incremented versionCode and tested recovery. Do not edit existing app data or stable main prior to acceptance.

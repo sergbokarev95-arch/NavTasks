@@ -218,3 +218,10 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Same Preview2 UI ported unchanged into in-place signed Beta candidate `0.4.62-beta` code85, package `com.navtasks.app.glass`, feature source `7bea5101e051774d4fe82a74a2395d8d184ce27e`, CI `42438818985` SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.62-liquid-glass-surfaces-candidate. ZIP SHA256 `c2c2246e2e7aa3afe1b7dc7ac455bb03c895d35a9739e013df3f670823aa1e1a`.
 - Recovery: exact stable Haze sources, same ID & signing, `0.4.63-beta` code86 signed ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.63-haze-rollback, CI 42438923548 SUCCESS, SHA256 `1663e9c472ce26635a93d4171e5e9329ac6ee7db98ea2830e3339bc762036780`. Export full profile before updates; never uninstall.
 - `main` production source remains v0.4.59 Haze with documentation-only changes; user currently has 0.4.60 ExactLab candidate installed. Final signed release pending on-device acceptance; next live versionCode must exceed 86.
+
+
+## 2026-11-08 — isolated Glass UX Preview 1 released for HONOR review
+- Candidate v0.4.62 approved Liquid Glass + opaque gradient surfaces preserved. Follow-up requested: native glass on more buttons, Settings cutoff footer fix, and gesture-open quick profiles centered popup with underlying blur.
+- Built separate package `com.navtasks.app.glassux` branch `feature/liquid-glass-controls-quick-profiles-preview`, commit `ce0b76df9aa5dfc2550bfd56ef044e1037f8037b`. CI 42440578629 SUCCESS.
+- Signed ZIP (10,876,570 bytes) https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glassux-preview1 ; SHA256 `7f129658e517e3cfacb259249f6bb087101e91fe9284cdcf47b96d6e472a8c6b`.
+- Direct Backdrop for floating '+' / Calendar; Settings scrollbar safe end inset; guarded two-finger pinch >=100dp start, >=52dp shrink, >=25% shrink, modal with blurred background and identical existing profile switching. Stable production source not merged; HONOR device feedback pending. Header buttons/remaining controls still not migrated.
