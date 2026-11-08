@@ -164,6 +164,7 @@ fun ServicesScreen(
                     ServiceOption(
                         localized("Работы · ${activeServices.size}", "Work · ${activeServices.size}", lang),
                         p, selectedView == ServiceListView.WORKS, modifier = Modifier.weight(1f),
+                        compact = true,
                     ) {
                         selectedView = ServiceListView.WORKS
                         selectedFilter = WorkOverviewFilter.ALL
@@ -171,6 +172,7 @@ fun ServicesScreen(
                     ServiceOption(
                         localized("Заявки · ${activeRequests.size}", "Requests · ${activeRequests.size}", lang),
                         p, selectedView == ServiceListView.REQUESTS, modifier = Modifier.weight(1f),
+                        compact = true,
                     ) {
                         selectedView = ServiceListView.REQUESTS
                         selectedFilter = WorkOverviewFilter.ALL
@@ -178,6 +180,7 @@ fun ServicesScreen(
                     ServiceOption(
                         localized("Закрытые · ${closedServices.size}", "Closed · ${closedServices.size}", lang),
                         p, selectedView == ServiceListView.CLOSED, modifier = Modifier.weight(1f),
+                        compact = true,
                     ) {
                         selectedView = ServiceListView.CLOSED
                         selectedFilter = WorkOverviewFilter.ALL
@@ -880,14 +883,16 @@ private fun ServiceNumberInput(
 @Composable
 private fun ServiceOption(
     label: String, p: NavPalette, selected: Boolean,
-    modifier: Modifier = Modifier, onClick: () -> Unit,
+    modifier: Modifier = Modifier, compact: Boolean = false, onClick: () -> Unit,
 ) {
     Box(modifier.navGlass(p, radius = 12.dp,
         role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
         .glassClickable(onClick = onClick)
         .heightIn(min = 44.dp)
-        .padding(horizontal = 10.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
-        Text(label, color = if (selected) p.blue else p.text, fontSize = 12.sp,
+        .padding(horizontal = if (compact) 5.dp else 10.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center) {
+        Text(label, color = if (selected) p.blue else p.text,
+            fontSize = if (compact) 11.sp else 12.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
