@@ -58,6 +58,8 @@ jobs:
           grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/ServicesUi.kt
           grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/HandoverUi.kt
           grep -Fq 'Color(0xFFE6E8EC)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          test "$(grep -oF '#E6E8EC' app/src/main/java/com/navtasks/app/MainActivity.kt | wc -l)" -eq 4
+          ! grep -Fq '#EAF3FA' app/src/main/java/com/navtasks/app/MainActivity.kt
           grep -Fq 'Color(0xFF0088FF)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
           grep -Fq 'Color(0xFF0091FF)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
           grep -Fq 'drawRect(p.background)' app/src/main/java/com/navtasks/app/NavGlass.kt
