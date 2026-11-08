@@ -84,11 +84,13 @@ data class NavPalette(
 )
 
 fun navPalette(dark: Boolean) = if (dark) NavPalette(
-    true, Color.Black, Color.Black, Color(0xE021344F),
-    Color(0xE01A304B), Color(0xE021415E), Color(0xFF36536B),
-    Color(0xFFF5F5F7), Color(0xFFABABB3), Color(0xFF0091FF), Color(0xFF68CE77),
+    // Night #09 Smoke Slate: true black canvas, solid neutral graphite surfaces.
+    true, Color.Black, Color.Black, Color(0xFF1D2126),
+    Color(0xFF282D33), Color(0xFF282D33), Color(0xFF40464D),
+    Color(0xFFF6F7F8), Color(0xFFAAAFB5), Color(0xFF0091FF), Color(0xFF68CE77),
 ) else NavPalette(
-    false, Color(0xFFF4F5F7), Color(0xFFF4F5F7), Color(0xF9FFFFFF),
+    // Day #02 Slate Mist: only the canvas gets slightly darker; light cards stay as approved.
+    false, Color(0xFFE6E8EC), Color(0xFFE6E8EC), Color(0xF9FFFFFF),
     Color(0xFFF8FCFF), Color(0xFFE1F0FA), Color(0xFFC9DFED),
     Color(0xFF1C1C1E), Color(0xFF707076), Color(0xFF0088FF), Color(0xFF60C569),
 )
