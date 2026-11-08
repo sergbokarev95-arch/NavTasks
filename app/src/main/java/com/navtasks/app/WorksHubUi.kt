@@ -1,5 +1,7 @@
 package com.navtasks.app
 
+import com.kyant.backdrop.backdrops.layerBackdrop
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,17 +41,21 @@ fun WorksHubScreen(
     val overdue = filterServiceOverview(activeServices, today, WorkOverviewFilter.OVERDUE).size
     val approaching = filterServiceOverview(activeServices, today, WorkOverviewFilter.SOON).size
 
+    val workBackdrop = if (!embeddedInTab && android.os.Build.VERSION.SDK_INT >= 33)
+        com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
+    Box(Modifier.fillMaxSize()) {
     Column(
         Modifier.fillMaxSize().then(
             if (embeddedInTab) Modifier else Modifier.statusBarsPadding().navigationBarsPadding()
-        ),
+        ).then(if (workBackdrop != null) Modifier.layerBackdrop(workBackdrop) else Modifier),
     ) {
         if (!embeddedInTab) {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                NavGlassCircleButton(p, "back", onBack)
+                if (workBackdrop != null) Spacer(Modifier.size(44.dp))
+                else NavGlassCircleButton(p, "back", onBack)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
@@ -126,6 +132,13 @@ fun WorksHubScreen(
                 )
             }
         }
+    }
+    if (workBackdrop != null) {
+        Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
+            .padding(start = 16.dp, top = 9.dp)) {
+            NavLiquidGlassCircleButton(p, workBackdrop, "back", onBack)
+        }
+    }
     }
 }
 
