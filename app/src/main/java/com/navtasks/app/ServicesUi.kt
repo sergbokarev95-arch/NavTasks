@@ -584,8 +584,8 @@ private fun ServiceCount(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(number.toString(), color = color, fontSize = 22.sp)
-        Text(label, color = if (selected) p.blue else p.muted, fontSize = 11.sp,
+        Text(number.toString(), color = if (selected) p.selectionContent else color, fontSize = 22.sp)
+        Text(label, color = if (selected) p.selectionContent else p.muted, fontSize = 11.sp,
             maxLines = 1)
     }
 }
@@ -904,7 +904,7 @@ private fun ServiceOption(
         .heightIn(min = 44.dp)
         .padding(horizontal = if (compact) 5.dp else 10.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center) {
-        Text(label, color = if (selected) p.blue else p.text,
+        Text(label, color = if (selected) p.selectionContent else p.text,
             fontSize = if (compact) 11.sp else 12.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
