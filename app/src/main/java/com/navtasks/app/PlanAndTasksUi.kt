@@ -1179,7 +1179,7 @@ fun SettingsScreen(
                         color = p.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
                     Switch(settings.groupSimultaneousReminders,
                         onCheckedChange = {
-                            settings.setGroupSimultaneousReminders(it)
+                            settings.updateReminderGrouping(it)
                             syncSettings()
                         },
                         enabled = settings.notificationsEnabled, colors = navSwitchColors(p))
