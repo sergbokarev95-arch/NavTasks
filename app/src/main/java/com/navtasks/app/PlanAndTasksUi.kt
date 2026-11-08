@@ -235,7 +235,7 @@ fun PlanScreenV2(
                                 val shape = RoundedCornerShape(10.dp)
                                 // Quiet filled cells; no neon-blue outlines.
                                 val cellColor = when {
-                                    isToday -> p.blue.copy(alpha = if (p.dark) 0.24f else 0.14f)
+                                    isToday -> p.selectionFill
                                     !inMonth -> if (p.dark) Color.White.copy(alpha = 0.018f)
                                         else p.blue.copy(alpha = 0.018f)
                                     status == CalendarDayState.COMPLETE ->
@@ -263,8 +263,8 @@ fun PlanScreenV2(
                                         modifier = Modifier.align(Alignment.Center),
                                         color = when {
                                             !inMonth -> p.muted.copy(alpha = 0.46f)
+                                            isToday -> p.selectionContent
                                             calendarIsWeekend(date) -> weekendInk
-                                            isToday -> p.blue
                                             else -> p.text
                                         },
                                         fontWeight = if (isToday) FontWeight.Medium else FontWeight.Normal,
@@ -459,7 +459,7 @@ fun TasksScreenV2(
                     role = if (filter == freq) GlassRole.SELECTED else GlassRole.CONTROL, elevation = 0.dp)
                     .glassClickable { onFilter(freq) }.padding(vertical = 11.dp),
                     contentAlignment = Alignment.Center) {
-                    Text(labels[i], color = if (filter == freq) p.blue else p.text, fontSize = 11.sp, maxLines = 1)
+                    Text(labels[i], color = if (filter == freq) p.selectionContent else p.text, fontSize = 11.sp, maxLines = 1)
                 }
             }
         }
@@ -539,7 +539,7 @@ private fun OptionLine(options: List<Pair<String, String>>, selected: String, p:
                     .padding(horizontal = 13.dp, vertical = 11.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, color = if (active) p.blue else p.text, fontSize = 12.sp)
+                Text(label, color = if (active) p.selectionContent else p.text, fontSize = 12.sp)
             }
         }
     }
@@ -1191,9 +1191,9 @@ fun SettingsScreen(
 
 @Composable
 private fun navSwitchColors(p: NavPalette) = SwitchDefaults.colors(
-    checkedTrackColor = p.blue.copy(alpha = 0.76f),
+    checkedTrackColor = p.blue,
     checkedThumbColor = Color.White,
-    checkedBorderColor = p.blue.copy(alpha = 0.60f),
+    checkedBorderColor = p.blue,
     uncheckedTrackColor = p.panel,
     uncheckedThumbColor = p.muted,
     uncheckedBorderColor = p.border,
