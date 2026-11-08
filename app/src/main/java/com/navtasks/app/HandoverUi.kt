@@ -114,7 +114,7 @@ fun HandoverScreen(
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(if (personalMode) localized("ЛИЧНОЕ", "PERSONAL", lang) else "HANDOVER",
-                        color = p.blue, fontSize = 13.sp, letterSpacing = 1.8.sp)
+                        color = p.blueText, fontSize = 13.sp, letterSpacing = 1.8.sp)
                     Text(if (personalMode) localized("Заметки", "Notes", lang)
                         else localized("Передача дел", "Handover notes", lang),
                         color = p.text, fontSize = 22.sp)
