@@ -868,6 +868,8 @@ private fun TodayScreenV2(
     // still starts at item zero without an unnecessary scroll.
     LaunchedEffect(smoothReturnTick) {
         if (smoothReturnTick > 0) {
+            showMissed = false
+            showCompleted = false
             kotlinx.coroutines.coroutineScope {
                 launch { daysScroll.animateScrollToItem(0) }
                 launch { taskListScroll.animateScrollToItem(0) }
