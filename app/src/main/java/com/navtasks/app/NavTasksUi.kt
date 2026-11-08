@@ -576,11 +576,11 @@ fun NavTasksApp(
                             label = "primaryTabSlide",
                         ) { page ->
                             tabStateHolder.SaveableStateProvider(
-                                if (page == 1) profiles.activeId + "/main-tab-works"
-                                else profiles.activeId + "/main-tab-" + page
                                 // Every dock tap starts a fresh visible page instead
                                 // of resurrecting an old scrolled SaveableStateProvider.
-                                + "/dock-" + dockTapGeneration
+                                profiles.activeId + "/main-tab-" +
+                                    (if (page == 1) "works" else page.toString()) +
+                                    "/dock-" + dockTapGeneration
                             ) {
                                 when (page) {
                                     0 -> TodayScreenV2(store, now, selectedDate, { selectedDate = it }, palette, lang,
