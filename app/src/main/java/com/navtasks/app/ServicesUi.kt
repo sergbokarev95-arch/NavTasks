@@ -105,7 +105,7 @@ fun ServicesScreen(
             else NavGlassCircleButton(p, "back", onClick = onBack)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("NAVTASKS", color = p.blueText, fontSize = 12.sp)
+                NavBrandLabel(p)
                 Text(localized("Сервисы", "Maintenance", lang), color = p.text, fontSize = 23.sp)
             }
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
