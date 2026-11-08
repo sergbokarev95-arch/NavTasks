@@ -15,6 +15,6 @@ class QuickProfilePinchTest {
         assertFalse(isQuickProfilePinch(80f, 10f, 100f, 52f))
         assertFalse(isQuickProfilePinch(240f, 193f, 100f, 52f))
         assertFalse(isQuickProfilePinch(240f, 260f, 100f, 52f))
-        assertFalse(isQuickProfilePinch(240f, 175f, 100f, 52f))
+        assertFalse(isQuickProfilePinch(240f, 185f, 100f, 52f))
     }
 }
