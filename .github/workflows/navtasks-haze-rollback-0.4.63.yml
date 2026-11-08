@@ -1,0 +1,87 @@
+name: Signed NavTasks stable Haze 0.4.63 rollback
+on:
+  push:
+    branches: [feature/navtasks-0.4.63-haze-rollback]
+    paths:
+      - 'app/build.gradle.kts'
+      - '.github/workflows/navtasks-haze-rollback-0.4.63.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore the SAME Beta signing key as stable NavTasks
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Validate exact Haze baseline and run full app tests
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-beta"' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.63"' app/build.gradle.kts
+          grep -Fq 'versionCode = 86' app/build.gradle.kts
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavGlass.kt)" = "80c0a8aef011ac9212a1516e7e74071a9290ddad"
+          test "$(git hash-object app/src/main/java/com/navtasks/app/MainActivity.kt)" = "c76dce62762d59e417f10aadeed055c5db1edf7b"
+          if test -f app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt; then
+            echo "::error::Recovery source must not contain experimental dock"
+            exit 1
+          fi
+          gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - name: Verify actual Android package ID and version
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='86' versionName='0.4.63-beta'"
+      - name: Destroy key from runner
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Prepare checksum and recovery APK
+        run: |
+          set -euo pipefail
+          cp app/build/outputs/apk/debug/app-debug.apk NavTasks_Stable_Haze_Rollback_0.4.63.apk
+          zip -9 -X NavTasks_Stable_Haze_Rollback_0.4.63.zip NavTasks_Stable_Haze_Rollback_0.4.63.apk
+          unzip -t NavTasks_Stable_Haze_Rollback_0.4.63.zip
+          test "$(sha256sum NavTasks_Stable_Haze_Rollback_0.4.63.apk | awk '{print $1}')" = "$(unzip -p NavTasks_Stable_Haze_Rollback_0.4.63.zip NavTasks_Stable_Haze_Rollback_0.4.63.apk | sha256sum | awk '{print $1}')"
+          echo "ZIP bytes: $(stat -c %s NavTasks_Stable_Haze_Rollback_0.4.63.zip)"
+          sha256sum NavTasks_Stable_Haze_Rollback_0.4.63.zip
+      # Avoid failed uploads to full GitHub Actions artifact storage.
+      # The validated compact ZIP is published directly to GitHub Releases.
+      - name: Publish recovery prerelease (not main)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="v0.4.63-haze-rollback"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" NavTasks_Stable_Haze_Rollback_0.4.63.zip --clobber
+          else
+            gh release create "$TAG" NavTasks_Stable_Haze_Rollback_0.4.63.zip \
+              --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.63 Beta - SAFE Haze rollback from 0.4.62 Liquid Glass surfaces candidate" \
+              --notes "BACKUP RECOVERY ONLY. Rebuild of stable v0.4.59 Haze application sources, bumped versionCode to 86 (versionName 0.4.63-beta). SAME Beta application ID com.navtasks.app.glass and SAME signing key: install as an UPDATE if 0.4.62 Liquid Glass surfaces candidate optics are rejected, preserving local task/profile data. DO NOT UNINSTALL the app. This returns to the stable v0.4.59 visual architecture and all original business logic. Export a complete profile backup before any software test." \
+              --prerelease
+          fi
