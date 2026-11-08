@@ -91,7 +91,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG=v0.4.74-apple-palette-candidate
+          TAG=v0.4.74-apple-palette-verified
+          # Refuse to publish a stale binary after newer commits to this branch.
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/apple-semantic-colors-0.4.74-beta" --jq '.commit.sha')"
+          if [ "$CURRENT_SHA" != "$GITHUB_SHA" ]; then
+            echo "Skipping stale source $GITHUB_SHA; current is $CURRENT_SHA"
+            exit 0
+          fi
           ZIP=NavTasks_Apple_Palette_0.4.74_Beta_Update.zip
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$ZIP" --clobber
