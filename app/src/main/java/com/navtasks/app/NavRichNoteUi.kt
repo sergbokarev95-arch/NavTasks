@@ -71,7 +71,7 @@ internal fun NavRichNoteEditor(
         }
         if (showColors) Row(Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(Color.Unspecified, Color(0xFF2377B7), Color(0xFFC04949),
+            listOf(Color.Unspecified, p.blue, Color(0xFFC04949),
                 Color(0xFF2B9069), Color(0xFFBE852D)).forEach { color ->
                 NavRichTool("●", p, fg = if (color == Color.Unspecified) p.text else color) {
                     if (color == Color.Unspecified)
@@ -108,7 +108,7 @@ private fun NavRichTool(label: String, p: NavPalette, fg: Color = p.text,
     Box(Modifier.size(42.dp).navGlass(p, radius = 11.dp,
             role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
         .glassClickable(onClick), contentAlignment = Alignment.Center) {
-        Text(label, color = fg, fontSize = 20.sp,
+        Text(label, color = if (selected) p.selectionContent else fg, fontSize = 20.sp,
             fontWeight = if (label == "B") FontWeight.Bold else FontWeight.Normal)
     }
 }
