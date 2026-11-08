@@ -90,7 +90,7 @@ fun navPalette(dark: Boolean) = if (dark) NavPalette(
 ) else NavPalette(
     false, Color(0xFFF4F5F7), Color(0xFFF4F5F7), Color(0xF9FFFFFF),
     Color(0xFFF8FCFF), Color(0xFFE1F0FA), Color(0xFFC9DFED),
-    Color(0xFF1C1C1E), Color(0xFF77777B), Color(0xFF0088FF), Color(0xFF60C569),
+    Color(0xFF1C1C1E), Color(0xFF707076), Color(0xFF0088FF), Color(0xFF60C569),
 )
 
 /** HONOR-style success green, with readable contrast for text in Day mode. */
@@ -102,7 +102,11 @@ val NavPalette.systemOrange: Color
     get() = if (dark) Color(0xFFFF9230) else Color(0xFFFF8D28)
 
 val NavPalette.warningText: Color
-    get() = if (dark) systemOrange else Color(0xFFC55300)
+    get() = if (dark) systemOrange else Color(0xFFBE5300)
+
+/** High-contrast Apple-blue variant for small readable text; system blue stays on icons. */
+val NavPalette.blueText: Color
+    get() = if (dark) Color(0xFF5CB8FF) else Color(0xFF0071E3)
 
 val NavPalette.dangerText: Color
     get() = if (dark) Color(0xFFFFB1A6) else Color(0xFFB13B32)
