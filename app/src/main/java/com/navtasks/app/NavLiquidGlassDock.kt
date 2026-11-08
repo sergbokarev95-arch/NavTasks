@@ -250,10 +250,10 @@ fun NavLiquidGlassBottomBar(
                             interactionSource = interaction,
                             indication = null
                         ) {
-                            if (!active) {
-                                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                                onSelect(index)
-                            }
+                            // Re-tapping the selected tab must also dispatch:
+                            // the parent restores Today/date/list to its root.
+                            view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                            onSelect(index)
                         },
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
