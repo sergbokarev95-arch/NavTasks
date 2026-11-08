@@ -1,0 +1,104 @@
+name: NavTasks 0.4.66 Beta - single green completion motion
+on:
+  push:
+    branches: [feature/task-completion-single-green-0.4.66-beta]
+    paths:
+      - 'app/**'
+      - '.github/workflows/task-completion-single-green-0.4.66.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore exact installed Beta signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Guard unmodified glass optics, profiles and logic; run all app tests
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-beta"' app/build.gradle.kts
+          grep -Fq 'versionCode = 91' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.66"' app/build.gradle.kts
+          # Shader/animation source; only DAY border brush is newly adjusted.
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockTabs.kt)" = 'a30dbb3dd6e80b2531b826ddc0873bdd5ec5a412'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt)" = 'ee7c0f4388164d05490f89a2e63ae461fc9dfbf8'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavQuickProfileUi.kt)" = '43adbfa9f50229a7ec532b0f6332a3aca160331e'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavGlass.kt)" = 'e3ac00c1f555205bce0f8b59b6faf2c817ffe034'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/ProfileStore.kt)" = 'bfeb0a735eec84a033db187dbe669e37969d2067'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/TaskStore.kt)" = 'ab422f5c07755bf1f7e1b78edbe693f675f7d12e'
+          grep -Fq 'brush = navLiquidGlassRim(dark)' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'val rim = navLiquidGlassRim(dark)' app/src/main/java/com/navtasks/app/NavLiquidGlassActionButton.kt
+          grep -Fq 'NavLiquidGlassCalendarButton(palette, glassBackdrop)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'NavLiquidGlassCircleButton(palette, glassBackdrop, "settings")' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'NavLiquidGlassAddButton(p, actionBackdrop)' app/src/main/java/com/navtasks/app/ServicesUi.kt
+          grep -Fq 'NavLiquidGlassAddButton(p, actionBackdrop)' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'NavLiquidGlassAddButton(p, actionBackdrop)' app/src/main/java/com/navtasks/app/WorkOrdersUi.kt
+          # Only one task card composable changed: optical rendering must stay byte-identical.
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt)" = '4d20d574afcca5cf356972797829252e9366e6fa'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassActionButton.kt)" = 'a551bac11ad051c1c72c68bb1030d084cacfef87'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassRim.kt)" = '545c5b03c620012db5abb98b3aec1782e07dd549'
+          grep -Fq 'flash.snapTo(1f)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          if grep -Fq 'flash.animateTo(' app/src/main/java/com/navtasks/app/NavTasksUi.kt; then
+            echo "::error::Old double-flash must never return"
+            exit 1
+          fi
+          grep -Fq 'delay(NavTaskCompletionMotion.greenHoldMillis)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'translationY = amount * NavTaskCompletionMotion.dropDistanceDp.dp.toPx()' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - name: Remove temporary signing material
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify signed same-ID APK and create compact update ZIP
+        run: |
+          set -euo pipefail
+          APK=NavTasks_Completion_Check_0.4.66_Beta.apk
+          ZIP=NavTasks_Completion_Check_0.4.66_Beta_Update.zip
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='91' versionName='0.4.66-beta'"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk "$APK"
+          zip -9 -X "$ZIP" "$APK"
+          unzip -t "$ZIP"
+          test "$(sha256sum "$APK" | cut -d ' ' -f 1)" = "$(unzip -p "$ZIP" "$APK" | sha256sum | cut -d ' ' -f 1)"
+          echo "ZIP bytes: $(stat -c %s "$ZIP")"
+          sha256sum "$ZIP"
+      - name: Publish pre-release ZIP directly (Actions artifact quota full)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=v0.4.66-completion-motion-candidate
+          ZIP=NavTasks_Completion_Check_0.4.66_Beta_Update.zip
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+          else
+            gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.66 Beta — fast single-green check completion" \
+              --notes "IN-PLACE Beta update com.navtasks.app.glass v0.4.66-beta code91, original stable Beta signing key; export FULL profiles first, NEVER uninstall. ONLY Today task completion motion changed: on check, one SOLID green card+tick for 190ms (no double flash), then 250ms straight downward fade (no up-kick or stretch). Same for final checklist item. TaskStore and calendar confirmation logic untouched, same complete date and history. All approved Liquid Glass dock/optics/action/button sources and card design have immutable CI hash guards. No other changes. HONOR validation pending; production main branch untouched." \
+              --prerelease
+              --prerelease
+          fi
