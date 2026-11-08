@@ -533,7 +533,7 @@ private fun WorkOrderClosedCard(
             WorkOrderChip(localized("Восстановить", "Restore", lang), false, p,
                 modifier = Modifier.weight(1f), onClick = onRestore)
             WorkOrderChip(localized("Удалить навсегда", "Delete forever", lang), false, p,
-                modifier = Modifier.weight(1f), onClick = onPurge)
+                modifier = Modifier.weight(1f), destructive = true, onClick = onPurge)
         }
     }
 }
@@ -632,7 +632,7 @@ private fun WorkOrderCard(
                 onClick = if (order.completed) onReopen else onComplete,
             )
             WorkOrderChip(localized("Удалить", "Delete", lang), false, p,
-                modifier = Modifier.weight(1f), onClick = onDelete)
+                modifier = Modifier.weight(1f), destructive = true, onClick = onDelete)
         }
     }
     selectedNote?.let { item ->
@@ -645,7 +645,8 @@ private fun WorkOrderCard(
 @Composable
 private fun WorkOrderChip(
     label: String, selected: Boolean, p: NavPalette,
-    modifier: Modifier = Modifier, onClick: () -> Unit,
+    modifier: Modifier = Modifier, destructive: Boolean = false,
+    onClick: () -> Unit,
 ) {
     Box(
         modifier.navGlass(p, radius = 12.dp,
@@ -656,7 +657,8 @@ private fun WorkOrderChip(
             .padding(horizontal = 9.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (selected) p.selectionContent else p.text,
+        Text(label, color = if (selected) p.selectionContent
+            else if (destructive) p.dangerText else p.text,
             fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
