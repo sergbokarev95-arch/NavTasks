@@ -1,5 +1,7 @@
 package com.navtasks.app
 
+import com.kyant.backdrop.backdrops.layerBackdrop
+
 import android.app.DatePickerDialog
 import androidx.activity.compose.BackHandler
 import android.app.AlarmManager
@@ -1082,10 +1084,17 @@ fun SettingsScreen(
             },
         )
     }
-    // System navigation inset is for scroll content, not an artificial footer.
-    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+    // Keep the approved Settings footer; put only the Back control outside
+    // the recorded scene so its optical lens never samples itself.
+    val settingsBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+        com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
+    Box(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().then(
+        if (settingsBackdrop != null) Modifier.layerBackdrop(settingsBackdrop) else Modifier
+    ).statusBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            NavGlassCircleButton(p, "back", onClick = onBack)
+            if (settingsBackdrop != null) Spacer(Modifier.size(44.dp))
+            else NavGlassCircleButton(p, "back", onClick = onBack)
             Spacer(Modifier.width(12.dp))
             Text(localized("Настройки", "Settings", lang), color = p.text, fontSize = 23.sp)
         }
@@ -1156,6 +1165,13 @@ fun SettingsScreen(
             Spacer(Modifier.height(12.dp))
             Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
         }
+    }
+    if (settingsBackdrop != null) {
+        Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
+            .padding(start = 16.dp, top = 10.dp)) {
+            NavLiquidGlassCircleButton(p, settingsBackdrop, "back", onBack)
+        }
+    }
     }
 
 }
