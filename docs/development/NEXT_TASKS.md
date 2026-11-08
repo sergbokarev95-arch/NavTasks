@@ -267,3 +267,17 @@
 - [x] Prepare optional higher-code same-ID 0.4.79 code104 exact pre-card v0.4.76 rollback, CI42495228148 SUCCESS; https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.79-card-palette-recovery/NavTasks_Cards_Restore_0.4.79_Beta_Update.zip. Do not install unless needed.
 - [ ] Export FULL profiles, install v0.4.78 in place on HONOR, verify Today, Plan, Tasks, Handover, AMOS/Services, settings Day/Night colors; native status/nav bars equal #E6E8EC in Day, no blue gradient at night; selected blue/white and optical dock unchanged, no lost profiles.
 - [ ] Only after explicit HONOR approval consider promoting tested code; do not modify stable main application. Font SF Pro license vs Inter alternatives unresolved; do not bundle unapproved alternative. If 0.4.79 rollback installed, next same-ID APK versionCode >=105.
+
+## NEXT: HONOR UI polish 0.4.80 review and separate tiny-popup glass Lab
+- [x] Protect original v0.4.78 source, isolate `feature/navtasks-hig-polish-0.4.80-beta`.
+- [x] NavTasks shared larger bold brand across Today, Plan, Handover, Work Hub, Services, AMOS.
+- [x] Dock tap per-target-tab UI refresh on both active and different tabs, zero change to dock optic source; Back/swipes remain original; test pure key semantics.
+- [x] Compact Today and nested checklist/Handover/Plan/Tasks/AMOS/Services cards via spacing changes only; don't shrink 44dp controls.
+- [x] Consistent `p.dangerText` in Services, AMOS, Plan delete, anchored popover delete actions.
+- [x] Neutral opaque night graphite `navDialogSurface` and lighter Day02 background for ALL large dialogs; native small menus neutral, not fake glass.
+- [x] Full CI 42498478208 SUCCESS signed same-ID 0.4.80 code105 ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.80-hig-polish-verified/NavTasks_HIG_Polish_0.4.80_Beta_Update.zip.
+- [x] Optional identical prior 0.4.78 source code106 rollback, CI42498384092 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.81-hig-polish-recovery/NavTasks_HIG_Restore_0.4.81_Beta_Update.zip.
+- [ ] Export FULL profiles; install v0.4.80 in place without uninstalling. On HONOR verify dock tap of Today while scrolled, switching among all four tabs, back navigation/swipe preserved; tap Today's seven-day selector, GMDSS nested checklist, Handover sections, task templates, Services/AMOS Delete and modals, profile/time picker, day/night. Check no misclicks from reduced nested row heights and no lost task data.
+- [ ] If approved consider promoting safe code after review; otherwise install code106 recovery (not downgrade/uninstall). If 0.4.81 installed future versionCode >=107.
+- [ ] Separately prototype **real small anchored popup glass**: Compose DropdownMenu uses another window and cannot directly share same-scene LayerBackdrop. Trial in-scene clipped, z-ordered overlay sharing app's original source, with controlled background blur and no optical flicker; maintain backdrop and tap-away semantics, and test performance on HONOR and Samsung before touching stable navigation. User approval required. Current 0.4.80 only matches neutral colors.
+- [ ] Typography SF Pro licensing / Inter alternative remains unresolved; do not bundle/rename font without user decision.
