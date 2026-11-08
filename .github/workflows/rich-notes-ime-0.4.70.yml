@@ -53,7 +53,7 @@ jobs:
           test "$(git hash-object app/src/main/java/com/navtasks/app/TaskStore.kt)" = 'ab422f5c07755bf1f7e1b78edbe693f675f7d12e'
           grep -Fq 'versionCode = 95' app/build.gradle.kts
           grep -Fq 'richeditor-compose:1.0.0-rc14' app/build.gradle.kts
-          grep -Fq 'NavSentenceKeyboard' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'NavTitleKeyboard' app/src/main/java/com/navtasks/app/NavGlass.kt
           grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/ChecklistNotesUi.kt
           grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/ServicesUi.kt
           grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/HandoverUi.kt
