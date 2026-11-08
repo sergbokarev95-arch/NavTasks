@@ -46,6 +46,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -197,6 +198,7 @@ fun NavTasksApp(
     val tabStateHolder = rememberSaveableStateHolder()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showProfiles by rememberSaveable { mutableStateOf(false) }
+    var showQuickProfiles by rememberSaveable { mutableStateOf(false) }
     var showServices by rememberSaveable { mutableStateOf(false) }
     var showWorks by rememberSaveable { mutableStateOf(false) }
     var showCalendar by rememberSaveable { mutableStateOf(false) }
@@ -304,9 +306,10 @@ fun NavTasksApp(
 
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
-    BackHandler(enabled = editorOpen || showSettings || showProfiles || showServices || showWorks || showWorkOrders || showCalendar ||
+    BackHandler(enabled = showQuickProfiles || editorOpen || showSettings || showProfiles || showServices || showWorks || showWorkOrders || showCalendar ||
             profiles.active.kind == NavProfileKind.PERSONAL || tabHistory.isNotEmpty() || tab != 0) {
         when {
+            showQuickProfiles -> showQuickProfiles = false
             editorOpen -> editorOpen = false
             showProfiles -> showProfiles = false
             showSettings -> showSettings = false
@@ -328,7 +331,19 @@ fun NavTasksApp(
     }
 
     MaterialTheme(colorScheme = scheme) {
-        Box(Modifier.fillMaxSize()) {
+        Box(
+            Modifier.fillMaxSize().navQuickProfilePinch(
+                enabled = !showQuickProfiles && !editorOpen && !showSettings &&
+                    !showProfiles && !showServices && !showWorks &&
+                    !showWorkOrders && !showCalendar,
+                onPinch = { showQuickProfiles = true },
+            )
+        ) {
+            // Blur the whole existing UI only while the profile selector is up.
+            // The selector itself is a crisp sibling, never blurred or sampled.
+            Box(Modifier.fillMaxSize().then(
+                if (showQuickProfiles) Modifier.blur(17.dp) else Modifier
+            )) {
             NavGlassBackdrop(palette)
             if (editorOpen) {
                 TaskEditorScreen(
@@ -532,8 +547,14 @@ fun NavTasksApp(
                             Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
                                 .padding(end = 19.dp, bottom = 83.dp),
                         ) {
-                            NavGlassCalendarButton(palette, hazeState) {
-                                showCalendar = true
+                            if (glassBackdrop != null) {
+                                NavLiquidGlassActionButton(
+                                    p = palette, backdrop = glassBackdrop, glyph = "calendar"
+                                ) { showCalendar = true }
+                            } else {
+                                NavGlassCalendarButton(palette, hazeState) {
+                                    showCalendar = true
+                                }
                             }
                         }
                     }
@@ -542,9 +563,18 @@ fun NavTasksApp(
                             Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
                                 .padding(end = 19.dp, bottom = 83.dp),
                         ) {
-                            NavGlassAddButton(palette, hazeState) {
-                                editorTask = null
-                                editorOpen = true
+                            if (glassBackdrop != null) {
+                                NavLiquidGlassActionButton(
+                                    p = palette, backdrop = glassBackdrop, glyph = "plus"
+                                ) {
+                                    editorTask = null
+                                    editorOpen = true
+                                }
+                            } else {
+                                NavGlassAddButton(palette, hazeState) {
+                                    editorTask = null
+                                    editorOpen = true
+                                }
                             }
                         }
                     }
@@ -572,6 +602,35 @@ fun NavTasksApp(
                     }
                 }
 
+            }
+            } // Existing application screen, blurred only during Quick Profiles.
+            if (showQuickProfiles) {
+                NavQuickProfilePicker(
+                    profiles = profiles.profiles,
+                    activeId = profiles.activeId,
+                    p = palette,
+                    lang = lang,
+                    onDismiss = { showQuickProfiles = false },
+                    onSelect = { id ->
+                        if (id != profiles.activeId) {
+                            // Exact same activation sequence as ProfilesScreen.activate().
+                            profiles.select(id)
+                            store.switchProfile()
+                            handoverStore.switchProfile()
+                            serviceStore.switchProfile()
+                            workOrderStore.switchProfile()
+                            tab = 0
+                            tabHistory = ""
+                            selectedDate = LocalDate.now()
+                            templateFilter = Frequency.DAILY
+                            expandedRun = null
+                            focusWorkOrderId = null
+                            focusHistoryWorkOrderId = null
+                            focusServiceId = null
+                        }
+                        showQuickProfiles = false
+                    }
+                )
             }
         }
     }

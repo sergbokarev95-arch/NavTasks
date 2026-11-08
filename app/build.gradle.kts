@@ -36,8 +36,8 @@ android {
             signingConfigs.findByName("betaStable")?.let { signingConfig = it }
             // Same app ID and betaStable signing as installed NavTasks;
             // versionCode 85 updates 0.4.60/0.4.61 without uninstalling.
-            applicationIdSuffix = ".glass"
-            versionNameSuffix = "-beta"
+            applicationIdSuffix = ".glassux"
+            versionNameSuffix = "-controls-preview1"
         }
         release {
             isMinifyEnabled = false
