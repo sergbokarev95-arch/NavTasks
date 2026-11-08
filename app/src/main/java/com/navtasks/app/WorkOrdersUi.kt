@@ -513,7 +513,8 @@ private fun WorkOrderClosedCard(
 ) {
     Column(
         Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
-            .padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Column(Modifier.fillMaxWidth().glassClickable(onClick = onHistory)
             .padding(vertical = 3.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -575,8 +576,9 @@ private fun WorkOrderCard(
     }
     Column(
         Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
-            .glassClickable(onClick = onHistory).padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(9.dp),
+            .glassClickable(onClick = onHistory)
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(
