@@ -108,3 +108,6 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 
 - 2026-11-08 — signed separate `NavTasks Glass Quick` Preview1, commit `cc1abcbac68e3efb4801ab8685167fbdc2715344`, CI42441508734 SUCCESS. Adds two-finger pinch quick profile picker + 12dp background blur/dialog, preserves five-store switch, fixes Settings nav footer by limiting safe inset to scrolling content. Signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glassquick-preview1; ZIP 10,869,116 bytes SHA256 97bf5ed69bded324d7dfe27e8f2150bd14e7a3f06d49c93caba78ccaf650f8d6. Isolated `com.navtasks.app.glassquick` app, no user data shared; main app code, optics, cards untouched. HONOR device acceptance pending, glass buttons are next.
+
+
+- 2026-11-08 — HONOR confirmed Quick Profile gesture/Settings footer Preview1 works. Built isolated `NavTasks Glass Buttons Preview2` using true dock-matching Backdrop refraction on Tasks floating '+' only, based on accepted preview. Source 50c8868af2e53455d3f993956af81848802cbc25, CI42442451411 SUCCESS, signed ZIP 10,872,529 bytes https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glassplus-preview2, SHA256 bd721d3d1d668972b279513a4d6be7afb5239065ef99e221bd48566b675ee4e6. Independent com.navtasks.app.glassquick code88, production main untouched; phone acceptance of new button pending.

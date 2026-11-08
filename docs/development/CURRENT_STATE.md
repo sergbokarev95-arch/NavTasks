@@ -230,3 +230,9 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-08 — pinch profile and Settings footer isolated Preview1 ready
 - Preview branch `feature/quick-profile-pinch-settings-footer-preview` compiled and signed CI `42441508734` SUCCESS, from accepted Surfaces 0.4.62 code. Separate package `com.navtasks.app.glassquick` versionCode87, ZIP 10.9MB https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glassquick-preview1.
 - Only main root handler/blur/modal and bounded Settings scrolling changed. Original LiquidGlass dock, gradient card tokens, Task/Service/Handover/AMOS logic unchanged. Plain swipe tabs not modified. Device HONOR testing pending; no main production source merge.
+
+
+## 2026-11-08 — Quick profile/Settings approved; '+' Liquid Glass isolated Preview2 available
+- User reports Quick Profile Preview1 works correctly on HONOR. Accepted behavior: inward 2-finger gesture, central blurred picker, store switching, Settings footer.
+- New isolated APK Preview2 code88 `com.navtasks.app.glassquick`: exact-dock Backdrop optical recipe on Tasks floating '+' only, original dimensions/click and Android12 fallback. CI 42442451411 SUCCESS. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/glassplus-preview2; SHA256 `bd721d3d1d668972b279513a4d6be7afb5239065ef99e221bd48566b675ee4e6`.
+- On-device screenshot/acceptance for plus glass pending; no production app changes. Do not treat a successful build as visual acceptance. Existing main code remains stable baseline.

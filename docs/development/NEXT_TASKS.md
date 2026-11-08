@@ -190,3 +190,12 @@
 - [ ] User tests Settings bottom/footer in Day and Night: last panel remains scrollable, no clipped navy region above Android gesture bar.
 - [ ] After approval create same-ID signed in-place version with code greater than all installed/recovery versions (existing 0.4.63 code86 recovery, preview separate code87); prepare higher-code stable Haze fallback, full profile export first, never uninstall.
 - [ ] Then adapt each circular '+' / Calendar / Settings action to reusable true Liquid Glass in its own incremental tests. Do not blanket change all buttons or profile logic.
+
+
+## Next: verify first true-glass floating action (+) on HONOR
+- [x] HONOR user accepted Quick Profile pinch and Settings footer Preview1.
+- [x] Add direct Backdrop/Liquid Glass to ONLY Tasks '+' action in separate test app, retaining 54dp, 28dp blue glyph, haptics and editor action, unchanged Haze fallback.
+- [x] Signed CI 42442451411 SUCCESS and small ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/glassplus-preview2/NavTasks_Glass_Plus_Button_Preview2.zip (10.9MB).
+- [ ] Test on HONOR: scroll Task card title/border under '+', compare refractive rim and blue glyph with dock in day/night; tap opens editor, normal scrolling and Quick Profile gestures unaffected.
+- [ ] Only after success, adapt calendar circular shortcut, then Settings icons, dialogs/other controls in small independent changes. Do not globally mutate task UI, profile stores or existing workflows.
+- [ ] Later prepare signed same-package upgrade to installed NavTasks, back up full profile first, maintain rollback with higher version code, never uninstall or merge unverified code.

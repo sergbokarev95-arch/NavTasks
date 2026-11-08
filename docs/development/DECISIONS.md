@@ -111,3 +111,6 @@
 
 
 - 2026-11-08: In response to user approval of new surfaces, first fix Settings nav footer and prototype quick profile switching via **inward two-finger pinch** on main screens only. Use non-consuming gesture with 96dp starting span, 48dp contraction and 25% shrink threshold; dismissible centered neutral-glass dialog on 12dp blurred app, current profile blue. Switch all five existing stores exactly as ProfilesScreen does, with no new data format. Disabled in editor/Settings/Calendar/inner pages. User requested full button glass later, but protect stability by doing it after HONOR acceptance. Separate signed Preview1 CI42441508734 SUCCESS, stable main source unchanged.
+
+
+- 2026-11-08: Quick Profile Preview1 two-finger pinch and Settings footer approved on HONOR. Begin glass action migration carefully: first '+' button only on Tasks, same `NavLiquidDockOptics.bar` Backdrop source, same 54dp target and click, API31/32 Haze fallback; preserve dock, button placement, task data and calendar/settings unchanged. Separate Preview2 `com.navtasks.app.glassquick` code88, CI42442451411 SUCCESS, device acceptance pending. Do not promote to stable or broaden button migration until reviewed.
