@@ -28,6 +28,19 @@ class NavSettings(context: Context) {
     var digestMinute by mutableStateOf(prefs.getInt("digest_minute", 0))
         private set
 
+    // Migration: previous "digest time" was the only clock exposed in Settings.
+    // Seed the new independent task reminder clock from that exact user choice.
+    var reminderHour by mutableStateOf(
+        prefs.getInt("reminder_hour", prefs.getInt("digest_hour", 13)).coerceIn(0, 23)
+    )
+        private set
+    var reminderMinute by mutableStateOf(
+        prefs.getInt("reminder_minute", prefs.getInt("digest_minute", 0)).coerceIn(0, 59)
+    )
+        private set
+    var groupSimultaneousReminders by mutableStateOf(prefs.getBoolean("group_reminders", true))
+        private set
+
     fun updateLanguage(value: UiLanguage) {
         language = value
         prefs.edit().putString("language", value.name).apply()
@@ -46,6 +59,18 @@ class NavSettings(context: Context) {
     fun setDigest(value: Boolean) {
         dailyDigestEnabled = value
         prefs.edit().putBoolean("digest", value).apply()
+    }
+
+    fun setReminderTime(hour: Int, minute: Int) {
+        reminderHour = hour.coerceIn(0, 23)
+        reminderMinute = minute.coerceIn(0, 59)
+        prefs.edit().putInt("reminder_hour", reminderHour)
+            .putInt("reminder_minute", reminderMinute).apply()
+    }
+
+    fun setGroupSimultaneousReminders(value: Boolean) {
+        groupSimultaneousReminders = value
+        prefs.edit().putBoolean("group_reminders", value).apply()
     }
 
     fun setDigestTime(hour: Int, minute: Int) {
