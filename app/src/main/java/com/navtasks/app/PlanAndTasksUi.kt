@@ -170,7 +170,7 @@ fun PlanScreenV2(
                                                 date, workOrders.entries, services.entries)
                                             val markColor = if (mark == CalendarDayState.EMPTY && workPlanned) p.blue else when (mark) {
                                                 CalendarDayState.COMPLETE -> p.mint
-                                                CalendarDayState.PARTIAL -> Color(0xFFE9B35A)
+                                                CalendarDayState.PARTIAL -> p.systemOrange
                                                 CalendarDayState.INCOMPLETE -> Color(0xFFE88B83)
                                                 CalendarDayState.SCHEDULED -> p.blue
                                                 else -> p.muted
@@ -227,7 +227,7 @@ fun PlanScreenV2(
                                     date, workOrders.entries, services.entries)
                                 val statusColor = if (status == CalendarDayState.EMPTY && hasWork) p.blue else when (status) {
                                     CalendarDayState.COMPLETE -> p.mint
-                                    CalendarDayState.PARTIAL -> Color(0xFFE7B25B)
+                                    CalendarDayState.PARTIAL -> p.systemOrange
                                     CalendarDayState.INCOMPLETE -> Color(0xFFE98881)
                                     CalendarDayState.SCHEDULED -> p.blue
                                     CalendarDayState.EMPTY -> p.border
@@ -289,7 +289,7 @@ fun PlanScreenV2(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         listOf(
                             p.mint to localized("Все выполнено", "All done", lang),
-                            Color(0xFFE7B25B) to localized("Часть", "Partial", lang),
+                            p.systemOrange to localized("Часть", "Partial", lang),
                             Color(0xFFE98881) to localized("Пропущено", "Missed", lang),
                         ).forEach { (color, title) ->
                             Row(verticalAlignment = Alignment.CenterVertically,
