@@ -1,6 +1,7 @@
 package com.navtasks.app
 
 import dev.chrisbanes.haze.hazeSource
+import com.kyant.backdrop.backdrops.layerBackdrop
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,6 +47,9 @@ fun WorkOrdersScreen(
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
+    // Page content only: floating buttons stay sibling to the recorder.
+    val actionBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+        com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
     var selectedFilter by rememberSaveable { mutableStateOf(WorkOverviewFilter.ALL) }
     var completionNotice by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<WorkOrderEntry?>(null) }
@@ -127,18 +131,21 @@ fun WorkOrdersScreen(
     Box(Modifier.fillMaxSize()) {
     // Edge-to-edge scroll content, matching Today; keep only the Add FAB inset.
     Column(Modifier.fillMaxSize().statusBarsPadding()
-        .hazeSource(hazeState)) {
+        .hazeSource(hazeState)
+        .then(if (actionBackdrop != null) Modifier.layerBackdrop(actionBackdrop) else Modifier)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NavGlassCircleButton(p, "back", onBack)
+            if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
+            else NavGlassCircleButton(p, "back", onBack)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text("NAVTASKS", color = p.blue, fontSize = 12.sp)
                 Text("AMOS · Work Orders", color = p.text, fontSize = 22.sp)
             }
-            NavGlassCircleButton(p, "search") {
+            if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
+            else NavGlassCircleButton(p, "search") {
                 searchOpen = !searchOpen
                 if (!searchOpen) searchText = ""
             }
@@ -264,13 +271,33 @@ fun WorkOrdersScreen(
             }
         }
     }
+    if (actionBackdrop != null) {
+        Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
+            .padding(start = 16.dp, top = 9.dp)) {
+            NavLiquidGlassCircleButton(p, actionBackdrop, "back", onBack)
+        }
+        Box(Modifier.align(Alignment.TopEnd).statusBarsPadding()
+            .padding(end = 16.dp, top = 9.dp)) {
+            NavLiquidGlassCircleButton(p, actionBackdrop, "search") {
+                searchOpen = !searchOpen
+                if (!searchOpen) searchText = ""
+            }
+        }
+    }
     Box(
         Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
             .padding(end = 19.dp, bottom = 18.dp),
     ) {
-        NavGlassAddButton(p, hazeState) {
+        if (actionBackdrop != null) {
+            NavLiquidGlassAddButton(p, actionBackdrop) {
             editing = null
             editorOpen = true
+            }
+        } else {
+            NavGlassAddButton(p, hazeState) {
+            editing = null
+            editorOpen = true
+            }
         }
     }
     } // End work screen; floating Add retains its separate glass overlay.
