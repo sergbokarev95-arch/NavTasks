@@ -122,7 +122,7 @@ fun ServicesScreen(
             )
         }
         LazyColumn(
-            Modifier.fillMaxSize(),
+            Modifier.fillMaxSize().dismissSearchImeOnResultsGesture(searchOpen),
             state = listState,
             contentPadding = PaddingValues(16.dp, 6.dp, 16.dp, 106.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
