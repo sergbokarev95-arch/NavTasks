@@ -113,8 +113,10 @@ fun HandoverScreen(
                 else NavGlassCircleButton(p, "back", onClick = onBack)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(if (personalMode) localized("ЛИЧНОЕ", "PERSONAL", lang) else "HANDOVER",
-                        color = p.blueText, fontSize = 13.sp, letterSpacing = 1.8.sp)
+                    if (personalMode) {
+                        Text(localized("Личное", "Personal", lang),
+                            color = p.blueText, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    } else NavBrandLabel(p)
                     Text(if (personalMode) localized("Заметки", "Notes", lang)
                         else localized("Передача дел", "Handover notes", lang),
                         color = p.text, fontSize = 22.sp)
