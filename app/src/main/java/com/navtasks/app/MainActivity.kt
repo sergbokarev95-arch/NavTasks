@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         }
         window.setBackgroundDrawable(ColorDrawable(
-            Color.parseColor(if (savedDark) "#000000" else "#EAF3FA")
+            Color.parseColor(if (savedDark) "#000000" else "#E6E8EC")
         ))
         requestedRunKey = intent.getStringExtra("runKey")
         requestedWorkOrderId = intent.getStringExtra("workOrderId")
@@ -53,14 +53,14 @@ class MainActivity : ComponentActivity() {
                 // Keep the pre-Compose background in sync when Night/Day is
                 // changed in Settings, so window exposures never flash white.
                 window.setBackgroundDrawable(ColorDrawable(
-                    Color.parseColor(if (dark) "#000000" else "#EAF3FA")
+                    Color.parseColor(if (dark) "#000000" else "#E6E8EC")
                 ))
                 @Suppress("DEPRECATION")
                 window.statusBarColor = Color.parseColor(
-                    if (dark) "#000000" else "#EAF3FA")
+                    if (dark) "#000000" else "#E6E8EC")
                 @Suppress("DEPRECATION")
                 window.navigationBarColor = Color.parseColor(
-                    if (dark) "#000000" else "#EAF3FA")
+                    if (dark) "#000000" else "#E6E8EC")
                 val flags = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
                     WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
                 window.insetsController?.setSystemBarsAppearance(
