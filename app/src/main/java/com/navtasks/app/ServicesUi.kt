@@ -304,7 +304,7 @@ fun ServicesScreen(
                             }
                         }
                         ServiceOption(localized("Удалить", "Delete", lang), p, false,
-                            modifier = Modifier.weight(1f)) {
+                            modifier = Modifier.weight(1f), destructive = true) {
                             confirmingDelete = service
                         }
                     }
@@ -565,7 +565,7 @@ private fun ServiceClosedCard(
             ServiceOption(localized("Восстановить", "Restore", lang), p, false,
                 modifier = Modifier.weight(1f), onClick = onRestore)
             ServiceOption(localized("Удалить навсегда", "Delete forever", lang), p, false,
-                modifier = Modifier.weight(1f), onClick = onPurge)
+                modifier = Modifier.weight(1f), destructive = true, onClick = onPurge)
         }
     }
 }
@@ -896,7 +896,8 @@ private fun ServiceNumberInput(
 @Composable
 private fun ServiceOption(
     label: String, p: NavPalette, selected: Boolean,
-    modifier: Modifier = Modifier, compact: Boolean = false, onClick: () -> Unit,
+    modifier: Modifier = Modifier, compact: Boolean = false,
+    destructive: Boolean = false, onClick: () -> Unit,
 ) {
     Box(modifier.navGlass(p, radius = 12.dp,
         role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
@@ -904,7 +905,8 @@ private fun ServiceOption(
         .heightIn(min = 44.dp)
         .padding(horizontal = if (compact) 5.dp else 10.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center) {
-        Text(label, color = if (selected) p.selectionContent else p.text,
+        Text(label, color = if (selected) p.selectionContent
+            else if (destructive) p.dangerText else p.text,
             fontSize = if (compact) 11.sp else 12.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
