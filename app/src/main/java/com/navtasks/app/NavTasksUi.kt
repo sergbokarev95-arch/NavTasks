@@ -1146,7 +1146,11 @@ fun RunTileV2(
     var exiting by remember(run.key) { mutableStateOf(false) }
     var confirming by remember(run.key) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val amount by animateFloatAsState(if (exiting) 1f else 0f, tween(330), label = "taskComplete")
+    val amount by animateFloatAsState(
+        if (exiting) 1f else 0f,
+        tween(NavTaskCompletionMotion.exitMillis),
+        label = "taskComplete",
+    )
     val flash = remember(run.key) { Animatable(0f) }
     // Only the header's existing action targets drive the card press.
     // Menu/checklist controls keep their own independent gestures.
@@ -1164,11 +1168,10 @@ fun RunTileV2(
         label = "checklistDisclosure",
     )
     suspend fun showConfirmation() {
-        // Two distinct mint flashes while the circle displays its tick.
-        flash.animateTo(1f, tween(140))
-        flash.animateTo(0.22f, tween(170))
-        flash.animateTo(0.85f, tween(140))
-        delay(150)
+        // ONE solid green confirmation, visible before the card starts moving.
+        // This is not an animation: no flashing, bouncing or color oscillation.
+        flash.snapTo(1f)
+        delay(NavTaskCompletionMotion.greenHoldMillis)
     }
     fun completeSimple() {
         if (confirming || exiting) return
@@ -1176,7 +1179,7 @@ fun RunTileV2(
         scope.launch {
             showConfirmation()
             exiting = true
-            delay(330)
+            delay(NavTaskCompletionMotion.exitMillis.toLong())
             store.setSimpleComplete(run.key, true)
             confirming = false
             exiting = false
@@ -1190,7 +1193,7 @@ fun RunTileV2(
             scope.launch {
                 showConfirmation()
                 exiting = true
-                delay(330)
+                delay(NavTaskCompletionMotion.exitMillis.toLong())
                 store.setCheck(run.key, id, true)
                 confirming = false
                 exiting = false
@@ -1222,12 +1225,12 @@ fun RunTileV2(
     val shape = RoundedCornerShape(15.dp)
     Column(
         Modifier.fillMaxWidth().graphicsLayer {
+            // Straight down only: the old up-kick and stretch are removed.
+            // Green is already fully visible from the previous hold phase.
             alpha = 1f - amount * 0.85f
-            translationY = if (amount < 0.32f) -amount / 0.32f * 10.dp.toPx()
-                else -10.dp.toPx() + (amount - 0.32f) / 0.68f * 55.dp.toPx()
-            scaleX = 1f + (1f - kotlin.math.abs(amount - 0.4f) / 0.6f).coerceIn(0f, 1f) * 0.045f
-            scaleX *= pressScale
-            scaleY = scaleX
+            translationY = amount * NavTaskCompletionMotion.dropDistanceDp.dp.toPx()
+            scaleX = pressScale
+            scaleY = pressScale
         }.navGlass(p, radius = 15.dp,
             role = if (run.checklist.isEmpty()) GlassRole.TASK else GlassRole.NESTED_TASK)
             .then(
