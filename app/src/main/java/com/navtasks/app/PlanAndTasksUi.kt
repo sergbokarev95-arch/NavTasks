@@ -825,6 +825,12 @@ fun TaskEditorScreen(
                         60 to localized("За час", "1 hour before", lang),
                         1440 to localized("За день", "1 day before", lang)).map { "${it.first}" to it.second },
                         "$reminder", p) { reminder = it.toInt() }
+                    Text(localized(
+                        "Без указанного времени напоминания считаются от основного времени в настройках. " +
+                            "Срок выполнения при этом остаётся до конца дня.",
+                        "Without a specific hour, reminders use the default time in Settings; " +
+                            "the task itself remains due by end of day.",
+                        lang), color = p.muted, fontSize = 12.sp)
                 }
             }
             NavPanel(p) {
@@ -1089,9 +1095,21 @@ fun SettingsScreen(
     val lang = settings.language
     val context = LocalContext.current
     var showDigestWheel by remember { mutableStateOf(false) }
+    var showReminderWheel by remember { mutableStateOf(false) }
     fun syncSettings() {
         NavNotifications.reschedule(context, store, settings)
         NavWidgetUpdater.updateAll(context, store)
+    }
+    if (showReminderWheel) {
+        NavTimeWheelDialog(
+            initial = LocalTime.of(settings.reminderHour, settings.reminderMinute),
+            p = p, lang = lang, onDismiss = { showReminderWheel = false },
+            onSelected = {
+                settings.setReminderTime(it.hour, it.minute)
+                syncSettings()
+                showReminderWheel = false
+            },
+        )
     }
     if (showDigestWheel) {
         NavTimeWheelDialog(
@@ -1142,6 +1160,30 @@ fun SettingsScreen(
                     Text(localized("Уведомления", "Notifications", lang), color = p.text, modifier = Modifier.weight(1f))
                     Switch(settings.notificationsEnabled, onCheckedChange = { settings.setNotifications(it); syncSettings() }, colors = navSwitchColors(p))
                 }
+                if (settings.notificationsEnabled) {
+                    OutlinedButton(onClick = { showReminderWheel = true },
+                        modifier = Modifier.fillMaxWidth()) {
+                        Text(localized("Основное время напоминаний", "Default reminder time", lang) +
+                            "  %02d:%02d".format(settings.reminderHour, settings.reminderMinute))
+                    }
+                    Text(localized(
+                        "Для задач «До конца дня» уведомление отсчитывается от этого времени. " +
+                            "Задачи с указанным часом используют своё время; срок «До конца дня» остаётся до 23:59.",
+                        "Tasks due by end of day use this reminder clock. " +
+                            "Tasks with a specific hour use their own time; end-of-day deadlines remain unchanged.",
+                        lang), color = p.muted, fontSize = 12.sp)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(localized("Объединять одновременные напоминания",
+                        "Group simultaneous reminders", lang),
+                        color = p.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
+                    Switch(settings.groupSimultaneousReminders,
+                        onCheckedChange = {
+                            settings.setGroupSimultaneousReminders(it)
+                            syncSettings()
+                        },
+                        enabled = settings.notificationsEnabled, colors = navSwitchColors(p))
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(localized("Ежедневная сводка пропусков", "Daily missed-task digest", lang),
                         color = p.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
@@ -1151,7 +1193,7 @@ fun SettingsScreen(
                 if (settings.notificationsEnabled && settings.dailyDigestEnabled) {
                     OutlinedButton(onClick = { showDigestWheel = true },
                         modifier = Modifier.fillMaxWidth()) {
-                        Text(localized("Время сводки", "Digest time", lang) +
+                        Text(localized("Время сводки пропусков", "Missed-task digest time", lang) +
                             "  %02d:%02d".format(settings.digestHour, settings.digestMinute))
                     }
                 }
