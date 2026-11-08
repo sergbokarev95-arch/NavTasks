@@ -296,3 +296,14 @@
 - [ ] Open Handover, Services and AMOS search: cursor and keyboard must appear immediately. Test editing ECDIS note with independent Delete/Cancel/Save labels, no overlap in RU/EN. Check expanded GMDSS weekly 0/5 inline and compact rounded subrows in Day/Night.
 - [ ] Check no data loss, all completion/history/recurrence unchanged and dock glass refraction motion unchanged. If rejected install code108 recovery over existing app without clearing data (future versionCode >=109).
 - [ ] After explicit user approval, consider separate small-popup optical glass experiment; DO NOT fake translucency or alter approved dock. SF Pro/Inter font decision unresolved.
+
+## NEXT — HONOR acceptance of 0.4.84
+- [x] Back up signed 0.4.82 exact-source UI; isolate 0.4.84 code109.
+- [x] Pointer Initial-pass helper for Handover/AMOS/Services result lists to remove search cursor and hide keyboard on result touches/scrolls, without consuming event or losing query; preserve autofocus on opening search.
+- [x] Active dock taps no longer invalidate SaveableStateProvider; smooth animated `animateScrollToItem(0)` on Today two axes, Handover, Works, Tasks; reset date/current Today and transient subviews, preserve original horizontal cross-tab animation and glass lens.
+- [x] Use Apple systemRed across Today and Plan weekends and incomplete-status marker; Apple systemOrange on note-reference glyph and circular border; retain all other status semantics.
+- [x] Update legacy calendar colors test and add semantic accent tests; first CI42504708801 failed only stale expected pink, final CI42505065303 SUCCESS. Signed 0.4.84 code109 ZIP: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.84-animated-dock-verified/NavTasks_Animated_Dock_0.4.84_Beta_Update.zip.
+- [x] Prepare optional higher-code exact 0.4.82 UI 0.4.85 code110 recovery CI42504767028 SUCCESS: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.85-ux-polish-recovery/NavTasks_Animated_Restore_0.4.85_Beta_Update.zip (do NOT install except after rejection).
+- [ ] Export full profiles; install 0.4.84 OVER existing NavTasks on HONOR. Verify active Today scroll from deep list/future chip animates to current day and first task; Works, Tasks, Handover active taps also smooth; cross-tab swipe/Back unaffected.
+- [ ] In Handover/AMOS/Services type search and then touch/drag results: caret loses focus/keyboard hides immediately but query remains and list works; tapping search field again focuses. Test Day/Night weekends and Plan incomplete dot in Apple red; question-mark note icon/ring orange. Confirm all data/glass preserved.
+- [ ] Only after explicit physical acceptance consider merging tested sources; main still unchanged. If recovery code110 used, future package builds must use versionCode >=111. Tiny-popup genuine optical glass lab and SF Pro/font licensing remain separate work.
