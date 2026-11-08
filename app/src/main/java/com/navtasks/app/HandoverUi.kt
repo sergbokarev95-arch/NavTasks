@@ -314,23 +314,23 @@ fun HandoverScreen(
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
+                HandoverDialogAction(localized("Сохранить", "Save", lang), p,
+                    enabled = sectionName.isNotBlank()) {
                     handover.saveSection(sectionName, editSectionId)
                     addSection = false
-                }, enabled = sectionName.isNotBlank()) {
-                    Text(localized("Сохранить", "Save", lang))
                 }
             },
             dismissButton = {
-                Row {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (editSectionId != null) {
-                        TextButton(onClick = {
+                        HandoverDialogAction(localized("Удалить", "Delete", lang),
+                            p, destructive = true) {
                             confirmDelete = editSectionId.orEmpty() to null
                             addSection = false
-                        }) { Text(localized("Удалить", "Delete", lang), color = p.dangerText) }
+                        }
                     }
-                    TextButton(onClick = { addSection = false }) {
-                        Text(localized("Отмена", "Cancel", lang))
+                    HandoverDialogAction(localized("Отмена", "Cancel", lang), p) {
+                        addSection = false
                     }
                 }
             },
@@ -364,23 +364,25 @@ fun HandoverScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
+                HandoverDialogAction(localized("Сохранить", "Save", lang), p,
+                    enabled = entryTitle.isNotBlank() &&
+                        navRichNoteAllowed(entryNotes, entryNotesHtml, 4000)) {
                     handover.saveEntry(sectionId, entryTitle, entryNotes, entryId, entryNotesHtml)
                     editEntry = null
-                }, enabled = entryTitle.isNotBlank() &&
-                    navRichNoteAllowed(entryNotes, entryNotesHtml, 4000)) {
-                    Text(localized("Сохранить", "Save", lang))
                 }
             },
             dismissButton = {
-                Row {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (entryId != null) {
-                        TextButton(onClick = {
+                        HandoverDialogAction(localized("Удалить", "Delete", lang),
+                            p, destructive = true) {
                             confirmDelete = sectionId to entryId
                             editEntry = null
-                        }) { Text(localized("Удалить", "Delete", lang), color = p.dangerText) }
+                        }
                     }
-                    TextButton(onClick = { editEntry = null }) { Text(localized("Отмена", "Cancel", lang)) }
+                    HandoverDialogAction(localized("Отмена", "Cancel", lang), p) {
+                        editEntry = null
+                    }
                 }
             },
         )
@@ -456,8 +458,8 @@ fun HandoverScreen(
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = { selectedEntry = null }) {
-                        Text(localized("Закрыть", "Close", lang))
+                    HandoverDialogAction(localized("Закрыть", "Close", lang), p) {
+                        selectedEntry = null
                     }
                 },
             )
@@ -472,15 +474,16 @@ fun HandoverScreen(
             text = { Text(localized("Пункт или раздел будет удалён из передачи дел.",
                 "The item or section will be removed from Handover.", lang)) },
             confirmButton = {
-                TextButton(onClick = {
+                HandoverDialogAction(localized("Удалить", "Delete", lang), p,
+                    destructive = true) {
                     if (entryId == null) handover.deleteSection(sectionId)
                     else handover.deleteEntry(sectionId, entryId)
                     confirmDelete = null
-                }) { Text(localized("Удалить", "Delete", lang), color = p.dangerText) }
+                }
             },
             dismissButton = {
-                TextButton(onClick = { confirmDelete = null }) {
-                    Text(localized("Отмена", "Cancel", lang))
+                HandoverDialogAction(localized("Отмена", "Cancel", lang), p) {
+                    confirmDelete = null
                 }
             },
         )
@@ -516,17 +519,33 @@ private fun HandoverGlassDialog(
             }
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(Modifier.navGlass(p, radius = 14.dp, role = GlassRole.CONTROL)) {
-                    dismissButton()
-                }
-                Spacer(Modifier.width(7.dp))
-                Box(Modifier.navGlass(p, radius = 14.dp, role = GlassRole.CONTROL)) {
-                    confirmButton()
-                }
+                dismissButton()
+                confirmButton()
             }
+        }
+    }
+}
+
+/** Separate, minimum 44dp, optically consistent actions; no merged Delete/Cancel pill. */
+@Composable
+private fun HandoverDialogAction(
+    label: String, p: NavPalette,
+    destructive: Boolean = false, enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    Box(Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)) {
+        TextButton(
+            onClick = onClick, enabled = enabled,
+            modifier = Modifier.heightIn(min = 44.dp),
+            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 4.dp),
+        ) {
+            Text(label,
+                color = if (!enabled) p.muted
+                    else if (destructive) p.systemRed else p.blueText,
+                fontSize = 13.sp)
         }
     }
 }
