@@ -660,7 +660,7 @@ private fun WorkOrderChip(
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = if (selected) p.selectionContent
-            else if (destructive) p.dangerText else p.text,
+            else if (destructive) p.systemRed else p.text,
             fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
