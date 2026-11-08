@@ -63,7 +63,7 @@ fun NavPopoverAction(
         text = {
             Text(label,
                 fontSize = 15.sp,
-                color = if (destructive) p.dangerText else p.text,
+                color = if (destructive) p.systemRed else p.text,
             )
         },
         onClick = onClick,
