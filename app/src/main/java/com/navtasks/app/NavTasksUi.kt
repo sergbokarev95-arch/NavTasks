@@ -57,6 +57,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.abs
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -638,7 +641,8 @@ fun NavTasksApp(
                                             showServices = true
                                         },
                                         openMissed = requestedMissed,
-                                        onOpenMissedHandled = onMissedRequestHandled)
+                                        onOpenMissedHandled = onMissedRequestHandled,
+                                        dockTapEpoch = todayDockEpoch)
                                     1 -> WorksHubScreen(
                                         serviceStore, workOrderStore, palette, lang,
                                         onBack = { openPrimaryTab(0) },
@@ -796,6 +800,7 @@ private fun TodayScreenV2(
     onServices: (String) -> Unit,
     openMissed: Boolean = false,
     onOpenMissedHandled: () -> Unit = {},
+    dockTapEpoch: Int = 0,
 ) {
     var showMissed by rememberSaveable { mutableStateOf(false) }
     var showCompleted by rememberSaveable { mutableStateOf(false) }
@@ -833,6 +838,14 @@ private fun TodayScreenV2(
     val hasWork = dayWorkOrders.any { amosVisibleOnDay(it, selectedDay) } ||
         dayServices.any { serviceReminderVisibleOnDay(it, selectedDay) }
 
+    val daysScroll = rememberLazyListState()
+    val taskListScroll = rememberLazyListState()
+    LaunchedEffect(dockTapEpoch) {
+        if (dockTapEpoch > 0) {
+            daysScroll.scrollToItem(0)
+            taskListScroll.scrollToItem(0)
+        }
+    }
     Column {
         NavPanel(p, Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -858,7 +871,6 @@ private fun TodayScreenV2(
         }
         Spacer(Modifier.height(12.dp))
         // Dates use all available width whenever there is no missed backlog.
-        val daysScroll = rememberLazyListState()
         LaunchedEffect(selectedDay, currentDay) {
             val index = java.time.temporal.ChronoUnit.DAYS.between(currentDay, selectedDay).toInt()
             if (index in 0..6) daysScroll.animateScrollToItem(index)
@@ -972,6 +984,7 @@ private fun TodayScreenV2(
             }
         }
         LazyColumn(
+            state = taskListScroll,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 125.dp),
             verticalArrangement = Arrangement.spacedBy(7.dp),
         ) {
@@ -1350,15 +1363,27 @@ fun RunTileV2(
                 if (run.checklist.isNotEmpty()) onToggleExpand()
                 else requestSimpleChange()
             }) {
-                Text(task.title, color = if (run.completed) p.muted else p.text,
+                Text(
+                    buildAnnotatedString {
+                        append(task.title)
+                        if (run.checklist.isNotEmpty()) {
+                            append("  ")
+                            withStyle(SpanStyle(color = p.blueText, fontSize = 11.sp)) {
+                                append("${run.checkedCount}/${run.checklist.size}")
+                            }
+                        }
+                    },
+                    color = if (run.completed) p.muted else p.text,
                     fontSize = 14.sp, maxLines = 2,
-                    textDecoration = if (run.completed || confirming) TextDecoration.LineThrough else null)
-                Spacer(Modifier.height(2.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (run.checklist.isNotEmpty()) Text("${run.checkedCount}/${run.checklist.size}", color = p.blueText, fontSize = 11.sp)
-                    if (run.transferred) Text(localized("Перенесено", "Moved", lang), color = p.successText, fontSize = 11.sp)
-                    if (overdue) Text(navDate(run.dueDate, lang), color = p.dangerText, fontSize = 11.sp)
-                    if (task.deadlineTime != null) Text(task.deadlineTime.toString(), color = p.muted, fontSize = 11.sp)
+                    textDecoration = if (run.completed || confirming) TextDecoration.LineThrough else null,
+                )
+                if (run.transferred || overdue || task.deadlineTime != null) {
+                    Spacer(Modifier.height(2.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (run.transferred) Text(localized("Перенесено", "Moved", lang), color = p.successText, fontSize = 11.sp)
+                        if (overdue) Text(navDate(run.dueDate, lang), color = p.dangerText, fontSize = 11.sp)
+                        if (task.deadlineTime != null) Text(task.deadlineTime.toString(), color = p.muted, fontSize = 11.sp)
+                    }
                 }
             }
             Box {
@@ -1393,9 +1418,10 @@ fun RunTileV2(
                 HorizontalDivider(color = p.border)
                 run.checklist.forEach { item ->
                     Row(verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth().navGlass(p, radius = 10.dp,
+                        modifier = Modifier.fillMaxWidth().navGlass(p, radius = 16.dp,
                             role = GlassRole.CONTROL, elevation = 0.dp)
-                            .padding(horizontal = 8.dp, vertical = 5.dp)) {
+                            .heightIn(min = 46.dp)
+                            .padding(horizontal = 7.dp, vertical = 1.dp)) {
                         RoundCheck(item.id in run.checkedIds || (confirming && run.checklist.all { it.id == item.id || it.id in run.checkedIds }), p,
                             onClick = {
                                 val checking = item.id !in run.checkedIds
