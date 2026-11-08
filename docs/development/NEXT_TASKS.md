@@ -232,3 +232,11 @@
 - [x] Signed same-Glass original 0.4.68 recovery as v0.4.71 code96 CI42455220247 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.71-glass-recovery/NavTasks_RichNotes_Restore_0.4.71_Beta_Update.zip.
 - [ ] User exports full profiles first and installs code95 without uninstall. Test HONOR keyboard with Russian/English after ". " and initial entry, selection & B/I/U/S/color/highlight, saved/reopen/backup preserving formatting, long-text scrolling, dark/day styling, dialog keyboard and search; all prior Glass/check/Handover/Services Requests functional regression.
 - [ ] Only if accepted merge app source into main and mark stable. If rejected, install code96 over it; avoid editing styled notes while old editor installed; future code>=97 if rollback was used.
+
+## Next: HONOR accept direct Handover Edit access 0.4.72
+- [x] Diagnose 0.4.70 Handover long-detail dialog: Edit was buried at bottom of a scrollable action list; visible edit was not discoverable.
+- [x] Back up rich-notes baseline, add 44dp accessible blue edit pencil in detail dialog title, reuse original editor and save functions, remove duplicate scroll-footer Edit. No store/schema/Glass changes.
+- [x] Signed same-ID 0.4.72 code97 candidate, full CI 42458988093 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.72-handover-edit-candidate/NavTasks_Handover_Edit_0.4.72_Beta_Update.zip.
+- [x] Higher-code safe 0.4.73 code98 exact-original-rich-notes fallback, full CI 42459070578 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.73-handover-edit-recovery/NavTasks_Handover_Restore_0.4.73_Beta_Update.zip.
+- [ ] Export full profiles; install 0.4.72 over installed Beta without uninstalling. On HONOR open ECDIS with a long note and tap pencil at top-right. Edit both title and WYSIWYG text, save/reopen, verify original completion mark/history, both themes, keyboard and profile switching.
+- [ ] If accepted, merge tested feature to main in a carefully reviewed promotion. If rejected, in-place update to fallback98 with intact data, do not uninstall. Future same-ID code >=99 after rollback.
