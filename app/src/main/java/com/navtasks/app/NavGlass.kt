@@ -14,6 +14,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import android.view.HapticFeedbackConstants
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.layout.*
@@ -655,6 +660,24 @@ fun NavGlassInput(
             }
         },
     )
+}
+
+/**
+ * Touching the result list clears search focus and closes the keyboard.
+ * Initial-pass down is observed but never consumed, so clicks and scroll
+ * gestures are delivered to the original handlers.
+ */
+@Composable
+fun Modifier.dismissSearchImeOnResultsGesture(searchOpen: Boolean): Modifier {
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    return if (!searchOpen) this else this.pointerInput(searchOpen) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            focus.clearFocus()
+            keyboard?.hide()
+        }
+    }
 }
 
 /** Compact search input shared across AMOS, maintenance and Handover. */
