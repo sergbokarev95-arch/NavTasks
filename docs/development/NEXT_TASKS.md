@@ -281,3 +281,18 @@
 - [ ] If approved consider promoting safe code after review; otherwise install code106 recovery (not downgrade/uninstall). If 0.4.81 installed future versionCode >=107.
 - [ ] Separately prototype **real small anchored popup glass**: Compose DropdownMenu uses another window and cannot directly share same-scene LayerBackdrop. Trial in-scene clipped, z-ordered overlay sharing app's original source, with controlled background blur and no optical flicker; maintain backdrop and tap-away semantics, and test performance on HONOR and Samsung before touching stable navigation. User approval required. Current 0.4.80 only matches neutral colors.
 - [ ] Typography SF Pro licensing / Inter alternative remains unresolved; do not bundle/rename font without user decision.
+
+## NEXT: HONOR acceptance of 0.4.82 active dock tap and compact checklist
+- [x] Preserve v0.4.80 exact-source backup before modifying.
+- [x] Fix root selected-tab click blocker in both optical and legacy dock callback handlers (do not redesign dock); keep per-tab reset keys and scroll/date state.
+- [x] Add explicit item-0 scroll on both Today task list and 7-day chips, current local date reset on Today dock tap.
+- [x] Inline styled completed count `0/5` after title and remove empty subtitle line for checklist task cards; round and compact child rows to 16dp/46dp without changing 44dp check targets.
+- [x] Autofocus shared search field and show IME after opening Handover, AMOS, Services search.
+- [x] Separate Handover Delete/Cancel/Save buttons into individually rounded buttons with 8dp gaps; no shared combined surface.
+- [x] Make destructive labels exact Apple systemRed Day #FF3B30, Night #FF453A; contrast-safe danger/status text remains separate.
+- [x] CI42502226588 SUCCESS full tests/Android signed build, verified in-place 0.4.82/code107: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.82-ux-fixes-verified/NavTasks_UX_Fixes_0.4.82_Beta_Update.zip.
+- [x] CI42502302586 SUCCESS rollback exact previous 0.4.80 code108: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.83-ux-recovery/NavTasks_UX_Restore_0.4.83_Beta_Update.zip. Only if user rejects fix.
+- [ ] Export FULL profiles, install v0.4.82 on HONOR over existing app (never uninstall) and tap selected Today at scrolled list and later dates; verify current date, first date chip and first task shown, then test other tabs and Back/swipe retention.
+- [ ] Open Handover, Services and AMOS search: cursor and keyboard must appear immediately. Test editing ECDIS note with independent Delete/Cancel/Save labels, no overlap in RU/EN. Check expanded GMDSS weekly 0/5 inline and compact rounded subrows in Day/Night.
+- [ ] Check no data loss, all completion/history/recurrence unchanged and dock glass refraction motion unchanged. If rejected install code108 recovery over existing app without clearing data (future versionCode >=109).
+- [ ] After explicit user approval, consider separate small-popup optical glass experiment; DO NOT fake translucency or alter approved dock. SF Pro/Inter font decision unresolved.
