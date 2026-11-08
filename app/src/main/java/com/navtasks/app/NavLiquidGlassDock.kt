@@ -138,13 +138,7 @@ fun NavLiquidGlassBottomBar(
     val opticalEdge = if (optical) {
         Modifier.border(
             width = .75.dp,
-            brush = Brush.verticalGradient(
-                listOf(
-                    Color.White.copy(alpha = if (dark) .36f else .49f),
-                    Color(0xFF8FAFCB).copy(alpha = .12f),
-                    Color.White.copy(alpha = if (dark) .17f else .28f)
-                )
-            ),
+            brush = navLiquidGlassRim(dark),
             shape = RoundedCornerShape(30.dp)
         )
     } else Modifier

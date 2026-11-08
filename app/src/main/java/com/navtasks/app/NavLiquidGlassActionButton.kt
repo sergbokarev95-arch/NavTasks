@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -22,18 +23,45 @@ import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
 
 /**
- * The exact optical recipe of the accepted dock, now on ONE floating create
- * action only. The button is outside the captured layer, sharing its Backdrop.
- * Glyph and touch target are drawn on top, never sampled by the lens.
+ * Single exact Backdrop optical recipe for all floating circular actions.
+ * The only visual material change is the DAY rim brush, shared with the dock.
+ * Do not edit blur/lens/vibrancy/highlight/shadow values or task semantics.
  */
 internal object NavLiquidGlassActionTokens {
     const val addDiameterDp = 54f
+    const val compactDiameterDp = 44f
 }
 
 @Composable
-fun NavLiquidGlassAddButton(
+fun NavLiquidGlassAddButton(p: NavPalette, backdrop: Backdrop, onClick: () -> Unit) =
+    NavLiquidGlassRoundButton(
+        p, backdrop, "plus", 54.dp, 28.dp, p.blue, onClick,
+    )
+
+@Composable
+fun NavLiquidGlassCalendarButton(p: NavPalette, backdrop: Backdrop, onClick: () -> Unit) =
+    NavLiquidGlassRoundButton(
+        p, backdrop, "calendar", 54.dp, 26.dp, p.blue, onClick,
+    )
+
+@Composable
+fun NavLiquidGlassCircleButton(
     p: NavPalette,
     backdrop: Backdrop,
+    kind: String,
+    onClick: () -> Unit,
+) = NavLiquidGlassRoundButton(
+    p, backdrop, kind, 44.dp, 25.dp, p.text, onClick,
+)
+
+@Composable
+internal fun NavLiquidGlassRoundButton(
+    p: NavPalette,
+    backdrop: Backdrop,
+    kind: String,
+    diameter: Dp,
+    glyphSize: Dp,
+    glyphColor: Color,
     onClick: () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -51,16 +79,10 @@ fun NavLiquidGlassAddButton(
             Color(0xFF8CACCB).copy(alpha = .035f),
         )
     )
-    val rim = Brush.verticalGradient(
-        listOf(
-            Color.White.copy(alpha = if (dark) .36f else .49f),
-            Color(0xFF8FAFCB).copy(alpha = .12f),
-            Color.White.copy(alpha = if (dark) .17f else .28f),
-        )
-    )
+    val rim = navLiquidGlassRim(dark)
 
     Box(
-        Modifier.size(NavLiquidGlassActionTokens.addDiameterDp.dp)
+        Modifier.size(diameter)
             .drawBackdrop(
                 backdrop = backdrop,
                 shape = { Capsule() }, // 54 x 54: geometrically a circle
@@ -83,6 +105,6 @@ fun NavLiquidGlassAddButton(
             .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        NavGlassGlyph("plus", p.blue, Modifier.size(28.dp))
+        NavGlassGlyph(kind, glyphColor, Modifier.size(glyphSize))
     }
 }
