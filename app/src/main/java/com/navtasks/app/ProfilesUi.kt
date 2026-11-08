@@ -1,5 +1,7 @@
 package com.navtasks.app
 
+import com.kyant.backdrop.backdrops.layerBackdrop
+
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,19 +50,25 @@ fun ProfilesScreen(
         onBack()
     }
 
+    val profileBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+        com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
+    Box(Modifier.fillMaxSize()) {
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
-            .padding(horizontal = 16.dp),
+        Modifier.fillMaxSize()
+            .then(if (profileBackdrop != null) Modifier.layerBackdrop(profileBackdrop) else Modifier)
+            .statusBarsPadding().navigationBarsPadding().padding(horizontal = 16.dp),
     ) {
         Row(
             Modifier.fillMaxWidth().padding(vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NavGlassCircleButton(p, "back", onBack)
+            if (profileBackdrop != null) Spacer(Modifier.size(44.dp))
+            else NavGlassCircleButton(p, "back", onBack)
             Spacer(Modifier.width(12.dp))
             Text(localized("Профили", "Profiles", lang), color = p.text,
                 fontSize = 24.sp, modifier = Modifier.weight(1f))
-            NavGlassCircleButton(p, "settings", onSettings)
+            if (profileBackdrop != null) Spacer(Modifier.size(44.dp))
+            else NavGlassCircleButton(p, "settings", onSettings)
         }
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()),
@@ -121,6 +129,17 @@ fun ProfilesScreen(
             if (error != null) Text(error.orEmpty(), color = p.dangerText, fontSize = 12.sp)
             Spacer(Modifier.height(32.dp))
         }
+    }
+    if (profileBackdrop != null) {
+        Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
+            .padding(start = 16.dp, top = 9.dp)) {
+            NavLiquidGlassCircleButton(p, profileBackdrop, "back", onBack)
+        }
+        Box(Modifier.align(Alignment.TopEnd).statusBarsPadding()
+            .padding(end = 16.dp, top = 9.dp)) {
+            NavLiquidGlassCircleButton(p, profileBackdrop, "settings", onSettings)
+        }
+    }
     }
 
     if (createOpen || editing != null) {
