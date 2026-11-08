@@ -112,14 +112,14 @@ internal fun NavQuickProfilePicker(
                     Row(
                         Modifier.fillMaxWidth()
                             .background(
-                                if (selected) p.blue.copy(alpha = 0.13f)
+                                if (selected) p.selectionFill
                                 else if (p.dark) Color(0xFF283643)
                                 else Color(0xFFE9F1F7),
                                 shape,
                             )
                             .border(
                                 1.dp,
-                                if (selected) p.blue.copy(alpha = .64f)
+                                if (selected) Color.White.copy(alpha = 0.24f)
                                 else p.border.copy(alpha = .65f),
                                 shape,
                             )
@@ -129,17 +129,17 @@ internal fun NavQuickProfilePicker(
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(
-                                profile.title, color = p.text, fontSize = 16.sp,
+                                profile.title, color = if (selected) p.selectionContent else p.text, fontSize = 16.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                             )
                             Text(
                                 if (profile.kind == NavProfileKind.PERSONAL)
                                     localized("Личное", "Personal", lang)
                                 else localized("Судовой профиль", "Vessel profile", lang),
-                                color = p.muted, fontSize = 12.sp,
+                                color = if (selected) p.selectionContent.copy(alpha = 0.86f) else p.muted, fontSize = 12.sp,
                             )
                         }
-                        if (selected) NavGlassGlyph("check", p.blue, Modifier.size(23.dp))
+                        if (selected) NavGlassGlyph("check", p.selectionContent, Modifier.size(23.dp))
                     }
                 }
             }
