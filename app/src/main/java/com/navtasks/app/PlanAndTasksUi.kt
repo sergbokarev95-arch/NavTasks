@@ -22,6 +22,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -445,7 +446,12 @@ fun TasksScreenV2(
     store: TaskStore, filter: Frequency, onFilter: (Frequency) -> Unit,
     p: NavPalette, lang: UiLanguage,
     onEdit: (TaskTemplate) -> Unit,
+    smoothReturnTick: Int = 0,
 ) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(smoothReturnTick) {
+        if (smoothReturnTick > 0) listState.animateScrollToItem(0)
+    }
     val labels = listOf(
         localized("День", "Daily", lang), localized("Неделя", "Weekly", lang),
         localized("Месяц", "Monthly", lang), localized("Разовые", "Extra", lang),
@@ -482,7 +488,7 @@ fun TasksScreenV2(
         }
         // Keep the same lazy list, stable item keys and editing navigation.
         LazyColumn(
-            Modifier.weight(1f),
+            Modifier.weight(1f), state = listState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
                 top = 5.dp, bottom = 180.dp),
             verticalArrangement = Arrangement.spacedBy(9.dp),
