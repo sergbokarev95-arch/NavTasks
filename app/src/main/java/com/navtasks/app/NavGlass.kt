@@ -85,7 +85,8 @@ fun Modifier.navGlass(
     val shape = RoundedCornerShape(radius)
     // Non-floating panels have no dynamic content behind them; a half-
     // transparent fill only flattens the source image sampled by Liquid Glass.
-    // Keep the original NAVIGATION and SELECTED material byte-for-byte.
+    // Keep the original NAVIGATION material untouched. SELECTED belongs to
+    // regular UI controls (not the independent Liquid Glass dock renderer).
     navSolidCardTokens(p, role)?.let { solid ->
         return this
             .clip(shape)
@@ -106,7 +107,7 @@ fun Modifier.navGlass(
         GlassRole.TASK -> if (p.dark) Color(0x781C2D40) else Color(0x79FFFFFF)
         GlassRole.NESTED_TASK -> if (p.dark) Color(0x80234259) else Color(0x7BDDECF7)
         GlassRole.NAVIGATION -> if (p.dark) Color(0x7918202A) else Color(0x7AFFFFFF)
-        GlassRole.SELECTED -> if (p.dark) Color(0x582989C5) else Color(0x493EA1F2)
+        GlassRole.SELECTED -> p.selectionFill
         GlassRole.CONTROL -> if (p.dark) Color(0x792C3D50) else Color(0x80FFFFFF)
     }
     // The edge, not a white/blue blanket on the surface, communicates the glass.
