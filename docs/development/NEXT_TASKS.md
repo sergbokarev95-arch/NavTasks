@@ -257,3 +257,13 @@
 - [x] Prepare optional exact former 0.4.74 UI fallback v0.4.77/code102, CI `42490737993` SUCCESS; https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.77-blue-selection-recovery/NavTasks_Blue_Selection_Restore_0.4.77_Beta_Update.zip. DO NOT use unless needed; no uninstall.
 - [ ] User exports full profiles and installs 0.4.76 over current Beta; verifies white selected labels in Settings, Today, Services/AMOS (including populated AMOS request tile), Task frequency, calendar current day, selected profile and rich-text formatting; checks readability and dock remained identical in both themes.
 - [ ] If accepted, promote feature carefully to main after explicit approval. Card materials redesigned separately later; Inter font decision remains pending user approval. If rollback v0.4.77 installed, future APK code>=103.
+
+## NEXT: physical acceptance of v0.4.78 Day02 / Night09 chosen card palettes
+- [x] Compare chosen concept `02.html` Day Slate Mist and `09.html` Night Smoke Slate to real screenshot; record exact HEX tokens.
+- [x] Protect immutable v0.4.76 code101 source in backup; scoped feature `feature/card-palette-day02-night09-0.4.78-beta`.
+- [x] Day only background -> `#E6E8EC`; synchronize native Activity pre-Compose window/system bar colors. Keep all light card material tokens unchanged.
+- [x] Night true-black background, neutral flat `#1D2126` outer and `#282D33` inner cards, uniform quiet border `#40464D`, white/muted text tones. Preserve optical glass dock/lens, selected solid Apple Blue/white, semantic success/orange/red, all business/profile/data logic.
+- [x] Add tests locking exact card/night HEX and optical roles, test updated legibility; final CI 42495153837 SUCCESS, signed same-ID 0.4.78 code103 ZIP https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.78-day02-night09-verified/NavTasks_Cards_02_09_0.4.78_Beta_Update.zip.
+- [x] Prepare optional higher-code same-ID 0.4.79 code104 exact pre-card v0.4.76 rollback, CI42495228148 SUCCESS; https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.79-card-palette-recovery/NavTasks_Cards_Restore_0.4.79_Beta_Update.zip. Do not install unless needed.
+- [ ] Export FULL profiles, install v0.4.78 in place on HONOR, verify Today, Plan, Tasks, Handover, AMOS/Services, settings Day/Night colors; native status/nav bars equal #E6E8EC in Day, no blue gradient at night; selected blue/white and optical dock unchanged, no lost profiles.
+- [ ] Only after explicit HONOR approval consider promoting tested code; do not modify stable main application. Font SF Pro license vs Inter alternatives unresolved; do not bundle unapproved alternative. If 0.4.79 rollback installed, next same-ID APK versionCode >=105.
