@@ -74,7 +74,8 @@ jobs:
           test "$(git hash-object app/src/main/java/com/navtasks/app/WorkOrderStore.kt)" = 'e721fd57a42403fefe4fca6d6c325a9c2a8acd46'
           test "$(git hash-object app/src/main/java/com/navtasks/app/HandoverStore.kt)" = '7db73a2b37a845ecbd76c8b6045ec6eb5d597077'
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassActionButton.kt)" = 'a551bac11ad051c1c72c68bb1030d084cacfef87'
-          test "$(git hash-object app/src/main/java/com/navtasks/app/HandoverUi.kt)" = '74b3c8858bb61180a1e868430e57365526a39634'
+          grep -Fq 'bottom = navFloatingActionBottomPadding(embeddedInTab)' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'HandoverFullNoteEditor(' app/src/main/java/com/navtasks/app/HandoverUi.kt
           test "$(git hash-object app/src/main/java/com/navtasks/app/TaskStore.kt)" = 'ab422f5c07755bf1f7e1b78edbe693f675f7d12e'
           test "$(git hash-object app/src/main/java/com/navtasks/app/ServiceStore.kt)" = '9302d73141adb644f0ec8fe7210c010da7aae376'
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavNotifications.kt)" = 'c0ddcbe460445f16704bda0a7251b4c3f19701d6'
