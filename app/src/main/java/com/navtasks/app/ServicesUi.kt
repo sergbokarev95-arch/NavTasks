@@ -265,7 +265,8 @@ fun ServicesScreen(
                                 color = accent, fontSize = 12.sp)
                         }
                         ServiceAmosRequestButton(
-                            if (service.requestNumber.isBlank())
+                            hasRequest = service.requestNumber.isNotBlank(),
+                            label = if (service.requestNumber.isBlank())
                                 localized("Указать заявку AMOS", "Enter AMOS request", lang)
                             else localized("Заявка AMOS: ", "AMOS request: ", lang) +
                                 service.requestNumber,
@@ -605,6 +606,11 @@ private fun ServiceEditorDialog(
     var requestDate by remember(existing?.id) {
         mutableStateOf(existing?.takeIf { it.unplanned }?.lastDate ?: LocalDate.now())
     }
+    // Planned equipment has a real last-service date, independently editable.
+    // Legacy entries keep both stored dates as-is until the user edits them.
+    var lastServiceDate by remember(existing?.id) {
+        mutableStateOf(existing?.takeUnless { it.unplanned }?.lastDate ?: LocalDate.now())
+    }
     var next by remember(existing?.id) {
         mutableStateOf(existing?.nextDate ?: LocalDate.now().plusMonths(12))
     }
@@ -673,6 +679,12 @@ private fun ServiceEditorDialog(
                         "For reference only — no effect on due dates or reminders.", lang),
                         color = p.muted, fontSize = 11.sp)
                 } else {
+                    Text(localized("Последнее обслуживание", "Last service date", lang),
+                        color = p.muted, fontSize = 12.sp)
+                    ServiceOption(navDate(lastServiceDate, lang, true), p, false,
+                        Modifier.fillMaxWidth()) {
+                        pickingDate = "last"
+                    }
                     Text(localized("Следующее обслуживание", "Next service date", lang),
                         color = p.muted, fontSize = 12.sp)
                     ServiceOption(navDate(next, lang, true), p, false, Modifier.fillMaxWidth()) {
@@ -700,6 +712,7 @@ private fun ServiceEditorDialog(
 
                             customSelected = false
                             period = months
+                            if (months > 0) next = calculatedNextServiceDate(lastServiceDate, months)
                         }
                     }
                     ServiceOption(
@@ -711,6 +724,7 @@ private fun ServiceEditorDialog(
                             if (candidate in 1..1200) {
 
                                 period = candidate
+                                next = calculatedNextServiceDate(lastServiceDate, candidate)
                             }
                         }
                         customSelected = true
@@ -729,6 +743,7 @@ private fun ServiceEditorDialog(
                                     if (total in 1..1200) {
 
                                         period = total
+                                        next = calculatedNextServiceDate(lastServiceDate, total)
                                     }
                                 }
                             }, p)
@@ -744,6 +759,7 @@ private fun ServiceEditorDialog(
                                     if (total in 1..1200) {
 
                                         period = total
+                                        next = calculatedNextServiceDate(lastServiceDate, total)
                                     }
                                 }
                             }, p)
@@ -802,11 +818,10 @@ private fun ServiceEditorDialog(
                         ServiceEntry(
                             id = existing?.id ?: UUID.randomUUID().toString(),
                             equipment = equipment.trim(),
-                            // For unplanned work, lastDate is the user-selected
-                            // informational request date, never a due date.
-                            lastDate = if (unplanned) requestDate
-                                else existing?.lastDate?.takeIf { it.isBefore(next) }
-                                    ?: next.minusDays(1),
+                            // A planned service uses the actual user-selected previous
+                            // maintenance date; never fabricate "next date - 1 day".
+                            // Unplanned keeps its informational AMOS request date.
+                            lastDate = if (unplanned) requestDate else lastServiceDate,
                             nextDate = if (unplanned) null else next,
                             comment = note.trim(),
                             commentHtml = noteHtml,
@@ -833,11 +848,23 @@ private fun ServiceEditorDialog(
     }
     if (pickingDate != null) {
         val forRequest = pickingDate == "request"
+        val forLastService = pickingDate == "last"
         NavDateWheelDialog(
-            initial = if (forRequest) requestDate else next, p = p, lang = lang,
+            initial = when {
+                forRequest -> requestDate
+                forLastService -> lastServiceDate
+                else -> next
+            }, p = p, lang = lang,
             onDismiss = { pickingDate = null },
             onSelected = { chosen ->
-                if (forRequest) requestDate = chosen else next = chosen
+                when {
+                    forRequest -> requestDate = chosen
+                    forLastService -> {
+                        lastServiceDate = chosen
+                        if (period > 0) next = calculatedNextServiceDate(chosen, period)
+                    }
+                    else -> next = chosen // Keep explicit manual due-date override.
+                }
                 pickingDate = null
             },
         )
@@ -931,9 +958,13 @@ internal fun serviceAmosBadgeColors(dark: Boolean): ServiceAmosBadgeColors =
         text = Color(0xFFAE5800),
     )
 
+/** Warm fill is reserved for records that already have an AMOS number. */
+internal fun serviceAmosBadgeFill(dark: Boolean, hasRequest: Boolean): Color =
+    if (hasRequest) serviceAmosBadgeColors(dark).fill else Color.Transparent
+
 @Composable
 private fun ServiceAmosRequestButton(
-    label: String, p: NavPalette,
+    hasRequest: Boolean, label: String, p: NavPalette,
     modifier: Modifier = Modifier, onClick: () -> Unit,
 ) {
     val colors = serviceAmosBadgeColors(p.dark)
@@ -941,7 +972,8 @@ private fun ServiceAmosRequestButton(
     Box(
         modifier
             .clip(shape)
-            .background(colors.fill, shape)
+            // Empty AMOS request is an outline-only action, not a filled badge.
+            .background(serviceAmosBadgeFill(p.dark, hasRequest), shape)
             .border(1.dp, colors.outline, shape)
             .glassClickable(onClick = onClick)
             .heightIn(min = 44.dp)
