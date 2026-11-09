@@ -46,7 +46,7 @@ internal object NavNotificationIconLab {
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL, "NavTasks icon comparison",
-                NotificationManager.IMPORTANCE_DEFAULT,
+                NotificationManager.IMPORTANCE_LOW,
             ),
         )
         val titles = listOf(
@@ -67,8 +67,7 @@ internal object NavNotificationIconLab {
                 .setColor(BRAND_BLUE)
                 .setAutoCancel(true)
                 .setShowWhen(false)
-                .setSilent(true)
-                .apply {
+                                .apply {
                     if (hasLargeIcon(variant)) {
                         setLargeIcon(Icon.createWithResource(
                             context, R.drawable.navtasks_notification_color_tile))
