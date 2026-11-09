@@ -270,7 +270,7 @@ fun ServicesScreen(
                                 localized("Указать заявку AMOS", "Enter AMOS request", lang)
                             else localized("Заявка AMOS: ", "AMOS request: ", lang) +
                                 service.requestNumber,
-                            p, Modifier.fillMaxWidth(),
+                            p = p, modifier = Modifier.fillMaxWidth(),
                         ) { requestTarget = service }
                     }
                     if (service.comment.isNotBlank()) {
