@@ -36,13 +36,13 @@ object NavNotifications {
     /**
      * Show one system app icon, not two competing logos.
      * Android's status-bar/notification icon is a monochrome 24dp symbol.
-     * Reuse the exact artwork supplied to the installed adaptive launcher icon
-     * instead of the old hand-traced notification icon. Do not set a large icon
-     * for branding: on HONOR that displaced/duplicated the app's icon.
+     * The launcher monochrome layer contains translucent stacked fills which
+     * get muddy at status-bar size. Use a dedicated 24dp high-contrast NavTasks
+     * card/check vector instead; never attach a second LargeIcon.
      */
     private fun notificationBuilder(context: Context, channel: String): Notification.Builder =
         Notification.Builder(context, channel)
-            .setSmallIcon(R.drawable.navtasks_icon_monochrome)
+            .setSmallIcon(R.drawable.navtasks_notification_small)
 
     fun createChannels(context: Context) {
         manager(context).createNotificationChannel(NotificationChannel(
