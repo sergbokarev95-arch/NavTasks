@@ -399,3 +399,11 @@
 - [ ] Trigger one fresh REAL notification from task, service or AMOS; screenshot collapsed/expanded shade, lock and status if possible. Does left NavTasks blue icon look good without right duplicate? Existing A/B/C test controls intentionally removed from the production candidate.
 - [ ] Verify notification timing, grouping, missed-task digest, tap actions, all profile data, Handover/Personal full-screen notes and Liquid Glass; then accept or revise icon only.
 - [ ] If regression, use 0.4.99 recovery in place; future same package versionCode >=125 after recovery.
+
+## NEXT — verify standalone D colored small icon on HONOR, 2026-11-10
+- [x] Inspect HONOR screenshot: B colored small mark is at left, C LargeIcon branded tile at right; B has not been approved as complete visual.
+- [x] Isolate D test from original A/B/C: one fully colored tile supplied as SmallIcon, no LargeIcon, no actual notification change.
+- [x] CI42638778449 SUCCESS, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.98-icon-d-verified (0.4.98/code123). CI42638844435 SUCCESS, exact v0.4.96 app recovery https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.99-icon-d-recovery (0.4.99/code124).
+- [ ] Export FULL profile, install D-tag build, Settings > Notifications > `Проверить D — цветная иконка слева`.
+- [ ] Send screenshot of the **single D** collapsed and expanded; check left visual against premium white/Slate-Mist/Apple-blue target and status bar small badge. Device may monochrome-mask fully opaque SmallIcon; test result determines whether viable.
+- [ ] Only after explicit user acceptance change production SmallIcon in a separate new versionCode >=125 if recovery ever installed; preserve normal reminder behavior. Avoid confusion with separately created production B 0.4.98/code123 release.
