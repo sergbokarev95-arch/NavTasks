@@ -1,10 +1,10 @@
-name: NavTasks 0.4.98 - isolated MagicOS notification SmallIcon comparison
+name: NavTasks 0.4.100 - isolated MagicOS notification SmallIcon comparison
 on:
   push:
-    branches: [feature/navtasks-notification-single-icon-0.4.98-beta]
+    branches: [feature/navtasks-notification-single-icon-0.4.100-beta]
     paths:
       - 'app/**'
-      - '.github/workflows/navtasks-single-icon-lab-0.4.98.yml'
+      - '.github/workflows/navtasks-single-icon-lab-0.4.100.yml'
   workflow_dispatch:
 permissions:
   contents: write
@@ -40,8 +40,8 @@ jobs:
           set -euo pipefail
           grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
           grep -Fq 'versionNameSuffix = "-beta"' app/build.gradle.kts
-          grep -Fq 'versionCode = 123' app/build.gradle.kts
-          grep -Fq 'versionName = "0.4.98"' app/build.gradle.kts
+          grep -Fq 'versionCode = 125' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.100"' app/build.gradle.kts
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavNotifications.kt)" = '869e614a8bfcfa11b85db39462cbd67c92c69bd6'
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt)" = 'c49e7a8edd155880693e1a7425399bb9b4397f83'
@@ -68,10 +68,10 @@ jobs:
       - name: Verify signed APK/ZIP/identity
         run: |
           set -euo pipefail
-          APK=NavTasks_Single_Icon_Compare_0.4.98_Beta.apk
-          ZIP=NavTasks_Notification_Icon_Lab_0.4.98_Beta_Update.zip
+          APK=NavTasks_Single_Icon_Compare_0.4.100_Beta.apk
+          ZIP=NavTasks_Notification_Icon_Lab_0.4.100_Beta_Update.zip
           test -s app/build/outputs/apk/debug/app-debug.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='123' versionName='0.4.98-beta'"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='125' versionName='0.4.100-beta'"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify app/build/outputs/apk/debug/app-debug.apk
           cp app/build/outputs/apk/debug/app-debug.apk "$APK"
           zip -9 -X "$ZIP" "$APK"
@@ -83,8 +83,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG=v0.4.98-single-icon-lab-verified
-          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-notification-single-icon-0.4.98-beta" --jq '.commit.sha')"
+          TAG=v0.4.100-single-icon-lab-verified
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-notification-single-icon-0.4.100-beta" --jq '.commit.sha')"
           if [ "$CURRENT_SHA" != "$GITHUB_SHA" ]; then
             echo "Skipping stale commit $GITHUB_SHA; current is $CURRENT_SHA"
             exit 0
@@ -93,7 +93,7 @@ jobs:
             echo "Immutable release already exists."
           else
             gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
-              --title "NavTasks 0.4.98 Beta - compare one notification SmallIcon at a time" \
+              --title "NavTasks 0.4.100 Beta - compare one notification SmallIcon at a time" \
               --notes "Signed CI-verified in-place icon diagnosis for MagicOS 11. In Settings > Notifications tap Compare notification icons to generate one preview at a time (A native, B blue contour, D full-color small, E launcher adaptive). Previous A/B/C test auto-grouped, and C LargeIcon appeared on the right. Existing notifications, timing, cards, profiles, schedules and Liquid Glass are unchanged; do NOT treat any trial icon as production until physically verified on HONOR. Backup all profiles before installing, never uninstall." \
               --prerelease
           fi
