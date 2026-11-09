@@ -415,3 +415,15 @@
 - [ ] If installing candidate, export FULL profiles, install OVER beta without uninstalling; trigger D separately and screenshot its LEFT avatar + status; trigger E separately and screenshot, preferably with MagicOS notification icon style Multicolor if available. Do NOT open multiple test notifications together. Check no accidental white-square status-bar icon.
 - [ ] Compare D/E with production B candidate on a new real notification; user chooses the final approach. Preserve old note/editor/services/schedule and app data.
 - [ ] Safe return version 0.4.101/code126 exact v0.4.96 app is in CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42639230106 SUCCESS, signed release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.101-single-icon-recovery is now verified and should be used ONLY to restore the prior app if needed. If code126 installed, next code>=127.
+
+## NEXT — validate color adaptive notification tile v0.4.102/code127 (2026-11-10)
+
+- [x] User selected full-color premium tile like Amnezia, NOT blue-only B and NOT duplicate LargeIcon C.
+- [x] Preserve original v0.4.96 source backup and isolate v0.4.102/code127 (code above v0.4.100/0.4.101), without changing task/profile/service/AMOS stores or Liquid Glass.
+- [x] White Slate Mist Apple Blue adaptive icon as actual HONOR SmallIcon, other OEMs mono, no LargeIcon. Settings single real-builder preview (clears old A/B/C); no reminder timing changes.
+- [x] Signed JUnit/assemble/APK/ZIP CI42642525997 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.102-honor-adaptive-icon-verified.
+- [x] Higher-code signed exact v0.4.96 app recovery v0.4.103/code128 CI42642766235 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.103-adaptive-icon-recovery.
+- [ ] Export FULL profiles. Install new 0.4.102 over existing beta without uninstall/clearing data.
+- [ ] On HONOR, Settings > Notifications > Проверить иконку уведомления. Capture individual notification (not grouped A/B/C), expanded and collapsed; check left tile against Amnezia and status-bar glyph. Evaluate actual MagicOS multicolor mode if available. Do NOT claim success without screenshot.
+- [ ] Check real scheduled task/AMOS/Service notifications, grouping and all regular screens/dock/profile data unaffected.
+- [ ] If adaptive SmallIcon white tile is tinted/blank or ugly on device, use signed v0.4.103 recovery and investigate system rendering next. After code128 recovery, future code>=129.
