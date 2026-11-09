@@ -427,3 +427,16 @@
 - [ ] On HONOR, Settings > Notifications > Проверить иконку уведомления. Capture individual notification (not grouped A/B/C), expanded and collapsed; check left tile against Amnezia and status-bar glyph. Evaluate actual MagicOS multicolor mode if available. Do NOT claim success without screenshot.
 - [ ] Check real scheduled task/AMOS/Service notifications, grouping and all regular screens/dock/profile data unaffected.
 - [ ] If adaptive SmallIcon white tile is tinted/blank or ugly on device, use signed v0.4.103 recovery and investigate system rendering next. After code128 recovery, future code>=129.
+
+## NEXT — Mobile NavTasks 1.0.0 preparation agreed 2026-11-10
+
+- [x] Scope limited before 1.0.0: dock press/hold; move Tasks UI to Work hub (alongside AMOS, Services); Today Calendar-left, Add Task-right with original Daily/Weekly/Monthly/One-off; replace dock Tasks with Reference containing ONLY empty SIRE 2.0 + VIQ7 archive tiles; thorough regression then stable 1.0.0.
+- [x] Explicitly DEFER full Reference/SIRE 2.0/VIQ7/manuals/PDF population and Windows desktop + sync until AFTER 1.0.0. No data migration for hypothetical future cloud.
+- [x] Save v0.4.102 original to `backup/navtasks-0.4.102-before-dock-press`; source 0.4.104/code129 `4e8d737854d5625271ca6665cd35e009dd5ac828`; JUnit/full APK/signature/ZIP CI42653872788 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.104-dock-press-verified.
+- [x] Safe in-place rollback v0.4.105/code130 exact v0.4.102 application source, CI42654015439 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.105-dock-press-recovery. No uninstall/clear.
+- [ ] User FULL profile export and physical HONOR check of 0.4.104: hold current tab (1.15x), hold a different tab (single lens slides to finger), release (1.0x matte or travel to chosen tab), rapid taps, cancels, left/right edge alignment, light/dark over text, haptics, old Back/scroll resets. Do not call phone-tested until confirmed.
+- [ ] After dock acceptance: separately move **TasksScreenV2** entry into `WorksHubScreen` as Routines without moving `TaskStore` data or changing TaskEditor/TaskRun/notifications/history/profile serialization. Preserve tasks count/status and Today/Calendar integration.
+- [ ] Separately adjust Today bottom actions: Plan/calendar LEFT, Add(+) RIGHT invoking the SAME TaskEditor screen, default frequency visible at top and existing choices Day/Week/Month/One-off. Test keyboard/back, no bottom overlap and both themes.
+- [ ] Replace fourth dock tab label/icon Tasks -> Reference; initial Reference page ONLY styled SIRE 2.0 and VIQ7 (archival) tiles with Coming Later, no broken links or hidden data.
+- [ ] End-to-end regression: Handover Personal notes rich editing, task recurrence, weekly/monthly move, overdue, AMOS/Services dates and history, profile exchange, notifications/digest icon, widgets, Plan statuses, all themes, Samsung/HONOR. Preserve all existing features and stable version before signing 1.0.0.
+- [ ] After 1.0.0 workstreams: populate Reference gradually with docs/inspection content and separate Windows+offline-first sync architecture.
