@@ -1,10 +1,10 @@
-name: NavTasks 0.4.98 Beta - HONOR full-color notification
+name: NavTasks 0.4.102 Beta - HONOR full-color notification
 on:
   push:
-    branches: [feature/navtasks-full-color-notification-0.4.98-beta]
+    branches: [feature/navtasks-full-color-notification-0.4.102-beta]
     paths:
       - 'app/**'
-      - '.github/workflows/navtasks-full-color-notification-0.4.98.yml'
+      - '.github/workflows/navtasks-full-color-notification-0.4.102.yml'
   workflow_dispatch:
 permissions:
   contents: write
@@ -40,8 +40,8 @@ jobs:
           set -euo pipefail
           grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
           grep -Fq 'versionNameSuffix = "-beta"' app/build.gradle.kts
-          grep -Fq 'versionCode = 123' app/build.gradle.kts
-          grep -Fq 'versionName = "0.4.98"' app/build.gradle.kts
+          grep -Fq 'versionCode = 127' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.102"' app/build.gradle.kts
           grep -Fq 'smallIconForManufacturer(Build.MANUFACTURER)' app/src/main/java/com/navtasks/app/NavNotifications.kt
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt)" = 'c49e7a8edd155880693e1a7425399bb9b4397f83'
@@ -66,10 +66,10 @@ jobs:
       - name: Verify signed APK/ZIP/identity
         run: |
           set -euo pipefail
-          APK=NavTasks_Full_Color_Notification_0.4.98_Beta.apk
-          ZIP=NavTasks_Full_Color_Notification_0.4.98_Beta_Update.zip
+          APK=NavTasks_Full_Color_Notification_0.4.102_Beta.apk
+          ZIP=NavTasks_Full_Color_Notification_0.4.102_Beta_Update.zip
           test -s app/build/outputs/apk/debug/app-debug.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='123' versionName='0.4.98-beta'"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='127' versionName='0.4.102-beta'"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify app/build/outputs/apk/debug/app-debug.apk
           cp app/build/outputs/apk/debug/app-debug.apk "$APK"
           zip -9 -X "$ZIP" "$APK"
@@ -81,8 +81,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG=v0.4.98-honor-full-color-verified
-          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-full-color-notification-0.4.98-beta" --jq '.commit.sha')"
+          TAG=v0.4.102-honor-adaptive-icon-verified
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-full-color-notification-0.4.102-beta" --jq '.commit.sha')"
           if [ "$CURRENT_SHA" != "$GITHUB_SHA" ]; then
             echo "Skipping stale commit $GITHUB_SHA; current is $CURRENT_SHA"
             exit 0
@@ -91,7 +91,7 @@ jobs:
             echo "Immutable release already exists."
           else
             gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
-              --title "NavTasks 0.4.98 Beta - HONOR full-color notification icon" \
-              --notes "Signed CI-verified Beta versionCode123. On HONOR, production notifications use a white/Slate Mist/Apple Blue full-color adaptive SmallIcon (left icon), never a separate LargeIcon. Other OEMs retain monochrome. One preview button in Settings uses the same production builder, old A/B/C preview replaced. Existing reminders, schedules, data, editor, launcher and optical Liquid Glass unchanged. Export FULL profiles; install over existing Beta without uninstalling. Physical HONOR visual check pending." \
+              --title "NavTasks 0.4.102 Beta - HONOR full-color notification icon" \
+              --notes "Signed CI-verified Beta versionCode127. On HONOR, production notifications use a white/Slate Mist/Apple Blue full-color adaptive SmallIcon (left icon), never a separate LargeIcon. Other OEMs retain monochrome. One preview button in Settings uses the same production builder, old A/B/C preview replaced. Existing reminders, schedules, data, editor, launcher and optical Liquid Glass unchanged. Export FULL profiles; install over existing Beta without uninstalling. Physical HONOR visual check pending." \
               --prerelease
           fi
