@@ -1,10 +1,10 @@
 name: NavTasks 0.4.102 Beta - HONOR full-color notification
 on:
   push:
-    branches: [feature/navtasks-full-color-notification-0.4.102-beta]
+    branches: [feature/navtasks-full-color-notification-0.4.98-beta]
     paths:
       - 'app/**'
-      - '.github/workflows/navtasks-full-color-notification-0.4.102.yml'
+      - '.github/workflows/navtasks-full-color-notification-0.4.98.yml'
   workflow_dispatch:
 permissions:
   contents: write
@@ -82,7 +82,7 @@ jobs:
         run: |
           set -euo pipefail
           TAG=v0.4.102-honor-adaptive-icon-verified
-          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-full-color-notification-0.4.102-beta" --jq '.commit.sha')"
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-full-color-notification-0.4.98-beta" --jq '.commit.sha')"
           if [ "$CURRENT_SHA" != "$GITHUB_SHA" ]; then
             echo "Skipping stale commit $GITHUB_SHA; current is $CURRENT_SHA"
             exit 0
