@@ -470,3 +470,14 @@
 - [ ] HONOR: install in-place AFTER FULL profile export; Work > Routine tasks opens and filters Day/Week/Month/One-off; create/edit/delete, subtasks, notes, move/overdue, history and reminders; Back returns Work, scroll persists after editor, old Tasks dock and Work entry show identical tasks, AMOS/Services/Today/Handover untouched. Check both themes and unchanged accepted dock animation. Only after confirmation proceed.
 - [ ] Second isolated stage: Today Calendar floating button LEFT, Add task (+) RIGHT using SAME TaskEditor; frequency selector at top for Daily/Weekly/Monthly/One-off; remove Tasks dock tab replacing with Reference/Справочник, ONLY two polished non-clickable Coming Later tiles SIRE 2.0 and archival VIQ7; no inspection/PDF database, content, sync.
 - [ ] Final UI/interaction/theme/notifications/widgets/import/export regression and stable mobile 1.0.0 after HONOR and Samsung tests. Reference content/manuals and Windows app/LAN/cloud sync remain AFTER 1.0.0.
+
+## NEXT — 0.4.112 HONOR acceptance and mobile 1.0.0 final polish (2026-11-10)
+
+- [x] Preserve accepted 0.4.110 source in backup branch; isolate next 0.4.112/code137.
+- [x] Today Calendar left + Task Add right using same floating glass/Haze components; frequency selector Day/Week/Month/One-off first in existing TaskEditor, no data migration.
+- [x] Dock fourth Tasks tab -> `Справочник`/Reference, matching glyph both new/old docks, only two SIRE2.0 + VIQ7 archive **noninteractive** tiles; old Tasks screen remains via Work > Routine tasks; remove Work's outdated Inspections dummy tile.
+- [x] Update parity test to new fourth-tab symbol while retaining Lab optics numeric checks; new ReferenceNavigationTest. Signed JUnit/assemble/version/ZIP CI42668433844 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.112-reference-today-verified; intermediate failed CI builds not released.
+- [x] Safe signed higher-code 0.4.113/code138 original 0.4.110 application rollback CI42667375817 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.113-reference-recovery; in-place only, full profile export, never uninstall.
+- [ ] HONOR real-device: install 0.4.112 over existing without clearing app; test Calendar LEFT, Add RIGHT with same 54dp glass in day/night, first-frequency selector for all four types; task add/edit/history/subtasks/overdue/notifications unchanged. Work contains exactly Routines/AMOS/Services; SIRE/VIQ7 Reference tiles are legible and not clickable; dock 0.4.108 smoothness unchanged; all swipes/Back, local profile, widgets, import/export unaffected.
+- [ ] After acceptance final pre-1.0.0 audit: UI geometry, rich note editor, services/AMOS workflow, notifications and widgets, accessibility/keyboard/scroll/performance and Samsung/HONOR checks; release v1.0.0 only with agreed user sign-off.
+- [ ] After v1.0.0 only: SIRE 2.0/VIQ7/reference document content, manuals and Windows offline-first client/sync.
