@@ -346,3 +346,15 @@
 - [ ] Export FULL profiles, install 0.4.90 over existing app on HONOR without uninstall; inspect Services request badges on planned/unplanned cards in both Day/Night, including unfilled request. Tap to edit and verify request number/date and save behavior unchanged.
 - [ ] Confirm ordinary blue filter/buttons remain blue, red delete remains red, and Liquid Glass dock unchanged. Do not merge into main or mark accepted until user's physical device test.
 - [ ] If recovery code116 installed, subsequent updates must use versionCode >=117. Genuine little-menu glass and pending 0.4.86 smart reminder / 0.4.88 notification icon acceptance remain separate.
+
+## NEXT — HONOR acceptance of service date + AMOS outline + notification icon 0.4.92
+- [x] Preserve immutable signed 0.4.90 source in backup branch and isolate 0.4.92 versionCode117.
+- [x] Fix fabricated planned lastDate and independent period/nextDate UI: show actual last service selector and calculate `LocalDate.plusMonths` on interval or last-date change; retain manual next-due override. Never migrate existing incorrect legacy records silently.
+- [x] Outline-only (transparent fill, neutral text) empty AMOS request button in Services; existing numbered requests keep warm day/night fill.
+- [x] Dedicated notification-only opaque white 24dp NavTasks layered-card/check vector, sole SmallIcon. Keep launcher icon and all reminder scheduling unchanged.
+- [x] Tests for 2024-04-25 + 60mo => 2029-04-25, leap/month-end, invalid zero interval, filled/outline badge; CI42561492881 **SUCCESS** signed Android APK/versionCode117 and ZIP. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.92-service-dates-icon-verified.
+- [x] Safe higher-code rollback to original exact 0.4.90 app logic/UI: 0.4.93/code118, CI42561496089 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.93-service-date-icon-recovery.
+- [ ] Export FULL profiles then install **0.4.92 over** current NavTasks on HONOR; NEVER uninstall or clear storage. Edit existing Gyro Sphere #1 with last service 25 April 2024 and select 60mo; expected next due 25 April 2029, not 26 April 2024. Also test new planned service, 6/12/60mo, manual next override and re-edit persistence.
+- [ ] Check no regression for unplanned AMOS request date/number, service completion/history, notifications and task calendars. In Services Day/Night compare numbered AMOS filled vs empty outline/neutral text, test tap+save.
+- [ ] Clear previous alerts, trigger a NEW notification; inspect app icon on MagicOS lock screen, shade and status bar. Expect one recognizable monochrome task-card mark (OEM chooses coloring/tile); no second duplicated LargeIcon. Device result cannot be inferred from CI.
+- [ ] Only promote app feature after user device acceptance. If optional rollback code118 installed, next versionCode >=119. Keep glass optical dock unchanged.
