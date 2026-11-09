@@ -1,0 +1,92 @@
+name: NavTasks 0.4.99 Beta - restore exact 0.4.94 R2 after color icon test
+on:
+  push:
+    branches: [feature/navtasks-0.4.99-notification-recovery]
+    paths:
+      - 'app/**'
+      - '.github/workflows/navtasks-notification-recovery-0.4.99.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore original Beta signing
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify source integrity, run all tests and assemble
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-beta"' app/build.gradle.kts
+          grep -Fq 'versionCode = 124' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.99"' app/build.gradle.kts
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt)" = 'c49e7a8edd155880693e1a7425399bb9b4397f83'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassActionButton.kt)" = 'a551bac11ad051c1c72c68bb1030d084cacfef87'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt)" = 'cbdb16dfe8b9ee7e7e8c623f7b0947988da4a618'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavGlass.kt)" = '81c17717c1f1df08df7e4d9f5dfecf091f0c00d9'
+          ! git diff --name-only b7242279aafa8d2c2c4ce5832f5952361419cac7 HEAD -- app/src/main/java/com/navtasks/app/HandoverStore.kt app/src/main/java/com/navtasks/app/TaskStore.kt app/src/main/java/com/navtasks/app/ProfileStore.kt app/src/main/java/com/navtasks/app/ServiceStore.kt app/src/main/java/com/navtasks/app/WorkOrderStore.kt | grep .
+          grep -Fq 'HandoverFullNoteEditor(' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'confirmDelete = sectionId to entryId' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'fullPage = true' app/src/main/java/com/navtasks/app/HandoverFullNoteEditor.kt
+          grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/HandoverFullNoteEditor.kt
+          ! grep -Fq '.setLargeIcon(' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          grep -Fq 'calendarHasOutcomeDot' app/src/test/java/com/navtasks/app/CalendarVisualRulesTest.kt
+          gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - name: Remove signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify signed APK identity and compact ZIP
+        run: |
+          set -euo pipefail
+          APK=NavTasks_Previous_0.4.94_0.4.99_Recovery_Beta.apk
+          ZIP=NavTasks_Previous_0.4.94_0.4.99_Recovery_Beta_Update.zip
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='124' versionName='0.4.99-beta'"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk "$APK"
+          zip -9 -X "$ZIP" "$APK"
+          unzip -t "$ZIP"
+          test "$(sha256sum "$APK" | cut -d ' ' -f 1)" = "$(unzip -p "$ZIP" "$APK" | sha256sum | cut -d ' ' -f 1)"
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+      - name: Publish CI-verified signed Beta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=v0.4.99-notification-recovery
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-0.4.99-notification-recovery" --jq '.commit.sha')"
+          if [ "$CURRENT_SHA" != "$GITHUB_SHA" ]; then
+            echo "Skipping stale source; branch now points to $CURRENT_SHA"
+            exit 0
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Immutable release exists; not replacing."
+          else
+            gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.99 Beta - exact 0.4.94 R2 app recovery" \
+              --notes "Exact previously signed 0.4.94 R2 application source with ONLY versionName/Code raised to 0.4.99/code124. Install in-place if HONOR color icon v0.4.98 is not acceptable. All profiles/notes/tasks/services/reminders and Liquid Glass kept. Do not uninstall or clear storage. Original Beta signature; unit tests, APK identity and ZIP integrity validated." \
+              --prerelease
+          fi
