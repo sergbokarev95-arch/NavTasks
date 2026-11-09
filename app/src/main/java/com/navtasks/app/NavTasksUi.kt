@@ -555,18 +555,25 @@ fun NavTasksApp(
                 }
                 }
             } else if (showRoutineTasks) {
-                RoutinesModuleScreen(
-                    store = store,
-                    filter = templateFilter,
-                    onFilter = { templateFilter = it },
-                    p = palette, lang = lang,
-                    onBack = { showRoutineTasks = false },
-                    onEdit = { editorTask = it; editorOpen = true },
-                    onAdd = {
-                        editorTask = null
-                        editorOpen = true
-                    },
-                )
+                // Preserve routine-list scroll/expanded child state while the
+                // existing TaskEditor temporarily replaces this full-screen page.
+                // Profile-specific key prevents cross-profile UI state bleed.
+                tabStateHolder.SaveableStateProvider(
+                    profiles.activeId + "/work-routines"
+                ) {
+                    RoutinesModuleScreen(
+                        store = store,
+                        filter = templateFilter,
+                        onFilter = { templateFilter = it },
+                        p = palette, lang = lang,
+                        onBack = { showRoutineTasks = false },
+                        onEdit = { editorTask = it; editorOpen = true },
+                        onAdd = {
+                            editorTask = null
+                            editorOpen = true
+                        },
+                    )
+                }
             } else if (showWorks) {
                 WorksHubScreen(serviceStore, workOrderStore, palette, lang,
                     taskCount = store.templates.size,
