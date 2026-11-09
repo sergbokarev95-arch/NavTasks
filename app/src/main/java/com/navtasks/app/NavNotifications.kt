@@ -34,15 +34,17 @@ object NavNotifications {
     private fun manager(context: Context) = context.getSystemService(NotificationManager::class.java)
 
     /**
-     * Show one system app icon, not two competing logos.
-     * Android's status-bar/notification icon is a monochrome 24dp symbol.
-     * The launcher monochrome layer contains translucent stacked fills which
-     * get muddy at status-bar size. Use a dedicated 24dp high-contrast NavTasks
-     * card/check vector instead; never attach a second LargeIcon.
+     * MagicOS 11 on HONOR Magic 8 Pro: physically verified A/B/C comparison.
+     * Test B (colored, transparent 24dp SmallIcon) appeared in the LEFT notification
+     * icon position with blue NavTasks outlines. Test C LargeIcon appeared on the
+     * RIGHT of expanded notifications, not as the left app icon.
+     * Keep only the approved native SmallIcon path, with no LargeIcon.
+     * On standard Android, notification/status-bar SmallIcon may still be tinted
+     * monochrome by the OS. No scheduling or message behavior changes here.
      */
     private fun notificationBuilder(context: Context, channel: String): Notification.Builder =
         Notification.Builder(context, channel)
-            .setSmallIcon(R.drawable.navtasks_notification_small)
+            .setSmallIcon(R.drawable.navtasks_notification_colored_small)
             // Accent hint only; MagicOS controls actual badge/tile colors.
             .setColor(android.graphics.Color.rgb(0, 113, 227))
 
