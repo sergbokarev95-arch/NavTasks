@@ -264,12 +264,12 @@ fun ServicesScreen(
                                 navDate(due, lang, true),
                                 color = accent, fontSize = 12.sp)
                         }
-                        ServiceOption(
+                        ServiceAmosRequestButton(
                             if (service.requestNumber.isBlank())
                                 localized("Указать заявку AMOS", "Enter AMOS request", lang)
                             else localized("Заявка AMOS: ", "AMOS request: ", lang) +
                                 service.requestNumber,
-                            p, service.requestNumber.isNotBlank(), Modifier.fillMaxWidth(),
+                            p, Modifier.fillMaxWidth(),
                         ) { requestTarget = service }
                     }
                     if (service.comment.isNotBlank()) {
@@ -909,6 +909,49 @@ private fun ServiceOption(
             else if (destructive) p.systemRed else p.text,
             fontSize = if (compact) 11.sp else 12.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/**
+ * Only the AMOS request badge inside Services uses the chosen warm accent.
+ * Keep the action/filter selection system blue and preserve the glass dock.
+ */
+internal data class ServiceAmosBadgeColors(
+    val fill: Color, val outline: Color, val text: Color,
+)
+
+internal fun serviceAmosBadgeColors(dark: Boolean): ServiceAmosBadgeColors =
+    if (dark) ServiceAmosBadgeColors(
+        fill = Color(0xFF403227),
+        outline = Color(0xFF74583C),
+        text = Color(0xFFFFBF79),
+    ) else ServiceAmosBadgeColors(
+        fill = Color(0xFFFFF1DE),
+        outline = Color(0xFFF4C48B),
+        text = Color(0xFFAE5800),
+    )
+
+@Composable
+private fun ServiceAmosRequestButton(
+    label: String, p: NavPalette,
+    modifier: Modifier = Modifier, onClick: () -> Unit,
+) {
+    val colors = serviceAmosBadgeColors(p.dark)
+    val shape = RoundedCornerShape(12.dp)
+    Box(
+        modifier
+            .clip(shape)
+            .background(colors.fill, shape)
+            .border(1.dp, colors.outline, shape)
+            .glassClickable(onClick = onClick)
+            .heightIn(min = 44.dp)
+            .padding(horizontal = 10.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label, color = colors.text, fontSize = 12.sp,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
