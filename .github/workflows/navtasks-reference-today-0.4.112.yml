@@ -51,6 +51,7 @@ jobs:
           grep -Fq 'TasksScreenV2(' app/src/main/java/com/navtasks/app/RoutinesModuleScreen.kt
           grep -Fq 'onTasks = { showRoutineTasks = true }' app/src/main/java/com/navtasks/app/NavTasksUi.kt
           grep -Fq 'onClick = onTasks' app/src/main/java/com/navtasks/app/WorksHubUi.kt
+          ! grep -Fq 'title = localized("Инспекции"' app/src/main/java/com/navtasks/app/WorksHubUi.kt
           grep -Fq 'ReferenceHubScreen(palette, lang' app/src/main/java/com/navtasks/app/NavTasksUi.kt
           grep -Fq 'NavLiquidDockTab("reference", "Справочник")' app/src/main/java/com/navtasks/app/NavLiquidDockTabs.kt
           grep -Fq 'localized("Справочник", "Reference", lang)' app/src/main/java/com/navtasks/app/NavGlass.kt

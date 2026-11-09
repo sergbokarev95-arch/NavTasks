@@ -144,20 +144,6 @@ fun WorksHubScreen(
                     onClick = onServices,
                 )
             }
-            item {
-                WorkHubTile(
-                    p = p,
-                    title = localized("Инспекции", "Inspections", lang),
-                    description = localized(
-                        "VIQ7 и SIRE 2.0 — справочник и чек-листы (позже).",
-                        "VIQ7 and SIRE 2.0 reference and checklists (planned).",
-                        lang,
-                    ),
-                    secondary = localized("В разработке", "Coming next", lang),
-                    icon = "plus",
-                    onClick = null,
-                )
-            }
         }
     }
     if (workBackdrop != null) {
