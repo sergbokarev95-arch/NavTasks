@@ -1,7 +1,7 @@
 name: NavTasks 0.4.100 - isolated MagicOS notification SmallIcon comparison
 on:
   push:
-    branches: [feature/navtasks-notification-single-icon-0.4.100-beta]
+    branches: [feature/navtasks-notification-single-icon-0.4.98-beta]
     paths:
       - 'app/**'
       - '.github/workflows/navtasks-single-icon-lab-0.4.100.yml'
@@ -84,7 +84,7 @@ jobs:
         run: |
           set -euo pipefail
           TAG=v0.4.100-single-icon-lab-verified
-          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-notification-single-icon-0.4.100-beta" --jq '.commit.sha')"
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-notification-single-icon-0.4.98-beta" --jq '.commit.sha')"
           if [ "$CURRENT_SHA" != "$GITHUB_SHA" ]; then
             echo "Skipping stale commit $GITHUB_SHA; current is $CURRENT_SHA"
             exit 0
