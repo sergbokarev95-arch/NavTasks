@@ -440,3 +440,13 @@
 - [ ] Replace fourth dock tab label/icon Tasks -> Reference; initial Reference page ONLY styled SIRE 2.0 and VIQ7 (archival) tiles with Coming Later, no broken links or hidden data.
 - [ ] End-to-end regression: Handover Personal notes rich editing, task recurrence, weekly/monthly move, overdue, AMOS/Services dates and history, profile exchange, notifications/digest icon, widgets, Plan statuses, all themes, Samsung/HONOR. Preserve all existing features and stable version before signing 1.0.0.
 - [ ] After 1.0.0 workstreams: populate Reference gradually with docs/inspection content and separate Windows+offline-first sync architecture.
+
+## NEXT — Verify 0.4.106 dock quick response on physical HONOR (2026-11-10)
+
+- [x] Preserve v0.4.104 in backup branch and isolate versionCode131 candidate.
+- [x] Eliminate press release -> click transient retarget by stable clicked destination, preserve canceled gestures and selected tab as fallback, speed critically damped travel without changing original shader/material or navigation semantics.
+- [x] New JUnit for fast tap destination, cancellation, edge bounds, hold/travel/idle scales; signed assemble/ZIP CI42657916308 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.106-dock-response-verified.
+- [x] Prepare exact v0.4.104 application fallback as v0.4.107/code132, CI42658060669 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.107-dock-response-recovery.
+- [ ] User export FULL profiles and install verified v0.4.106 over v0.4.104. Never uninstall or clear.
+- [ ] HONOR: rapidly tap distant dock tabs, press/hold current and unselected tabs, release, cancel, check extreme left/right, day/night optical text, matte, haptics and navigation reset. Ensure no pause, bounce or flash. If still delayed, user feedback before additional tuning.
+- [ ] Once accepted continue 1.0.0 scope: Tasks UI within Work; Today Calendar left/Add right; Reference tab ONLY SIRE 2.0 and VIQ7 placeholder tiles; test and sign. Content/Windows after 1.0.0.
