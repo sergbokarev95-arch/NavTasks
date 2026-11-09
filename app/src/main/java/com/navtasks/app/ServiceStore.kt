@@ -137,6 +137,16 @@ data class ServiceEntry(
     }
 }
 
+/**
+ * Planned maintenance: compute the next due date from the ACTUAL last service,
+ * never from an unrelated default date or an invented yesterday value.
+ * Keep manually selected due dates in ServiceEntry unchanged until edited.
+ */
+internal fun calculatedNextServiceDate(lastServiceDate: LocalDate, periodMonths: Int): LocalDate {
+    require(periodMonths in 1..1200) { "A recurring service needs a valid interval" }
+    return lastServiceDate.plusMonths(periodMonths.toLong())
+}
+
 internal fun serviceWarningStart(entry: ServiceEntry): LocalDate {
     require(!entry.unplanned) { "Unplanned requests have no due-date warnings" }
     return requireNotNull(entry.nextDate).minusMonths(entry.remindMonths.toLong())
