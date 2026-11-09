@@ -21,6 +21,14 @@ class ServiceAmosBadgeColorsTest {
         assertEquals(Color(0xFFFFBF79), c.text)
     }
 
+    @Test fun emptyRequestIsOutlineOnlyInBothThemes() {
+        for (dark in listOf(false, true)) {
+            assertEquals(Color.Transparent, serviceAmosBadgeFill(dark, hasRequest = false))
+            assertEquals(serviceAmosBadgeColors(dark).fill,
+                serviceAmosBadgeFill(dark, hasRequest = true))
+        }
+    }
+
     @Test fun onlyRequestBadgeUsesWarmAccentNotGlobalSelection() {
         for (dark in listOf(false, true)) {
             val request = serviceAmosBadgeColors(dark)
