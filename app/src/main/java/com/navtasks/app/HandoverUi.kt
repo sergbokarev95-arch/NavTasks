@@ -153,7 +153,9 @@ fun HandoverScreen(
                 .dismissSearchImeOnResultsGesture(searchOpen),
             contentPadding = PaddingValues(
                 start = 16.dp, end = 16.dp, top = 10.dp,
-                bottom = if (embeddedInTab) 126.dp else 32.dp,
+                // Keep the final section/entry entirely above the glass Add
+                // button (including the navigation gesture inset in dock tabs).
+                bottom = navFloatingActionBottomPadding(embeddedInTab),
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

@@ -1046,7 +1046,12 @@ private fun TodayScreenV2(
         }
         LazyColumn(
             state = taskListScroll,
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 125.dp),
+            // Content is drawn behind floating glass. Reserve the gesture inset,
+            // button offset + diameter and 20dp breathing room at list end.
+            contentPadding = PaddingValues(
+                start = 16.dp, end = 16.dp,
+                bottom = navFloatingActionBottomPadding(embeddedInTab = true),
+            ),
             verticalArrangement = Arrangement.spacedBy(7.dp),
         ) {
             if (showMissed) {
