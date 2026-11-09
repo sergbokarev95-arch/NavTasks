@@ -49,6 +49,7 @@ jobs:
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavGlass.kt)" = '81c17717c1f1df08df7e4d9f5dfecf091f0c00d9'
           ! git diff --name-only b7242279aafa8d2c2c4ce5832f5952361419cac7 HEAD -- app/src/main/java/com/navtasks/app/HandoverStore.kt app/src/main/java/com/navtasks/app/TaskStore.kt app/src/main/java/com/navtasks/app/ProfileStore.kt app/src/main/java/com/navtasks/app/ServiceStore.kt app/src/main/java/com/navtasks/app/WorkOrderStore.kt | grep .
           grep -Fq 'HandoverFullNoteEditor(' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'confirmDelete = sectionId to entryId' app/src/main/java/com/navtasks/app/HandoverUi.kt
           grep -Fq 'fullPage = true' app/src/main/java/com/navtasks/app/HandoverFullNoteEditor.kt
           grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/HandoverFullNoteEditor.kt
           ! grep -Fq '.setLargeIcon(' app/src/main/java/com/navtasks/app/NavNotifications.kt
@@ -75,12 +76,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG=v0.4.94-notes-polish-verified
+          TAG=v0.4.94-notes-polish-r2-verified
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-notes-visual-0.4.94-beta" --jq '.commit.sha')"
+          if [ "$CURRENT_SHA" != "$GITHUB_SHA" ]; then
+            echo "Skipping stale source; branch now points to $CURRENT_SHA"
+            exit 0
+          fi
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Immutable release exists; not replacing."
           else
             gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
               --title "NavTasks 0.4.94 Beta - full-screen notes and UI polish" \
               --notes "Signed CI-verified candidate; HONOR acceptance pending. Shared full-screen rich note editor for Personal and Handover, expanding card comments, no mystery blue calendar dots, Services next date blue, refined monochrome notification icon with Android color hint. All stores and optical Liquid Glass untouched." \
+              --prerelease
+          fi
+          # Previous CI build lacked the restored note deletion action.
+          # Mark it superseded only after this complete R2 build succeeds.
+          if gh release view v0.4.94-notes-polish-verified >/dev/null 2>&1; then
+            gh release edit v0.4.94-notes-polish-verified \
+              --title "Superseded: NavTasks 0.4.94 Beta (use R2)" \
+              --notes "Superseded by v0.4.94-notes-polish-r2-verified. R2 retains the note Delete action and is the complete verified 0.4.94 candidate." \
               --prerelease
           fi

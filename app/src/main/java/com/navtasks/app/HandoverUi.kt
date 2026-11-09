@@ -475,6 +475,16 @@ fun HandoverScreen(
                                 selectedEntry = null
                             }) { Text(localized("Вернуть в работу", "Reopen", lang)) }
                         }
+                        // Deletion used to live in the old edit dialog. Keep it
+                        // reachable via the dedicated actions menu after moving
+                        // note editing into a full-screen page.
+                        TextButton(onClick = {
+                            confirmDelete = sectionId to entryId
+                            selectedEntry = null
+                        }) {
+                            Text(localized("Удалить заметку", "Delete note", lang),
+                                color = p.systemRed)
+                        }
                     }
                 },
                 confirmButton = {
