@@ -407,3 +407,11 @@
 - [ ] Export FULL profile, install D-tag build, Settings > Notifications > `Проверить D — цветная иконка слева`.
 - [ ] Send screenshot of the **single D** collapsed and expanded; check left visual against premium white/Slate-Mist/Apple-blue target and status bar small badge. Device may monochrome-mask fully opaque SmallIcon; test result determines whether viable.
 - [ ] Only after explicit user acceptance change production SmallIcon in a separate new versionCode >=125 if recovery ever installed; preserve normal reminder behavior. Avoid confusion with separately created production B 0.4.98/code123 release.
+
+## NEXT — MagicOS full-color SMALL icon D/E validation (v0.4.100) — 2026-11-10
+- [x] Read actual HONOR A/B/C screenshot: C LargeIcon shows on right, group header blue B icon; grouping prevents reliable A/B isolation.
+- [x] Keep verified v0.4.98 production B release separate. Avoid same version number collision by naming the new lab v0.4.100/code125, based on immutable v0.4.96 source and isolated branch.
+- [x] Add D white/gray/Apple-blue SmallIcon full tile and E adaptive launcher SmallIcon; single preview ID, UI buttons A/B/D/E, one active at a time, no actual delivery changes. CI42638976702 passed, signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.100-single-icon-lab-verified.
+- [ ] If installing candidate, export FULL profiles, install OVER beta without uninstalling; trigger D separately and screenshot its LEFT avatar + status; trigger E separately and screenshot, preferably with MagicOS notification icon style Multicolor if available. Do NOT open multiple test notifications together. Check no accidental white-square status-bar icon.
+- [ ] Compare D/E with production B candidate on a new real notification; user chooses the final approach. Preserve old note/editor/services/schedule and app data.
+- [ ] Safe return version 0.4.101/code126 exact v0.4.96 app is in CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42639230106, release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.101-single-icon-recovery ONLY after CI success. If code126 installed, next code>=127.
