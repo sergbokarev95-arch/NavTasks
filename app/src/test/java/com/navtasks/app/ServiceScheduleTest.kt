@@ -44,6 +44,27 @@ class ServiceScheduleTest {
             nextServiceFromCompletion(threeYears, LocalDate.of(2026, 11, 1)).nextDate)
     }
 
+    @Test fun plannedServiceCalculatesFiveYearsFromActualLastServiceDate() {
+        val last = LocalDate.of(2024, 4, 25)
+        val due = calculatedNextServiceDate(last, 60)
+        assertEquals(LocalDate.of(2029, 4, 25), due)
+        // Persist both dates exactly as selected/computed; no phantom -1 day.
+        val saved = service(last = last, next = due, period = 60)
+        assertEquals(last, saved.lastDate)
+        assertEquals(due, saved.nextDate)
+        assertEquals(60, saved.periodMonths)
+    }
+
+    @Test fun plannedServiceUsesMonthEndCalendarRules() {
+        assertEquals(LocalDate.of(2029, 2, 28),
+            calculatedNextServiceDate(LocalDate.of(2024, 2, 29), 60))
+        assertEquals(LocalDate.of(2026, 2, 28),
+            calculatedNextServiceDate(LocalDate.of(2025, 8, 31), 6))
+        assertTrue(runCatching {
+            calculatedNextServiceDate(LocalDate.of(2024, 4, 25), 0)
+        }.isFailure)
+    }
+
     @Test fun customNineAndTwentySevenMonthIntervalsAreSupported() {
         val nine = service(period = 9)
         val result = nextServiceFromCompletion(nine, LocalDate.of(2026, 1, 31))
