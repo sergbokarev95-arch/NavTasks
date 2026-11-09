@@ -459,3 +459,14 @@
 - [x] Safe exact v0.4.102 app recovery v0.4.109/code134 with NO pulse and original dock, CI42660907817 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.109-classic-dock-recovery. Do not uninstall or clear; export FULL profiles.
 - [ ] HONOR test switching across all four tabs for previous smooth feel; long hold must NOT grow lens, repeated tap on active tab gives tiny quick pulse; both themes, haptics, root reset, no flicker. Acceptance only on user's report.
 - [ ] After accepted, next isolated navigation stage: expose Tasks UI under Works next to AMOS/Services (leave TaskStore intact); Today Calendar-left/+ Add-right, existing TaskEditor; replace Tasks dock with Reference (ONLY SIRE 2.0 and archival VIQ7 empty tiles). Full regression, stable v1.0.0. Populate documents and Windows synchronization only AFTER 1.0.0.
+
+## NEXT — 0.4.110 acceptance, followed by 1.0.0 mobile navigation (2026-11-10)
+
+- [x] User confirmed original Liquid Glass smoothness with one-shot active-tab pulse v0.4.108 — **freeze dock**.
+- [x] Back up v0.4.108 at `backup/navtasks-0.4.108-before-routines-in-work`.
+- [x] New Work > Routine tasks card, uses same TaskStore/TasksScreenV2/TaskEditor and four categories, no data changes; Back and profile-scoped list state; leave Tasks tab temporarily for comparison.
+- [x] Full JUnit, signed APK/version/ZIP CI42663503311 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.110-routines-in-work-verified, code135.
+- [x] Exact accepted v0.4.108 app-source recovery 0.4.111/code136 CI42663232108 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.111-work-routines-recovery, no uninstall.
+- [ ] HONOR: install in-place AFTER FULL profile export; Work > Routine tasks opens and filters Day/Week/Month/One-off; create/edit/delete, subtasks, notes, move/overdue, history and reminders; Back returns Work, scroll persists after editor, old Tasks dock and Work entry show identical tasks, AMOS/Services/Today/Handover untouched. Check both themes and unchanged accepted dock animation. Only after confirmation proceed.
+- [ ] Second isolated stage: Today Calendar floating button LEFT, Add task (+) RIGHT using SAME TaskEditor; frequency selector at top for Daily/Weekly/Monthly/One-off; remove Tasks dock tab replacing with Reference/Справочник, ONLY two polished non-clickable Coming Later tiles SIRE 2.0 and archival VIQ7; no inspection/PDF database, content, sync.
+- [ ] Final UI/interaction/theme/notifications/widgets/import/export regression and stable mobile 1.0.0 after HONOR and Samsung tests. Reference content/manuals and Windows app/LAN/cloud sync remain AFTER 1.0.0.
