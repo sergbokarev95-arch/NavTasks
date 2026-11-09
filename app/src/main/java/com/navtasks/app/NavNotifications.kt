@@ -9,8 +9,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import java.time.Instant
@@ -35,20 +33,18 @@ object NavNotifications {
 
     private fun manager(context: Context) = context.getSystemService(NotificationManager::class.java)
 
-    /** Original installed app icon, not a surrogate checkmark, in notification cards. */
-    private fun appIconBitmap(context: Context): Bitmap {
-        val size = (64f * context.resources.displayMetrics.density).toInt().coerceAtLeast(64)
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-        val drawable = context.packageManager.getApplicationIcon(context.applicationInfo)
-        drawable.setBounds(0, 0, size, size)
-        drawable.draw(Canvas(bitmap))
-        return bitmap
-    }
-
+    /**
+     * Standard Android notification identity: reuse the exact monochrome
+     * layer of the installed NavTasks adaptive launcher icon.
+     *
+     * Do not pass the launcher icon as a LargeIcon. Android reserves that
+     * slot for notification-specific content (such as a contact avatar);
+     * on HONOR it created an oversized duplicate plus a small corner badge.
+     * Without LargeIcon the system positions and tints our app icon normally.
+     */
     private fun notificationBuilder(context: Context, channel: String): Notification.Builder =
         Notification.Builder(context, channel)
-            .setSmallIcon(R.drawable.navtasks_notification)
-            .setLargeIcon(appIconBitmap(context))
+            .setSmallIcon(R.drawable.navtasks_icon_monochrome)
 
     fun createChannels(context: Context) {
         manager(context).createNotificationChannel(NotificationChannel(
