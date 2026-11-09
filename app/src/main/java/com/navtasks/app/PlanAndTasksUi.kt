@@ -1198,46 +1198,63 @@ fun SettingsScreen(
                     }
                 }
 
-                // Isolated MagicOS experiment. It never changes normal delivery,
-                // stored tasks, notification timing, channels or user settings.
-                OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        iconTestFeedback = if (NavNotificationIconLab.show(context))
-                            localized(
-                                "Отправлены 3 тестовых уведомления A, B и C. Сравни значки в шторке HONOR.",
-                                "Sent three test notifications A, B and C. Compare the icons in the notification shade.",
-                                lang,
-                            )
-                        else localized(
-                            "Разреши уведомления NavTasks в настройках Android.",
-                            "Allow NavTasks notifications in Android Settings.",
-                            lang,
-                        )
-                    },
+                // Show one test notification at a time: no OEM auto-grouping.
+                Text(
+                    localized("Проверка иконки уведомлений", "Notification icon rendering test", lang),
+                    color = p.text, fontSize = 14.sp,
+                )
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text(localized("Сравнить значки уведомлений", "Compare notification icons", lang))
+                    listOf(
+                        "A" to NavNotificationIconLab.Variant.STANDARD,
+                        "B" to NavNotificationIconLab.Variant.COLORED_SMALL,
+                        "D" to NavNotificationIconLab.Variant.FULL_COLOR_SMALL,
+                        "E" to NavNotificationIconLab.Variant.LAUNCHER_SMALL,
+                    ).forEach { (letter, variant) ->
+                        OutlinedButton(
+                            onClick = {
+                                iconTestFeedback = if (NavNotificationIconLab.show(context, variant))
+                                    localized(
+                                        "Отправлен только вариант $letter. Открой шторку уведомлений.",
+                                        "Sent only variant $letter. Open the notification shade.",
+                                        lang,
+                                    )
+                                else localized(
+                                    "Не удалось показать значок $letter. Проверь разрешение уведомлений.",
+                                    "Could not display variant $letter. Check notification permission.",
+                                    lang,
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 7.dp),
+                        ) {
+                            Text(letter, color = p.blueText)
+                        }
+                    }
                 }
                 Text(
                     localized(
-                        "A — системная иконка, B — цветная пиктограмма, C — фирменная цветная плитка. " +
-                            "Тест не меняет настоящие напоминания. В MagicOS 11 проверь режим «Многоцветный» " +
-                            "в настройках стиля значков уведомлений.",
-                        "A — standard icon, B — colored symbol, C — full-color brand tile. " +
-                            "The test does not change actual reminders. In MagicOS 11, check the " +
-                            "Multicolor notification icon style.",
+                        "A — системный белый; B — синий контур; D — белая плитка с синими " +
+                            "элементами как SmallIcon; E — адаптивная иконка приложения. " +
+                            "Каждое нажатие убирает предыдущее тестовое уведомление. " +
+                            "C (LargeIcon) уже проверен — значок отображается справа.",
+                        "A — native white; B — blue outline; D — full white/blue tile as " +
+                            "SmallIcon; E — adaptive launcher icon. Each tap clears the " +
+                            "previous preview. C (LargeIcon) was already seen on the right.",
                         lang,
                     ),
                     color = p.muted, fontSize = 12.sp,
                 )
                 iconTestFeedback?.let {
                     Text(it, color = p.blueText, fontSize = 12.sp)
-                    TextButton(onClick = {
-                        NavNotificationIconLab.clear(context)
-                        iconTestFeedback = null
-                    }) {
-                        Text(localized("Убрать тестовые уведомления", "Clear test notifications", lang))
-                    }
+                }
+                TextButton(onClick = {
+                    NavNotificationIconLab.clear(context)
+                    iconTestFeedback = null
+                }) {
+                    Text(localized("Убрать тестовое уведомление", "Clear test notification", lang))
                 }
                 Text(localized("Дата и время берутся только с телефона. Отдельного судового UTC нет.",
                     "Date and time follow the phone. No separate ship time zone.", lang),

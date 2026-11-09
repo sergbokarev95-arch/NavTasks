@@ -10,14 +10,9 @@ import android.graphics.drawable.Icon
 import android.os.Build
 
 /**
- * HONOR/MagicOS rendering experiment. These temporary samples use their OWN
- * notification channel and IDs. No scheduling, task data, user preferences,
- * notification delivery markers, or real reminder icons are modified.
- *
- * Android's SmallIcon always remains required. Version C intentionally adds
- * a LargeIcon ONLY to test whether MagicOS shows it as the desired left tile;
- * the platform may add a right-hand monochrome small badge as a consequence.
- * Do not enable C on actual reminders until the owner verifies the device.
+ * Only notification-icon rendering experiments. Actual reminders, groups,
+ * schedules, and all app data are untouched. Exactly ONE preview notification
+ * is sent at a time to prevent MagicOS automatically grouping the variants.
  */
 internal object NavNotificationIconLab {
     private const val CHANNEL = "navtasks-icon-compare-v1"
@@ -26,17 +21,38 @@ internal object NavNotificationIconLab {
     private const val BRAND_BLUE = 0xFF0071E3.toInt()
 
     internal enum class Variant {
-        STANDARD, COLORED_SMALL, COLOR_TILE
+        STANDARD, COLORED_SMALL, COLOR_TILE, FULL_COLOR_SMALL, LAUNCHER_SMALL
     }
 
-    internal fun smallIconFor(variant: Variant): Int =
-        if (variant == Variant.COLORED_SMALL) R.drawable.navtasks_notification_colored_small
-        else R.drawable.navtasks_notification_small
+    internal fun smallIconFor(variant: Variant): Int = when (variant) {
+        Variant.COLORED_SMALL -> R.drawable.navtasks_notification_colored_small
+        Variant.FULL_COLOR_SMALL -> R.drawable.navtasks_notification_full_small
+        // An isolated experiment to see whether MagicOS uses the adaptive
+        // launcher artwork when this resource is supplied as SmallIcon.
+        Variant.LAUNCHER_SMALL -> R.mipmap.ic_launcher
+        Variant.STANDARD, Variant.COLOR_TILE -> R.drawable.navtasks_notification_small
+    }
 
     internal fun hasLargeIcon(variant: Variant): Boolean =
         variant == Variant.COLOR_TILE
 
-    fun show(context: Context): Boolean {
+    private fun title(variant: Variant): String = when (variant) {
+        Variant.STANDARD -> "A · Системная иконка"
+        Variant.COLORED_SMALL -> "B · Синий контур"
+        Variant.COLOR_TILE -> "C · Большая цветная"
+        Variant.FULL_COLOR_SMALL -> "D · Полный цвет SmallIcon"
+        Variant.LAUNCHER_SMALL -> "E · Иконка приложения"
+    }
+
+    private fun detail(variant: Variant): String = when (variant) {
+        Variant.STANDARD -> "Чистая монохромная иконка Android"
+        Variant.COLORED_SMALL -> "Цветной синий контур на прозрачном фоне"
+        Variant.COLOR_TILE -> "LargeIcon (уже проверено — справа)"
+        Variant.FULL_COLOR_SMALL -> "Белая плитка, серые карточки, синий знак"
+        Variant.LAUNCHER_SMALL -> "Адаптивная иконка NavTasks без LargeIcon"
+    }
+
+    fun show(context: Context, variant: Variant): Boolean {
         if (Build.VERSION.SDK_INT >= 33 &&
             context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
                 PackageManager.PERMISSION_GRANTED) return false
@@ -49,40 +65,30 @@ internal object NavNotificationIconLab {
                 NotificationManager.IMPORTANCE_LOW,
             ),
         )
-        val titles = listOf(
-            "A · Стандартный Android",
-            "B · Цветной контур",
-            "C · Цветной фирменный",
-        )
-        val details = listOf(
-            "Системная монохромная пиктограмма",
-            "Синие контуры на прозрачном фоне",
-            "Белая плитка, серые карточки, синий знак",
-        )
-        Variant.entries.forEachIndexed { index, variant ->
-            val notification = Notification.Builder(context, CHANNEL)
+        // Clean up both old A/B/C IDs and the current single preview.
+        clear(context)
+        return runCatching {
+            val builder = Notification.Builder(context, CHANNEL)
                 .setSmallIcon(smallIconFor(variant))
-                .setContentTitle(titles[index])
-                .setContentText(details[index])
+                .setContentTitle(title(variant))
+                .setContentText(detail(variant))
                 .setColor(BRAND_BLUE)
                 .setAutoCancel(true)
                 .setShowWhen(false)
-                                .apply {
-                    if (hasLargeIcon(variant)) {
-                        setLargeIcon(Icon.createWithResource(
-                            context, R.drawable.navtasks_notification_color_tile))
-                    }
-                }
-                .build()
-            manager.notify(TAG, FIRST_ID + index, notification)
-        }
-        return true
+            if (hasLargeIcon(variant)) {
+                builder.setLargeIcon(Icon.createWithResource(
+                    context, R.drawable.navtasks_notification_color_tile,
+                ))
+            }
+            manager.notify(TAG, FIRST_ID, builder.build())
+        }.isSuccess
     }
+
+    // Kept for source/API compatibility with earlier tests/call sites.
+    fun show(context: Context): Boolean = show(context, Variant.STANDARD)
 
     fun clear(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
-        Variant.entries.forEachIndexed { index, _ ->
-            manager.cancel(TAG, FIRST_ID + index)
-        }
+        for (offset in 0 until 5) manager.cancel(TAG, FIRST_ID + offset)
     }
 }
