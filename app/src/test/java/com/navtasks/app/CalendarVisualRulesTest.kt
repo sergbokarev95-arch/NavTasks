@@ -29,7 +29,8 @@ class CalendarVisualRulesTest {
         assertTrue(calendarHasOutcomeDot(CalendarDayState.INCOMPLETE, false))
         assertTrue(calendarHasOutcomeDot(CalendarDayState.PARTIAL, false))
         assertTrue(calendarHasOutcomeDot(CalendarDayState.COMPLETE, false))
-        assertTrue(calendarHasOutcomeDot(CalendarDayState.EMPTY, true))
-        assertTrue(calendarHasOutcomeDot(CalendarDayState.SCHEDULED, true))
+        assertFalse(calendarHasOutcomeDot(CalendarDayState.EMPTY, true))
+        assertFalse(calendarHasOutcomeDot(CalendarDayState.SCHEDULED, true))
+        assertTrue(calendarHasOutcomeDot(CalendarDayState.COMPLETE, true))
     }
 }

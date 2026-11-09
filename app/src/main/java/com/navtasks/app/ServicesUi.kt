@@ -234,7 +234,7 @@ fun ServicesScreen(
                 val accent = if (completed) p.successText
                     else if (service.unplanned) p.blue
                     else if (late) p.dangerText
-                    else if (approaching) p.warningText else p.successText
+                    else if (approaching) p.warningText else p.blueText
                 Column(
                     Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
                         .glassClickable { viewingHistory = service }
@@ -275,7 +275,7 @@ fun ServicesScreen(
                     }
                     if (service.comment.isNotBlank()) {
                         NavRichNoteText(service.comment, service.commentHtml, p, fontSize = 12.sp,
-                            modifier = Modifier.fillMaxWidth().heightIn(max = 50.dp))
+                            modifier = Modifier.fillMaxWidth())
                     }
                     Text(
                         if (completed) localized("Завершено", "Completed", lang)

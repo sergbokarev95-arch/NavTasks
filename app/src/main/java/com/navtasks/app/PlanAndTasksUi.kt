@@ -66,7 +66,9 @@ internal fun calendarWeekendInk(p: NavPalette): Color = p.systemRed
 
 /** Preserve existing status-dot meaning independently of its layout position. */
 internal fun calendarHasOutcomeDot(state: CalendarDayState, hasWork: Boolean): Boolean =
-    hasWork || (state != CalendarDayState.EMPTY && state != CalendarDayState.SCHEDULED)
+    // Planned work remains accessible in Day view, but has no mystery blue dot.
+    state == CalendarDayState.COMPLETE || state == CalendarDayState.PARTIAL ||
+        state == CalendarDayState.INCOMPLETE
 
 /** The same swipe gesture changes the visible unit at the current calendar zoom. */
 internal data class CalendarSwipePosition(val year: Int, val month: Int, val day: LocalDate)
@@ -168,20 +170,17 @@ fun PlanScreenV2(
                                         week.forEach { date ->
                                             val isInMonth = date.monthValue == m && date.year == year
                                             val mark = store.dayCounts(date).state(date, today)
-                                            val workPlanned = workAgendaExistsOnDay(
-                                                date, workOrders.entries, services.entries)
-                                            val markColor = if (mark == CalendarDayState.EMPTY && workPlanned) p.blue else when (mark) {
+                                            val markColor = when (mark) {
                                                 CalendarDayState.COMPLETE -> p.mint
                                                 CalendarDayState.PARTIAL -> p.systemOrange
-                                                CalendarDayState.INCOMPLETE -> Color(0xFFE88B83)
-                                                CalendarDayState.SCHEDULED -> p.blue
+                                                CalendarDayState.INCOMPLETE -> p.systemRed
+                                                CalendarDayState.SCHEDULED -> p.muted
                                                 else -> p.muted
                                             }
                                             Text("${date.dayOfMonth}",
                                                 color = when {
                                                     date == today -> p.blue
                                                     !isInMonth -> p.muted.copy(alpha = 0.40f)
-                                                    mark == CalendarDayState.EMPTY && !workPlanned -> p.muted
                                                     else -> markColor
                                                 }, fontSize = 8.sp, lineHeight = 12.sp, textAlign = TextAlign.Center,
                                                 modifier = Modifier.weight(1f))
@@ -227,11 +226,11 @@ fun PlanScreenV2(
                                 val status = store.dayCounts(date).state(date, today)
                                 val hasWork = workAgendaExistsOnDay(
                                     date, workOrders.entries, services.entries)
-                                val statusColor = if (status == CalendarDayState.EMPTY && hasWork) p.blue else when (status) {
+                                val statusColor = when (status) {
                                     CalendarDayState.COMPLETE -> p.mint
                                     CalendarDayState.PARTIAL -> p.systemOrange
                                     CalendarDayState.INCOMPLETE -> p.systemRed
-                                    CalendarDayState.SCHEDULED -> p.blue
+                                    CalendarDayState.SCHEDULED -> p.border
                                     CalendarDayState.EMPTY -> p.border
                                 }
                                 val shape = RoundedCornerShape(10.dp)
@@ -292,7 +291,7 @@ fun PlanScreenV2(
                         listOf(
                             p.mint to localized("Все выполнено", "All done", lang),
                             p.systemOrange to localized("Часть", "Partial", lang),
-                            Color(0xFFE98881) to localized("Пропущено", "Missed", lang),
+                            p.systemRed to localized("Пропущено", "Missed", lang),
                         ).forEach { (color, title) ->
                             Row(verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(5.dp)) {

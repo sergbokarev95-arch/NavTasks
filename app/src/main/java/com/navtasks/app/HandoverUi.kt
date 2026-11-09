@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
@@ -251,32 +252,61 @@ fun HandoverScreen(
                                 Modifier.fillMaxWidth()
                                     .navGlass(p, radius = 13.dp,
                                         role = if (finished) GlassRole.CONTROL else GlassRole.TASK)
-                                    .glassClickable { selectedEntry = section.id to entry.id }
-                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    .padding(horizontal = 10.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(if (entry.mark == HandoverMark.COMPLETED) "✓" else if (finished) "–" else "○",
-                                    color = if (finished) p.successText else p.blue, fontSize = 22.sp)
-                                Spacer(Modifier.width(11.dp))
-                                Column(Modifier.weight(1f)) {
-                                    Text(entry.title, color = if (finished) p.muted else p.text,
-                                        fontSize = 14.sp,
-                                        textDecoration = if (finished) TextDecoration.LineThrough else TextDecoration.None)
-                                    if (entry.notes.isNotBlank()) {
-                                        NavRichNoteText(entry.notes, entry.notesHtml, p,
-                                            fontSize = 11.sp, modifier = Modifier.heightIn(max = 46.dp))
-                                    }
-                                    if (entry.mark == HandoverMark.COMPLETED) {
-                                        Text(entry.completedDate?.let {
-                                            localized("Завершено: $it", "Completed: $it", lang)
-                                        } ?: localized("Завершено без даты", "Completed without date", lang),
-                                            color = p.successText, fontSize = 11.sp)
-                                    } else if (entry.mark == HandoverMark.STRUCK) {
-                                        Text(localized("Вычеркнуто", "Struck out", lang),
-                                            color = p.muted, fontSize = 11.sp)
+                                Row(
+                                    Modifier.weight(1f)
+                                        .glassClickable { openEntryEditor(section.id, entry) }
+                                        .padding(vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        if (entry.mark == HandoverMark.COMPLETED) "✓"
+                                        else if (finished) "–" else "○",
+                                        color = if (finished) p.successText else p.blue,
+                                        fontSize = 22.sp,
+                                    )
+                                    Spacer(Modifier.width(11.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            entry.title, color = if (finished) p.muted else p.text,
+                                            fontSize = 14.sp,
+                                            textDecoration = if (finished) TextDecoration.LineThrough
+                                                else TextDecoration.None,
+                                        )
+                                        if (entry.notes.isNotBlank()) {
+                                            NavRichNoteText(
+                                                entry.notes, entry.notesHtml, p, fontSize = 11.sp,
+                                                modifier = Modifier.fillMaxWidth(),
+                                            )
+                                        }
+                                        if (entry.mark == HandoverMark.COMPLETED) {
+                                            Text(
+                                                entry.completedDate?.let {
+                                                    localized("Завершено: $it", "Completed: $it", lang)
+                                                } ?: localized("Завершено без даты",
+                                                    "Completed without date", lang),
+                                                color = p.successText, fontSize = 11.sp,
+                                            )
+                                        } else if (entry.mark == HandoverMark.STRUCK) {
+                                            Text(localized("Вычеркнуто", "Struck out", lang),
+                                                color = p.muted, fontSize = 11.sp)
+                                        }
                                     }
                                 }
-                                NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
+                                // All existing complete/strike/reopen actions remain accessible.
+                                Box(
+                                    Modifier.size(44.dp)
+                                        .glassClickable { selectedEntry = section.id to entry.id }
+                                        .semantics {
+                                            contentDescription = localized(
+                                                "Действия с заметкой", "Note actions", lang)
+                                        },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    NavGlassGlyph("more", p.muted, Modifier.size(19.dp))
+                                }
                             }
                         }
                     }
@@ -352,54 +382,30 @@ fun HandoverScreen(
     }
 
     editEntry?.let { (sectionId, entryId) ->
-        HandoverGlassDialog(
-            p = p, 
+        val section = handover.sections.firstOrNull { it.id == sectionId }
+        val item = section?.entries?.firstOrNull { it.id == entryId }
+        // Shared editor for both Personal notes and vessel Handover; stores untouched.
+        Dialog(
             onDismissRequest = { editEntry = null },
-            title = { Text(if (entryId == null) localized("Новый пункт", "New item", lang)
-                else localized("Редактировать пункт", "Edit item", lang)) },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    HandoverGlassInput(
-                        value = entryTitle, onValueChange = { entryTitle = it.take(200) },
-                        p = p, placeholder = localized("Название", "Title", lang),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    NavRichNoteEditor(
-                        initialPlain = handover.sections.firstOrNull { it.id == sectionId }
-                            ?.entries?.firstOrNull { it.id == entryId }?.notes.orEmpty(),
-                        initialHtml = handover.sections.firstOrNull { it.id == sectionId }
-                            ?.entries?.firstOrNull { it.id == entryId }?.notesHtml.orEmpty(),
-                        entryKey = "handover:" + sectionId + ":" + (entryId ?: "new"),
-                        p = p, lang = lang, maxCharacters = 4000,
-                        placeholder = localized("Комментарий", "Notes", lang),
-                        onChange = { plain, html -> entryNotes = plain; entryNotesHtml = html },
-                    )
-                }
-            },
-            confirmButton = {
-                HandoverDialogAction(localized("Сохранить", "Save", lang), p,
-                    enabled = entryTitle.isNotBlank() &&
-                        navRichNoteAllowed(entryNotes, entryNotesHtml, 4000)) {
-                    handover.saveEntry(sectionId, entryTitle, entryNotes, entryId, entryNotesHtml)
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false,
+            ),
+        ) {
+            HandoverFullNoteEditor(
+                p = p, lang = lang, personalMode = personalMode,
+                sectionTitle = section?.title.orEmpty(),
+                entryKey = "handover:" + sectionId + ":" + (entryId ?: "new"),
+                initialTitle = item?.title.orEmpty(),
+                initialPlain = item?.notes.orEmpty(),
+                initialHtml = item?.notesHtml.orEmpty(),
+                onCancel = { editEntry = null },
+                onSave = { title, plain, html ->
+                    handover.saveEntry(sectionId, title, plain, entryId, html)
                     editEntry = null
-                }
-            },
-            dismissButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (entryId != null) {
-                        HandoverDialogAction(localized("Удалить", "Delete", lang),
-                            p, destructive = true) {
-                            confirmDelete = sectionId to entryId
-                            editEntry = null
-                        }
-                    }
-                    HandoverDialogAction(localized("Отмена", "Cancel", lang), p) {
-                        editEntry = null
-                    }
-                }
-            },
-        )
+                },
+            )
+        }
     }
 
     completingWithDate?.let { (sectionId, entryId, start) ->

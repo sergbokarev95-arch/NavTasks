@@ -43,6 +43,8 @@ object NavNotifications {
     private fun notificationBuilder(context: Context, channel: String): Notification.Builder =
         Notification.Builder(context, channel)
             .setSmallIcon(R.drawable.navtasks_notification_small)
+            // Accent hint only; MagicOS controls actual badge/tile colors.
+            .setColor(android.graphics.Color.rgb(0, 113, 227))
 
     fun createChannels(context: Context) {
         manager(context).createNotificationChannel(NotificationChannel(

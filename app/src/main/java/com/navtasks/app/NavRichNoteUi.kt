@@ -45,6 +45,7 @@ internal fun NavRichNoteEditor(
     initialPlain: String, initialHtml: String, entryKey: String,
     p: NavPalette, lang: UiLanguage, placeholder: String,
     maxCharacters: Int, onChange: (String, String) -> Unit,
+    fullPage: Boolean = false,
 ) {
     val state = rememberRichTextState()
     var ready by remember(entryKey) { mutableStateOf(false) }
@@ -57,7 +58,9 @@ internal fun NavRichNoteEditor(
     LaunchedEffect(state.annotatedString, ready) {
         if (ready) onChange(state.annotatedString.text, state.toHtml())
     }
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(if (fullPage) Modifier.fillMaxSize() else Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        val formattingTools: @Composable () -> Unit = {
         Row(Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             NavRichTool("B", p, selected = state.currentSpanStyle.fontWeight == FontWeight.Bold) { state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) }
@@ -81,18 +84,24 @@ internal fun NavRichNoteEditor(
                 }
             }
         }
-        Box(Modifier.fillMaxWidth().heightIn(min = 115.dp, max = 200.dp)
-                .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
+        }
+        // Notes-style editor uses full height and toolbar above keyboard.
+        if (!fullPage) formattingTools()
+        val editorModifier = if (fullPage) Modifier.fillMaxWidth().weight(1f)
+            else Modifier.fillMaxWidth().heightIn(min = 115.dp, max = 200.dp)
+        Box(editorModifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
                 .padding(10.dp)) {
             if (ready && state.annotatedString.text.isEmpty())
                 Text(placeholder, color = p.muted, fontSize = 12.sp)
             if (ready) RichTextEditor(
                 state = state,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 95.dp),
+                modifier = if (fullPage) Modifier.fillMaxSize()
+                    else Modifier.fillMaxWidth().heightIn(min = 95.dp),
                 textStyle = TextStyle(color = p.text, fontSize = 14.sp, lineHeight = 20.sp),
                 keyboardOptions = NavSentenceKeyboard,
             )
         }
+        if (fullPage) formattingTools()
         val size = state.annotatedString.text.length
         Text(
             if (navRichNoteAllowed(state.annotatedString.text, state.toHtml(), maxCharacters))

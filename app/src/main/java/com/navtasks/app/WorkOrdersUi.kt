@@ -613,7 +613,7 @@ private fun WorkOrderCard(
         }
         if (order.comment.isNotBlank()) {
             NavRichNoteText(order.comment, order.commentHtml, p, fontSize = 12.sp,
-                modifier = Modifier.fillMaxWidth().heightIn(max = 49.dp))
+                modifier = Modifier.fillMaxWidth())
         }
         Text(
             when (status) {
