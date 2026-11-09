@@ -156,7 +156,7 @@ jobs:
           APK=NavTasks_AMOS_Original_Restore_0.4.91_Beta.apk
           ZIP=NavTasks_AMOS_Original_Restore_0.4.91_Beta_Update.zip
           test -s app/build/outputs/apk/debug/app-debug.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='113' versionName='0.4.88-beta'"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='116' versionName='0.4.91-beta'"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify app/build/outputs/apk/debug/app-debug.apk
           cp app/build/outputs/apk/debug/app-debug.apk "$APK"
           zip -9 -X "$ZIP" "$APK"
