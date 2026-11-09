@@ -1,0 +1,187 @@
+name: NavTasks 0.4.91 Beta - exact 0.4.88 UI recovery
+on:
+  push:
+    branches: [feature/navtasks-amos-peach-0.4.91-recovery]
+    paths:
+      - 'app/**'
+      - '.github/workflows/amos-peach-recovery-0.4.91.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore signed installed-app Beta key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify tiny scope and run complete app test suite
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-beta"' app/build.gradle.kts
+          grep -Fq 'versionCode = 116' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.91"' app/build.gradle.kts
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt)" = 'c49e7a8edd155880693e1a7425399bb9b4397f83'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassActionButton.kt)" = 'a551bac11ad051c1c72c68bb1030d084cacfef87'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt)" = 'cbdb16dfe8b9ee7e7e8c623f7b0947988da4a618'
+          grep -Fq '"Заявки · ' app/src/main/java/com/navtasks/app/ServicesUi.kt
+          grep -Fq 'currentServiceRequests(activeServices)' app/src/main/java/com/navtasks/app/ServicesUi.kt
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockTabs.kt)" = 'a30dbb3dd6e80b2531b826ddc0873bdd5ec5a412'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavQuickProfileUi.kt)" = '42467ed6a0ea4230bffc9b6fd68b11b9393175f4'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/TaskStore.kt)" = 'ab422f5c07755bf1f7e1b78edbe693f675f7d12e'
+          grep -Fq 'versionCode = 116' app/build.gradle.kts
+          grep -Fq 'richeditor-compose:1.0.0-rc14' app/build.gradle.kts
+          grep -Fq 'NavTitleKeyboard' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/ChecklistNotesUi.kt
+          grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/ServicesUi.kt
+          grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'Color(0xFFE6E8EC)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          test "$(grep -oF '#E6E8EC' app/src/main/java/com/navtasks/app/MainActivity.kt | wc -l)" -eq 4
+          ! grep -Fq '#EAF3FA' app/src/main/java/com/navtasks/app/MainActivity.kt
+          grep -Fq 'Color(0xFF0088FF)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'Color(0xFF0091FF)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'drawRect(p.background)' app/src/main/java/com/navtasks/app/NavGlass.kt
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt)" = 'cbdb16dfe8b9ee7e7e8c623f7b0947988da4a618'
+          grep -Fq 'class ApplePaletteTest' app/src/test/java/com/navtasks/app/ApplePaletteTest.kt
+          grep -Fq 'Modifier.size(44.dp).semantics' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'contentDescription = localized("Редактировать пункт", "Edit item", lang)' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'openEntryEditor(sectionId, item)' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          ! grep -Fq '}) { Text(localized("Редактировать", "Edit", lang)) }' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'NavRichNoteEditor(' app/src/main/java/com/navtasks/app/WorkOrdersUi.kt
+          grep -Fq 'GlassRole.SELECTED -> p.selectionFill' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'val NavPalette.selectionFill: Color' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'val NavPalette.selectionContent: Color' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'if (selected) p.selectionContent' app/src/main/java/com/navtasks/app/ServicesUi.kt
+          grep -Fq 'if (selected) p.selectionContent' app/src/main/java/com/navtasks/app/WorkOrdersUi.kt
+          grep -Fq 'if (selected) p.selectionContent else fg' app/src/main/java/com/navtasks/app/NavRichNoteUi.kt
+          grep -Fq 'class AppleBlueSelectionTest' app/src/test/java/com/navtasks/app/AppleBlueSelectionTest.kt
+          # All optical Liquid Glass source files and data stores are pinned separately above.
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavGlass.kt)" = '81c17717c1f1df08df7e4d9f5dfecf091f0c00d9'
+          grep -Fq 'fun NavBrandLabel(' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'fontWeight = FontWeight.Bold' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'fun onDockTabTap(next: Int)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          test "$(grep -cF 'onSelect = ::onDockTabTap' app/src/main/java/com/navtasks/app/NavTasksUi.kt)" -eq 2
+          grep -Fq 'primaryTabResetStateKey(' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'class NavDockResetKeyTest' app/src/test/java/com/navtasks/app/NavDockResetKeyTest.kt
+          ! grep -Fq 'if (!active)' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          ! grep -Fq 'if (!active)' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'taskListScroll.animateScrollToItem(0)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'daysScroll.animateScrollToItem(0)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'smoothReturnTick = todayReturnTick' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'buildAnnotatedString {' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq '.navGlass(p, radius = 16.dp,' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'keyboard?.show()' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'focusRequester.requestFocus()' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'HandoverDialogAction(' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'Arrangement.spacedBy(8.dp, Alignment.End)' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'class AppleSystemRedTest' app/src/test/java/com/navtasks/app/AppleSystemRedTest.kt
+          grep -Fq 'class AppleWeekendAndReferenceTest' app/src/test/java/com/navtasks/app/AppleWeekendAndReferenceTest.kt
+          grep -Fq 'class SmartReminderTimingTest' app/src/test/java/com/navtasks/app/SmartReminderTimingTest.kt
+          grep -Fq 'object SmartReminderTiming' app/src/main/java/com/navtasks/app/SmartReminderTiming.kt
+          grep -Fq 'var reminderHour' app/src/main/java/com/navtasks/app/NavSettings.kt
+          grep -Fq 'var groupSimultaneousReminders' app/src/main/java/com/navtasks/app/NavSettings.kt
+          grep -Fq 'Основное время напоминаний' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          grep -Fq 'Время сводки пропусков' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          grep -Fq 'Объединять одновременные напоминания' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          grep -Fq 'SmartReminderTiming.trigger' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          grep -Fq 'task.remindMinutesBefore > 0' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          grep -Fq 'schedule(context, ROLL' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          grep -Fq 'tryGroupedReminders(context, store, settings, kind, runKey)' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          grep -Fq 'Notification.InboxStyle()' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          grep -Fq 'service_delivery_guard_086' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          grep -Fq '.setSmallIcon(R.drawable.navtasks_icon_monochrome)' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          ! grep -Fq '.setLargeIcon(' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          ! grep -Fq 'appIconBitmap(' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          test "$(git hash-object app/src/main/res/drawable/navtasks_icon_monochrome.xml)" = '1f739bc00acf92c43bf5c3234793f49c0884c714'
+          test "$(git hash-object app/src/main/res/drawable/navtasks_icon_foreground.xml)" = 'f2330350d6453eb103310ce8d9c70f15538e775a'
+          test "$(git hash-object app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml)" = 'ccd8e5e1c19ab2ade27c61cb1991c2ee2fc9682d'
+          ! grep -Fq 'atTime(9, 0)' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          grep -Fq 'calendarWeekendInk(p: NavPalette): Color = p.systemRed' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          grep -Fq 'CalendarDayState.INCOMPLETE -> p.systemRed' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          grep -Fq 'val accent = if (hasNote) p.systemOrange' app/src/main/java/com/navtasks/app/ChecklistNotesUi.kt
+          grep -Fq 'dismissSearchImeOnResultsGesture(searchOpen)' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'dismissSearchImeOnResultsGesture(searchOpen)' app/src/main/java/com/navtasks/app/ServicesUi.kt
+          grep -Fq 'dismissSearchImeOnResultsGesture(searchOpen)' app/src/main/java/com/navtasks/app/WorkOrdersUi.kt
+          grep -Fq 'focus.clearFocus()' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'keyboard?.hide()' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'worksReturnTick++' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'handoverReturnTick++' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'tasksReturnTick++' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'listState.animateScrollToItem(0)' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'listState.animateScrollToItem(0)' app/src/main/java/com/navtasks/app/WorksHubUi.kt
+          grep -Fq 'listState.animateScrollToItem(0)' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          ! grep -Fq 'Color(0xFFE5A4A0)' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          ! grep -Fq 'Color(0xFFB36563)' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          grep -Fq 'Color(0xFFFF453A)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'Color(0xFFFF3B30)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'destructive = true' app/src/main/java/com/navtasks/app/ServicesUi.kt
+          grep -Fq 'destructive = true' app/src/main/java/com/navtasks/app/WorkOrdersUi.kt
+          grep -Fq 'Color(0xFF25292E)' app/src/main/java/com/navtasks/app/NavOverlayUi.kt
+          grep -Fq '.heightIn(min = 46.dp)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'Color(0xFF1D2126)' app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt
+          grep -Fq 'Color(0xFF282D33)' app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt
+          grep -Fq 'Color(0xFF40464D)' app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt
+          grep -Fq 'Color(0xFFE6E8EC)' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'assertEquals(Color(0xFFE6E8EC), p.background)' app/src/test/java/com/navtasks/app/NavSolidCardTokensTest.kt
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavSolidCardTokens.kt)" = 'cbdb16dfe8b9ee7e7e8c623f7b0947988da4a618'
+          gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - name: Remove key from runner
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify signed APK identity and small ZIP integrity
+        run: |
+          set -euo pipefail
+          APK=NavTasks_AMOS_Original_Restore_0.4.91_Beta.apk
+          ZIP=NavTasks_AMOS_Original_Restore_0.4.91_Beta_Update.zip
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='113' versionName='0.4.88-beta'"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk "$APK"
+          zip -9 -X "$ZIP" "$APK"
+          unzip -t "$ZIP"
+          test "$(sha256sum "$APK" | cut -d ' ' -f 1)" = "$(unzip -p "$ZIP" "$APK" | sha256sum | cut -d ' ' -f 1)"
+          echo "ZIP bytes: $(stat -c %s "$ZIP")"
+          sha256sum "$ZIP"
+      - name: Publish one in-place Beta ZIP directly in Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=v0.4.91-amos-peach-recovery
+          # Refuse to publish a stale binary after newer commits to this branch.
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-amos-peach-0.4.91-recovery" --jq '.commit.sha')"
+          if [ "$CURRENT_SHA" != "$GITHUB_SHA" ]; then
+            echo "Skipping stale source $GITHUB_SHA; current is $CURRENT_SHA"
+            exit 0
+          fi
+          ZIP=NavTasks_AMOS_Original_Restore_0.4.91_Beta_Update.zip
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+          else
+            gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.91 Beta - exact original 0.4.88 UI rollback" \
+              --notes "Optional signed same-package in-place recovery Beta v0.4.91 code116: EXACT original verified NavTasks 0.4.88 application sources, only version increased. This can safely roll back the 0.4.90 peach AMOS button change if HONOR visual review rejects the new colors. All tasks, profiles, services, AMOS requests, saved history, smart reminders, Day02/Night09 palettes and Liquid Glass dock optics are unchanged. Export all profiles, NEVER uninstall or clear app data. Do not install unless recovery is needed; any later app build must use versionCode greater than 116." \
+              --prerelease
+          fi
