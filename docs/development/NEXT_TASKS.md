@@ -388,3 +388,14 @@
 - [ ] Screenshot A, B and C in notification shade (and lock screen if useful). Note blue/white/gray rendering and whether variant C shows duplicate small badge on right. Optional: Settings > Notifications & status bar > Status bar > Notification icon style > Multicolor if your MagicOS build offers it.
 - [ ] Clear test notifications. Verify actual tasks/AMOS/Services reminders still show original icon and all scheduling, profile data, complete actions, dock intact.
 - [ ] Choose production behavior ONLY with actual HONOR result; if A/B/C is unsatisfactory, inspect system/OEM rendering rather than adding more arbitrary icon glyphs. Main app code still stable 0.4.59. If rollback 0.4.97/code122 used, future code >=123.
+
+## NEXT — confirm real notifications with 0.4.98 B color glyph, 2026-11-10
+
+- [x] Capture MagicOS 11 A/B/C notification comparison on HONOR. B's blue icon appears left in grouped view; C's white branded LargeIcon is shown at the right side of expanded view and cannot substitute for left identity.
+- [x] Create isolated **production** 0.4.98/code123 directly from tested 0.4.94 R2, using only B color SmallIcon resource, no LargeIcon, no experiment UI. Existing reminders and stores untouched.
+- [x] Full tests, signed APK/ZIP CI42638360527 SUCCESS; verified release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.98-color-notification-icon-verified.
+- [x] Preserve exact 0.4.94 R2 app as higher-code in-place rollback 0.4.99/code124, CI42638428451 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.99-notification-recovery.
+- [ ] Export FULL profiles; install 0.4.98 over current Beta on HONOR without uninstall. Do not confuse with independent 0.4.98 test branches/releases.
+- [ ] Trigger one fresh REAL notification from task, service or AMOS; screenshot collapsed/expanded shade, lock and status if possible. Does left NavTasks blue icon look good without right duplicate? Existing A/B/C test controls intentionally removed from the production candidate.
+- [ ] Verify notification timing, grouping, missed-task digest, tap actions, all profile data, Handover/Personal full-screen notes and Liquid Glass; then accept or revise icon only.
+- [ ] If regression, use 0.4.99 recovery in place; future same package versionCode >=125 after recovery.
