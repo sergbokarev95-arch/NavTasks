@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Color tile for the controlled LargeIcon experiment only. Matches
+     NavTasks's Apple-blue/Day Slate Mist identity, not the old muddy cyan. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp" android:height="64dp"
+    android:viewportWidth="64" android:viewportHeight="64">
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M17,2 H47 Q62,2 62,17 V47 Q62,62 47,62 H17 Q2,62 2,47 V17 Q2,2 17,2 Z" />
+    <path android:fillColor="#E6E8EC"
+        android:strokeColor="#0071E3" android:strokeWidth="2.7"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M27,12 H43 Q49,12 49,18 V44" />
+    <path android:fillColor="#E6E8EC"
+        android:strokeColor="#0071E3" android:strokeWidth="3.1"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M18,22 H37 Q43,22 43,28 V46 Q43,52 37,52 H18 Q12,52 12,46 V28 Q12,22 18,22 Z" />
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#0071E3" android:strokeWidth="4.2"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M20,36 L27,42 L36,32" />
+</vector>

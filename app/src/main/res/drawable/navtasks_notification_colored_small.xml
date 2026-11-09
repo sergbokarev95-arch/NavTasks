@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Color-mark experiment only. No opaque background: safe when Android
+     reduces colored SmallIcon to a status-bar alpha mask. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#0071E3" android:strokeWidth="1.7"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M9.3,4.1 H17.1 Q19.6,4.1 19.6,6.6 V16.1" />
+    <path android:fillColor="#E6E8EC"
+        android:strokeColor="#0071E3" android:strokeWidth="1.9"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M6.5,7.2 H14.2 Q16.7,7.2 16.7,9.7 V17.5 Q16.7,20 14.2,20 H6.5 Q4,20 4,17.5 V9.7 Q4,7.2 6.5,7.2 Z" />
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#0071E3" android:strokeWidth="2.15"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M7.4,13.6 L9.8,16 L13.7,12.0" />
+</vector>

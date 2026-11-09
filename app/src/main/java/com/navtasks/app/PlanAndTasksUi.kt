@@ -1095,6 +1095,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     var showDigestWheel by remember { mutableStateOf(false) }
     var showReminderWheel by remember { mutableStateOf(false) }
+    var iconTestFeedback by remember { mutableStateOf<String?>(null) }
     fun syncSettings() {
         NavNotifications.reschedule(context, store, settings)
         NavWidgetUpdater.updateAll(context, store)
@@ -1194,6 +1195,48 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth()) {
                         Text(localized("Время сводки пропусков", "Missed-task digest time", lang) +
                             "  %02d:%02d".format(settings.digestHour, settings.digestMinute))
+                    }
+                }
+
+                // Isolated MagicOS experiment. It never changes normal delivery,
+                // stored tasks, notification timing, channels or user settings.
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        iconTestFeedback = if (NavNotificationIconLab.show(context))
+                            localized(
+                                "Отправлены 3 тестовых уведомления A, B и C. Сравни значки в шторке HONOR.",
+                                "Sent three test notifications A, B and C. Compare the icons in the notification shade.",
+                                lang,
+                            )
+                        else localized(
+                            "Разреши уведомления NavTasks в настройках Android.",
+                            "Allow NavTasks notifications in Android Settings.",
+                            lang,
+                        )
+                    },
+                ) {
+                    Text(localized("Сравнить значки уведомлений", "Compare notification icons", lang))
+                }
+                Text(
+                    localized(
+                        "A — системная иконка, B — цветная пиктограмма, C — фирменная цветная плитка. " +
+                            "Тест не меняет настоящие напоминания. В MagicOS 11 проверь режим «Многоцветный» " +
+                            "в настройках стиля значков уведомлений.",
+                        "A — standard icon, B — colored symbol, C — full-color brand tile. " +
+                            "The test does not change actual reminders. In MagicOS 11, check the " +
+                            "Multicolor notification icon style.",
+                        lang,
+                    ),
+                    color = p.muted, fontSize = 12.sp,
+                )
+                iconTestFeedback?.let {
+                    Text(it, color = p.blueText, fontSize = 12.sp)
+                    TextButton(onClick = {
+                        NavNotificationIconLab.clear(context)
+                        iconTestFeedback = null
+                    }) {
+                        Text(localized("Убрать тестовые уведомления", "Clear test notifications", lang))
                     }
                 }
                 Text(localized("Дата и время берутся только с телефона. Отдельного судового UTC нет.",
