@@ -20,7 +20,7 @@ class NavLiquidGlassParityTest {
         assertEquals(1.30f, NavLiquidDockTabs.movingScale, 0f)
         assertEquals(1f, NavLiquidDockTabs.scaleAt(0f), 0f)
         assertEquals(1.3f, NavLiquidDockTabs.scaleAt(1f), 0f)
-        assertEquals(listOf("today","work","handover","tasks"), NavLiquidDockTabs.items.map{it.glyph})
+        assertEquals(listOf("today","work","handover","reference"), NavLiquidDockTabs.items.map{it.glyph})
         assertTrue(NavLiquidDockTabs.restingLensHeightDp * NavLiquidDockTabs.movingScale >
             NavLiquidDockTabs.dockHeightDp)
     }

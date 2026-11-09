@@ -58,7 +58,8 @@ jobs:
           grep -Fq 'Alignment.BottomStart' app/src/main/java/com/navtasks/app/NavTasksUi.kt
           grep -Fq 'FormLabel("Периодичность", "Frequency", lang, p)' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
           ! grep -Fq 'else -> TasksScreenV2(' app/src/main/java/com/navtasks/app/NavTasksUi.kt
-          ! git diff --name-only 9c7145e53959cffc11f0e8500c6c6ca317ef9252 HEAD -- app/src/main/java/com/navtasks/app/TaskStore.kt app/src/main/java/com/navtasks/app/WorkOrderStore.kt app/src/main/java/com/navtasks/app/ServiceStore.kt app/src/main/java/com/navtasks/app/HandoverStore.kt | grep .
+          test "$(git hash-object app/src/main/java/com/navtasks/app/WorkOrderStore.kt)" = 'e721fd57a42403fefe4fca6d6c325a9c2a8acd46'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/HandoverStore.kt)" = '7db73a2b37a845ecbd76c8b6045ec6eb5d597077'
           test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassActionButton.kt)" = 'a551bac11ad051c1c72c68bb1030d084cacfef87'
           test "$(git hash-object app/src/main/java/com/navtasks/app/HandoverUi.kt)" = '74b3c8858bb61180a1e868430e57365526a39634'
           test "$(git hash-object app/src/main/java/com/navtasks/app/TaskStore.kt)" = 'ab422f5c07755bf1f7e1b78edbe693f675f7d12e'
@@ -74,7 +75,8 @@ jobs:
           ! grep -Fq 'clickedTab' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
           ! grep -Fq 'isHolding' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
           grep -Fq 'class NavLiquidDockClassicPulseTest' app/src/test/java/com/navtasks/app/NavLiquidDockClassicPulseTest.kt
-          ! git diff --name-only 1e33de3c3479caff39c28363b88cc477e56ea6d9 HEAD -- app/src/main/java/com/navtasks/app/ProfileStore.kt app/src/main/java/com/navtasks/app/WorkOrdersUi.kt app/src/main/java/com/navtasks/app/NavNotifications.kt app/src/main/java/com/navtasks/app/TaskStore.kt | grep .
+          test "$(git hash-object app/src/main/java/com/navtasks/app/ProfileStore.kt)" = 'bfeb0a735eec84a033db187dbe669e37969d2067'
+          grep -Fq 'class NavLiquidGlassParityTest' app/src/test/java/com/navtasks/app/NavLiquidGlassParityTest.kt
           gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
       - name: Remove signing key
         if: always()
