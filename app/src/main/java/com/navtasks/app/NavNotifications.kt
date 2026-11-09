@@ -9,8 +9,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import java.time.Instant
@@ -35,20 +33,16 @@ object NavNotifications {
 
     private fun manager(context: Context) = context.getSystemService(NotificationManager::class.java)
 
-    /** Original installed app icon, not a surrogate checkmark, in notification cards. */
-    private fun appIconBitmap(context: Context): Bitmap {
-        val size = (64f * context.resources.displayMetrics.density).toInt().coerceAtLeast(64)
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-        val drawable = context.packageManager.getApplicationIcon(context.applicationInfo)
-        drawable.setBounds(0, 0, size, size)
-        drawable.draw(Canvas(bitmap))
-        return bitmap
-    }
-
+    /**
+     * Show one system app icon, not two competing logos.
+     * Android's status-bar/notification icon is a monochrome 24dp symbol.
+     * Reuse the exact artwork supplied to the installed adaptive launcher icon
+     * instead of the old hand-traced notification icon. Do not set a large icon
+     * for branding: on HONOR that displaced/duplicated the app's icon.
+     */
     private fun notificationBuilder(context: Context, channel: String): Notification.Builder =
         Notification.Builder(context, channel)
-            .setSmallIcon(R.drawable.navtasks_notification)
-            .setLargeIcon(appIconBitmap(context))
+            .setSmallIcon(R.drawable.navtasks_icon_monochrome)
 
     fun createChannels(context: Context) {
         manager(context).createNotificationChannel(NotificationChannel(
