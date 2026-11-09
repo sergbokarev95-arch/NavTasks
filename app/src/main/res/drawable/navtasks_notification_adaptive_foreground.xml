@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Crisp Apple Blue brand outlines on Slate Mist, safe-zone aligned -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFE6E8EC"
+        android:strokeColor="#FF0071E3" android:strokeWidth="4.6"
+        android:strokeLineJoin="round"
+        android:pathData="M47,25 H73 Q83,25 83,35 V72 Q83,82 73,82 H47 Q37,82 37,72 V35 Q37,25 47,25 Z"/>
+    <path android:fillColor="#FFE6E8EC"
+        android:strokeColor="#FF0071E3" android:strokeWidth="5"
+        android:strokeLineJoin="round"
+        android:pathData="M35,34 H63 Q73,34 73,44 V76 Q73,86 63,86 H35 Q25,86 25,76 V44 Q25,34 35,34 Z"/>
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#FF0071E3" android:strokeWidth="7"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M38,60 L47,69 L62,52"/>
+</vector>

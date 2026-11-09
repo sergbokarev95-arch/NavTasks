@@ -34,17 +34,38 @@ object NavNotifications {
     private fun manager(context: Context) = context.getSystemService(NotificationManager::class.java)
 
     /**
-     * Show one system app icon, not two competing logos.
-     * Android's status-bar/notification icon is a monochrome 24dp symbol.
-     * The launcher monochrome layer contains translucent stacked fills which
-     * get muddy at status-bar size. Use a dedicated 24dp high-contrast NavTasks
-     * card/check vector instead; never attach a second LargeIcon.
+     * AOSP Android 17 avoids tinting an adaptive SmallIcon on standard
+     * notification templates. HONOR gets the color brand tile on the left;
+     * other vendors retain the original supported monochrome icon.
+     * Never attach LargeIcon: that moves the SmallIcon to the right.
      */
+    internal fun smallIconForManufacturer(manufacturer: String): Int =
+        if (manufacturer.equals("HONOR", ignoreCase = true))
+            R.drawable.navtasks_notification_adaptive
+        else R.drawable.navtasks_notification_small
+
     private fun notificationBuilder(context: Context, channel: String): Notification.Builder =
         Notification.Builder(context, channel)
-            .setSmallIcon(R.drawable.navtasks_notification_small)
-            // Accent hint only; MagicOS controls actual badge/tile colors.
+            .setSmallIcon(smallIconForManufacturer(Build.MANUFACTURER))
             .setColor(android.graphics.Color.rgb(0, 113, 227))
+
+    /** Manual preview: same builder as real events, no alarm/task mutation. */
+    fun showIconPreview(context: Context): Boolean {
+        if (!mayNotify(context) || !manager(context).areNotificationsEnabled()) return false
+        createChannels(context)
+        val preview = notificationBuilder(context, CHANNEL_TASKS)
+            .setContentTitle("NavTasks · Иконка")
+            .setContentText("Белая плитка, серые карточки и синяя галочка")
+            .setShowWhen(false)
+            .setAutoCancel(true)
+            .build()
+        manager(context).notify("navtasks-icon-preview", 27131, preview)
+        return true
+    }
+
+    fun clearIconPreview(context: Context) {
+        manager(context).cancel("navtasks-icon-preview", 27131)
+    }
 
     fun createChannels(context: Context) {
         manager(context).createNotificationChannel(NotificationChannel(

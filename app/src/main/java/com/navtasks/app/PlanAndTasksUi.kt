@@ -1198,15 +1198,15 @@ fun SettingsScreen(
                     }
                 }
 
-                // Isolated MagicOS experiment. It never changes normal delivery,
-                // stored tasks, notification timing, channels or user settings.
+                // Single production-path preview, replaces the A/B/C lab UI.
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        iconTestFeedback = if (NavNotificationIconLab.show(context))
+                        NavNotificationIconLab.clear(context) // remove old A/B/C samples
+                        iconTestFeedback = if (NavNotifications.showIconPreview(context))
                             localized(
-                                "Отправлены 3 тестовых уведомления A, B и C. Сравни значки в шторке HONOR.",
-                                "Sent three test notifications A, B and C. Compare the icons in the notification shade.",
+                                "Отправлено уведомление. Проверь цветную плитку слева в шторке HONOR.",
+                                "Preview sent. Check the left color tile in HONOR notifications.",
                                 lang,
                             )
                         else localized(
@@ -1216,27 +1216,15 @@ fun SettingsScreen(
                         )
                     },
                 ) {
-                    Text(localized("Сравнить значки уведомлений", "Compare notification icons", lang))
+                    Text(localized("Проверить иконку уведомления", "Preview notification icon", lang))
                 }
-                Text(
-                    localized(
-                        "A — системная иконка, B — цветная пиктограмма, C — фирменная цветная плитка. " +
-                            "Тест не меняет настоящие напоминания. В MagicOS 11 проверь режим «Многоцветный» " +
-                            "в настройках стиля значков уведомлений.",
-                        "A — standard icon, B — colored symbol, C — full-color brand tile. " +
-                            "The test does not change actual reminders. In MagicOS 11, check the " +
-                            "Multicolor notification icon style.",
-                        lang,
-                    ),
-                    color = p.muted, fontSize = 12.sp,
-                )
                 iconTestFeedback?.let {
                     Text(it, color = p.blueText, fontSize = 12.sp)
                     TextButton(onClick = {
-                        NavNotificationIconLab.clear(context)
+                        NavNotifications.clearIconPreview(context)
                         iconTestFeedback = null
                     }) {
-                        Text(localized("Убрать тестовые уведомления", "Clear test notifications", lang))
+                        Text(localized("Убрать тестовое уведомление", "Clear preview notification", lang))
                     }
                 }
                 Text(localized("Дата и время берутся только с телефона. Отдельного судового UTC нет.",
