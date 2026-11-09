@@ -133,7 +133,11 @@ val NavPalette.dangerText: Color
 
 /** A dock tap resets only its target tab; other tabs still restore via Back/swipe. */
 internal fun primaryTabResetStateKey(profileId: String, tab: Int, epoch: Int): String =
-    profileId + "/main-tab-" + (if (tab == 1) "works" else tab.toString()) +
+    profileId + "/main-tab-" + when (tab) {
+        1 -> "works"
+        3 -> "reference"
+        else -> tab.toString()
+    } +
         "/dock-" + epoch
 
 /** One prominent, consistent NavTasks wordmark, independent of the app's business screens. */
@@ -234,7 +238,7 @@ fun NavTasksApp(
     onMissedRequestHandled: () -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    // Four dock tabs: 0=Today, 1=Work, 2=Handover, 3=Tasks.
+    // Four dock tabs: 0=Today, 1=Work, 2=Handover, 3=Reference.
     // Calendar opens as its own full-screen surface, not a fifth dock tab.
     // Kept across activity recreation so Android's Back gesture retraces navigation.
     var tabHistory by rememberSaveable { mutableStateOf("") }
@@ -246,19 +250,19 @@ fun NavTasksApp(
     var todayDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     var worksDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     var handoverDockEpoch by rememberSaveable { mutableIntStateOf(0) }
-    var tasksDockEpoch by rememberSaveable { mutableIntStateOf(0) }
+    var referenceDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     // Active dock re-taps scroll without recreating the destination screen.
     var todayReturnTick by rememberSaveable { mutableIntStateOf(0) }
     var worksReturnTick by rememberSaveable { mutableIntStateOf(0) }
     var handoverReturnTick by rememberSaveable { mutableIntStateOf(0) }
-    var tasksReturnTick by rememberSaveable { mutableIntStateOf(0) }
+    var referenceReturnTick by rememberSaveable { mutableIntStateOf(0) }
     // A former tab snapshot is not reused after an intentional dock reset.
     // Clear inactive generations so repeated taps do not accumulate saved UI state.
     LaunchedEffect(
         profiles.activeId, todayDockEpoch, worksDockEpoch,
-        handoverDockEpoch, tasksDockEpoch,
+        handoverDockEpoch, referenceDockEpoch,
     ) {
-        listOf(todayDockEpoch, worksDockEpoch, handoverDockEpoch, tasksDockEpoch)
+        listOf(todayDockEpoch, worksDockEpoch, handoverDockEpoch, referenceDockEpoch)
             .forEachIndexed { page, epoch ->
                 if (epoch > 0) {
                     tabStateHolder.removeState(
@@ -386,8 +390,6 @@ fun NavTasksApp(
         if (next == 0) {
             selectedDate = LocalDate.now()
             expandedRun = null
-        } else if (next == 3) {
-            templateFilter = Frequency.DAILY
         }
         if (next == tab) {
             // Avoid remount: keep LazyColumn state alive while it animates.
@@ -395,7 +397,7 @@ fun NavTasksApp(
                 0 -> todayReturnTick++
                 1 -> worksReturnTick++
                 2 -> handoverReturnTick++
-                3 -> tasksReturnTick++
+                3 -> referenceReturnTick++
             }
         } else {
             // Cross-tab changes already use the existing horizontal transition.
@@ -403,7 +405,7 @@ fun NavTasksApp(
                 0 -> todayDockEpoch++
                 1 -> worksDockEpoch++
                 2 -> handoverDockEpoch++
-                3 -> tasksDockEpoch++
+                3 -> referenceDockEpoch++
             }
         }
         openPrimaryTab(next)
@@ -630,7 +632,7 @@ fun NavTasksApp(
                                         0 -> localized("Сегодня", "Today", lang)
                                         1 -> localized("Работы", "Work", lang)
                                         2 -> "Handover"
-                                        else -> localized("Задачи", "Tasks", lang)
+                                        else -> localized("Справочник", "Reference", lang)
                                     }, fontSize = 26.sp, color = palette.text, fontWeight = FontWeight.Medium,
                                 )
                             }
@@ -665,7 +667,7 @@ fun NavTasksApp(
                                         0 -> todayDockEpoch
                                         1 -> worksDockEpoch
                                         2 -> handoverDockEpoch
-                                        else -> tasksDockEpoch
+                                        else -> referenceDockEpoch
                                     },
                                 )
                             ) {
@@ -712,9 +714,8 @@ fun NavTasksApp(
                                         onBack = { openPrimaryTab(0) }, embeddedInTab = true,
                                         smoothReturnTick = handoverReturnTick,
                                     )
-                                    else -> TasksScreenV2(store, templateFilter, { templateFilter = it }, palette, lang,
-                                        onEdit = { editorTask = it; editorOpen = true },
-                                        smoothReturnTick = tasksReturnTick)
+                                    else -> ReferenceHubScreen(palette, lang,
+                                        smoothReturnTick = referenceReturnTick)
                                 }
                             }
                         }
@@ -729,9 +730,12 @@ fun NavTasksApp(
                         }
                     }
                     if (tab == 0) {
+                        // Today: Calendar on the LEFT, Add task on the RIGHT.
+                        // Both reuse the approved 54dp Liquid Glass action optics,
+                        // exact vertical inset and one captured backdrop.
                         Box(
-                            Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
-                                .padding(end = 19.dp, bottom = 83.dp),
+                            Modifier.align(Alignment.BottomStart).navigationBarsPadding()
+                                .padding(start = 19.dp, bottom = 83.dp),
                         ) {
                             if (glassBackdrop != null) {
                                 NavLiquidGlassCalendarButton(palette, glassBackdrop) {
@@ -743,23 +747,20 @@ fun NavTasksApp(
                                 }
                             }
                         }
-                    }
-                    if (tab == 3) {
                         Box(
                             Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
                                 .padding(end = 19.dp, bottom = 83.dp),
                         ) {
-                            // API 33+: share the same exact direct-scene Backdrop
-                            // as the approved Liquid Glass dock. Older Android
-                            // retains its existing, tested Haze button.
                             if (glassBackdrop != null) {
                                 NavLiquidGlassAddButton(palette, glassBackdrop) {
                                     editorTask = null
+                                    templateFilter = Frequency.DAILY
                                     editorOpen = true
                                 }
                             } else {
                                 NavGlassAddButton(palette, hazeState) {
                                     editorTask = null
+                                    templateFilter = Frequency.DAILY
                                     editorOpen = true
                                 }
                             }

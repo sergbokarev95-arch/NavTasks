@@ -293,7 +293,7 @@ fun NavLiquidGlassBottomBar(
                             0 -> localized("Сегодня", "Today", lang)
                             1 -> localized("Работы", "Work", lang)
                             2 -> "Handover"
-                            else -> localized("Задачи", "Tasks", lang)
+                            else -> localized("Справочник", "Reference", lang)
                         },
                         color = if (active) activeBlue else inactiveLabel,
                         fontSize = 10.sp,

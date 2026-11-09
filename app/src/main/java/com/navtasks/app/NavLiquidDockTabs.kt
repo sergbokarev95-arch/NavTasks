@@ -18,6 +18,6 @@ internal object NavLiquidDockTabs {
         NavLiquidDockTab("today", "Сегодня"),
         NavLiquidDockTab("work", "Работы"),
         NavLiquidDockTab("handover", "Handover"),
-        NavLiquidDockTab("tasks", "Задачи")
+        NavLiquidDockTab("reference", "Справочник")
     )
 }

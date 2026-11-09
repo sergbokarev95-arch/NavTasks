@@ -1,0 +1,113 @@
+name: NavTasks 0.4.112 Beta - Today actions and Reference placeholders
+on:
+  push:
+    branches: [feature/navtasks-reference-today-actions-0.4.112-beta]
+    paths:
+      - 'app/**'
+      - '.github/workflows/navtasks-reference-today-0.4.112.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore existing signed Beta key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify original smooth movement, protected code, full tests, assemble
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-beta"' app/build.gradle.kts
+          grep -Fq 'versionCode = 137' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.112"' app/build.gradle.kts
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
+          grep -Fq 'NavLiquidDockTabs.repeatTapScale' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'stiffness = 550f' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'stiffness = 600f' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'if (active) repeatedTapSerial++' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'RoutinesModuleScreen(' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'TasksScreenV2(' app/src/main/java/com/navtasks/app/RoutinesModuleScreen.kt
+          grep -Fq 'onTasks = { showRoutineTasks = true }' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'onClick = onTasks' app/src/main/java/com/navtasks/app/WorksHubUi.kt
+          grep -Fq 'ReferenceHubScreen(palette, lang' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'NavLiquidDockTab("reference", "Справочник")' app/src/main/java/com/navtasks/app/NavLiquidDockTabs.kt
+          grep -Fq 'localized("Справочник", "Reference", lang)' app/src/main/java/com/navtasks/app/NavGlass.kt
+          grep -Fq 'class ReferenceNavigationTest' app/src/test/java/com/navtasks/app/ReferenceNavigationTest.kt
+          grep -Fq 'Alignment.BottomStart' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          grep -Fq 'FormLabel("Периодичность", "Frequency", lang, p)' app/src/main/java/com/navtasks/app/PlanAndTasksUi.kt
+          ! grep -Fq 'else -> TasksScreenV2(' app/src/main/java/com/navtasks/app/NavTasksUi.kt
+          ! git diff --name-only 9c7145e53959cffc11f0e8500c6c6ca317ef9252 HEAD -- app/src/main/java/com/navtasks/app/TaskStore.kt app/src/main/java/com/navtasks/app/WorkOrderStore.kt app/src/main/java/com/navtasks/app/ServiceStore.kt app/src/main/java/com/navtasks/app/HandoverStore.kt | grep .
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassActionButton.kt)" = 'a551bac11ad051c1c72c68bb1030d084cacfef87'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/HandoverUi.kt)" = '74b3c8858bb61180a1e868430e57365526a39634'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/TaskStore.kt)" = 'ab422f5c07755bf1f7e1b78edbe693f675f7d12e'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/ServiceStore.kt)" = '9302d73141adb644f0ec8fe7210c010da7aae376'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavNotifications.kt)" = 'c0ddcbe460445f16704bda0a7251b4c3f19701d6'
+          grep -Fq 'stiffness = 550f' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'stiffness = 600f' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'target = selected.coerceIn(' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'if (active) repeatedTapSerial++' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'tapPulse.animateTo(1f,' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'NavLiquidDockTabs.repeatTapScale' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          ! grep -Fq 'pressedTab' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          ! grep -Fq 'clickedTab' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          ! grep -Fq 'isHolding' app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt
+          grep -Fq 'class NavLiquidDockClassicPulseTest' app/src/test/java/com/navtasks/app/NavLiquidDockClassicPulseTest.kt
+          ! git diff --name-only 1e33de3c3479caff39c28363b88cc477e56ea6d9 HEAD -- app/src/main/java/com/navtasks/app/ProfileStore.kt app/src/main/java/com/navtasks/app/WorkOrdersUi.kt app/src/main/java/com/navtasks/app/NavNotifications.kt app/src/main/java/com/navtasks/app/TaskStore.kt | grep .
+          gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - name: Remove signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Verify signed APK, package/version and ZIP integrity
+        run: |
+          set -euo pipefail
+          APK=NavTasks_Reference_Today_0.4.112_Beta.apk
+          ZIP=NavTasks_Reference_Today_0.4.112_Beta_Update.zip
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | grep -F "package: name='com.navtasks.app.glass' versionCode='137' versionName='0.4.112-beta'"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk "$APK"
+          zip -9 -X "$ZIP" "$APK"
+          unzip -t "$ZIP"
+          test "$(sha256sum "$APK" | cut -d ' ' -f 1)" = "$(unzip -p "$ZIP" "$APK" | sha256sum | cut -d ' ' -f 1)"
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+      - name: Publish immutable verified Beta only from current branch head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=v0.4.112-reference-today-verified
+          CURRENT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-reference-today-actions-0.4.112-beta" --jq '.commit.sha')"
+          if [ "$CURRENT_SHA" != "$GITHUB_SHA" ]; then
+            echo "Superseded source; not publishing stale artifact"
+            exit 0
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Immutable release exists, not overwriting."
+          else
+            gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.112 Beta - Today actions and Reference placeholders" \
+              --notes "Signed CI-verified NavTasks 0.4.112-beta/code137. Today Calendar shortcut moved to bottom left; new Task plus is on bottom right and opens original TaskEditor with Day/Week/Month/One-off choice first. Fourth dock tab replaced by Reference with two noninteractive SIRE 2.0 and archival VIQ7 coming-later tiles. Routine tasks remain in Work next to AMOS and Services, original task data and full behavior untouched. Accepted 0.4.108 smooth Liquid Glass movement, optics and short retap pulse unchanged. Both themes and fallback API path supported. Export FULL profiles; install in-place without uninstall. HONOR acceptance pending." \
+              --prerelease
+          fi

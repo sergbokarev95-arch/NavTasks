@@ -363,7 +363,7 @@ fun NavGlassBottomBar(
                     localized("Сегодня", "Today", lang),
                     localized("Работы", "Work", lang),
                     "Handover",
-                    localized("Задачи", "Tasks", lang),
+                    localized("Справочник", "Reference", lang),
                 )
                 repeat(4) { index ->
                     val active = selected == index
@@ -398,7 +398,7 @@ fun NavGlassBottomBar(
                                 0 -> "today"
                                 1 -> "work"
                                 2 -> "handover"
-                                else -> "tasks"
+                                else -> "reference"
                             },
                             color = if (active) activeBlue else p.text.copy(alpha = 0.89f),
                             modifier = Modifier.size(24.dp).graphicsLayer {
@@ -523,6 +523,29 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 drawLine(color, pt(18f,18f), pt(23f,18f), width, cap = StrokeCap.Round)
                 drawLine(color, pt(20.5f,15.5f), pt(23f,18f), width, cap = StrokeCap.Round)
                 drawLine(color, pt(20.5f,20.5f), pt(23f,18f), width, cap = StrokeCap.Round)
+            }
+            "reference" -> {
+                // Thin open-book outline, drawn with the same stroke as the dock.
+                // No filled emoji or extra dependency; centered at 24dp.
+                val leftPage = Path().apply {
+                    moveTo(15f*s, 9f*s)
+                    lineTo(10f*s, 6f*s)
+                    lineTo(4f*s, 7f*s)
+                    lineTo(4f*s, 23f*s)
+                    lineTo(10f*s, 22f*s)
+                    lineTo(15f*s, 25f*s)
+                }
+                val rightPage = Path().apply {
+                    moveTo(15f*s, 9f*s)
+                    lineTo(20f*s, 6f*s)
+                    lineTo(26f*s, 7f*s)
+                    lineTo(26f*s, 23f*s)
+                    lineTo(20f*s, 22f*s)
+                    lineTo(15f*s, 25f*s)
+                }
+                drawPath(leftPage, color, style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(rightPage, color, style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawLine(color, pt(15f,9f), pt(15f,25f), width, cap = StrokeCap.Round)
             }
             "tasks" -> {
                 for ((i, y) in listOf(7f,15f,23f).withIndex()) {

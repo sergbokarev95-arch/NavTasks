@@ -682,18 +682,20 @@ fun TaskEditorScreen(
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp)) {
             NavPanel(p) {
-                FormLabel("Название задачи", "Task name", lang, p)
-                Spacer(Modifier.height(5.dp))
-                NavGlassInput(title, { title = it }, p,
-                    placeholder = localized("Название", "Title", lang), modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(12.dp))
-                FormLabel("Категория", "Category", lang, p)
+                // Frequency first, directly below the New Task header.
+                // Keep existing model, validators and editor persistence intact.
+                FormLabel("Периодичность", "Frequency", lang, p)
                 OptionLine(Frequency.entries.map { it.name to when (it) {
                     Frequency.DAILY -> localized("День", "Daily", lang)
                     Frequency.WEEKLY -> localized("Неделя", "Weekly", lang)
                     Frequency.MONTHLY -> localized("Месяц", "Monthly", lang)
-                    Frequency.EXTRA -> localized("Разовые", "Extra", lang)
+                    Frequency.EXTRA -> localized("Разовая", "One-off", lang)
                 } }, frequency.name, p) { frequency = Frequency.valueOf(it) }
+                Spacer(Modifier.height(12.dp))
+                FormLabel("Название задачи", "Task name", lang, p)
+                Spacer(Modifier.height(5.dp))
+                NavGlassInput(title, { title = it }, p,
+                    placeholder = localized("Название", "Title", lang), modifier = Modifier.fillMaxWidth())
             }
             NavPanel(p) {
                 if (frequency != Frequency.EXTRA) {
