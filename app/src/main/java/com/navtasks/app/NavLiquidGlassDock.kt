@@ -163,16 +163,25 @@ fun NavLiquidGlassBottomBar(
         }
         val pressedTab = tabPressed.indexOfFirst { it }
         val isHolding = pressedTab >= 0
+        // The press position and the onClick selection are two different events:
+        // the former ends on pointer-up, the latter happens on that release.
+        // Remember the committed destination until the parent's selected tab
+        // catches up. This prevents a one-frame spring reversal ("lag/jump").
+        // Keying by selected also discards stale pending taps on swipe/back.
+        var clickedTab by remember(selected) { mutableIntStateOf(-1) }
         val cellWidth = maxWidth / NavLiquidDockTabs.items.size
-        val target = (if (isHolding) pressedTab else selected)
-            .coerceIn(0, NavLiquidDockTabs.items.lastIndex).toFloat()
+        val target = NavLiquidDockTabs.lensTargetIndex(
+            selected = selected, pressedTab = pressedTab, clickedTab = clickedTab,
+        ).toFloat()
+        // A responsive press response; the selected-tab spring stays critically
+        // damped so fast repeated taps do not overshoot or jiggle.
         // Follow the working NavTasks 0.4.59 movement: quick, interruptible spring,
         // while extra width and material settle independently of travel.
         val slide by animateFloatAsState(
             targetValue = target,
             animationSpec = spring(
                 dampingRatio = 1f,
-                stiffness = 550f,
+                stiffness = if (isHolding) 1100f else 800f,
                 visibilityThreshold = .001f
             ),
             label = "glassLabDockSlide"
@@ -185,7 +194,8 @@ fun NavLiquidGlassBottomBar(
         )
         val stretched by animateFloatAsState(
             targetValue = NavLiquidDockTabs.stretchTarget(moving, isHolding),
-            animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
+            animationSpec = spring(dampingRatio = 1f,
+                stiffness = if (isHolding) 1100f else 800f),
             label = "glassLabLensStretch"
         )
         // True proportional growth in both axes: 1.15x under a held finger,
@@ -267,6 +277,10 @@ fun NavLiquidGlassBottomBar(
                         ) {
                             // Re-tapping the selected tab must also dispatch:
                             // the parent restores Today/date/list to its root.
+                            // Preserve the on-release semantics and the clicked
+                            // destination across Compose's Press->Release->Click
+                            // state transition so the lens never travels backward.
+                            clickedTab = index
                             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                             onSelect(index)
                         },

@@ -22,6 +22,20 @@ internal object NavLiquidDockTabs {
 
     fun scaleAt(progress: Float): Float =
         1f + (movingScale - 1f) * progress.coerceIn(0f, 1f)
+
+    // Press begins before clickable emits onClick, which is dispatched upon
+    // pointer release. Keep the destination stable in between; a canceled
+    // press (no click) returns to the current selected tab.
+    fun lensTargetIndex(selected: Int, pressedTab: Int, clickedTab: Int): Int {
+        val last = items.lastIndex
+        val destination = when {
+            pressedTab in 0..last -> pressedTab
+            clickedTab in 0..last -> clickedTab
+            else -> selected
+        }
+        return destination.coerceIn(0, last)
+    }
+
     val items = listOf(
         NavLiquidDockTab("today", "Сегодня"),
         NavLiquidDockTab("work", "Работы"),
