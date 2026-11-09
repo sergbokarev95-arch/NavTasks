@@ -189,7 +189,8 @@ jobs:
             gh release upload "$TAG" "$ZIP" --clobber
           else
             gh release create "$TAG" "$ZIP" --target "$GITHUB_SHA" \
-              --title "NavTasks 0.4.90 Beta - soft peach AMOS request buttons in Services" \
+              --title "NavTasks 0.4.93 Beta - exact 0.4.90 app recovery" \
               --notes "Optional high-version in-place recovery 0.4.93 beta code118. This is the EXACT previously verified 0.4.90 application source including accepted filled peach AMOS badge, existing reminders/icon, data and Liquid Glass; only version number raised for safe upgrade from 0.4.92 code117. Install ONLY IF 0.4.92 is rejected. Back up all profiles first; NEVER uninstall the app or clear its data. The 0.4.92 service-date fix and dedicated notification icon are intentionally absent in this rollback. Same package ID and signing key. Future same-ID versions must use versionCode >=119 if this fallback is installed." \
               --prerelease
           fi
+          gh release edit "$TAG" --title "NavTasks 0.4.93 Beta - exact 0.4.90 app recovery" --prerelease
