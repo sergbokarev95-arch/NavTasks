@@ -6,7 +6,9 @@ import android.view.WindowInsetsController
 import android.view.HapticFeedbackConstants
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,6 +39,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -149,6 +152,21 @@ fun NavLiquidGlassBottomBar(
     // A separate background sibling keeps backdrop capture and rim unchanged.
     BoxWithConstraints(modifier.fillMaxWidth().height(56.dp)) {
         Box(Modifier.matchParentSize().then(backing).then(opticalEdge))
+        // A tiny one-shot pulse is allowed ONLY on clicking the already
+        // selected tab. No press/hold state ever controls the glass lens.
+        // Key by selected so switching tabs cancels any old pulse.
+        var repeatedTapSerial by remember(selected) { mutableIntStateOf(0) }
+        val tapPulse = remember(selected) { Animatable(1f) }
+        LaunchedEffect(selected, repeatedTapSerial) {
+            if (repeatedTapSerial > 0) {
+                // Interruptible, restrained Apple-style feedback: no delay,
+                // no steady enlargement while the finger is down.
+                tapPulse.animateTo(NavLiquidDockTabs.repeatTapScale,
+                    animationSpec = tween(durationMillis = 85))
+                tapPulse.animateTo(1f,
+                    animationSpec = tween(durationMillis = 155))
+            }
+        }
         val cellWidth = maxWidth / NavLiquidDockTabs.items.size
         val target = selected.coerceIn(0, NavLiquidDockTabs.items.lastIndex).toFloat()
         // Follow the working NavTasks 0.4.59 movement: quick, interruptible spring,
@@ -176,7 +194,7 @@ fun NavLiquidGlassBottomBar(
         // True proportional growth: both axes expand by the same factor.
         // Unlike 0.1.3's horizontal stretch, this makes the glass rise above
         // and drop below the 56dp navigation capsule while it is travelling.
-        val lensScale = NavLiquidDockTabs.scaleAt(stretched)
+        val lensScale = NavLiquidDockTabs.scaleAt(stretched) * tapPulse.value
         val lensWidth = (cellWidth - 4.dp) * lensScale
         val lensHeight = NavLiquidDockTabs.restingLensHeightDp.dp * lensScale
         val lensX = (cellWidth * (slide + .5f) - lensWidth / 2f)
@@ -252,6 +270,9 @@ fun NavLiquidGlassBottomBar(
                         ) {
                             // Re-tapping the selected tab must also dispatch:
                             // the parent restores Today/date/list to its root.
+                            // Preserve re-tap root reset; pulse starts only
+                            // after the click, never during a long hold.
+                            if (active) repeatedTapSerial++
                             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                             onSelect(index)
                         },

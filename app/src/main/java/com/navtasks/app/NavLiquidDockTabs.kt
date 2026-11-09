@@ -10,6 +10,7 @@ internal object NavLiquidDockTabs {
     const val dockHeightDp = 56f
     const val restingLensHeightDp = 52f
     const val movingScale = 1.30f
+    const val repeatTapScale = 1.06f
 
     fun scaleAt(progress: Float): Float =
         1f + (movingScale - 1f) * progress.coerceIn(0f, 1f)
