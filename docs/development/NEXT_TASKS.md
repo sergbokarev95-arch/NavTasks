@@ -330,3 +330,9 @@
 - [ ] Check the new small icon visually recognizable at status-bar size, and original home-screen icon unchanged. Native Android applies monochrome/tint; do not promise color launcher logo in status-bar.
 - [ ] Confirm 0.4.86 reminder timing/grouping, notices, AMOS, Services, backup/restore, dock and user records work unchanged. If rejected, optional exact v0.4.86 rollback code114 branch `feature/navtasks-0.4.89-native-icon-recovery` (confirm CI and release first). Never uninstall; if code114 installed, future app versionCode >=115.
 - [ ] Only after physical user acceptance consider merging; main application code still untouched.
+
+## NEXT — HONOR notification icon 0.4.88 and 0.4.86 smart reminder verification
+- [x] Diagnose extra hand-traced SmallIcon plus duplicated hand-rasterized launcher LargeIcon in NavNotifications. Correct app notification identity: setSmallIcon official adaptive monochrome asset only. Leave launcher/dock untouched.
+- [x] CI42545659634 SUCCESS signed versionCode113 Beta ZIP: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.88-native-icon-verified/NavTasks_Native_Notification_Icon_0.4.88_Beta_Update.zip.
+- [ ] Export FULL profiles and install v0.4.88 OVER existing NavTasks; never uninstall. Trigger at least one real task or grouped reminder, inspect small status-bar and full notification card on HONOR MagicOS. Expect one official monochrome app symbol, no oversized second cyan image/corner badge. OEM coloring and glass launcher treatment not guaranteed.
+- [ ] Recheck 0.4.86 smart reminder grouped schedule/zero interval/AMOS+Services from this version. Only after user acceptance consider promoting; main remains unchanged.
