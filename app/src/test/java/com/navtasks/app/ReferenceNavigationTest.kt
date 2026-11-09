@@ -10,7 +10,7 @@ class ReferenceNavigationTest {
         assertEquals(4, NavLiquidDockTabs.items.size)
         assertEquals("reference", NavLiquidDockTabs.items[3].glyph)
         assertEquals("Справочник", NavLiquidDockTabs.items[3].label)
-        assertEquals("tasks", NavLiquidDockTabs.items[3].glyph.replace("reference", "tasks"))
+        assertNotEquals("tasks", NavLiquidDockTabs.items[3].glyph)
     }
 
     @Test fun referenceDoesNotReuseStoredTasksTabScrollState() {

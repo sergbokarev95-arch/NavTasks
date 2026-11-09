@@ -133,12 +133,11 @@ val NavPalette.dangerText: Color
 
 /** A dock tap resets only its target tab; other tabs still restore via Back/swipe. */
 internal fun primaryTabResetStateKey(profileId: String, tab: Int, epoch: Int): String =
-    profileId + "/main-tab-" + when (tab) {
+    profileId + "/main-tab-" + (when (tab) {
         1 -> "works"
         3 -> "reference"
         else -> tab.toString()
-    } +
-        "/dock-" + epoch
+    }) + "/dock-" + epoch
 
 /** One prominent, consistent NavTasks wordmark, independent of the app's business screens. */
 @Composable
