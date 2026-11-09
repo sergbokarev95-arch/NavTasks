@@ -981,7 +981,8 @@ private fun ServiceAmosRequestButton(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            label, color = colors.text, fontSize = 12.sp,
+            // Empty request: orange outline is the only accent; text stays neutral.
+            label, color = if (hasRequest) colors.text else p.text, fontSize = 12.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
     }
