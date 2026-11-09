@@ -336,3 +336,13 @@
 - [x] CI42545659634 SUCCESS signed versionCode113 Beta ZIP: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.88-native-icon-verified/NavTasks_Native_Notification_Icon_0.4.88_Beta_Update.zip.
 - [ ] Export FULL profiles and install v0.4.88 OVER existing NavTasks; never uninstall. Trigger at least one real task or grouped reminder, inspect small status-bar and full notification card on HONOR MagicOS. Expect one official monochrome app symbol, no oversized second cyan image/corner badge. OEM coloring and glass launcher treatment not guaranteed.
 - [ ] Recheck 0.4.86 smart reminder grouped schedule/zero interval/AMOS+Services from this version. Only after user acceptance consider promoting; main remains unchanged.
+
+## NEXT — HONOR review of AMOS badge Day/Night color v0.4.90
+- [x] Protect exact verified 0.4.88 signed source. Scope AMOS request badge only, not global selected controls.
+- [x] Day option 1 soft peach fill #FFF1DE, border #F4C48B, readable amber text #AE5800; night graphite amber #403227, stroke #74583C, text #FFBF79.
+- [x] Preserve same requestTarget editor callback, labels and 44dp hit target; leave global `ServiceOption`, filters, dock optics, service/AMOS/task data and scheduling untouched.
+- [x] Unit test both semantic palettes and unchanged Apple blue; CI42556397343 SUCCESS signed 0.4.90 beta code115: https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.90-amos-peach-verified/NavTasks_AMOS_Peach_0.4.90_Beta_Update.zip.
+- [x] Prepare optional exact v0.4.88 UI recovery beta 0.4.91 code116 CI42556403359 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.91-amos-peach-recovery; DO NOT install unless user rejects 0.4.90.
+- [ ] Export FULL profiles, install 0.4.90 over existing app on HONOR without uninstall; inspect Services request badges on planned/unplanned cards in both Day/Night, including unfilled request. Tap to edit and verify request number/date and save behavior unchanged.
+- [ ] Confirm ordinary blue filter/buttons remain blue, red delete remains red, and Liquid Glass dock unchanged. Do not merge into main or mark accepted until user's physical device test.
+- [ ] If recovery code116 installed, subsequent updates must use versionCode >=117. Genuine little-menu glass and pending 0.4.86 smart reminder / 0.4.88 notification icon acceptance remain separate.
