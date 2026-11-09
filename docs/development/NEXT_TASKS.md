@@ -358,3 +358,21 @@
 - [ ] Check no regression for unplanned AMOS request date/number, service completion/history, notifications and task calendars. In Services Day/Night compare numbered AMOS filled vs empty outline/neutral text, test tap+save.
 - [ ] Clear previous alerts, trigger a NEW notification; inspect app icon on MagicOS lock screen, shade and status bar. Expect one recognizable monochrome task-card mark (OEM chooses coloring/tile); no second duplicated LargeIcon. Device result cannot be inferred from CI.
 - [ ] Only promote app feature after user device acceptance. If optional rollback code118 installed, next versionCode >=119. Keep glass optical dock unchanged.
+
+## NEXT — 0.4.94 R2 HONOR acceptance (2026-11-09)
+
+- [x] Preserve exact 0.4.92 source in backup; isolate versionCode119 candidate without changing main application code.
+- [x] Full-screen formatted note editor for **both** Personal and vessel Handover. Save/Back behavior; keep old plain/HTML/profile fields, Handover marks, Delete via More.
+- [x] Remove fixed 46–50dp clipping in Handover, Services and AMOS list cards; test/source review.
+- [x] Hide blue planned-work dots in month Plan; retain only success/partial/missed indicators and day agenda.
+- [x] Planned Service last green/next blue; keep warnings and overdue in orange/red.
+- [x] Replace notification small icon with refined monochrome glyph and system accent hint, no duplicate LargeIcon.
+- [x] JUnit, Gradle assemble, signed APK/ZIP release 0.4.94 R2 CI42615079776 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.94-notes-polish-r2-verified; mark R1 obsolete after missing deletion action corrected.
+- [x] Exact prior application recovery 0.4.95/code120 signed CI42614534271 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.95-notes-recovery.
+- [ ] Export **FULL** profile backup, install 0.4.94 R2 atop current Beta on HONOR without uninstall/clear storage.
+- [ ] Verify new/edit Personal notes and vessel Handover notes, WYSIWYG formatting, title, Save then close/reopen, Back without saving, no keyboard overlap; for Handover test More > dated/undated Complete, Strike/Reopen, confirmed Delete.
+- [ ] Test >4 lines and long rich comment in Handover/Service/AMOS cards, both themes, scroll and card geometry; no text lost, no overlap with action buttons.
+- [ ] Check month grid blue dots gone while green/orange/red outcome dots and legend align, Day details and AMOS/Service schedule still available.
+- [ ] Check planned normal Services last-date green, next-date blue in Day/Night; due-soon warning orange and overdue danger red still correct; AMOS itself unchanged.
+- [ ] Trigger a **new** NavTasks notification on MagicOS lock/shade/status, evaluate real monochrome system icon; launcher app icon remains unchanged. Device decides tile/background, do not promise a fully colored SmallIcon.
+- [ ] Confirm reminders, smart grouping, data, profile switches/import/export, Liquid Glass dock, normal app and Back navigation intact. Only after user feedback accept and plan the next update.
