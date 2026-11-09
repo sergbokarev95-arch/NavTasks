@@ -49,6 +49,7 @@ internal object NavNotificationIconLab {
                 NotificationManager.IMPORTANCE_LOW,
             ),
         )
+        manager.cancel(TAG, FIRST_ID + 3) // Separate the D-only preview.
         val titles = listOf(
             "A · Стандартный Android",
             "B · Цветной контур",
@@ -79,10 +80,37 @@ internal object NavNotificationIconLab {
         return true
     }
 
+    /** Full-color white/Slate-Mist/Apple-blue tile passed as SmallIcon (no LargeIcon).
+     * MAGICOS D ONLY: do not replace actual reminder icons until phone review. */
+    internal fun dSmallIcon(): Int = R.drawable.navtasks_notification_tile_small
+
+    fun showD(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED) return false
+        val manager = context.getSystemService(NotificationManager::class.java)
+        if (!manager.areNotificationsEnabled()) return false
+        manager.createNotificationChannel(NotificationChannel(
+            CHANNEL, "NavTasks icon comparison", NotificationManager.IMPORTANCE_LOW,
+        ))
+        clear(context)
+        val preview = Notification.Builder(context, CHANNEL)
+            .setSmallIcon(dSmallIcon())
+            .setContentTitle("D · Цветная иконка слева")
+            .setContentText("Белая плитка, серый фон карточки, синяя галочка")
+            .setColor(BRAND_BLUE)
+            .setAutoCancel(true)
+            .setShowWhen(false)
+            .build()
+        manager.notify(TAG, FIRST_ID + 3, preview)
+        return true
+    }
+
     fun clear(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
         Variant.entries.forEachIndexed { index, _ ->
             manager.cancel(TAG, FIRST_ID + index)
         }
+        manager.cancel(TAG, FIRST_ID + 3)
     }
 }

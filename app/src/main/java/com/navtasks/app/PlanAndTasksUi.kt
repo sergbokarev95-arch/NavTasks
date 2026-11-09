@@ -1218,6 +1218,38 @@ fun SettingsScreen(
                 ) {
                     Text(localized("Сравнить значки уведомлений", "Compare notification icons", lang))
                 }
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        iconTestFeedback = if (NavNotificationIconLab.showD(context))
+                            localized(
+                                "Отправлен вариант D отдельно. Проверь иконку слева в шторке HONOR.",
+                                "D sent alone. Check the icon on the left in the HONOR shade.",
+                                lang,
+                            )
+                        else localized(
+                            "Разреши уведомления NavTasks в настройках Android.",
+                            "Allow NavTasks notifications in Android Settings.",
+                            lang,
+                        )
+                    },
+                ) {
+                    Text(localized(
+                        "Проверить D — цветная иконка слева",
+                        "Test D — colored icon on the left",
+                        lang,
+                    ))
+                }
+                Text(
+                    localized(
+                        "D — фирменная бело-серо-синяя иконка как SmallIcon. " +
+                            "Тест заменяет A/B/C одним уведомлением без LargeIcon.",
+                        "D — full-color white/gray/blue as SmallIcon. " +
+                            "It replaces A/B/C with one preview without LargeIcon.",
+                        lang,
+                    ),
+                    color = p.muted, fontSize = 12.sp,
+                )
                 Text(
                     localized(
                         "A — системная иконка, B — цветная пиктограмма, C — фирменная цветная плитка. " +

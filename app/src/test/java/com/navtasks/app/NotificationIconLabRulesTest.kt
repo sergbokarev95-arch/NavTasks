@@ -18,6 +18,11 @@ class NotificationIconLabRulesTest {
             NavNotificationIconLab.smallIconFor(variant))
         assertFalse(NavNotificationIconLab.hasLargeIcon(variant))
     }
+    @Test fun standaloneDUsesColoredSmallIconWithoutAddingLargeIcon() {
+        assertEquals(R.drawable.navtasks_notification_tile_small,
+            NavNotificationIconLab.dSmallIcon())
+    }
+
     @Test fun onlyColorTileVariantAddsLargeIcon() {
         val variant = NavNotificationIconLab.Variant.COLOR_TILE
         assertEquals(R.drawable.navtasks_notification_small,
