@@ -321,3 +321,12 @@
 - [ ] For a practical test set reference to 2–5 minutes ahead, create 2 uncompleted tasks due end of day with At time notifications: expect exactly one grouped 2-event notification; check clicking, timestamps and duplicate suppression. Then test explicit task time overrides reference, offsets 15min/hour/day, per-task disabled switch, service/AMOS warning if available. Restore preferred clock afterward.
 - [ ] Verify delivery when app is backgrounded and after reboot/time-zone change. Android exact alarms require permission; system idle may delay inexact events.
 - [ ] No main app merge until user approval. If rollback v0.4.87 installed, versionCode must exceed112. True optical little-popup glass/SF Pro licensing remain separate.
+
+## NEXT — validate single native NavTasks notification icon 0.4.88 on HONOR
+- [x] Preserve exact signed 0.4.86 source backup.
+- [x] Remove manually traced notification small symbol and redundant branded `LargeIcon`; reuse existing unchanged adaptive launcher monochrome drawable as the only system notification icon.
+- [x] CI 42545659634 SUCCESS, same-package signed 0.4.88 code113 https://github.com/sergbokarev95-arch/NavTasks/releases/download/v0.4.88-native-icon-verified/NavTasks_Native_Notification_Icon_0.4.88_Beta_Update.zip.
+- [ ] Export full profiles; install over old NavTasks without uninstall or wiping. Remove old notifications from shade. Trigger NEW task or grouped notification and verify native single icon on HONOR MagicOS 11 in both lock screen and status/notification shade, with no right-side duplicate logo.
+- [ ] Check the new small icon visually recognizable at status-bar size, and original home-screen icon unchanged. Native Android applies monochrome/tint; do not promise color launcher logo in status-bar.
+- [ ] Confirm 0.4.86 reminder timing/grouping, notices, AMOS, Services, backup/restore, dock and user records work unchanged. If rejected, optional exact v0.4.86 rollback code114 branch `feature/navtasks-0.4.89-native-icon-recovery` (confirm CI and release first). Never uninstall; if code114 installed, future app versionCode >=115.
+- [ ] Only after physical user acceptance consider merging; main application code still untouched.
