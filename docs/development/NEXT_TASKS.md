@@ -450,3 +450,12 @@
 - [ ] User export FULL profiles and install verified v0.4.106 over v0.4.104. Never uninstall or clear.
 - [ ] HONOR: rapidly tap distant dock tabs, press/hold current and unselected tabs, release, cancel, check extreme left/right, day/night optical text, matte, haptics and navigation reset. Ensure no pause, bounce or flash. If still delayed, user feedback before additional tuning.
 - [ ] Once accepted continue 1.0.0 scope: Tasks UI within Work; Today Calendar left/Add right; Reference tab ONLY SIRE 2.0 and VIQ7 placeholder tiles; test and sign. Content/Windows after 1.0.0.
+
+## NEXT — Classic Liquid Glass acceptance and NavTasks 1.0.0 (2026-11-10)
+
+- [x] User rejected long-press enlargement and changed dock travel speed/smoothness of v0.4.104/v0.4.106. Restore precise v0.4.102 position/stretch/matte springs (550/600/700), selected-only target, 1.30x moving lens, and original backdrop/56dp geometry.
+- [x] Add only a restrained 1.06x lens pulse triggered by a click of the ALREADY selected dock tab (85ms rise/155ms return); no pulse on holding or switching tabs; preserve haptics/reset callback.
+- [x] Signed CI-verified feature v0.4.108/code133 source `9c7145e53959cffc11f0e8500c6c6ca317ef9252`, full unit tests/APK signature/ZIP integrity CI42660693061 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.108-classic-glass-retap-verified.
+- [x] Safe exact v0.4.102 app recovery v0.4.109/code134 with NO pulse and original dock, CI42660907817 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.109-classic-dock-recovery. Do not uninstall or clear; export FULL profiles.
+- [ ] HONOR test switching across all four tabs for previous smooth feel; long hold must NOT grow lens, repeated tap on active tab gives tiny quick pulse; both themes, haptics, root reset, no flicker. Acceptance only on user's report.
+- [ ] After accepted, next isolated navigation stage: expose Tasks UI under Works next to AMOS/Services (leave TaskStore intact); Today Calendar-left/+ Add-right, existing TaskEditor; replace Tasks dock with Reference (ONLY SIRE 2.0 and archival VIQ7 empty tiles). Full regression, stable v1.0.0. Populate documents and Windows synchronization only AFTER 1.0.0.
