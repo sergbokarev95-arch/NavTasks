@@ -376,3 +376,15 @@
 - [ ] Check planned normal Services last-date green, next-date blue in Day/Night; due-soon warning orange and overdue danger red still correct; AMOS itself unchanged.
 - [ ] Trigger a **new** NavTasks notification on MagicOS lock/shade/status, evaluate real monochrome system icon; launcher app icon remains unchanged. Device decides tile/background, do not promise a fully colored SmallIcon.
 - [ ] Confirm reminders, smart grouping, data, profile switches/import/export, Liquid Glass dock, normal app and Back navigation intact. Only after user feedback accept and plan the next update.
+
+## NEXT — HONOR compare 0.4.96 notification icon A/B/C (2026-11-09)
+
+- [x] Preserve stable signed 0.4.94 R2 source and create isolated feature versionCode121 with three test notification styles only.
+- [x] Test A native monochrome, B colored transparent blue mark, C full white/Slate Mist/Apple-blue tile as LargeIcon; protect all production NavNotifications, scheduling, profile stores, UI dock/launcher.
+- [x] Add Settings test button + clear action; one low-priority test channel and three tagged IDs, no preference/data migrations.
+- [x] CI fix system Notification.Builder unsupported setSilent; final full JUnit/build/signature/ZIP tests SUCCESS 42624280583, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.96-icon-lab-verified. No earlier broken artifact released.
+- [x] Exact previous 0.4.94 R2 recovery versionCode122 (0.4.97) passed CI42623919524, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.97-icon-lab-recovery; no uninstall.
+- [ ] Export FULL profiles and install verified v0.4.96 in place on HONOR (never uninstall/clear). In Settings > Notifications tap `Сравнить значки уведомлений`.
+- [ ] Screenshot A, B and C in notification shade (and lock screen if useful). Note blue/white/gray rendering and whether variant C shows duplicate small badge on right. Optional: Settings > Notifications & status bar > Status bar > Notification icon style > Multicolor if your MagicOS build offers it.
+- [ ] Clear test notifications. Verify actual tasks/AMOS/Services reminders still show original icon and all scheduling, profile data, complete actions, dock intact.
+- [ ] Choose production behavior ONLY with actual HONOR result; if A/B/C is unsatisfactory, inspect system/OEM rendering rather than adding more arbitrary icon glyphs. Main app code still stable 0.4.59. If rollback 0.4.97/code122 used, future code >=123.
