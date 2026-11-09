@@ -20,7 +20,9 @@ import java.time.LocalDate
 /**
  * The entry point for ship work. AMOS uses an independent WorkOrderStore.
  * Maintenance continues to use ServiceStore/ServicesScreen unchanged.
- * Inspections remain upcoming. Nothing here mutates task recurrence or its history.
+ * Routine tasks reuse the existing TasksScreenV2 and TaskStore through
+ * a presentation-only route; no storage or recurrence migration is involved.
+ * Inspections remain upcoming. Nothing here mutates task history.
  */
 @Composable
 fun WorksHubScreen(
@@ -28,7 +30,9 @@ fun WorksHubScreen(
     workOrders: WorkOrderStore,
     p: NavPalette,
     lang: UiLanguage,
+    taskCount: Int,
     onBack: () -> Unit,
+    onTasks: () -> Unit,
     onServices: () -> Unit,
     onAmos: () -> Unit,
     embeddedInTab: Boolean = false,
@@ -82,13 +86,29 @@ fun WorksHubScreen(
                     Spacer(Modifier.height(5.dp))
                     Text(
                         localized(
-                            "Единый раздел для работ AMOS, обслуживания оборудования и инспекций.",
-                            "One place for AMOS work orders, equipment maintenance and inspections.",
+                            "Рутинные задачи, работы AMOS и обслуживание оборудования — в одном разделе.",
+                            "Routine tasks, AMOS work orders and equipment maintenance in one place.",
                             lang,
                         ),
                         color = p.muted, fontSize = 12.sp,
                     )
                 }
+            }
+            item {
+                WorkHubTile(
+                    p = p,
+                    title = localized("Рутинные задачи", "Routine tasks", lang),
+                    description = localized(
+                        "Ежедневные, еженедельные, ежемесячные и разовые задачи.",
+                        "Daily, weekly, monthly and one-off tasks.",
+                        lang,
+                    ),
+                    secondary = localized(
+                        "$taskCount задач", "$taskCount tasks", lang,
+                    ),
+                    icon = "tasks",
+                    onClick = onTasks,
+                )
             }
             item {
                 WorkHubTile(

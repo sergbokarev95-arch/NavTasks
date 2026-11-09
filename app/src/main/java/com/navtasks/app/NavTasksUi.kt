@@ -273,6 +273,9 @@ fun NavTasksApp(
     var quickProfileOpen by rememberSaveable { mutableStateOf(false) }
     var showServices by rememberSaveable { mutableStateOf(false) }
     var showWorks by rememberSaveable { mutableStateOf(false) }
+    // Transitional route: the Work tile opens the ORIGINAL TasksScreenV2.
+    // Keep the old Tasks dock entry until the separate Reference-tab change.
+    var showRoutineTasks by rememberSaveable { mutableStateOf(false) }
     var showCalendar by rememberSaveable { mutableStateOf(false) }
     var showWorkOrders by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
@@ -354,6 +357,7 @@ fun NavTasksApp(
             showProfiles = false
             showServices = false
             showWorks = false
+            showRoutineTasks = false
             showCalendar = false
             showWorkOrders = false
             expandedRun = null
@@ -418,15 +422,17 @@ fun NavTasksApp(
             selectedDate = LocalDate.now()
             templateFilter = Frequency.DAILY
             expandedRun = null
+            showRoutineTasks = false
         }
         quickProfileOpen = false
     }
     val pinchEligible = !editorOpen && !showSettings && !showProfiles &&
-        !showServices && !showWorks && !showWorkOrders && !showCalendar
+        !showServices && !showWorks && !showRoutineTasks &&
+        !showWorkOrders && !showCalendar
 
     // Android gesture navigation dispatches the system Back action here. At the root
     // of Today there is intentionally no interception so the user can leave the app.
-    BackHandler(enabled = quickProfileOpen || editorOpen || showSettings || showProfiles || showServices || showWorks || showWorkOrders || showCalendar ||
+    BackHandler(enabled = quickProfileOpen || editorOpen || showSettings || showProfiles || showServices || showWorks || showRoutineTasks || showWorkOrders || showCalendar ||
             profiles.active.kind == NavProfileKind.PERSONAL || tabHistory.isNotEmpty() || tab != 0) {
         when {
             quickProfileOpen -> quickProfileOpen = false
@@ -439,6 +445,7 @@ fun NavTasksApp(
                 focusWorkOrderId = null
                 focusHistoryWorkOrderId = null
             }
+            showRoutineTasks -> showRoutineTasks = false
             showWorks -> showWorks = false
             showCalendar -> showCalendar = false
             profiles.active.kind == NavProfileKind.PERSONAL -> showProfiles = true
@@ -547,9 +554,24 @@ fun NavTasksApp(
                     }
                 }
                 }
+            } else if (showRoutineTasks) {
+                RoutinesModuleScreen(
+                    store = store,
+                    filter = templateFilter,
+                    onFilter = { templateFilter = it },
+                    p = palette, lang = lang,
+                    onBack = { showRoutineTasks = false },
+                    onEdit = { editorTask = it; editorOpen = true },
+                    onAdd = {
+                        editorTask = null
+                        editorOpen = true
+                    },
+                )
             } else if (showWorks) {
                 WorksHubScreen(serviceStore, workOrderStore, palette, lang,
+                    taskCount = store.templates.size,
                     onBack = { showWorks = false },
+                    onTasks = { showRoutineTasks = true },
                     onServices = { focusServiceId = null; showServices = true },
                     onAmos = {
                         focusWorkOrderId = null
@@ -666,7 +688,9 @@ fun NavTasksApp(
                                         smoothReturnTick = todayReturnTick)
                                     1 -> WorksHubScreen(
                                         serviceStore, workOrderStore, palette, lang,
+                                        taskCount = store.templates.size,
                                         onBack = { openPrimaryTab(0) },
+                                        onTasks = { showRoutineTasks = true },
                                         onServices = { focusServiceId = null; showServices = true },
                                         onAmos = {
                         focusWorkOrderId = null
