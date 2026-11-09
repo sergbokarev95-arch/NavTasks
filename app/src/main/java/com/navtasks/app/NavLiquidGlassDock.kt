@@ -149,8 +149,23 @@ fun NavLiquidGlassBottomBar(
     // A separate background sibling keeps backdrop capture and rim unchanged.
     BoxWithConstraints(modifier.fillMaxWidth().height(56.dp)) {
         Box(Modifier.matchParentSize().then(backing).then(opticalEdge))
+        // The same interaction sources drive touch feedback AND the moving lens.
+        // Tracking only the icon press would leave the selected glass capsule still.
+        // A held inactive tab draws the lens toward the finger before onSelect()
+        // fires on release; cancellation smoothly returns it to the selected tab.
+        val tabPressSources = remember {
+            NavLiquidDockTabs.items.map { MutableInteractionSource() }
+        }
+        val tabPressed = mutableListOf<Boolean>()
+        for (source in tabPressSources) {
+            val isPressed by source.collectIsPressedAsState()
+            tabPressed.add(isPressed)
+        }
+        val pressedTab = tabPressed.indexOfFirst { it }
+        val isHolding = pressedTab >= 0
         val cellWidth = maxWidth / NavLiquidDockTabs.items.size
-        val target = selected.coerceIn(0, NavLiquidDockTabs.items.lastIndex).toFloat()
+        val target = (if (isHolding) pressedTab else selected)
+            .coerceIn(0, NavLiquidDockTabs.items.lastIndex).toFloat()
         // Follow the working NavTasks 0.4.59 movement: quick, interruptible spring,
         // while extra width and material settle independently of travel.
         val slide by animateFloatAsState(
@@ -164,18 +179,18 @@ fun NavLiquidGlassBottomBar(
         )
         val moving = abs(slide - target) > .015f
         val matte by animateFloatAsState(
-            targetValue = if (moving) 0f else 1f,
+            targetValue = if (moving || isHolding) 0f else 1f,
             animationSpec = spring(dampingRatio = 1f, stiffness = 700f),
             label = "glassLabLensMatte"
         )
         val stretched by animateFloatAsState(
-            targetValue = if (moving) 1f else 0f,
+            targetValue = NavLiquidDockTabs.stretchTarget(moving, isHolding),
             animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
             label = "glassLabLensStretch"
         )
-        // True proportional growth: both axes expand by the same factor.
-        // Unlike 0.1.3's horizontal stretch, this makes the glass rise above
-        // and drop below the 56dp navigation capsule while it is travelling.
+        // True proportional growth in both axes: 1.15x under a held finger,
+        // 1.30x during travel, and 1.00x after release/settling.
+        // Preserve the accepted 56dp dock and symmetric top/bottom protrusion.
         val lensScale = NavLiquidDockTabs.scaleAt(stretched)
         val lensWidth = (cellWidth - 4.dp) * lensScale
         val lensHeight = NavLiquidDockTabs.restingLensHeightDp.dp * lensScale
@@ -234,8 +249,8 @@ fun NavLiquidGlassBottomBar(
         ) {
             NavLiquidDockTabs.items.forEachIndexed { index, item ->
                 val active = selected == index
-                val interaction = remember { MutableInteractionSource() }
-                val pressed by interaction.collectIsPressedAsState()
+                val interaction = tabPressSources[index]
+                val pressed = tabPressed[index]
                 val pressScale by animateFloatAsState(
                     targetValue = if (pressed) .94f else 1f,
                     animationSpec = spring(dampingRatio = 1f, stiffness = 1600f),
