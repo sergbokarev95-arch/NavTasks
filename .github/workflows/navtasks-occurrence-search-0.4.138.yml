@@ -146,7 +146,7 @@ jobs:
           grep -Fq 'NavAnimatedSearchField(' app/src/main/java/com/navtasks/app/ServicesUi.kt
           grep -Fq 'NavAnimatedSearchField(' app/src/main/java/com/navtasks/app/ReferenceHubUi.kt
           grep -Fq 'class NavSearchMarkerNavigationTest' app/src/test/java/com/navtasks/app/NavSearchMarkerNavigationTest.kt
-          grep -Fq 'NavSearchMatchControls(' app/src/main/java/com/navtasks/app/NavAnimatedSearchField.kt
+          grep -Fq 'NavSearchMatchControls(' app/src/main/java/com/navtasks/app/NavGlass.kt
           grep -Fq 'navSearchRanges(' app/src/main/java/com/navtasks/app/NavSearchMarkers.kt
           grep -Fq 'navHandoverSearchHits(' app/src/main/java/com/navtasks/app/HandoverUi.kt
           grep -Fq 'bringIntoViewRequester' app/src/main/java/com/navtasks/app/HandoverUi.kt
