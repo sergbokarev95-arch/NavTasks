@@ -124,7 +124,8 @@ fun ServicesScreen(
         LazyColumn(
             Modifier.fillMaxSize().dismissSearchImeOnResultsGesture(searchOpen),
             state = listState,
-            contentPadding = PaddingValues(16.dp, 6.dp, 16.dp, 106.dp),
+            contentPadding = PaddingValues(16.dp, 6.dp, 16.dp,
+                navFloatingActionBottomPadding(embeddedInTab = false, edgeToEdgeStandalone = true)),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
