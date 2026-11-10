@@ -86,10 +86,12 @@ internal fun NavQuickProfilePicker(
     onDismiss: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
+    val frost = navPopupFrostAvailable()
     Dialog(onDismissRequest = onDismiss) {
+        NavApplyDialogFrost(frost, radius = 26.dp)
         Column(
             Modifier.fillMaxWidth().widthIn(max = 380.dp)
-                .navDialogSurface(p, radius = 26.dp)
+                .navPopupGlassSurface(p, frosted = frost, radius = 26.dp)
                 .padding(horizontal = 18.dp, vertical = 19.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {

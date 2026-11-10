@@ -407,10 +407,12 @@ private fun HandoverGlassDialog(
     confirmButton: @Composable () -> Unit,
     dismissButton: @Composable () -> Unit = {},
 ) {
+    val frost = navPopupFrostAvailable()
     Dialog(onDismissRequest = onDismissRequest) {
+        NavApplyDialogFrost(frost)
         Column(
             Modifier.fillMaxWidth()
-                .navDialogSurface(p)
+                .navPopupGlassSurface(p, frosted = frost)
                 .padding(horizontal = 18.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(13.dp),
         ) {

@@ -108,10 +108,12 @@ fun NavGlassAlertDialog(
     confirmButton: @Composable () -> Unit,
     dismissButton: @Composable () -> Unit = {},
 ) {
+    val frost = navPopupFrostAvailable()
     Dialog(onDismissRequest = onDismissRequest) {
+        NavApplyDialogFrost(frost)
         Column(
             Modifier.fillMaxWidth().widthIn(max = 420.dp)
-                .navDialogSurface(p)
+                .navPopupGlassSurface(p, frosted = frost)
                 .padding(horizontal = 20.dp, vertical = 19.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
