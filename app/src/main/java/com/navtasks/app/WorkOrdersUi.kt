@@ -157,7 +157,9 @@ fun WorkOrdersScreen(
             )
         }
         LazyColumn(
-            Modifier.fillMaxSize().dismissSearchImeOnResultsGesture(searchOpen),
+            Modifier.fillMaxSize()
+                .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }
+                .dismissSearchImeOnResultsGesture(searchOpen),
             state = listState,
             contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp,
                 bottom = navFloatingActionBottomPadding(embeddedInTab = false, edgeToEdgeStandalone = true)),

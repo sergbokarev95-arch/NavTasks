@@ -70,6 +70,7 @@ internal fun ReferenceHubScreen(
         }
         LazyColumn(
             modifier = Modifier.weight(1f)
+                .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }
                 .dismissSearchImeOnResultsGesture(searchOpen),
             state = listState,
             contentPadding = PaddingValues(

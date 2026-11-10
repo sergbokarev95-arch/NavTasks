@@ -161,6 +161,7 @@ fun HandoverScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize()
+                .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }
                 .dismissSearchImeOnResultsGesture(searchOpen),
             contentPadding = PaddingValues(
                 start = 16.dp, end = 16.dp, top = 10.dp,
