@@ -128,7 +128,7 @@ jobs:
           grep -Fq 'class NavCrewReferenceSearchTest' app/src/test/java/com/navtasks/app/NavCrewReferenceSearchTest.kt
           grep -Fq 'NavRichNoteTypography.fullPageBodySp' app/src/main/java/com/navtasks/app/NavRichNoteUi.kt
           grep -Fq 'referencePlaceholderMatches(query' app/src/main/java/com/navtasks/app/ReferenceHubUi.kt
-          grep -Fq 'NavGlassSearchField(' app/src/main/java/com/navtasks/app/ReferenceHubUi.kt
+          grep -Fq 'NavGlassSearchField(' app/src/main/java/com/navtasks/app/NavAnimatedSearchField.kt
           grep -Fq 'AMOS / By Crew' app/src/main/java/com/navtasks/app/WorksHubUi.kt
           grep -Fq 'AMOS / By Crew' app/src/main/java/com/navtasks/app/WorkOrdersUi.kt
           grep -Fq 'class NavTopSearchGestureTest' app/src/test/java/com/navtasks/app/NavTopSearchGestureTest.kt
