@@ -12,6 +12,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -71,7 +73,7 @@ fun HandoverScreen(
         com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
-    val query = searchText.trim()
+    val query = if (searchOpen) navEffectiveSearchQuery(searchText) else ""
     val shownSections = searchHandoverSections(
         handover.sections, if (searchOpen) query else "")
     val searchResults = if (searchOpen && query.isNotEmpty())
@@ -87,7 +89,10 @@ fun HandoverScreen(
             if (hit != null) {
                 val sectionIndex = shownSections.indexOfFirst { it.id == hit.sectionId }
                 if (sectionIndex >= 0) {
-                    listState.animateScrollToItem(sectionIndex)
+                    // Avoid jumping to the section top for each repeated
+                    // occurrence in the same long note.
+                    if (listState.firstVisibleItemIndex != sectionIndex)
+                        listState.animateScrollToItem(sectionIndex)
                     entryRevealSerial = searchNavigationSerial
                 }
             }
@@ -246,7 +251,10 @@ fun HandoverScreen(
                                 color = p.text, fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                focused = focusedSearchHit == NavHandoverSearchHit(section.id),
+                                activeMatchStart = focusedSearchHit?.takeIf {
+                                    it.sectionId == section.id &&
+                                        it.field == NavHandoverField.SECTION_TITLE
+                                }?.start,
                             )
                             Spacer(Modifier.width(7.dp))
                             Text(
@@ -297,18 +305,41 @@ fun HandoverScreen(
                                 )
                             }
                             handoverNotebookEntries(section.entries).forEach { entry ->
-                                val isFocused = focusedSearchHit ==
-                                    NavHandoverSearchHit(section.id, entry.id)
-                                val target = remember(section.id, entry.id) { BringIntoViewRequester() }
-                                LaunchedEffect(entryRevealSerial, isFocused) {
-                                    if (entryRevealSerial > 0 && isFocused) {
+                                val focusedEntryHit = focusedSearchHit?.takeIf {
+                                    it.sectionId == section.id && it.entryId == entry.id
+                                }
+                                val titleRequester = remember(section.id, entry.id) {
+                                    BringIntoViewRequester()
+                                }
+                                val noteRequester = remember(section.id, entry.id) {
+                                    BringIntoViewRequester()
+                                }
+                                var noteLayout by remember(section.id, entry.id, query) {
+                                    mutableStateOf<TextLayoutResult?>(null)
+                                }
+                                LaunchedEffect(entryRevealSerial, focusedEntryHit, noteLayout) {
+                                    if (entryRevealSerial > 0 && focusedEntryHit != null) {
                                         withFrameNanos { }
-                                        target.bringIntoView()
+                                        when (focusedEntryHit.field) {
+                                            NavHandoverField.ENTRY_NOTES -> {
+                                                val layout = noteLayout
+                                                if (layout != null && entry.notes.isNotEmpty()) {
+                                                    val offset = focusedEntryHit.start
+                                                        .coerceIn(0, entry.notes.length - 1)
+                                                    val box = layout.getBoundingBox(offset)
+                                                    noteRequester.bringIntoView(Rect(
+                                                        0f, (box.top - 24f).coerceAtLeast(0f),
+                                                        layout.size.width.toFloat(), box.bottom + 24f,
+                                                    ))
+                                                }
+                                            }
+                                            NavHandoverField.ENTRY_TITLE -> titleRequester.bringIntoView()
+                                            else -> Unit
+                                        }
                                     }
                                 }
                                 Row(
                                     Modifier.fillMaxWidth()
-                                        .bringIntoViewRequester(target)
                                         .navGlass(p, radius = 13.dp, role = GlassRole.TASK)
                                         .glassClickable { openEntryEditor(section.id, entry) }
                                         .padding(horizontal = 14.dp, vertical = 12.dp),
@@ -317,21 +348,29 @@ fun HandoverScreen(
                                     Column(Modifier.weight(1f),
                                         verticalArrangement = Arrangement.spacedBy(5.dp)) {
                                         NavSearchMarkedText(
-                                            entry.title, if (searchOpen) query else "", p,
+                                            entry.title, query, p,
+                                            modifier = Modifier.bringIntoViewRequester(titleRequester),
                                             color = p.text, fontSize = 15.sp,
                                             fontWeight = FontWeight.Medium,
-                                            focused = isFocused,
+                                            activeMatchStart = focusedEntryHit?.takeIf {
+                                                it.field == NavHandoverField.ENTRY_TITLE
+                                            }?.start,
                                         )
                                         if (entry.notes.isNotBlank()) {
-                                            if (query.isNotBlank() &&
+                                            if (query.isNotEmpty() &&
                                                 navSearchRanges(entry.notes, query).isNotEmpty()
                                             ) {
-                                                // Search-only rendering preserves saved rich HTML.
+                                                // Only search rendering is plain/marked.
+                                                // Stored rich HTML and the editor remain intact.
                                                 NavSearchMarkedText(
                                                     entry.notes, query, p,
-                                                    modifier = Modifier.fillMaxWidth(),
+                                                    modifier = Modifier.fillMaxWidth()
+                                                        .bringIntoViewRequester(noteRequester),
                                                     color = p.muted, fontSize = 12.sp,
-                                                    focused = isFocused,
+                                                    activeMatchStart = focusedEntryHit?.takeIf {
+                                                        it.field == NavHandoverField.ENTRY_NOTES
+                                                    }?.start,
+                                                    onTextLayout = { noteLayout = it },
                                                 )
                                             } else {
                                                 NavRichNoteText(
@@ -446,7 +485,11 @@ fun HandoverScreen(
                     confirmDelete = sectionId to entryId
                 }) else null,
                 onSave = { title, plain, html ->
-                    handover.saveEntry(sectionId, title, plain, entryId, html)
+                    // Personal notes can omit a title; the existing store still
+                    // receives a nonblank name and its schema remains unchanged.
+                    val savedTitle = if (personalMode && title.isBlank())
+                        nextPersonalNoteTitle(handover.sections, lang) else title
+                    handover.saveEntry(sectionId, savedTitle, plain, entryId, html)
                     editEntry = null
                 },
             )
