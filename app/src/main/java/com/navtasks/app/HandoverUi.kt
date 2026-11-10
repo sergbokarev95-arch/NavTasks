@@ -22,6 +22,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
@@ -72,6 +74,25 @@ fun HandoverScreen(
     val query = searchText.trim()
     val shownSections = searchHandoverSections(
         handover.sections, if (searchOpen) query else "")
+    val searchResults = if (searchOpen && query.isNotEmpty())
+        navHandoverSearchHits(shownSections, query) else emptyList()
+    var searchResultIndex by rememberSaveable { mutableIntStateOf(0) }
+    var searchNavigationSerial by remember { mutableIntStateOf(0) }
+    var entryRevealSerial by remember { mutableIntStateOf(0) }
+    val focusedSearchHit = searchResults.getOrNull(searchResultIndex)
+    LaunchedEffect(query) { searchResultIndex = 0 }
+    LaunchedEffect(searchNavigationSerial) {
+        if (searchNavigationSerial > 0) {
+            val hit = searchResults.getOrNull(searchResultIndex)
+            if (hit != null) {
+                val sectionIndex = shownSections.indexOfFirst { it.id == hit.sectionId }
+                if (sectionIndex >= 0) {
+                    listState.animateScrollToItem(sectionIndex)
+                    entryRevealSerial = searchNavigationSerial
+                }
+            }
+        }
+    }
     // A compact accordion: all sections start closed; each profile keeps
     // its current open section when the activity is recreated.
     var expandedSectionId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -159,6 +180,16 @@ fun HandoverScreen(
             onDismiss = { searchOpen = false; searchText = "" },
             p = p, lang = lang,
             placeholder = localized("Поиск по всему Handover", "Search all Handover", lang),
+            resultCount = searchResults.size,
+            currentResult = searchResultIndex,
+            onPreviousResult = {
+                searchResultIndex = navSearchNextIndex(searchResultIndex, searchResults.size, -1)
+                searchNavigationSerial++
+            },
+            onNextResult = {
+                searchResultIndex = navSearchNextIndex(searchResultIndex, searchResults.size, 1)
+                searchNavigationSerial++
+            },
         )
         LazyColumn(
             state = listState,
@@ -208,11 +239,14 @@ fun HandoverScreen(
                                 .padding(vertical = 10.dp, horizontal = 3.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(
-                                section.title, Modifier.weight(1f),
+                            NavSearchMarkedText(
+                                value = section.title,
+                                query = if (searchOpen) query else "",
+                                p = p, modifier = Modifier.weight(1f),
                                 color = p.text, fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                focused = focusedSearchHit == NavHandoverSearchHit(section.id),
                             )
                             Spacer(Modifier.width(7.dp))
                             Text(

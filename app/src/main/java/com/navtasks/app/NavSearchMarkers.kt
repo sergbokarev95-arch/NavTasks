@@ -131,3 +131,27 @@ private fun NavSearchNavArrow(
             Modifier.size(20.dp).rotate(if (up) 180f else 0f))
     }
 }
+
+/** One navigation result for a matching section heading or Handover entry. */
+internal data class NavHandoverSearchHit(val sectionId: String, val entryId: String? = null)
+
+internal fun navHandoverSearchHits(
+    sections: List<HandoverSection>, query: String,
+): List<NavHandoverSearchHit> {
+    val token = query.trim()
+    if (token.isEmpty()) return emptyList()
+    return buildList {
+        sections.forEach { section ->
+            if (section.title.contains(token, ignoreCase = true)) {
+                add(NavHandoverSearchHit(section.id))
+            }
+            section.entries.forEach { entry ->
+                if (entry.title.contains(token, ignoreCase = true) ||
+                    entry.notes.contains(token, ignoreCase = true)
+                ) {
+                    add(NavHandoverSearchHit(section.id, entry.id))
+                }
+            }
+        }
+    }
+}
