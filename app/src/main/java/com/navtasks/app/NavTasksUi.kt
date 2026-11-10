@@ -296,6 +296,7 @@ fun NavTasksApp(
     var expandedRun by remember { mutableStateOf<String?>(null) }
     var now by remember { mutableStateOf(LocalDateTime.now()) }
     var previousToday by remember { mutableStateOf(LocalDate.now()) }
+    var dismissedStorageWarning by rememberSaveable { mutableStateOf("") }
 
     val lang = settings.language
     val dark = when (settings.theme) {
@@ -799,6 +800,34 @@ fun NavTasksApp(
                 lang = lang,
                 onDismiss = { quickProfileOpen = false },
                 onSelect = ::activateQuickProfile,
+            )
+        }
+        val storageWarning = store.storageIssue ?: handoverStore.storageIssue
+        val warningKey = profiles.activeId + ":" + (storageWarning ?: "")
+        if (storageWarning != null && dismissedStorageWarning != warningKey) {
+            NavGlassAlertDialog(
+                p = palette,
+                onDismissRequest = { dismissedStorageWarning = warningKey },
+                title = { androidx.compose.material3.Text(localized(
+                    "Данные профиля защищены", "Profile data protected", lang)) },
+                text = { androidx.compose.material3.Text(storageWarning) },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = {
+                        dismissedStorageWarning = warningKey
+                        showProfiles = true
+                    }) {
+                        androidx.compose.material3.Text(localized(
+                            "Восстановить из копии", "Restore backup", lang))
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = {
+                        dismissedStorageWarning = warningKey
+                    }) {
+                        androidx.compose.material3.Text(localized(
+                            "Только просмотр", "View only", lang))
+                    }
+                },
             )
         }
         }
