@@ -1,0 +1,40 @@
+# NavTasks release-readiness code audit — 2026-11-10
+
+## Scope and certainty
+Reviewed private GitHub repository `sergbokarev95-arch/NavTasks`, current signed source based on version 0.4.114, including Kotlin storage, recurrence, Work/AMOS/Services, Handover, JSON transfer, AlarmManager, widgets, main navigation, Manifest, Gradle and CI. This is source review and real GitHub CI verification, **not HONOR/Samsung instrumented/device testing**. 52 application Kotlin files, 44 JVM test source files, **zero `src/androidTest` instrumented tests**. No destructive migration or stable main application source change.
+
+## Verified release 1 — data guard (0.4.116-beta/code141)
+- Backup prior 0.4.114 source SHA `01eb9043c853e59f48eef159ec9ff5c23c5e3d04` at `backup/navtasks-0.4.114-before-release-stability`; first work branch `feature/navtasks-data-guard-0.4.116-beta` SHA `928398730d0f414a63f96abb1f306662f0f893bb`.
+- JUnit, signed APK/version/package/ZIP integrity CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42741799999 SUCCESS. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.116-data-guard-verified; ZIP `NavTasks_Data_Guard_0.4.116_Beta_Update.zip`.
+- Problem P0: `TaskStore.decodeTemplates/decodeRuns` previously returned empty arrays on malformed JSON, and `refresh` then persisted this state. `HandoverStore.load` likewise returned empty on parsing errors. Mitigation: `NavStorageRead` strict parsers, `TaskStore.storageIssue` + protected writes/refresh, Handover write guard and confirmed preference write, full import/export strict decoding, recovery warning with existing profile manager link, new JUnit `NavStorageReadTest` (malformed/duplicate data, historic notes/date, guarded write). **No on-device corrupt-data injection test yet**. No model format change. Keep JSON raw and restore via full-profile import if the warning appears.
+
+## Verified release 2 — notification/widget fixes (0.4.118-beta/code143)
+- Source branch `feature/navtasks-notification-widget-0.4.118-beta` SHA `6ee8978d27ce52ce75e12794d05f3886d4652f9e` strictly on top of 0.4.116, not main. CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42742957197 SUCCESS. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.118-notification-widget-verified ZIP `NavTasks_Reliability_0.4.118_Beta_Update.zip`.
+- P1 closed entries: shared `activeServiceReminderRecord` and `activeAmosReminderRecord` consistently check closed/completed state at queue creation, grouping and alarm delivery. Prevent old pending alarms from alerting for closed AMOS/Services. Business stores and scheduled due dates untouched.
+- P1 widget freshness: independent `ROLL` alarm is now scheduled even when notification preference is OFF; receiver updates widgets and rearms it. Daily widget refresh uses device-local next-day 00:05 in `nextNavWidgetRefresh`. Inexact alarms may be delayed by Android power management; do not claim exact 00:05 guarantee.
+- Exact-alarm permission: existing Settings button and warning were already present (initial audit omission); Android permission-granted broadcast now causes re-scheduling, guarded by `canScheduleExactAlarms()`. No forced new permission prompt.
+- P2 last-card clearance: edge-to-edge Services and AMOS LazyColumns now use nav gesture inset + 18dp button offset +54dp diameter +20dp gap, same formula as accepted 0.4.114, without modifying button optics or position. Existing embedded Today/Handover remains unchanged.
+- P2 Settings now displays installed app versionName instead of stale hardcoded 0.4.44.
+- New JUnit `NavNotificationRolloverTest` checks closed Service/AMOS, daily/year rollover and edge-to-edge safe area. No on-device alarm permission or widget resize tests yet.
+
+## Signed safe recovery (0.4.119-beta/code144)
+- Exact original 0.4.114 application code from the immutable base, version-only bump + standalone signing workflow in branch `feature/navtasks-0.4.119-pre-release-recovery`, SHA `d93536f525a8c934b3bb2ae90e3a7e5547a8d0e7`.
+- CI https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42743079436 SUCCESS. Release https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.119-pre-release-recovery, ZIP `NavTasks_Original_0.4.114_Restore_0.4.119_Beta_Update.zip`. Install IN PLACE only if 0.4.118 fails on device. NEVER uninstall or clear app storage; export FULL profile before all updates. Any update after recovery must be versionCode >=145.
+
+## Remaining 1.0.0 gates / code audit findings (NOT fixed by these Betas)
+1. **Release package identity:** current signed Beta is debug `com.navtasks.app.glass` (version suffix `-beta`); standard Gradle release `com.navtasks.app` has no configured same-key production signing. DO NOT publish a production APK as an in-place update until package/signature strategy is approved and tested. Preserve installed profiles.
+2. **Deep-link profile awareness:** notification/widget intents include a profileId, but `MainActivity` currently reads runKey / workOrderId / openMissed, not profileId. A link to an item in a formerly active profile may not open the correct record. Fix independently and test both cold- and warm-start flows without accidentally changing records in another profile.
+3. **Android cloud backup/privacy:** Manifest has `android:allowBackup="true"`. Discuss whether system-managed cloud backup of local maritime notes is desirable before final release. Do NOT silently change backup policy.
+4. **Large history/performance:** JSON lists in SharedPreferences and `TaskStore.refresh` iterate calendar dates since lastVisit; stress-test hundreds of templates, long absence, near month/year boundaries, multiple profiles, process death, Android power management and slow devices. Avoid changing occurrence logic without preservation tests.
+5. **Real device/regression:** manually confirm all Today checks including final card, dock optics, Services/AMOS scrolling, recurrence, notifications when closed, scheduled exact alarms with permission denied/granted, widget update after midnight with notifications OFF, export/import, rich notes, Handover marks, responsive widgets; both themes and HONOR/Samsung.
+6. **UI automation:** no on-device `androidTest` test suite currently; JVM tests cannot prove touch hitboxes, IME/keyboard, Notifications OEM tile, widgets/launcher or 60Hz scroll performance.
+
+## Acceptance checklist
+- Install 0.4.118 over current signed `com.navtasks.app.glass` without uninstall after full JSON profile export. Confirm existing tasks and history, Handover rich notes, AMOS/Services history still present; import/export full profile to an alternate test profile.
+- Verify last Today, Services, AMOS and Handover cards are tappable above floating buttons in dark and light mode; classic Liquid Glass 0.4.108 animation unchanged.
+- Create dummy *closed* Service/AMOS with short due reminders only in a disposable test profile; ensure no scheduled, grouped, or stale post-close alerts. Verify a still-active item notifies.
+- Disable NavTasks notifications, leave widget installed until after local midnight and confirm date/progress refresh. Inexact delivery delay is permitted.
+- In Settings check installed version, review exact-alarm permission and confirm specific-time events are timely only with permission and Android conditions.
+- Test two profiles, cold/warm notification/widget deep links, reboot, timezone change, system date, background/foreground, 10+ quick tab switches.
+
+**Do NOT tag 1.0.0 yet.** A signed CI-successful Beta is not a physical release acceptance. Stable main application code remains 0.4.59; docs-only commit records newer isolated release branches.

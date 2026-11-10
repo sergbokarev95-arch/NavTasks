@@ -490,3 +490,16 @@
 - [x] Exact v0.4.112 source rollback v0.4.115/code140 signed CI42672965626 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.115-bottom-safe-area-recovery; never uninstall/clear.
 - [ ] HONOR: install v0.4.114 in place after FULL profile export; scroll Today down until last task and its entire checkbox lie above Calendar/+, check/expand last task. Verify missed view/other days and completed accordion. Handover last/expanded section and Personal notes no overlap with Add. Day/night, gestures, no absurd blank area, accepted 0.4.108 dock intact.
 - [ ] Only after sign-off: focused final 1.0.0 polish/regression and signed release readiness across Work tasks/AMOS/Services, calendar, rich notes, profile exchange, notifications, widgets, both themes and Samsung/HONOR. SIRE2.0/VIQ7 content and desktop/sync AFTER 1.0.0.
+
+## NEXT — 0.4.118 physical acceptance and remaining 1.0.0 release gates (2026-11-10)
+
+- [x] Backup 0.4.114 exact source before pre-release changes, preserve all data and Liquid Glass.
+- [x] P0: block storage writes if TaskStore or Handover persisted JSON damaged, validate data before full import/export, add tests; signed v0.4.116/code141 CI42741799999 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.116-data-guard-verified.
+- [x] P1: closed AMOS/Services no longer scheduled/grouped/delivered reminders; widgets update daily even with task notifications disabled, exact-alarm permission-granted replan; full tests; signed 0.4.118/code143 CI42742957197 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.118-notification-widget-verified.
+- [x] P2: safe bottom padding for edge-to-edge Services and AMOS and dynamic installed version in Settings; signed in 0.4.118.
+- [x] Higher-version exact previous 0.4.114 application source recovery 0.4.119/code144 CI42743079436 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.119-pre-release-recovery; never uninstall or clear user data.
+- [ ] HONOR/Samsung device testing with FULL profile export first: preserve history/notes after update, full import/export, both themes, last Today/AMOS/Service/Handover cards, group and archived notifications, widgets next local midnight with app notifications disabled, exact-alarm permission, cold/warm routes and app background/reboot. Source CI is NOT enough.
+- [ ] Separate smallest-fix Beta for `profileId` routing of notification/widget deep links across profiles; do not mutate other ship records.
+- [ ] Decide/check stable 1.0.0 APK package/signature migration from `com.navtasks.app.glass` debug to intended final package without losing user data.
+- [ ] Decide Android allowBackup/privacy policy and build manual/automated device regression; load/history/performance profiling.
+- [ ] Only after signoff: signed final v1.0.0 mobile release. SIRE/VIQ content and Windows/cloud sync postponed until AFTER 1.0.0. Full audit `RELEASE_READINESS_AUDIT_2026-11-10.md`.
