@@ -124,8 +124,14 @@ fun HandoverScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (embeddedInTab) {
-                Text(localized("Разделы передачи дел", "Handover sections", lang),
-                    color = p.warningText, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                // Section label is informative, not a button. Reuse exactly
+                // the warm informational surface of Work and Reference.
+                NavInfoSectionBanner(
+                    p = p,
+                    title = localized("Разделы передачи дел", "Handover sections", lang),
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(8.dp))
             } else {
                 if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
                 else NavGlassCircleButton(p, "back", onClick = onBack)

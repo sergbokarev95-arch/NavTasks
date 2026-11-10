@@ -237,10 +237,13 @@ fun Modifier.glassClickable(
         ),
         label = "glassButtonPressed",
     )
-    return this.graphicsLayer {
+    // Put the animated layer OUTSIDE the existing material modifiers.
+    // Previous this.graphicsLayer() only scaled glyph/text drawn AFTER
+    // navGlass/drawBackdrop; now glass, rim, shadow and contents press together.
+    return Modifier.graphicsLayer {
         scaleX = scale
         scaleY = scale
-    }.clickable(interactionSource = source, indication = null) {
+    }.then(this).clickable(interactionSource = source, indication = null) {
         tapSerial++
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
         onClick()
@@ -593,6 +596,26 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 drawPath(leftPage, color, style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
                 drawPath(rightPage, color, style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
                 drawLine(color, pt(15f,9f), pt(15f,25f), width, cap = StrokeCap.Round)
+            }
+            "work-order" -> {
+                // AMOS work order: a clipped document, not a task checklist.
+                drawRoundRect(color, topLeft = pt(6f, 5.5f),
+                    size = Size(18f*s, 21.5f*s),
+                    cornerRadius = CornerRadius(2.5f*s), style = Stroke(width))
+                drawRoundRect(color, topLeft = pt(11f, 3.5f),
+                    size = Size(8f*s, 4.5f*s),
+                    cornerRadius = CornerRadius(1.6f*s), style = Stroke(width))
+                drawLine(color, pt(10f, 13f), pt(20f, 13f), width,
+                    cap = StrokeCap.Round)
+                drawLine(color, pt(10f, 17f), pt(18f, 17f), width,
+                    cap = StrokeCap.Round)
+                val mark = Path().apply {
+                    moveTo(10f*s, 22f*s)
+                    lineTo(12.5f*s, 24f*s)
+                    lineTo(19f*s, 19.5f*s)
+                }
+                drawPath(mark, color, style = Stroke(
+                    width = 2.3f*s, cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
             "tasks" -> {
                 for ((i, y) in listOf(7f,15f,23f).withIndex()) {

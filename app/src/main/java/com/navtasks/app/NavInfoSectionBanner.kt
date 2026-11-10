@@ -19,11 +19,12 @@ import androidx.compose.ui.unit.sp
 internal fun NavInfoSectionBanner(
     p: NavPalette,
     title: String,
-    description: String,
+    description: String? = null,
+    modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(17.dp)
     Column(
-        Modifier.fillMaxWidth()
+        modifier.fillMaxWidth()
             .navGlass(p, radius = 17.dp, role = GlassRole.PANEL)
             .border(1.dp, p.warningText.copy(alpha = .52f), shape)
             .background(p.warningText.copy(alpha = if (p.dark) .10f else .055f), shape)
@@ -32,6 +33,8 @@ internal fun NavInfoSectionBanner(
     ) {
         Text(title, color = p.warningText, fontSize = 15.sp,
             fontWeight = FontWeight.Medium)
-        Text(description, color = p.muted, fontSize = 12.sp, lineHeight = 18.sp)
+        if (!description.isNullOrBlank()) {
+            Text(description, color = p.muted, fontSize = 12.sp, lineHeight = 18.sp)
+        }
     }
 }

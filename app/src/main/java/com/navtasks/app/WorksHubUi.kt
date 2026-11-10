@@ -118,7 +118,7 @@ fun WorksHubScreen(
                     secondary = localized(
                         "${activeAmos.size} открыто · ${overdueAmos} просрочено",
                         "${activeAmos.size} open · ${overdueAmos} overdue", lang),
-                    icon = "tasks",
+                    icon = "work-order",
                     onClick = onAmos,
                 )
             }
