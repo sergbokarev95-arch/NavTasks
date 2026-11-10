@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate-release-candidate:
@@ -117,12 +117,29 @@ jobs:
       - name: Remove temporary signing key
         if: always()
         run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
-      - name: Upload PRIVATE Actions artifact only (NOT stable GitHub Release)
-        uses: actions/upload-artifact@v4
-        with:
-          name: NavTasks-0.4.142-RC1-private-signed-release
-          path: |
-            dist/NavTasks_0.4.142_RC1_Signed_Release.apk
-            dist/NavTasks_0.4.142_RC1_Signed_Release.apk.sha256
-          if-no-files-found: error
-          retention-days: 14
+      # Actions artifact quota is exhausted. Keep this draft release inside
+      # the PRIVATE repository; never expose it via the future stable channel.
+      - name: Publish private DRAFT prerelease (never mark stable)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=v0.4.142-rc1-signing-private
+          SOURCE="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-signed-release-candidate-0.4.142" --jq '.commit.sha')"
+          if [ "$SOURCE" != "$GITHUB_SHA" ]; then
+            echo "::error::Superseded candidate cannot publish"
+            exit 1
+          fi
+          test -s dist/NavTasks_0.4.142_RC1_Signed_Release.apk
+          test -s dist/NavTasks_0.4.142_RC1_Signed_Release.apk.sha256
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Existing immutable private draft remains untouched"
+          else
+            gh release create "$TAG" \
+              dist/NavTasks_0.4.142_RC1_Signed_Release.apk \
+              dist/NavTasks_0.4.142_RC1_Signed_Release.apk.sha256 \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.142 RC1 · private signing validation ONLY" \
+              --notes "PRIVATE DRAFT / PRERELEASE; not stable 1.0.0 and not an update feed. Signed non-debuggable release APK, same com.navtasks.app.glass ID and certificate as codes 143 and 165, code167. Unit tests include synthetic old format profiles. NOT YET tested for in-place data preservation on HONOR/Samsung. Never uninstall or clear user data; export FULL profiles before testing. Code168 emergency recovery prepared separately." \
+              --draft --prerelease
+          fi
