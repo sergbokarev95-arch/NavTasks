@@ -531,3 +531,14 @@
 - Official verified recovery release: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.125-popup-recovery, artifact `NavTasks_Original_0.4.122_Restore_0.4.125_Beta_Update.zip` (12,670,215 bytes), same installed package and Beta key. This rollback is ONLY for rejection of experimental popup blur in v0.4.124; it retains Handover UI/press/Today/Settings improvements of v0.4.122.
 - User must export FULL profiles before updating. Install IN PLACE; NEVER uninstall or clear app storage. If recovery code150 installed, any future same-package update needs **versionCode >=151**. Never confuse latest numeric recovery 0.4.125 with newest functional candidate 0.4.124/code149.
 - Device HONOR/Samsung visual/interaction acceptance still pending. No v1.0.0 published and no `main` application source merge.
+
+## NEXT — HONOR acceptance of 0.4.126 and remaining 1.0.0 release work (2026-11-10)
+- [x] Preserve native popup pilot 0.4.124 at `backup/navtasks-0.4.124-before-ui-polish`.
+- [x] Update Handover editor spacing and move Delete centered below rich editor; note storage/content unchanged.
+- [x] Work + Reference informative intro banner same warm framing as Today Completed; Handover heading amber, noninteractive.
+- [x] Non-dock press and quick tap pulse with immediate click callback; Handover Add moved to persistent parent glass layer; accepted dock untouched.
+- [x] 0.4.126-beta/code151 signed tests, build and ZIP success CI42763420520 https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.126-ui-polish-verified.
+- [x] Exact 0.4.124 source high-code recovery 0.4.127/code152 signed CI42763533651 https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.127-ui-polish-recovery. Only on rejection, full profile export, no uninstall.
+- [ ] HONOR test 0.4.126: full ECDIS note + long text and formatting, edit/save/back/delete confirmation, amber Work/Reference intro and Handover header day/night, click scaling on static and floating controls, no partial Handover '+' redraw, no dock animation regression.
+- [ ] Popup blur requires separate engineering: Android OEM disabled cross-window blur cannot be solved by translucent fill; investigate same-window overlay with proper backdrop coordinates/IME/Back/semantics on one isolated prototype BEFORE altering existing production modal flow.
+- [ ] Full HONOR/Samsung regression and 1.0.0 same-package same-key nondebuggable APK, privacy Auto Backup policy, device/dataset stress tests. References/Windows/sync post 1.0.0 only.
