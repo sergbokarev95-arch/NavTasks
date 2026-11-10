@@ -542,3 +542,12 @@
 - [ ] HONOR test 0.4.126: full ECDIS note + long text and formatting, edit/save/back/delete confirmation, amber Work/Reference intro and Handover header day/night, click scaling on static and floating controls, no partial Handover '+' redraw, no dock animation regression.
 - [ ] Popup blur requires separate engineering: Android OEM disabled cross-window blur cannot be solved by translucent fill; investigate same-window overlay with proper backdrop coordinates/IME/Back/semantics on one isolated prototype BEFORE altering existing production modal flow.
 - [ ] Full HONOR/Samsung regression and 1.0.0 same-package same-key nondebuggable APK, privacy Auto Backup policy, device/dataset stress tests. References/Windows/sync post 1.0.0 only.
+
+## Next after signed 0.4.128 whole glass tap correction
+- [x] Backup exact 0.4.126 source `backup/navtasks-0.4.126-before-pressed-glass`.
+- [x] Move ordinary glass-click animation layer BEFORE background/border/drawBackdrop chain; unchanged click/scale/haptic/dock; compiled/tested/signed 0.4.128-beta/code153 CI42768009539 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.128-pressed-glass-verified.
+- [x] Handover info title in shared warm information card; AMOS clipped work-order glyph distinct from routine task checklist.
+- [x] Exact 0.4.126 app-source recovery as higher 0.4.129-beta/code154 CI42768087904 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.129-pressed-glass-recovery. No uninstall/clear; full profile export first.
+- [ ] Physical HONOR: 0.4.128 installed in place; short/long touch on real glass FAB and cards scales rim/material and glyph together; no jitter, offsets, clicks behind dock, perf regression. Handover banner and search adjacent; Work tasks vs AMOS vs Service icons; both themes; notification and widget routing unchanged; Handover rich notes/AMOS/Services persist. Samsung where possible.
+- [ ] Popup cross-window frosted fallback: user previously reported no true glass; keep separate, don't fake backdrop by transparency. If high priority, prototype same-root Backdrop overlay without breaking IME/focus/Back/semantics.
+- [ ] Production 1.0.0 package + signer same as installed Beta, non-debuggable build; backup privacy decision, full device/data boundary regression. Reference content and Windows AFTER stable 1.0.0.
