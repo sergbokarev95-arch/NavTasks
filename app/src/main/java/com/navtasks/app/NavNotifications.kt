@@ -217,8 +217,7 @@ object NavNotifications {
             val current = LocalDateTime.now()
             for (service in ServiceStore(context, profiles).entries) {
                 // AMOS requisitions without a planned date never schedule a due alarm.
-                if (service.unplanned || service.closedAt != null ||
-                    service.completedAt != null || service.remindMonths == 0) continue
+                if (!activeServiceReminderRecord(service) || service.remindMonths == 0) continue
                 val due = service.nextDate ?: continue
                 if (due.isBefore(today)) continue
                 val notificationKey = profiles.activeId + ":service:" +
@@ -235,7 +234,7 @@ object NavNotifications {
             // One configurable early warning per open AMOS work order and due date.
             // Stale alarms from edited due dates or completed work are ignored at delivery.
             for (order in WorkOrderStore(context, profiles).entries) {
-                if (order.closedAt != null || order.completed || order.remindDaysBefore == 0 ||
+                if (!activeAmosReminderRecord(order) || order.remindDaysBefore == 0 ||
                     order.dueDate.isBefore(today)) continue
                 val key = profiles.activeId + ":amos:" + order.id + ":" +
                     order.dueDate + ":" + order.remindDaysBefore
@@ -350,8 +349,7 @@ object NavNotifications {
             target.toLocalTime() == clock && target.toLocalDate() == LocalDate.now()) {
             val today = LocalDate.now()
             for (service in ServiceStore(context, active).entries) {
-                if (service.unplanned || service.closedAt != null ||
-                    service.completedAt != null || service.remindMonths == 0)
+                if (!activeServiceReminderRecord(service) || service.remindMonths == 0)
                     continue
                 val due = service.nextDate ?: continue
                 if (today.isBefore(serviceWarningStart(service)) || today.isAfter(due)) continue
@@ -361,7 +359,7 @@ object NavNotifications {
                 }
             }
             for (order in WorkOrderStore(context, active).entries) {
-                if (order.closedAt != null || order.completed ||
+                if (!activeAmosReminderRecord(order) ||
                     order.remindDaysBefore == 0 ||
                     today.isBefore(workOrderWarningStart(order)) ||
                     today.isAfter(order.dueDate)) continue
@@ -448,8 +446,7 @@ object NavNotifications {
             if (profiles.active.kind != NavProfileKind.VESSEL) return
             val service = ServiceStore(context, profiles).entries
                 .firstOrNull { it.id == serviceId } ?: return
-            if (service.unplanned || service.closedAt != null ||
-                service.completedAt != null) return
+            if (!activeServiceReminderRecord(service)) return
             val due = service.nextDate ?: return
             if (due.toString() != expectedDue ||
                 service.remindMonths == 0 || LocalDate.now().isBefore(serviceWarningStart(service)) ||
@@ -475,7 +472,7 @@ object NavNotifications {
             if (profiles.active.kind != NavProfileKind.VESSEL) return
             val order = WorkOrderStore(context, profiles).entries
                 .firstOrNull { it.id == parts[0] } ?: return
-            if (order.closedAt != null || order.completed ||
+            if (!activeAmosReminderRecord(order) ||
                 order.remindDaysBefore == 0 ||
                 order.dueDate.toString() != parts[1] ||
                 order.remindDaysBefore.toString() != parts[2] ||
