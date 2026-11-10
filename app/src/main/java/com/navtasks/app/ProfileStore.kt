@@ -74,13 +74,9 @@ object ProfileTransfer {
         require(ts.length() <= 2500 && hs.length() <= 100_000 && ss.length() <= 250 && ms.length() <= 1000 && ws.length() <= 1500) {
             "Profile has too many records"
         }
-        val templates = (0 until ts.length()).map {
-            TaskTemplate.fromJson(ts.getJSONObject(it))
-        }
-        val runs = (0 until hs.length()).map { TaskRun.fromJson(hs.getJSONObject(it)) }
-        val sections = (0 until ss.length()).map {
-            HandoverSection.fromJson(ss.getJSONObject(it))
-        }
+        val templates = NavStorageRead.templates(ts.toString())
+        val runs = NavStorageRead.runs(hs.toString()).values.toList()
+        val sections = NavStorageRead.sections(ss.toString())
         val services = (0 until ms.length()).map { ServiceEntry.fromJson(ms.getJSONObject(it)) }
         val workOrders = (0 until ws.length()).map { WorkOrderEntry.fromJson(ws.getJSONObject(it)) }
         validateWorkOrders(workOrders)
@@ -237,16 +233,14 @@ class ProfileStore(context: Context) {
     fun snapshot(id: String): ProfileSnapshot {
         val profile = profiles.first { it.id == id }
         val prefs = data(id)
-        val tasks = JSONArray(prefs.getString("templates", "[]"))
-        val runs = JSONArray(prefs.getString("runs", "[]"))
-        val notes = JSONArray(prefs.getString("sections", "[]"))
+        val tasks = NavStorageRead.templates(prefs.getString("templates", "[]") ?: "[]")
+        val runs = NavStorageRead.runs(prefs.getString("runs", "[]") ?: "[]")
+        val notes = NavStorageRead.sections(prefs.getString("sections", "[]") ?: "[]")
         val services = JSONArray(prefs.getString("services", "[]"))
         val workOrders = JSONArray(prefs.getString("workOrders", "[]"))
         return ProfileSnapshot(
             profile,
-            (0 until tasks.length()).map { TaskTemplate.fromJson(tasks.getJSONObject(it)) },
-            (0 until runs.length()).map { TaskRun.fromJson(runs.getJSONObject(it)) },
-            (0 until notes.length()).map { HandoverSection.fromJson(notes.getJSONObject(it)) },
+            tasks, runs.values.toList(), notes,
             prefs.getString("lastVisit", LocalDate.now().toString()) ?: LocalDate.now().toString(),
             (0 until services.length()).map { ServiceEntry.fromJson(services.getJSONObject(it)) },
             (0 until workOrders.length()).map { WorkOrderEntry.fromJson(workOrders.getJSONObject(it)) },
