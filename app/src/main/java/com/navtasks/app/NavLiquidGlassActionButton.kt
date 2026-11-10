@@ -102,7 +102,8 @@ internal fun NavLiquidGlassRoundButton(
                 }
             )
             .border(.75.dp, rim, CircleShape)
-            .glassClickable(onClick = onClick),
+            .glassClickable(
+                onClick = onClick, pressScale = NavPressFeedbackTokens.floatingActionScale),
         contentAlignment = Alignment.Center,
     ) {
         NavGlassGlyph(kind, glyphColor, Modifier.size(glyphSize))

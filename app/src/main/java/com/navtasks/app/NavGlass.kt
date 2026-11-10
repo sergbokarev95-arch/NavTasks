@@ -179,22 +179,41 @@ fun Modifier.navFrostedOverlay(
 }
 
 /**
- * An accessible click target without the platform's transient ripple or grey pressed film.
- * Necessary for clear glass: the moving lens is the only visible touch feedback.
+ * Small spring response for ordinary glass controls.
+ * Explicit interaction sources keep their existing animation; the moving
+ * Liquid Glass dock does NOT use this modifier.
  */
-@Composable
-fun Modifier.glassClickable(onClick: () -> Unit): Modifier =
-    glassClickable(interactionSource = null, onClick = onClick)
+internal object NavPressFeedbackTokens {
+    const val cardScale = 1.022f
+    const val floatingActionScale = 1.055f
+}
 
-/** Optional press observation; click cancellation is still owned by Compose. */
+@Composable
+fun Modifier.glassClickable(
+    onClick: () -> Unit,
+    pressScale: Float = NavPressFeedbackTokens.cardScale,
+): Modifier = glassClickable(
+    interactionSource = null, pressScale = pressScale, onClick = onClick
+)
+
 @Composable
 fun Modifier.glassClickable(
     interactionSource: MutableInteractionSource?,
+    pressScale: Float = 1f,
     onClick: () -> Unit,
 ): Modifier {
     val view = LocalView.current
-    return this.clickable(interactionSource = interactionSource, indication = null) {
-        // Honours the phone's system haptic-feedback setting (no forced vibration).
+    val source = interactionSource ?: remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) pressScale else 1f,
+        animationSpec = spring(dampingRatio = 0.8f, stiffness = 900f),
+        label = "glassButtonPressed",
+    )
+    return this.graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+    }.clickable(interactionSource = source, indication = null) {
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
         onClick()
     }

@@ -1097,7 +1097,6 @@ fun SettingsScreen(
     val context = LocalContext.current
     var showDigestWheel by remember { mutableStateOf(false) }
     var showReminderWheel by remember { mutableStateOf(false) }
-    var iconTestFeedback by remember { mutableStateOf<String?>(null) }
     val actualVersion = remember(context) {
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
@@ -1205,35 +1204,6 @@ fun SettingsScreen(
                     }
                 }
 
-                // Single production-path preview, replaces the A/B/C lab UI.
-                OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        NavNotificationIconLab.clear(context) // remove old A/B/C samples
-                        iconTestFeedback = if (NavNotifications.showIconPreview(context))
-                            localized(
-                                "Отправлено уведомление. Проверь цветную плитку слева в шторке HONOR.",
-                                "Preview sent. Check the left color tile in HONOR notifications.",
-                                lang,
-                            )
-                        else localized(
-                            "Разреши уведомления NavTasks в настройках Android.",
-                            "Allow NavTasks notifications in Android Settings.",
-                            lang,
-                        )
-                    },
-                ) {
-                    Text(localized("Проверить иконку уведомления", "Preview notification icon", lang))
-                }
-                iconTestFeedback?.let {
-                    Text(it, color = p.blueText, fontSize = 12.sp)
-                    TextButton(onClick = {
-                        NavNotifications.clearIconPreview(context)
-                        iconTestFeedback = null
-                    }) {
-                        Text(localized("Убрать тестовое уведомление", "Clear preview notification", lang))
-                    }
-                }
                 Text(localized("Дата и время берутся только с телефона. Отдельного судового UTC нет.",
                     "Date and time follow the phone. No separate ship time zone.", lang),
                     color = p.muted, fontSize = 12.sp)
