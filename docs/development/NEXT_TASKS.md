@@ -503,3 +503,14 @@
 - [ ] Decide/check stable 1.0.0 APK package/signature migration from `com.navtasks.app.glass` debug to intended final package without losing user data.
 - [ ] Decide Android allowBackup/privacy policy and build manual/automated device regression; load/history/performance profiling.
 - [ ] Only after signoff: signed final v1.0.0 mobile release. SIRE/VIQ content and Windows/cloud sync postponed until AFTER 1.0.0. Full audit `RELEASE_READINESS_AUDIT_2026-11-10.md`.
+
+## NEXT — 0.4.120 device acceptance and final mobile 1.0.0 gates (2026-11-10)
+- [x] HONOR user installed 0.4.118 and reports preliminary stability; continue targeted regression.
+- [x] Save immutable 0.4.118 at `backup/navtasks-0.4.118-before-profile-deeplink`.
+- [x] Use intent `profileId` for Task/AMOS/Missed/Today navigation, single serialized cold/warm/repeated tap routing, unknown profile ignored, no cross-profile history edits. JUnit tests, signed 0.4.120/code145 CI42750924441 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.120-profile-deeplinks-verified.
+- [x] Exact previous 0.4.118 app-source recovery version 0.4.121/code146 CI42751054359 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.121-profile-deeplink-recovery. No uninstall/wipe.
+- [ ] HONOR real-device: export FULL profiles before in-place 0.4.120 install; from active ship A click a pending Task notification of ship B with cold start and running app, verify ship B selected and exact task/date/checklist; repeat tap; then an AMOS event, a widget task title/checklist and missed chip; return via Back. Test deleted/stale profile and old same-profile intent, no wrong ship data changed.
+- [ ] Full device regression: both themes, date/week/month/year boundaries, Work/AMOS/Services completion and history, notes/formatting, Handover, exports/imports, profile switches, widgets at next local midnight with notifications off, grouped/closed alerts, exact-alarm permission, device reboot/locale/timezone, last-card tap clearance, smooth v0.4.108 dock. Include Samsung where possible.
+- [ ] Agree safe `1.0.0` release-package strategy: current Beta package `com.navtasks.app.glass` and beta stable signing; default release `com.navtasks.app` cannot update in place. Prefer production non-debuggable release variant retaining installed package + signing; verify on-device update and data. DO NOT silently switch package, signature, or clear data.
+- [ ] Decide Android system Auto Backup policy (`allowBackup=true` today) for maritime notes/privacy; never silently change it. Stress-test large histories and multi-profile startup; add Android UI/instrumented testing where feasible.
+- [ ] Only after confirmation: publish stable signed 1.0.0. SIRE 2.0 / archival VIQ7 content and Windows / sync remain POST-1.0.0. See `docs/development/RELEASE_PLAN_1.0.0.md`.
