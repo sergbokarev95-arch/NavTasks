@@ -17,6 +17,10 @@ import java.util.UUID
  * A future migration can replace SharedPreferences with Room without changing
  * the stable template IDs or occurrence keys.
  */
+/** Personal is notes-only. Never materialize task history or run vessel validation there. */
+internal fun navProfileNeedsTaskStorage(kind: NavProfileKind): Boolean =
+    kind == NavProfileKind.VESSEL
+
 class TaskStore(context: Context, private val profiles: ProfileStore = ProfileStore(context)) {
     private val appContext = context.applicationContext
     private var prefs = profiles.data(profiles.activeId)
@@ -42,6 +46,16 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
     }
 
     private fun reloadProfile() {
+        if (!navProfileNeedsTaskStorage(profiles.active.kind)) {
+            // A previously opened Personal profile may already contain "runs=[]"
+            // without "templates". That is NORMAL: old refresh() wrote empty
+            // history despite Personal owning no tasks. Don't validate or
+            // rewrite these keys. Leave Handover notes fully untouched.
+            storageIssue = null
+            templates = emptyList()
+            runs = emptyMap()
+            return
+        }
         val loaded = runCatching {
             // Missing templates next to existing run history are not a fresh install.
             require(prefs.contains("templates") || !prefs.contains("runs")) {

@@ -45,6 +45,23 @@ internal fun navSearchRanges(text: String, query: String): List<IntRange> {
     return result
 }
 
+/**
+ * Positive delta scrolls list content upward; never requests scrolling on an
+ * ancestor Window or the search-field container. Keep the match inside the
+ * LazyColumn viewport with a margin for comfortable reading.
+ */
+internal fun navSearchListScrollDelta(
+    matchY: Float, top: Float, bottom: Float, margin: Float,
+): Float {
+    val safeTop = top + margin
+    val safeBottom = (bottom - margin).coerceAtLeast(safeTop)
+    return when {
+        matchY < safeTop -> matchY - safeTop
+        matchY > safeBottom -> matchY - safeBottom
+        else -> 0f
+    }
+}
+
 internal fun navSearchNextIndex(current: Int, count: Int, delta: Int): Int =
     if (count <= 0) 0 else Math.floorMod(current.coerceIn(0, count - 1) + delta, count)
 

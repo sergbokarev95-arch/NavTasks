@@ -13,7 +13,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,8 +23,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
@@ -67,6 +68,7 @@ fun HandoverScreen(
     onExternalAddHandled: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
+    var listViewportCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
     // Page content only: floating buttons stay sibling to the recorder.
     val actionBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
@@ -199,6 +201,7 @@ fun HandoverScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize()
+                .onGloballyPositioned { listViewportCoordinates = it }
                 .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }
                 .dismissSearchImeOnResultsGesture(searchOpen),
             contentPadding = PaddingValues(
@@ -308,33 +311,56 @@ fun HandoverScreen(
                                 val focusedEntryHit = focusedSearchHit?.takeIf {
                                     it.sectionId == section.id && it.entryId == entry.id
                                 }
-                                val titleRequester = remember(section.id, entry.id) {
-                                    BringIntoViewRequester()
+                                var titleCoordinates by remember(section.id, entry.id) {
+                                    mutableStateOf<LayoutCoordinates?>(null)
                                 }
-                                val noteRequester = remember(section.id, entry.id) {
-                                    BringIntoViewRequester()
+                                var noteCoordinates by remember(section.id, entry.id) {
+                                    mutableStateOf<LayoutCoordinates?>(null)
                                 }
                                 var noteLayout by remember(section.id, entry.id, query) {
                                     mutableStateOf<TextLayoutResult?>(null)
                                 }
-                                LaunchedEffect(entryRevealSerial, focusedEntryHit, noteLayout) {
-                                    if (entryRevealSerial > 0 && focusedEntryHit != null) {
-                                        withFrameNanos { }
-                                        when (focusedEntryHit.field) {
-                                            NavHandoverField.ENTRY_NOTES -> {
-                                                val layout = noteLayout
-                                                if (layout != null && entry.notes.isNotEmpty()) {
-                                                    val offset = focusedEntryHit.start
-                                                        .coerceIn(0, entry.notes.length - 1)
-                                                    val box = layout.getBoundingBox(offset)
-                                                    noteRequester.bringIntoView(Rect(
-                                                        0f, (box.top - 24f).coerceAtLeast(0f),
-                                                        layout.size.width.toFloat(), box.bottom + 24f,
-                                                    ))
-                                                }
-                                            }
-                                            NavHandoverField.ENTRY_TITLE -> titleRequester.bringIntoView()
-                                            else -> Unit
+                                var handledSearchSerial by remember(section.id, entry.id) {
+                                    mutableIntStateOf(0)
+                                }
+                                // Only the LazyColumn may scroll to a match.
+                                // BringIntoViewRequester used to propagate scrolling
+                                // to the Android window and push the fixed search bar
+                                // above the top edge while the keyboard was open.
+                                LaunchedEffect(
+                                    entryRevealSerial, focusedEntryHit, noteLayout,
+                                    titleCoordinates, noteCoordinates, listViewportCoordinates,
+                                ) {
+                                    val hit = focusedEntryHit
+                                    if (entryRevealSerial > 0 && hit != null &&
+                                        handledSearchSerial != entryRevealSerial
+                                    ) {
+                                        val target = when (hit.field) {
+                                            NavHandoverField.ENTRY_TITLE -> titleCoordinates
+                                            NavHandoverField.ENTRY_NOTES -> noteCoordinates
+                                            else -> null
+                                        }
+                                        val viewport = listViewportCoordinates
+                                        val measured = if (hit.field == NavHandoverField.ENTRY_NOTES)
+                                            noteLayout else null
+                                        if (target != null && target.isAttached &&
+                                            viewport != null && viewport.isAttached &&
+                                            (hit.field != NavHandoverField.ENTRY_NOTES || measured != null)
+                                        ) {
+                                            withFrameNanos { }
+                                            val localY = if (measured != null && entry.notes.isNotEmpty())
+                                                measured.getBoundingBox(
+                                                    hit.start.coerceIn(0, entry.notes.length - 1),
+                                                ).top else 0f
+                                            val wordY = target.positionInWindow().y + localY
+                                            val viewportTop = viewport.positionInWindow().y
+                                            val delta = navSearchListScrollDelta(
+                                                matchY = wordY, top = viewportTop,
+                                                bottom = viewportTop + viewport.size.height,
+                                                margin = 42.dp.toPx(),
+                                            )
+                                            handledSearchSerial = entryRevealSerial
+                                            if (delta != 0f) listState.animateScrollBy(delta)
                                         }
                                     }
                                 }
@@ -349,7 +375,9 @@ fun HandoverScreen(
                                         verticalArrangement = Arrangement.spacedBy(5.dp)) {
                                         NavSearchMarkedText(
                                             entry.title, query, p,
-                                            modifier = Modifier.bringIntoViewRequester(titleRequester),
+                                            modifier = Modifier.onGloballyPositioned {
+                                                titleCoordinates = it
+                                            },
                                             color = p.text, fontSize = 15.sp,
                                             fontWeight = FontWeight.Medium,
                                             activeMatchStart = focusedEntryHit?.takeIf {
@@ -365,7 +393,9 @@ fun HandoverScreen(
                                                 NavSearchMarkedText(
                                                     entry.notes, query, p,
                                                     modifier = Modifier.fillMaxWidth()
-                                                        .bringIntoViewRequester(noteRequester),
+                                                        .onGloballyPositioned {
+                                                            noteCoordinates = it
+                                                        },
                                                     color = p.muted, fontSize = 12.sp,
                                                     activeMatchStart = focusedEntryHit?.takeIf {
                                                         it.field == NavHandoverField.ENTRY_NOTES
