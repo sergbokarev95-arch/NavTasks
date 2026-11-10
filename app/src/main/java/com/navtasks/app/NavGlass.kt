@@ -189,12 +189,16 @@ internal object NavPressFeedbackTokens {
 }
 
 @Composable
-fun Modifier.glassClickable(
-    pressScale: Float = NavPressFeedbackTokens.cardScale,
-    onClick: () -> Unit,
-): Modifier = glassClickable(
-    interactionSource = null, pressScale = pressScale, onClick = onClick
-)
+fun Modifier.glassClickable(onClick: () -> Unit): Modifier =
+    glassClickable(
+        interactionSource = null,
+        pressScale = NavPressFeedbackTokens.cardScale,
+        onClick = onClick,
+    )
+
+@Composable
+fun Modifier.glassClickable(pressScale: Float, onClick: () -> Unit): Modifier =
+    glassClickable(interactionSource = null, pressScale = pressScale, onClick = onClick)
 
 @Composable
 fun Modifier.glassClickable(
