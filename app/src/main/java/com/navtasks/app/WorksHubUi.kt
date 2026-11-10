@@ -109,10 +109,10 @@ fun WorksHubScreen(
             item {
                 WorkHubTile(
                     p = p,
-                    title = "AMOS · Work Orders",
+                    title = "AMOS / By Crew",
                     description = localized(
-                        "Судовые работы AMOS: дата начала, повторения и история.",
-                        "AMOS jobs: start dates, recurrence and history.",
+                        "Работы AMOS и проверки силами экипажа: даты, повторения и история.",
+                        "AMOS work orders and crew-performed checks: dates, recurrence and history.",
                         lang,
                     ),
                     secondary = localized(

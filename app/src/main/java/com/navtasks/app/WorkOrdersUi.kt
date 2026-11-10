@@ -142,7 +142,7 @@ fun WorkOrdersScreen(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 NavBrandLabel(p)
-                Text("AMOS · Work Orders", color = p.text, fontSize = 22.sp)
+                Text("AMOS / By Crew", color = p.text, fontSize = 22.sp)
             }
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
             else NavGlassCircleButton(p, "search") {
@@ -153,7 +153,7 @@ fun WorkOrdersScreen(
         if (searchOpen) {
             NavGlassSearchField(
                 searchText, { searchText = it }, p, lang,
-                placeholder = localized("Поиск по названию AMOS", "Search AMOS titles", lang),
+                placeholder = localized("Поиск по работам", "Search work names", lang),
             )
         }
         LazyColumn(
@@ -186,8 +186,8 @@ fun WorkOrdersScreen(
                     }
                     Text(
                         localized(
-                            "Судовые работы AMOS. Даты и история сохраняются на телефоне.",
-                            "AMOS work and history are stored locally on this phone.",
+                            "Работы AMOS и проверки экипажа. Даты и история сохраняются на телефоне.",
+                            "AMOS jobs and crew checks. Dates and history stay on this phone.",
                             lang,
                         ),
                         color = p.muted, fontSize = 11.sp,
@@ -373,7 +373,7 @@ fun WorkOrdersScreen(
                 p = p,
                 onDismissRequest = { chooseShiftAfterCompletion = false },
                 title = {
-                    Text(localized("Сместить график AMOS?", "Shift AMOS schedule?", lang))
+                    Text(localized("Сместить график работы?", "Shift work schedule?", lang))
                 },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -472,7 +472,7 @@ fun WorkOrdersScreen(
         val history = workOrderHistoryRecords(listOf(current))
         NavGlassAlertDialog(
             p = p, onDismissRequest = { viewingHistory = null },
-            title = { Text(localized("История AMOS", "AMOS history", lang)) },
+            title = { Text(localized("История работы", "Work history", lang)) },
             text = {
                 Column(
                     Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
@@ -519,7 +519,7 @@ private fun WorkOrderClosedCard(
     ) {
         Column(Modifier.fillMaxWidth().glassClickable(onClick = onHistory)
             .padding(vertical = 3.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text("AMOS", color = p.blueText, fontSize = 11.sp)
+            Text(localized("Работа", "Work", lang), color = p.blueText, fontSize = 11.sp)
             Text(order.title, color = p.text, fontSize = 15.sp)
             order.closedAt?.let {
                 Text(localized("Закрыта: ", "Closed: ", lang) +
@@ -586,7 +586,7 @@ private fun WorkOrderCard(
                 Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text("AMOS", color = p.blueText, fontSize = 12.sp)
+                Text(localized("Работа", "Work", lang), color = p.blueText, fontSize = 12.sp)
                 Text(order.title, color = p.text, fontSize = 15.sp,
                     maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
@@ -701,8 +701,8 @@ private fun WorkOrderEditorDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                if (existing == null) localized("Новая работа AMOS", "New AMOS work order", lang)
-                else localized("Редактировать AMOS", "Edit AMOS work order", lang),
+                if (existing == null) localized("Новая работа", "New work item", lang)
+                else localized("Редактировать работу", "Edit work item", lang),
                 color = p.text, fontSize = 20.sp,
             )
             Column(
@@ -911,7 +911,7 @@ private fun WorkOrderHistoryCard(
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text("AMOS", color = p.blueText, fontSize = 12.sp)
+        Text(localized("Работа", "Work", lang), color = p.blueText, fontSize = 12.sp)
         Text(archive.order.title, color = p.text, fontSize = 15.sp)
         Text(localized("Срок: ", "Due: ", lang) +
             navDate(completion.dueDate, lang, true),

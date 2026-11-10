@@ -31,6 +31,14 @@ internal val NavIdentifierKeyboard = KeyboardOptions(
     capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false)
 internal const val NavRichHtmlMax = 24000
 
+/** Full-page note body is larger; small work-comment fields retain 14/20sp. */
+internal object NavRichNoteTypography {
+    const val fullPageBodySp = 17
+    const val fullPageLineSp = 25
+    const val compactBodySp = 14
+    const val compactLineSp = 20
+}
+
 internal fun navRichNoteAllowed(plain: String, html: String, max: Int): Boolean =
     plain.length <= max && html.length <= NavRichHtmlMax
 
@@ -97,7 +105,13 @@ internal fun NavRichNoteEditor(
                 state = state,
                 modifier = if (fullPage) Modifier.fillMaxSize()
                     else Modifier.fillMaxWidth().heightIn(min = 95.dp),
-                textStyle = TextStyle(color = p.text, fontSize = 14.sp, lineHeight = 20.sp),
+                textStyle = TextStyle(
+                    color = p.text,
+                    fontSize = (if (fullPage) NavRichNoteTypography.fullPageBodySp
+                        else NavRichNoteTypography.compactBodySp).sp,
+                    lineHeight = (if (fullPage) NavRichNoteTypography.fullPageLineSp
+                        else NavRichNoteTypography.compactLineSp).sp,
+                ),
                 keyboardOptions = NavSentenceKeyboard,
             )
         }
