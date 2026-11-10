@@ -170,8 +170,17 @@ object NavNotifications {
     fun reschedule(context: Context, store: TaskStore, settings: NavSettings) {
         createChannels(context)
         migrateOldServiceNotificationMarkers(context)
-        if (!settings.notificationsEnabled) return
         val today = LocalDate.now()
+        // Updating home-screen widgets must not depend on whether users want
+        // task notifications or the missed-task digest. One daily lightweight
+        // alarm keeps the date, progress and backlog correct after midnight.
+        val nextRoll = nextNavWidgetRefresh(LocalDateTime.now())
+        schedule(context, ROLL, "next-day",
+            nextRoll.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+        if (!settings.notificationsEnabled) {
+            cancelAlarm(context, DIGEST, "daily")
+            return
+        }
         // Keep the AlarmManager queue bounded; independent ROLL extends the horizon.
         val horizon = today.plusDays(7)
         store.refresh(today, horizon)
@@ -208,8 +217,8 @@ object NavNotifications {
             val current = LocalDateTime.now()
             for (service in ServiceStore(context, profiles).entries) {
                 // AMOS requisitions without a planned date never schedule a due alarm.
-                if (service.unplanned || service.completedAt != null ||
-                    service.remindMonths == 0) continue
+                if (service.unplanned || service.closedAt != null ||
+                    service.completedAt != null || service.remindMonths == 0) continue
                 val due = service.nextDate ?: continue
                 if (due.isBefore(today)) continue
                 val notificationKey = profiles.activeId + ":service:" +
@@ -226,7 +235,7 @@ object NavNotifications {
             // One configurable early warning per open AMOS work order and due date.
             // Stale alarms from edited due dates or completed work are ignored at delivery.
             for (order in WorkOrderStore(context, profiles).entries) {
-                if (order.completed || order.remindDaysBefore == 0 ||
+                if (order.closedAt != null || order.completed || order.remindDaysBefore == 0 ||
                     order.dueDate.isBefore(today)) continue
                 val key = profiles.activeId + ":amos:" + order.id + ":" +
                     order.dueDate + ":" + order.remindDaysBefore
@@ -249,11 +258,6 @@ object NavNotifications {
         } else {
             cancelAlarm(context, DIGEST, "daily")
         }
-        // Reminders must extend beyond the seven-day window even when
-        // the separate daily MISSED digest is disabled.
-        val nextRoll = today.plusDays(1).atTime(0, 5)
-        schedule(context, ROLL, "next-day",
-            nextRoll.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
     }
 
     private fun mayNotify(context: Context): Boolean =
@@ -346,7 +350,8 @@ object NavNotifications {
             target.toLocalTime() == clock && target.toLocalDate() == LocalDate.now()) {
             val today = LocalDate.now()
             for (service in ServiceStore(context, active).entries) {
-                if (service.unplanned || service.completedAt != null || service.remindMonths == 0)
+                if (service.unplanned || service.closedAt != null ||
+                    service.completedAt != null || service.remindMonths == 0)
                     continue
                 val due = service.nextDate ?: continue
                 if (today.isBefore(serviceWarningStart(service)) || today.isAfter(due)) continue
@@ -356,7 +361,8 @@ object NavNotifications {
                 }
             }
             for (order in WorkOrderStore(context, active).entries) {
-                if (order.completed || order.remindDaysBefore == 0 ||
+                if (order.closedAt != null || order.completed ||
+                    order.remindDaysBefore == 0 ||
                     today.isBefore(workOrderWarningStart(order)) ||
                     today.isAfter(order.dueDate)) continue
                 val eventKey = active.activeId + ":amos:" + order.id + ":" +
@@ -407,13 +413,16 @@ object NavNotifications {
 
     fun receiveAlarm(context: Context, kind: String, runKey: String) {
         val settings = NavSettings(context)
-        if (!settings.notificationsEnabled) return
-        val store = TaskStore(context)
-        createChannels(context)
+        // Roll forward and repaint widgets even with all notifications OFF.
         if (kind == ROLL) {
+            val store = TaskStore(context)
+            NavWidgetUpdater.updateAll(context, store)
             reschedule(context, store, settings)
             return
         }
+        if (!settings.notificationsEnabled) return
+        val store = TaskStore(context)
+        createChannels(context)
         if (kind == DIGEST) {
             if (settings.dailyDigestEnabled) {
                 val overdue = store.missed()
@@ -439,7 +448,8 @@ object NavNotifications {
             if (profiles.active.kind != NavProfileKind.VESSEL) return
             val service = ServiceStore(context, profiles).entries
                 .firstOrNull { it.id == serviceId } ?: return
-            if (service.unplanned || service.completedAt != null) return
+            if (service.unplanned || service.closedAt != null ||
+                service.completedAt != null) return
             val due = service.nextDate ?: return
             if (due.toString() != expectedDue ||
                 service.remindMonths == 0 || LocalDate.now().isBefore(serviceWarningStart(service)) ||
@@ -465,7 +475,8 @@ object NavNotifications {
             if (profiles.active.kind != NavProfileKind.VESSEL) return
             val order = WorkOrderStore(context, profiles).entries
                 .firstOrNull { it.id == parts[0] } ?: return
-            if (order.completed || order.remindDaysBefore == 0 ||
+            if (order.closedAt != null || order.completed ||
+                order.remindDaysBefore == 0 ||
                 order.dueDate.toString() != parts[1] ||
                 order.remindDaysBefore.toString() != parts[2] ||
                 LocalDate.now().isBefore(workOrderWarningStart(order)) ||
