@@ -46,6 +46,7 @@ fun WorkOrdersScreen(
     var showClosed by rememberSaveable { mutableStateOf(false) }
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
+    val activeQuery = if (searchOpen) navEffectiveSearchQuery(searchText) else ""
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
     // Page content only: floating buttons stay sibling to the recorder.
     val actionBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
@@ -71,10 +72,10 @@ fun WorkOrdersScreen(
         .sortedByDescending { it.closedAt }
     val listState = rememberLazyListState()
     val filteredOrders = searchAmosTitles(
-        filterAmosOverview(activeOrders, today, selectedFilter), searchText)
-    val filteredClosed = searchAmosTitles(closedOrders, searchText)
+        filterAmosOverview(activeOrders, today, selectedFilter), activeQuery)
+    val filteredClosed = searchAmosTitles(closedOrders, activeQuery)
     val visibleResults = if (showClosed) filteredClosed else filteredOrders
-    val searchResults = if (searchOpen && searchText.isNotBlank())
+    val searchResults = if (activeQuery.isNotBlank())
         visibleResults else emptyList()
     var searchResultIndex by rememberSaveable { mutableIntStateOf(0) }
     var searchNavigationSerial by remember { mutableIntStateOf(0) }
@@ -255,7 +256,7 @@ fun WorkOrdersScreen(
                 item {
                     NavPanel(p) {
                         Text(
-                            if (searchText.isNotBlank())
+                            if (activeQuery.isNotBlank())
                                 localized("Работы с таким названием не найдены.",
                                     "No work orders match this title.", lang)
                             else if (showClosed)
@@ -273,7 +274,7 @@ fun WorkOrdersScreen(
                 items(filteredClosed, key = { it.id }) { order ->
                     WorkOrderClosedCard(
                         order, p, lang,
-                        searchQuery = if (searchOpen) searchText else "",
+                        searchQuery = activeQuery,
                         focusedSearchResult = searchResults.getOrNull(searchResultIndex)?.id == order.id,
                         onHistory = { viewingHistory = order },
                         onRestore = {
@@ -287,7 +288,7 @@ fun WorkOrdersScreen(
                 items(filteredOrders, key = { it.id }) { order ->
                     WorkOrderCard(
                         order, today, p, lang,
-                        searchQuery = if (searchOpen) searchText else "",
+                        searchQuery = activeQuery,
                         focusedSearchResult = searchResults.getOrNull(searchResultIndex)?.id == order.id,
                         onHistory = { viewingHistory = order },
                         onEdit = { editing = order; editorOpen = true },

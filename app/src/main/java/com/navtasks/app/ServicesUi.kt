@@ -50,6 +50,7 @@ fun ServicesScreen(
     var selectedView by rememberSaveable { mutableStateOf(ServiceListView.WORKS) }
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
+    val activeQuery = if (searchOpen) navEffectiveSearchQuery(searchText) else ""
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
     // Page content only: floating buttons stay sibling to the recorder.
     val actionBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
@@ -74,11 +75,11 @@ fun ServicesScreen(
         filterServiceOverview(
             if (selectedView == ServiceListView.REQUESTS) activeRequests else activeServices,
             now, selectedFilter,
-        ), searchText)
-    val filteredClosed = searchServiceTitles(closedServices, searchText)
+        ), activeQuery)
+    val filteredClosed = searchServiceTitles(closedServices, activeQuery)
     val visibleResults = if (selectedView == ServiceListView.CLOSED)
         filteredClosed else filteredServices
-    val searchResults = if (searchOpen && searchText.isNotBlank())
+    val searchResults = if (activeQuery.isNotBlank())
         visibleResults else emptyList()
     var searchResultIndex by rememberSaveable { mutableIntStateOf(0) }
     var searchNavigationSerial by remember { mutableIntStateOf(0) }
@@ -224,7 +225,7 @@ fun ServicesScreen(
                 item {
                     NavPanel(p) {
                         Text(
-                            if (searchText.isNotBlank())
+                            if (activeQuery.isNotBlank())
                                 localized("Нет работ с таким названием.",
                                     "No maintenance names match.", lang)
                             else if (selectedView == ServiceListView.CLOSED)
@@ -245,7 +246,7 @@ fun ServicesScreen(
             if (selectedView == ServiceListView.CLOSED) {
                 items(filteredClosed, key = { it.id }) { service ->
                     ServiceClosedCard(service, p, lang,
-                        searchQuery = if (searchOpen) searchText else "",
+                        searchQuery = activeQuery,
                         focusedSearchResult = searchResults.getOrNull(searchResultIndex)?.id == service.id,
                         onHistory = { viewingHistory = service },
                         onRestore = {
@@ -275,7 +276,7 @@ fun ServicesScreen(
                         Box(Modifier.size(7.dp).background(accent, RoundedCornerShape(5.dp)))
                         Spacer(Modifier.width(10.dp))
                         NavSearchMarkedText(
-                            value = service.equipment, query = if (searchOpen) searchText else "",
+                            value = service.equipment, query = activeQuery,
                             p = p, fontSize = 16.sp, modifier = Modifier.weight(1f),
                             maxLines = 2, overflow = TextOverflow.Ellipsis,
                             focused = searchResults.getOrNull(searchResultIndex)?.id == service.id,

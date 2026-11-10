@@ -26,23 +26,27 @@ internal fun ReferenceHubScreen(
     val listState = rememberLazyListState()
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
-    val query = searchText.trim()
+    val query = if (searchOpen) navEffectiveSearchQuery(searchText) else ""
     val sireSubtitle = localized("Подготовка к инспекциям", "Inspection preparation", lang)
     val viqSubtitle = localized("Архивный справочник", "Historical reference", lang)
     val later = localized("Материалы будут добавлены позже", "Content coming later", lang)
     val showSire = referencePlaceholderMatches(query, "SIRE 2.0", sireSubtitle, later)
     val showViq = referencePlaceholderMatches(query, "VIQ7", viqSubtitle, later)
-    val searchResults = if (searchOpen && query.isNotBlank()) buildList {
-        if (showSire) add("sire")
-        if (showViq) add("viq")
-    } else emptyList()
+    val searchResults = navReferenceSearchHits(
+        listOf(
+            NavReferenceSearchRow("sire", "SIRE 2.0", sireSubtitle, later),
+            NavReferenceSearchRow("viq", "VIQ7", viqSubtitle, later),
+        ), query,
+    )
     var searchResultIndex by rememberSaveable { mutableIntStateOf(0) }
+    val focusedSearchHit = searchResults.getOrNull(searchResultIndex)
     var searchNavigationSerial by remember { mutableIntStateOf(0) }
     LaunchedEffect(query) { searchResultIndex = 0 }
     LaunchedEffect(searchNavigationSerial) {
         if (searchNavigationSerial > 0 && searchResults.isNotEmpty()) {
-            listState.animateScrollToItem(
-                searchResultIndex.coerceIn(0, searchResults.lastIndex))
+            val hit = searchResults[searchResultIndex.coerceIn(0, searchResults.lastIndex)]
+            val itemIndex = if (hit.sectionId == "sire") 0 else if (showSire) 1 else 0
+            listState.animateScrollToItem(itemIndex)
         }
     }
 
@@ -116,7 +120,7 @@ internal fun ReferenceHubScreen(
                 item(key = "reference-sire") {
                     ReferencePlaceholderTile(
                         p, "SIRE 2.0", sireSubtitle, later, query,
-                        focused = searchResults.getOrNull(searchResultIndex) == "sire",
+                        activeHit = focusedSearchHit?.takeIf { it.sectionId == "sire" },
                     )
                 }
             }
@@ -124,7 +128,7 @@ internal fun ReferenceHubScreen(
                 item(key = "reference-viq") {
                     ReferencePlaceholderTile(
                         p, "VIQ7", viqSubtitle, later, query,
-                        focused = searchResults.getOrNull(searchResultIndex) == "viq",
+                        activeHit = focusedSearchHit?.takeIf { it.sectionId == "viq" },
                     )
                 }
             }
@@ -140,7 +144,7 @@ private fun ReferencePlaceholderTile(
     subtitle: String,
     footer: String,
     query: String = "",
-    focused: Boolean = false,
+    activeHit: NavReferenceSearchHit? = null,
 ) {
     Row(
         Modifier.fillMaxWidth()
@@ -156,12 +160,16 @@ private fun ReferencePlaceholderTile(
             NavGlassGlyph("reference", p.muted, Modifier.size(22.dp))
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            NavSearchMarkedText(title, query, p, fontSize = 16.sp, focused = focused)
+            NavSearchMarkedText(title, query, p, fontSize = 16.sp,
+                activeMatchStart = activeHit?.takeIf {
+                    it.field == NavReferenceField.TITLE }?.start)
             NavSearchMarkedText(subtitle, query, p, color = p.muted,
-                fontSize = 12.sp, focused = focused)
+                fontSize = 12.sp, activeMatchStart = activeHit?.takeIf {
+                    it.field == NavReferenceField.SUBTITLE }?.start)
             Spacer(Modifier.height(5.dp))
             NavSearchMarkedText(footer, query, p, color = p.muted,
-                fontSize = 11.sp, focused = focused)
+                fontSize = 11.sp, activeMatchStart = activeHit?.takeIf {
+                    it.field == NavReferenceField.FOOTER }?.start)
         }
     }
 }
