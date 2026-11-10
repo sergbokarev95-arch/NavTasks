@@ -2,6 +2,7 @@ package com.navtasks.app
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -61,6 +65,7 @@ import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 import kotlin.math.abs
+import kotlinx.coroutines.delay
 
 /** Local, lightweight light fields make the translucent layers visibly react to their own backdrop. */
 @Composable
@@ -184,8 +189,11 @@ fun Modifier.navFrostedOverlay(
  * Liquid Glass dock does NOT use this modifier.
  */
 internal object NavPressFeedbackTokens {
-    const val cardScale = 1.022f
-    const val floatingActionScale = 1.055f
+    const val cardScale = 1.04f
+    const val floatingActionScale = 1.075f
+    const val minClickPulseMs = 125L
+    const val pressRiseMs = 55
+    const val pressReleaseMs = 165
 }
 
 @Composable
@@ -209,15 +217,31 @@ fun Modifier.glassClickable(
     val view = LocalView.current
     val source = interactionSource ?: remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
+    var tapSerial by remember { mutableIntStateOf(0) }
+    var clickPulse by remember { mutableStateOf(false) }
+    // A quick tap needs a visible minimum pulse, not only a held-press frame.
+    // Business actions remain immediate; the selected dock never uses this.
+    LaunchedEffect(tapSerial) {
+        if (tapSerial > 0 && pressScale > 1f) {
+            clickPulse = true
+            delay(NavPressFeedbackTokens.minClickPulseMs)
+            clickPulse = false
+        }
+    }
+    val enlarged = (pressed || clickPulse) && pressScale > 1f
     val scale by animateFloatAsState(
-        targetValue = if (pressed) pressScale else 1f,
-        animationSpec = spring(dampingRatio = 0.8f, stiffness = 900f),
+        targetValue = if (enlarged) pressScale else 1f,
+        animationSpec = tween(
+            durationMillis = if (enlarged) NavPressFeedbackTokens.pressRiseMs
+                else NavPressFeedbackTokens.pressReleaseMs,
+        ),
         label = "glassButtonPressed",
     )
     return this.graphicsLayer {
         scaleX = scale
         scaleY = scale
     }.clickable(interactionSource = source, indication = null) {
+        tapSerial++
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
         onClick()
     }

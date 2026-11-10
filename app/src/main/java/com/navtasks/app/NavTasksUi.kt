@@ -245,6 +245,9 @@ fun NavTasksApp(
     var todayDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     var worksDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     var handoverDockEpoch by rememberSaveable { mutableIntStateOf(0) }
+    // The Handover FAB is drawn by this persistent parent, not rebuilt
+    // as the Handover tab enters AnimatedContent.
+    var handoverAddRequest by remember { mutableIntStateOf(0) }
     var referenceDockEpoch by rememberSaveable { mutableIntStateOf(0) }
     // Active dock re-taps scroll without recreating the destination screen.
     var todayReturnTick by rememberSaveable { mutableIntStateOf(0) }
@@ -724,6 +727,8 @@ fun NavTasksApp(
                                         handoverStore, store, palette, lang,
                                         onBack = { openPrimaryTab(0) }, embeddedInTab = true,
                                         smoothReturnTick = handoverReturnTick,
+                                        externalAddRequest = handoverAddRequest,
+                                        onExternalAddHandled = { handoverAddRequest = 0 },
                                     )
                                     else -> ReferenceHubScreen(palette, lang,
                                         smoothReturnTick = referenceReturnTick)
@@ -773,6 +778,23 @@ fun NavTasksApp(
                                     editorTask = null
                                     templateFilter = Frequency.DAILY
                                     editorOpen = true
+                                }
+                            }
+                        }
+                    }
+                    if (tab == 2) {
+                        // Same ready optical source and inset as Today's action.
+                        Box(
+                            Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
+                                .padding(end = 19.dp, bottom = 83.dp),
+                        ) {
+                            if (glassBackdrop != null) {
+                                NavLiquidGlassAddButton(palette, glassBackdrop) {
+                                    handoverAddRequest++
+                                }
+                            } else {
+                                NavGlassAddButton(palette, hazeState) {
+                                    handoverAddRequest++
                                 }
                             }
                         }
