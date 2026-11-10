@@ -229,12 +229,8 @@ fun NavTasksApp(
     store: TaskStore,
     settings: NavSettings,
     profiles: ProfileStore,
-    requestedRunKey: String? = null,
-    onRequestHandled: () -> Unit = {},
-    requestedWorkOrderId: String? = null,
-    onWorkOrderRequestHandled: () -> Unit = {},
-    requestedMissed: Boolean = false,
-    onMissedRequestHandled: () -> Unit = {},
+    openRequest: NavOpenRequest? = null,
+    onOpenRequestHandled: (Long) -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     // Four dock tabs: 0=Today, 1=Work, 2=Handover, 3=Reference.
@@ -294,6 +290,8 @@ fun NavTasksApp(
     var templateFilter by rememberSaveable { mutableStateOf(Frequency.DAILY) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var expandedRun by remember { mutableStateOf<String?>(null) }
+    // Sent to Today only AFTER any owning-profile switch has finished.
+    var pendingMissedDeepLink by remember { mutableStateOf(false) }
     var now by remember { mutableStateOf(LocalDateTime.now()) }
     var previousToday by remember { mutableStateOf(LocalDate.now()) }
     var dismissedStorageWarning by rememberSaveable { mutableStateOf("") }
@@ -319,55 +317,6 @@ fun NavTasksApp(
         previousToday = now.toLocalDate()
         store.refresh(now.toLocalDate())
     }
-    LaunchedEffect(requestedWorkOrderId) {
-        if (requestedWorkOrderId != null) {
-            if (workOrderStore.entries.any { it.id == requestedWorkOrderId }) {
-                editorOpen = false
-                showSettings = false
-                showProfiles = false
-                showServices = false
-                showCalendar = false
-                showWorks = true
-                focusWorkOrderId = requestedWorkOrderId
-                focusHistoryWorkOrderId = null
-                showWorkOrders = true
-            }
-            onWorkOrderRequestHandled()
-        }
-    }
-    LaunchedEffect(requestedRunKey) {
-        if (requestedRunKey != null) {
-            val target = store.runs[requestedRunKey]
-            if (target != null) {
-                selectedDate = target.displayDate
-                tab = 0
-                tabHistory = ""
-                showCalendar = false
-                showSettings = false
-                editorOpen = false
-                expandedRun = requestedRunKey
-            }
-            onRequestHandled()
-        }
-    }
-
-    LaunchedEffect(requestedMissed) {
-        if (requestedMissed) {
-            tab = 0
-            tabHistory = ""
-            selectedDate = LocalDate.now()
-            editorOpen = false
-            showSettings = false
-            showProfiles = false
-            showServices = false
-            showWorks = false
-            showRoutineTasks = false
-            showCalendar = false
-            showWorkOrders = false
-            expandedRun = null
-        }
-    }
-
     val scheme = if (dark) darkColorScheme(
         primary = palette.blue, secondary = palette.mint, background = palette.background,
         surface = palette.panel, onSurface = palette.text, onBackground = palette.text,
@@ -427,6 +376,68 @@ fun NavTasksApp(
             showRoutineTasks = false
         }
         quickProfileOpen = false
+    }
+
+    // Handle the profile and destination as ONE navigation transaction.
+    // Never search the active profile for an item belonging to another ship.
+    LaunchedEffect(openRequest?.serial) {
+        val request = openRequest ?: return@LaunchedEffect
+        val targetProfile = resolveNavProfileTarget(
+            activeId = profiles.activeId,
+            availableIds = profiles.profiles.map { it.id },
+            requestedId = request.profileId,
+        )
+        if (targetProfile != null) {
+            if (targetProfile != profiles.activeId) activateQuickProfile(targetProfile)
+            // A notification may be opened while any nested screen is visible.
+            // Close only transient navigation; never clear task or history data.
+            quickProfileOpen = false
+            editorOpen = false
+            showSettings = false
+            showProfiles = false
+            showServices = false
+            showWorks = false
+            showRoutineTasks = false
+            showCalendar = false
+            showWorkOrders = false
+            focusWorkOrderId = null
+            focusHistoryWorkOrderId = null
+            focusServiceId = null
+            expandedRun = null
+            pendingMissedDeepLink = false
+            tabHistory = ""
+            when (navOpenDestination(request)) {
+                NavOpenDestination.TASK -> {
+                    tab = 0
+                    val run = request.runKey?.let { store.runs[it] }
+                    selectedDate = run?.displayDate ?: LocalDate.now()
+                    expandedRun = run?.key
+                }
+                NavOpenDestination.AMOS -> {
+                    val orderId = request.workOrderId
+                    if (orderId != null && workOrderStore.entries.any { it.id == orderId }) {
+                        tab = 1
+                        showWorks = true
+                        focusWorkOrderId = orderId
+                        showWorkOrders = true
+                    } else {
+                        tab = 0 // Deleted record: never open a similarly keyed foreign entry.
+                        selectedDate = LocalDate.now()
+                    }
+                }
+                NavOpenDestination.MISSED -> {
+                    tab = 0
+                    selectedDate = LocalDate.now()
+                    pendingMissedDeepLink = true
+                }
+                NavOpenDestination.TODAY -> {
+                    tab = 0
+                    selectedDate = LocalDate.now()
+                }
+            }
+        }
+        // Deleted/unknown profile: consume stale intent without changing profile.
+        onOpenRequestHandled(request.serial)
     }
     val pinchEligible = !editorOpen && !showSettings && !showProfiles &&
         !showServices && !showWorks && !showRoutineTasks &&
@@ -692,8 +703,8 @@ fun NavTasksApp(
                                             showWorks = true
                                             showServices = true
                                         },
-                                        openMissed = requestedMissed,
-                                        onOpenMissedHandled = onMissedRequestHandled,
+                                        openMissed = pendingMissedDeepLink,
+                                        onOpenMissedHandled = { pendingMissedDeepLink = false },
                                         smoothReturnTick = todayReturnTick)
                                     1 -> WorksHubScreen(
                                         serviceStore, workOrderStore, palette, lang,

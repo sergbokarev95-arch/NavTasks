@@ -21,9 +21,21 @@ class MainActivity : ComponentActivity() {
     private val profileStore by lazy { ProfileStore(this) }
     private val taskStore by lazy { TaskStore(this, profileStore) }
     private val appSettings by lazy { NavSettings(this) }
-    private var requestedRunKey by mutableStateOf<String?>(null)
-    private var requestedWorkOrderId by mutableStateOf<String?>(null)
-    private var requestedMissed by mutableStateOf(false)
+    // One request object prevents profile and record routing from racing.
+    // A serial guarantees repeated taps on the same notification are handled.
+    private var nextOpenSerial = 0L
+    private var openRequest by mutableStateOf<NavOpenRequest?>(null)
+
+    private fun receiveOpenIntent(incoming: Intent) {
+        val profileId = incoming.getStringExtra("profileId")
+        val runKey = incoming.getStringExtra("runKey")
+        val workOrderId = incoming.getStringExtra("workOrderId")
+        val openMissed = incoming.getBooleanExtra("openMissed", false)
+        openRequest = if (profileId != null || runKey != null ||
+            workOrderId != null || openMissed) {
+            NavOpenRequest(++nextOpenSerial, profileId, runKey, workOrderId, openMissed)
+        } else null
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,9 +50,7 @@ class MainActivity : ComponentActivity() {
         window.setBackgroundDrawable(ColorDrawable(
             Color.parseColor(if (savedDark) "#000000" else "#E6E8EC")
         ))
-        requestedRunKey = intent.getStringExtra("runKey")
-        requestedWorkOrderId = intent.getStringExtra("workOrderId")
-        requestedMissed = intent.getBooleanExtra("openMissed", false)
+        receiveOpenIntent(intent)
         setContent {
             // Sync status/navigation icon foregrounds to the actual selected app
             // theme, not only to Android's global Day/Night setting.
@@ -70,12 +80,10 @@ class MainActivity : ComponentActivity() {
             }
             NavTasksApp(
                 store = taskStore, settings = appSettings, profiles = profileStore,
-                requestedRunKey = requestedRunKey,
-                onRequestHandled = { requestedRunKey = null },
-                requestedWorkOrderId = requestedWorkOrderId,
-                onWorkOrderRequestHandled = { requestedWorkOrderId = null },
-                requestedMissed = requestedMissed,
-                onMissedRequestHandled = { requestedMissed = false },
+                openRequest = openRequest,
+                onOpenRequestHandled = { handledSerial ->
+                    if (openRequest?.serial == handledSerial) openRequest = null
+                },
             )
         }
         if (Build.VERSION.SDK_INT >= 33 &&
@@ -88,9 +96,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        requestedRunKey = intent.getStringExtra("runKey")
-        requestedWorkOrderId = intent.getStringExtra("workOrderId")
-        requestedMissed = intent.getBooleanExtra("openMissed", false)
+        receiveOpenIntent(intent)
     }
 
     override fun onResume() {
