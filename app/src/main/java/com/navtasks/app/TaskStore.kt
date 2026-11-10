@@ -27,6 +27,12 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
     var runs: Map<String, TaskRun> by mutableStateOf(emptyMap())
         private set
 
+    // Damaged JSON is never reinterpreted as a successful empty profile.
+    var storageIssue: String? by mutableStateOf(null)
+        private set
+
+    private fun assertWritable() = ensureNavStorageWritable(storageIssue)
+
     init { reloadProfile() }
 
     fun switchProfile() {
@@ -36,16 +42,36 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
     }
 
     private fun reloadProfile() {
-        templates = if (prefs.contains("templates")) {
-            decodeTemplates(prefs.getString("templates", "[]").orEmpty())
-        } else if (profiles.activeId == ProfileStore.DEFAULT_SHIP) {
-            sampleTemplates().also { saveTemplates(it) }
-        } else emptyList()
-        runs = decodeRuns(prefs.getString("runs", "[]").orEmpty())
+        val loaded = runCatching {
+            // Missing templates next to existing run history are not a fresh install.
+            require(prefs.contains("templates") || !prefs.contains("runs")) {
+                "Task templates missing while history exists"
+            }
+            val parsedTemplates = if (prefs.contains("templates")) {
+                NavStorageRead.templates(prefs.getString("templates", "[]").orEmpty())
+            } else if (profiles.activeId == ProfileStore.DEFAULT_SHIP) {
+                sampleTemplates()
+            } else emptyList()
+            val parsedRuns = NavStorageRead.runs(prefs.getString("runs", "[]").orEmpty())
+            parsedTemplates to parsedRuns
+        }
+        if (loaded.isFailure) {
+            storageIssue = "Не удалось прочитать задачи или историю этого профиля. Запись заблокирована. Восстановите полный профиль из копии."
+            templates = emptyList()
+            runs = emptyMap()
+            return
+        }
+        storageIssue = null
+        val (parsedTemplates, parsedRuns) = loaded.getOrThrow()
+        templates = parsedTemplates
+        runs = parsedRuns
+        if (!prefs.contains("templates") && profiles.activeId == ProfileStore.DEFAULT_SHIP)
+            saveTemplates(templates)
         refresh(LocalDate.now())
     }
 
     fun refresh(today: LocalDate = LocalDate.now(), through: LocalDate = today.plusDays(6)) {
+        if (storageIssue != null) return
         val lastVisit = runCatching {
             LocalDate.parse(prefs.getString("lastVisit", today.toString()).orEmpty())
         }.getOrDefault(today)
@@ -207,6 +233,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
      * Completed history and unrelated templates are preserved.
      */
     fun postponeSeriesFrom(runKey: String, newDate: LocalDate): Boolean {
+        assertWritable()
         val selected = runs[runKey] ?: return false
         val task = templates.firstOrNull { it.id == selected.taskId } ?: return false
         val result = scopedCalendarMove(task, runs, selected, newDate) ?: return false
@@ -229,6 +256,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
         scope: CalendarEditScope,
         today: LocalDate = LocalDate.now(),
     ): Boolean {
+        assertWritable()
         require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
         val original = templates.firstOrNull { it.id == edited.id } ?: return false
         val result = editCalendarDayScoped(original, edited, runs, scope, today) ?: return false
@@ -250,6 +278,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
         scope: CalendarEditScope,
         today: LocalDate = LocalDate.now(),
     ): Boolean {
+        assertWritable()
         require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
         val original = templates.firstOrNull { it.id == edited.id } ?: return false
         val change = editCalendarFrequencyScoped(original, edited, runs, scope, today) ?: return false
@@ -263,6 +292,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
     }
 
     private fun materializeSingleDay(day: LocalDate) {
+        if (storageIssue != null) return
         val updated = runs.toMutableMap()
         for (task in templates.filter { it.scheduleMode == ScheduleMode.CALENDAR }) {
             if (TaskSchedule.isCalendarDue(task, day)) {
@@ -283,6 +313,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
     }
 
     fun upsert(task: TaskTemplate) {
+        assertWritable()
         require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
         templates = if (templates.any { it.id == task.id }) {
             templates.map { if (it.id == task.id) task else it }
@@ -304,6 +335,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
      * The task remains in Tasks as inactive and can be reactivated later.
      */
     fun stopRepeatingTask(taskId: String): Boolean {
+        assertWritable()
         require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
         val existing = templates.firstOrNull { it.id == taskId } ?: return false
         if (!existing.enabled) return true
@@ -326,6 +358,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
      * a task whose historical runs are unexpectedly orphaned.
      */
     fun deleteTaskPermanently(taskId: String): Boolean {
+        assertWritable()
         require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
         val result = taskDeletePermanently(templates, runs, taskId) ?: return false
         val templatesJson = JSONArray().apply {
@@ -346,6 +379,7 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
 
     /** Add only new templates, preserving local tasks and all completion history. */
     fun importTemplates(imported: List<TaskTemplate>): Int {
+        assertWritable()
         require(profiles.active.kind == NavProfileKind.VESSEL) { "Personal profile is notes-only" }
         val additions = NavTaskTransfer.newTemplates(templates, imported)
         if (additions.isEmpty()) return 0
@@ -365,39 +399,29 @@ class TaskStore(context: Context, private val profiles: ProfileStore = ProfileSt
     }
 
     private fun replaceRun(run: TaskRun) {
+        assertWritable()
         runs = runs + (run.key to run)
         persistRuns()
     }
 
     private fun syncOutputs() {
+        if (storageIssue != null) return
         NavWidgetUpdater.updateAll(appContext, this)
         NavNotifications.reschedule(appContext, this, NavSettings(appContext))
     }
 
     private fun persistRuns() {
+        assertWritable()
         val json = JSONArray().apply { runs.values.forEach { put(it.toJson()) } }
         prefs.edit().putString("runs", json.toString()).apply()
     }
 
     private fun saveTemplates(value: List<TaskTemplate>) {
+        assertWritable()
         prefs.edit().putString("templates", JSONArray().apply {
             value.forEach { put(it.toJson()) }
         }.toString()).apply()
     }
-
-    private fun decodeTemplates(raw: String): List<TaskTemplate> = runCatching {
-        val items = JSONArray(raw)
-        (0 until items.length()).mapNotNull {
-            items.optJSONObject(it)?.let(TaskTemplate::fromJson)
-        }
-    }.getOrDefault(emptyList())
-
-    private fun decodeRuns(raw: String): Map<String, TaskRun> = runCatching {
-        val items = JSONArray(raw)
-        (0 until items.length()).mapNotNull {
-            items.optJSONObject(it)?.let { json -> runCatching { TaskRun.fromJson(json) }.getOrNull() }
-        }.associateBy { it.key }
-    }.getOrDefault(emptyMap())
 
     companion object {
         fun key(taskId: String, day: LocalDate) = "${taskId}@${day}"
