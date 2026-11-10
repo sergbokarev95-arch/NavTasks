@@ -27,6 +27,7 @@ import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
@@ -68,6 +69,7 @@ fun HandoverScreen(
     onExternalAddHandled: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
+    val matchMarginPx = with(LocalDensity.current) { 42.dp.toPx() }
     var listViewportCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
     // Page content only: floating buttons stay sibling to the recorder.
@@ -357,7 +359,7 @@ fun HandoverScreen(
                                             val delta = navSearchListScrollDelta(
                                                 matchY = wordY, top = viewportTop,
                                                 bottom = viewportTop + viewport.size.height,
-                                                margin = 42.dp.toPx(),
+                                                margin = matchMarginPx,
                                             )
                                             handledSearchSerial = entryRevealSerial
                                             if (delta != 0f) listState.animateScrollBy(delta)
