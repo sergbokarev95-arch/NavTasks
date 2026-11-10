@@ -24,3 +24,7 @@ internal object SmartReminderTiming {
     fun sameMinute(a: LocalDateTime, b: LocalDateTime): Boolean =
         a.withSecond(0).withNano(0) == b.withSecond(0).withNano(0)
 }
+
+/** One device-local midnight rollover regardless of notifications preference. */
+internal fun nextNavWidgetRefresh(now: LocalDateTime): LocalDateTime =
+    now.toLocalDate().plusDays(1).atTime(0, 5)
