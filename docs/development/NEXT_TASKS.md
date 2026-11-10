@@ -551,3 +551,13 @@
 - [ ] Physical HONOR: 0.4.128 installed in place; short/long touch on real glass FAB and cards scales rim/material and glyph together; no jitter, offsets, clicks behind dock, perf regression. Handover banner and search adjacent; Work tasks vs AMOS vs Service icons; both themes; notification and widget routing unchanged; Handover rich notes/AMOS/Services persist. Samsung where possible.
 - [ ] Popup cross-window frosted fallback: user previously reported no true glass; keep separate, don't fake backdrop by transparency. If high priority, prototype same-root Backdrop overlay without breaking IME/focus/Back/semantics.
 - [ ] Production 1.0.0 package + signer same as installed Beta, non-debuggable build; backup privacy decision, full device/data boundary regression. Reference content and Windows AFTER stable 1.0.0.
+
+## NEXT — after signed 0.4.130 crew-work and reference-search Beta (2026-11-11)
+- [x] Protect exact 0.4.128 source at `backup/navtasks-0.4.128-before-crew-reference-font`.
+- [x] Rename existing WorkHub/WorkOrders UI module `AMOS / By Crew`; description covers AMOS plus crew-periodic inspections, neutral existing WorkOrder badges, new model classification intentionally NOT added.
+- [x] Full-screen Handover rich-note body 17sp/25sp; compact comments 14sp/20sp, no stored-HTML rewrite.
+- [x] Search UI in Reference: SIRE 2.0 and VIQ7 placeholder matching, RU/EN, clear/empty search, no indexing of future content. JVM tests.
+- [x] 0.4.130 code155 GitHub CI42839714152 SUCCESS and signed https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.130-crew-reference-notes-verified.
+- [x] Exact previous 0.4.128 app recovery as 0.4.131 code156 CI42839880090 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.131-crew-reference-recovery. Full profile export + in-place only if candidate fails; do not uninstall.
+- [ ] HONOR real-device: new AMOS/By Crew overview/card labels, repeat/complete dates and history unaffected, rich note edit format and font, Reference search keyboard/filters/clear and light/dark, no changed dock, overlays, widgets or notifications. Test Samsung where possible.
+- [ ] Before stable 1.0.0: nondebuggable release APK with same installed package/signing key, private-data Auto Backup policy decision, regression on boundary dates/profile swaps/large histories and notification/widget cycles. Real cross-window refraction for popups remains separate unresolved prototype; no SIRE/VIQ PDF/content or Windows/sync before 1.0.0.
