@@ -1146,15 +1146,18 @@ private fun TodayScreenV2(
                     )
                     Column(Modifier.fillMaxWidth()) {
                         Column(
-                            Modifier.fillMaxWidth().navGlass(p, radius = 17.dp, role = GlassRole.PANEL).glassClickable { showCompleted = !showCompleted }
+                            Modifier.fillMaxWidth().navGlass(p, radius = 17.dp, role = GlassRole.PANEL)
+                                .border(1.dp, p.warningText.copy(alpha = 0.52f), RoundedCornerShape(17.dp))
+                                .background(p.warningText.copy(alpha = if (p.dark) 0.10f else 0.055f), RoundedCornerShape(17.dp))
+                                .glassClickable { showCompleted = !showCompleted }
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("✓", color = p.successText, fontSize = 19.sp)
                                 Spacer(Modifier.width(9.dp))
-                                Text(localized("Выполнено", "Completed", lang), color = p.text,
+                                Text(localized("Выполнено", "Completed", lang), color = p.warningText,
                                     modifier = Modifier.weight(1f), fontSize = 15.sp)
-                                Text(completedTotal.toString(), color = p.muted, fontSize = 14.sp)
+                                Text(completedTotal.toString(), color = p.warningText, fontSize = 14.sp)
                                 Spacer(Modifier.width(9.dp))
                                 NavGlassGlyph(
                                     "chevron-down", p.muted,

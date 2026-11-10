@@ -26,6 +26,7 @@ internal fun HandoverFullNoteEditor(
     sectionTitle: String, entryKey: String,
     initialTitle: String, initialPlain: String, initialHtml: String,
     onSave: (String, String, String) -> Unit, onCancel: () -> Unit,
+    onDelete: (() -> Unit)? = null,
 ) {
     var title by remember(entryKey) { mutableStateOf(initialTitle) }
     var plain by remember(entryKey) { mutableStateOf(initialPlain) }
@@ -52,6 +53,13 @@ internal fun HandoverFullNoteEditor(
                 if (sectionTitle.isNotEmpty()) {
                     Text(sectionTitle, color = p.muted, fontSize = 12.sp, maxLines = 1)
                 }
+            }
+            if (onDelete != null) {
+                TextButton(onClick = onDelete, modifier = Modifier.heightIn(min = 44.dp)) {
+                    Text(localized("Удалить", "Delete", lang),
+                        color = p.systemRed, fontSize = 13.sp)
+                }
+                Spacer(Modifier.width(5.dp))
             }
             Box(Modifier.navGlass(p, radius = 13.dp,
                 role = if (canSave) GlassRole.SELECTED else GlassRole.CONTROL)) {
