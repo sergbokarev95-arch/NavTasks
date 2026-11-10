@@ -18,7 +18,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,14 +26,14 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/**
- * A result is one visible card (or a Handover section header), not every
- * repeated occurrence within a note. Text within each matching result may
- * contain multiple highlighted spans.
- */
+/** Only begin filtering and marking after two entered characters. */
+internal fun navEffectiveSearchQuery(input: String): String =
+    input.trim().takeIf { it.length >= 2 }.orEmpty()
+
+/** Case-insensitive, non-overlapping textual occurrences. */
 internal fun navSearchRanges(text: String, query: String): List<IntRange> {
     val token = query.trim()
-    if (token.isEmpty()) return emptyList()
+    if (token.length < 2) return emptyList()
     val result = mutableListOf<IntRange>()
     var from = 0
     while (from < text.length) {
@@ -50,14 +50,16 @@ internal fun navSearchNextIndex(current: Int, count: Int, delta: Int): Int =
 
 internal fun navSearchAnnotatedText(
     text: String, query: String, p: NavPalette, focused: Boolean = false,
+    activeMatchStart: Int? = null,
 ): AnnotatedString = buildAnnotatedString {
     append(text)
-    val background = if (focused) p.systemOrange else
-        p.systemOrange.copy(alpha = if (p.dark) .46f else .33f)
     for (range in navSearchRanges(text, query)) {
+        val strong = range.first == activeMatchStart ||
+            (activeMatchStart == null && focused)
         addStyle(SpanStyle(
-            background = background,
-            color = if (focused) Color.Black else p.text,
+            background = if (strong) p.systemOrange else
+                p.systemOrange.copy(alpha = if (p.dark) .46f else .33f),
+            color = if (strong) Color.Black else p.text,
             fontWeight = FontWeight.SemiBold,
         ), range.first, range.last + 1)
     }
@@ -76,15 +78,18 @@ internal fun NavSearchMarkedText(
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
     focused: Boolean = false,
+    activeMatchStart: Int? = null,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
 ) {
     Text(
-        text = navSearchAnnotatedText(value, query, p, focused),
+        text = navSearchAnnotatedText(value, query, p, focused, activeMatchStart),
         modifier = modifier,
         color = color,
         fontSize = fontSize,
         fontWeight = fontWeight,
         maxLines = maxLines,
         overflow = overflow,
+        onTextLayout = onTextLayout,
     )
 }
 
@@ -99,15 +104,14 @@ internal fun NavSearchMatchControls(
     onNext: () -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 18.dp, bottom = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
     ) {
         Text(
             text = "${if (count > 0) current.coerceIn(0, count - 1) + 1 else 0} / $count",
-            color = p.warningText, fontSize = 12.sp,
+            color = p.warningText, fontSize = 11.sp,
         )
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(2.dp))
         NavSearchNavArrow(up = true, enabled = count > 0, p = p,
             label = localized("Предыдущее совпадение", "Previous result", lang),
             onClick = onPrevious)
@@ -122,36 +126,67 @@ private fun NavSearchNavArrow(
     up: Boolean, enabled: Boolean, p: NavPalette,
     label: String, onClick: () -> Unit,
 ) {
-    val base = Modifier.size(40.dp).semantics { contentDescription = label }
+    val base = Modifier.size(32.dp).semantics { contentDescription = label }
     Box(
         base.then(if (enabled) Modifier.glassClickable(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         NavGlassGlyph("chevron-down", if (enabled) p.warningText else p.muted,
-            Modifier.size(20.dp).rotate(if (up) 180f else 0f))
+            Modifier.size(17.dp).rotate(if (up) 180f else 0f))
     }
 }
 
-/** One navigation result for a matching section heading or Handover entry. */
-internal data class NavHandoverSearchHit(val sectionId: String, val entryId: String? = null)
 
+/** Every matching text fragment is an independent result. */
+internal enum class NavHandoverField { SECTION_TITLE, ENTRY_TITLE, ENTRY_NOTES }
+internal data class NavHandoverSearchHit(
+    val sectionId: String,
+    val entryId: String? = null,
+    val field: NavHandoverField = NavHandoverField.SECTION_TITLE,
+    val start: Int = 0,
+)
 internal fun navHandoverSearchHits(
     sections: List<HandoverSection>, query: String,
 ): List<NavHandoverSearchHit> {
-    val token = query.trim()
+    val token = navEffectiveSearchQuery(query)
     if (token.isEmpty()) return emptyList()
     return buildList {
-        sections.forEach { section ->
-            if (section.title.contains(token, ignoreCase = true)) {
-                add(NavHandoverSearchHit(section.id))
+        for (section in sections) {
+            for (range in navSearchRanges(section.title, token))
+                add(NavHandoverSearchHit(section.id, field = NavHandoverField.SECTION_TITLE,
+                    start = range.first))
+            for (entry in section.entries) {
+                for (range in navSearchRanges(entry.title, token))
+                    add(NavHandoverSearchHit(section.id, entry.id,
+                        NavHandoverField.ENTRY_TITLE, range.first))
+                for (range in navSearchRanges(entry.notes, token))
+                    add(NavHandoverSearchHit(section.id, entry.id,
+                        NavHandoverField.ENTRY_NOTES, range.first))
             }
-            section.entries.forEach { entry ->
-                if (entry.title.contains(token, ignoreCase = true) ||
-                    entry.notes.contains(token, ignoreCase = true)
-                ) {
-                    add(NavHandoverSearchHit(section.id, entry.id))
-                }
-            }
+        }
+    }
+}
+
+internal enum class NavReferenceField { TITLE, SUBTITLE, FOOTER }
+internal data class NavReferenceSearchRow(
+    val id: String, val title: String, val subtitle: String, val footer: String,
+)
+internal data class NavReferenceSearchHit(
+    val sectionId: String, val field: NavReferenceField, val start: Int,
+)
+internal fun navReferenceSearchHits(
+    rows: List<NavReferenceSearchRow>, query: String,
+): List<NavReferenceSearchHit> {
+    val token = navEffectiveSearchQuery(query)
+    if (token.isEmpty()) return emptyList()
+    return buildList {
+        for (row in rows) {
+            for (range in navSearchRanges(row.title, token))
+                add(NavReferenceSearchHit(row.id, NavReferenceField.TITLE, range.first))
+            for (range in navSearchRanges(row.subtitle, token))
+                add(NavReferenceSearchHit(row.id, NavReferenceField.SUBTITLE, range.first))
+            for (range in navSearchRanges(row.footer, token))
+                add(NavReferenceSearchHit(row.id, NavReferenceField.FOOTER, range.first))
         }
     }
 }

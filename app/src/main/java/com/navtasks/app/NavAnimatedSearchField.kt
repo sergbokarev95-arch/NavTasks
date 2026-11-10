@@ -9,7 +9,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
@@ -82,15 +81,13 @@ internal fun NavAnimatedSearchField(
     ) {
         // Retain the existing autofocus/keyboard logic, search filtering and
         // glass styling; only animate the container that reveals the input.
-        Column {
-            NavGlassSearchField(value, onValueChange, p, lang, placeholder)
-            if (searchOpen && value.trim().isNotEmpty()) {
-                NavSearchMatchControls(
-                    count = resultCount, current = currentResult,
-                    p = p, lang = lang,
-                    onPrevious = onPreviousResult, onNext = onNextResult,
-                )
-            }
-        }
+        NavGlassSearchField(
+            value, onValueChange, p, lang, placeholder,
+            resultCount = if (searchOpen && navEffectiveSearchQuery(value).isNotEmpty())
+                resultCount else null,
+            currentResult = currentResult,
+            onPreviousResult = onPreviousResult,
+            onNextResult = onNextResult,
+        )
     }
 }

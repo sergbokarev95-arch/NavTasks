@@ -781,6 +781,10 @@ fun NavGlassSearchField(
     p: NavPalette,
     lang: UiLanguage,
     placeholder: String = localized("Поиск", "Search", lang),
+    resultCount: Int? = null,
+    currentResult: Int = 0,
+    onPreviousResult: () -> Unit = {},
+    onNextResult: () -> Unit = {},
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -801,6 +805,12 @@ fun NavGlassSearchField(
             placeholder = placeholder,
             modifier = Modifier.weight(1f).focusRequester(focusRequester),
         )
+        if (resultCount != null) {
+            NavSearchMatchControls(
+                count = resultCount, current = currentResult, p = p, lang = lang,
+                onPrevious = onPreviousResult, onNext = onNextResult,
+            )
+        }
         if (value.isNotEmpty()) {
             NavGlassIconAction("x", p.muted,
                 localized("Очистить поиск", "Clear search", lang)) { onValueChange("") }

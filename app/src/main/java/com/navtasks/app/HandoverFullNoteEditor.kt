@@ -31,7 +31,9 @@ internal fun HandoverFullNoteEditor(
     var title by remember(entryKey) { mutableStateOf(initialTitle) }
     var plain by remember(entryKey) { mutableStateOf(initialPlain) }
     var html by remember(entryKey) { mutableStateOf(initialHtml) }
-    val canSave = title.isNotBlank() && navRichNoteAllowed(plain, html, 4000)
+    // Only Personal notes may be saved without a title when they have a body.
+    val canSave = navRichNoteAllowed(plain, html, 4000) &&
+        (title.isNotBlank() || (personalMode && plain.isNotBlank()))
     Column(
         Modifier.fillMaxSize().background(p.background)
             .statusBarsPadding().navigationBarsPadding().imePadding()
