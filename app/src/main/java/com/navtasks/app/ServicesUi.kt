@@ -114,13 +114,15 @@ fun ServicesScreen(
                 if (!searchOpen) searchText = ""
             }
         }
-        if (searchOpen) {
-            NavGlassSearchField(
-                searchText, { searchText = it }, p, lang,
-                placeholder = localized("Поиск по названию оборудования",
-                    "Search equipment names", lang),
-            )
-        }
+        NavAnimatedSearchField(
+            searchOpen = searchOpen,
+            value = searchText,
+            onValueChange = { searchText = it },
+            onDismiss = { searchOpen = false; searchText = "" },
+            p = p, lang = lang,
+            placeholder = localized("Поиск по названию оборудования",
+                "Search equipment names", lang),
+        )
         LazyColumn(
             Modifier.fillMaxSize()
                 .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }

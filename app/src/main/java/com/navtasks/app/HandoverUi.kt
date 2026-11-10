@@ -152,12 +152,14 @@ fun HandoverScreen(
                 if (!searchOpen) searchText = ""
             }
         }
-        if (searchOpen) {
-            NavGlassSearchField(
-                searchText, { searchText = it }, p, lang,
-                placeholder = localized("Поиск по всему Handover", "Search all Handover", lang),
-            )
-        }
+        NavAnimatedSearchField(
+            searchOpen = searchOpen,
+            value = searchText,
+            onValueChange = { searchText = it },
+            onDismiss = { searchOpen = false; searchText = "" },
+            p = p, lang = lang,
+            placeholder = localized("Поиск по всему Handover", "Search all Handover", lang),
+        )
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize()

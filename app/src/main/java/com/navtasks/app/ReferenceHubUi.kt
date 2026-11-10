@@ -62,12 +62,14 @@ internal fun ReferenceHubScreen(
                 if (!searchOpen) searchText = ""
             }
         }
-        if (searchOpen) {
-            NavGlassSearchField(
-                searchText, { searchText = it }, p, lang,
-                placeholder = localized("Поиск по справочнику", "Search references", lang),
-            )
-        }
+        NavAnimatedSearchField(
+            searchOpen = searchOpen,
+            value = searchText,
+            onValueChange = { searchText = it },
+            onDismiss = { searchOpen = false; searchText = "" },
+            p = p, lang = lang,
+            placeholder = localized("Поиск по справочнику", "Search references", lang),
+        )
         LazyColumn(
             modifier = Modifier.weight(1f)
                 .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }
