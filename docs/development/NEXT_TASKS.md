@@ -579,3 +579,12 @@
 - [x] Exact 0.4.132 app recovery 0.4.135/code160 CI42849425894 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.135-search-back-recovery.
 - [ ] Real HONOR test: open via magnifier and deliberate pull, immediate keyboard, first Back only hides IME, second collapses Search but stays on SAME screen, third Back navigates. Test after list-touch keyboard dismissal, empty and nonempty query, fast repeated gestures, all four screens, light/night. Verify visual entry/exit pacing, scrolling/focus, 0.4.108 dock, profile data and notifications unchanged. Samsung if possible.
 - [ ] Continue final 1.0.0 gates: nondebuggable APK matching currently installed package/key, backup privacy/Auto Backup policy, data/alerts/widgets/large histories QA, real small popup Glass separately. No SIRE/VIQ full content/Windows until stable 1.0.0.
+
+## NEXT — acceptance of 0.4.136 orange markers and result card navigation
+- [x] Back up 0.4.134 source at `backup/navtasks-0.4.134-before-search-highlight`.
+- [x] Shared orange search text marks; count as result cards rather than word occurrence; up/down buttons wrap, disabled at 0, accessible descriptions in RU/EN.
+- [x] Implement consistent AMOS / By Crew, Services title filtering/highlighting and scrolling including closed/filter variants; Reference existing SIRE/VIQ placeholders; Handover sections/entries/note text with nested BringIntoView.
+- [x] JUnit tests, signed CI42855571669 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.136-search-results-verified (code161).
+- [x] Exact previous 0.4.134 app recovery as v0.4.137/code162 CI42855687113 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.137-search-results-recovery. Install only if new version rejected, with full profile export and no uninstall.
+- [ ] HONOR: query 'ECDIS' in Handover, query phrase in long note, next/previous through different nested entries/sections, 0 results disabled arrows, multiple occurrences in a single note counted as 1 entry; switch closed/requests filter in AMOS/Services; Reference 'SIRE'/'VIQ'; check keyboard and Back chain. Verify day/night warm marker readability and no dock jitter/overlapping search controls; Samsung if possible.
+- [ ] Final 1.0.0: non-debuggable same-package/key signed APK update, Android Auto Backup privacy policy, data/import/export/history/alarm/widget regression, real popup glass independent proof. SIRE/VIQ full content and Windows/sync after mobile stable.
