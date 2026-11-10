@@ -20,6 +20,25 @@ class NavSearchMarkerNavigationTest {
         assertEquals(0, navSearchNextIndex(5, 0, -1))
     }
 
+    @Test fun HandoverSearchFindsHeadingsAndNotesSeparately() {
+        val sections = listOf(
+            HandoverSection(
+                id = "navigation",
+                title = "Navigation",
+                entries = listOf(
+                    HandoverEntry(id = "e1", title = "ECDIS", notes = "Charts ready"),
+                    HandoverEntry(id = "e2", title = "Radar", notes = "Navx fix pending"),
+                ),
+            ),
+            HandoverSection(id = "other", title = "Other"),
+        )
+        assertEquals(listOf(NavHandoverSearchHit("navigation", "e2")),
+            navHandoverSearchHits(sections, "NAVX"))
+        assertEquals(listOf(NavHandoverSearchHit("navigation")),
+            navHandoverSearchHits(sections, "navigation"))
+        assertTrue(navHandoverSearchHits(sections, "not found").isEmpty())
+    }
+
     @Test fun multipleOccurrencesInOneEntryAreNotExtraNavigationCards() {
         val rows = listOf("Radar radar radar", "Radar")
         val matchedCards = rows.count { navSearchRanges(it, "radar").isNotEmpty() }

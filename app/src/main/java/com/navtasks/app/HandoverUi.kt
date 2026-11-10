@@ -297,8 +297,18 @@ fun HandoverScreen(
                                 )
                             }
                             handoverNotebookEntries(section.entries).forEach { entry ->
+                                val isFocused = focusedSearchHit ==
+                                    NavHandoverSearchHit(section.id, entry.id)
+                                val target = remember(section.id, entry.id) { BringIntoViewRequester() }
+                                LaunchedEffect(entryRevealSerial, isFocused) {
+                                    if (entryRevealSerial > 0 && isFocused) {
+                                        withFrameNanos { }
+                                        target.bringIntoView()
+                                    }
+                                }
                                 Row(
                                     Modifier.fillMaxWidth()
+                                        .bringIntoViewRequester(target)
                                         .navGlass(p, radius = 13.dp, role = GlassRole.TASK)
                                         .glassClickable { openEntryEditor(section.id, entry) }
                                         .padding(horizontal = 14.dp, vertical = 12.dp),
@@ -306,13 +316,30 @@ fun HandoverScreen(
                                 ) {
                                     Column(Modifier.weight(1f),
                                         verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                                        Text(entry.title, color = p.text,
-                                            fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                                        NavSearchMarkedText(
+                                            entry.title, if (searchOpen) query else "", p,
+                                            color = p.text, fontSize = 15.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            focused = isFocused,
+                                        )
                                         if (entry.notes.isNotBlank()) {
-                                            NavRichNoteText(
-                                                entry.notes, entry.notesHtml, p,
-                                                fontSize = 12.sp, modifier = Modifier.fillMaxWidth(),
-                                            )
+                                            if (query.isNotBlank() &&
+                                                navSearchRanges(entry.notes, query).isNotEmpty()
+                                            ) {
+                                                // Search-only rendering preserves saved rich HTML.
+                                                NavSearchMarkedText(
+                                                    entry.notes, query, p,
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    color = p.muted, fontSize = 12.sp,
+                                                    focused = isFocused,
+                                                )
+                                            } else {
+                                                NavRichNoteText(
+                                                    entry.notes, entry.notesHtml, p,
+                                                    fontSize = 12.sp,
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                )
+                                            }
                                         }
                                     }
                                     Spacer(Modifier.width(8.dp))
