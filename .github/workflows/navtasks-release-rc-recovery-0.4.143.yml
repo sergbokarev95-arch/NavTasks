@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   recovery-build:
@@ -91,12 +91,27 @@ jobs:
       - name: Erase temporary key
         if: always()
         run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
-      - name: Upload private rollback artifact only
-        uses: actions/upload-artifact@v4
-        with:
-          name: NavTasks-0.4.143-exact-0.4.140-recovery-private
-          path: |
-            dist/NavTasks_0.4.143_Beta_Exact_0.4.140_Recovery.apk
-            dist/NavTasks_0.4.143_Beta_Exact_0.4.140_Recovery.apk.sha256
-          retention-days: 14
-          if-no-files-found: error
+      - name: Publish private DRAFT recovery (not stable)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=v0.4.143-exact-0.4.140-recovery-private
+          SOURCE="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-0.4.143-release-rc-recovery" --jq '.commit.sha')"
+          if [ "$SOURCE" != "$GITHUB_SHA" ]; then
+            echo "::error::Superseded recovery cannot publish"
+            exit 1
+          fi
+          test -s dist/NavTasks_0.4.143_Beta_Exact_0.4.140_Recovery.apk
+          test -s dist/NavTasks_0.4.143_Beta_Exact_0.4.140_Recovery.apk.sha256
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Private draft already exists; not replacing"
+          else
+            gh release create "$TAG" \
+              dist/NavTasks_0.4.143_Beta_Exact_0.4.140_Recovery.apk \
+              dist/NavTasks_0.4.143_Beta_Exact_0.4.140_Recovery.apk.sha256 \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.143 · private exact 0.4.140 rollback ONLY" \
+              --notes "PRIVATE DRAFT / PRERELEASE. This APK contains EXACT earlier 0.4.140 application sources, with Gradle version bumped to code168 so it can be installed ON TOP of 0.4.142-rc1/code167 if that candidate fails. It is NOT a new functional upgrade or a stable release. Export FULL profiles first; NEVER uninstall or clear data. Next version after code168 must be at least 169." \
+              --draft --prerelease
+          fi
