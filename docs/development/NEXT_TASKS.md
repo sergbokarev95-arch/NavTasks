@@ -570,3 +570,12 @@
 - [x] Exact 0.4.130 app-source rollback 0.4.133 code158 signed CI42844676421 SUCCESS, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.133-pull-search-recovery. Install only if needed, full export, no uninstall; next versionCode>=159 if recovery installed.
 - [ ] HONOR 0.4.132: scroll deeply down, fling up to the top and overswipe in same motion (must NOT search), interrupt inertia with new touch (must NOT search), wait 200ms and fresh intentional down >=90dp >150ms (must open), rotate/Back/re-enter, keyboard focus and search exit, all four screens, both themes and short/long lists. Check normal scrolling, tapping item cards, dock glass/animation and no jank. Samsung if possible.
 - [ ] Finish same app ID/signature non-debuggable production 1.0.0 packaging, Auto Backup privacy policy, full offline/profile/import history and next-day alarm/widget regression. Popups real glass remains separate research; full SIRE2/VIQ7 content and Windows/sync after stable Android 1.0.0.
+
+## NEXT — device acceptance for 0.4.134 staged Search Back and softer motion
+- [x] Preserve source 0.4.132 at `backup/navtasks-0.4.132-before-search-back-animation`.
+- [x] Common Search AnimatedVisibility in Handover, AMOS/By Crew, Services, Reference; no modification to pull-search or work stores.
+- [x] IME-aware child BackHandler: visible keyboard gets first system Back; after IME hidden, Search closes/reset query; next Back navigates. JVM policy tests. Inherited CI grep corrected after first failed preflight.
+- [x] Signed 0.4.134/code159 CI42849635847 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.134-search-back-motion-verified.
+- [x] Exact 0.4.132 app recovery 0.4.135/code160 CI42849425894 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.135-search-back-recovery.
+- [ ] Real HONOR test: open via magnifier and deliberate pull, immediate keyboard, first Back only hides IME, second collapses Search but stays on SAME screen, third Back navigates. Test after list-touch keyboard dismissal, empty and nonempty query, fast repeated gestures, all four screens, light/night. Verify visual entry/exit pacing, scrolling/focus, 0.4.108 dock, profile data and notifications unchanged. Samsung if possible.
+- [ ] Continue final 1.0.0 gates: nondebuggable APK matching currently installed package/key, backup privacy/Auto Backup policy, data/alerts/widgets/large histories QA, real small popup Glass separately. No SIRE/VIQ full content/Windows until stable 1.0.0.
