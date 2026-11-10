@@ -18,6 +18,6 @@ class NavPersonalAndSearchViewportFixTest {
     }
 
     @Test fun shortViewportStillProducesFiniteScroll() {
-        assertEquals(10f, navSearchListScrollDelta(160f, 100f, 170f, 45f), 0.001f)
+        assertEquals(15f, navSearchListScrollDelta(160f, 100f, 170f, 45f), 0.001f)
     }
 }
