@@ -36,7 +36,7 @@ internal fun HandoverFullNoteEditor(
         Modifier.fillMaxSize().background(p.background)
             .statusBarsPadding().navigationBarsPadding().imePadding()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(
             Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -53,16 +53,6 @@ internal fun HandoverFullNoteEditor(
                 if (sectionTitle.isNotEmpty()) {
                     Text(sectionTitle, color = p.muted, fontSize = 12.sp, maxLines = 1)
                 }
-            }
-            if (onDelete != null) {
-                TextButton(
-                    onClick = onDelete, modifier = Modifier.heightIn(min = 44.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp),
-                ) {
-                    Text(localized("Удалить", "Delete", lang),
-                        color = p.systemRed, fontSize = 13.sp)
-                }
-                Spacer(Modifier.width(4.dp))
             }
             Box(Modifier.navGlass(p, radius = 13.dp,
                 role = if (canSave) GlassRole.SELECTED else GlassRole.CONTROL)) {
@@ -82,7 +72,7 @@ internal fun HandoverFullNoteEditor(
         }
         BasicTextField(
             value = title, onValueChange = { title = it.take(200) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+            modifier = Modifier.fillMaxWidth().heightIn(min = 38.dp)
                 .semantics {
                     contentDescription = localized("Название заметки", "Note title", lang)
                 },
@@ -103,7 +93,7 @@ internal fun HandoverFullNoteEditor(
                 }
             },
         )
-        Box(Modifier.fillMaxWidth().weight(1f).padding(bottom = 8.dp)) {
+        Box(Modifier.fillMaxWidth().weight(1f).padding(bottom = 2.dp)) {
             NavRichNoteEditor(
                 initialPlain = initialPlain, initialHtml = initialHtml,
                 entryKey = entryKey, p = p, lang = lang,
@@ -114,6 +104,18 @@ internal fun HandoverFullNoteEditor(
                     html = updatedHtml
                 },
             )
+        }
+        // Deletion belongs in the bottom center, away from title and Save.
+        if (onDelete != null) {
+            Box(
+                Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                TextButton(onClick = onDelete, modifier = Modifier.heightIn(min = 44.dp)) {
+                    Text(localized("Удалить заметку", "Delete note", lang),
+                        color = p.systemRed, fontSize = 13.sp)
+                }
+            }
         }
     }
 }

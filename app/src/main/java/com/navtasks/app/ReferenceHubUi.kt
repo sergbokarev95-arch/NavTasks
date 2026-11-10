@@ -35,21 +35,15 @@ internal fun ReferenceHubScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            NavPanel(p) {
-                Text(
-                    localized("Материалы для работы", "Working references", lang),
-                    color = p.text, fontSize = 17.sp,
-                )
-                Spacer(Modifier.height(5.dp))
-                Text(
-                    localized(
-                        "Справочник будет постепенно наполняться после релиза 1.0.0.",
-                        "Reference materials will be added after version 1.0.0.",
-                        lang,
-                    ),
-                    color = p.muted, fontSize = 12.sp,
-                )
-            }
+            NavInfoSectionBanner(
+                p = p,
+                title = localized("Материалы для работы", "Working references", lang),
+                description = localized(
+                    "Справочник будет постепенно наполняться после релиза 1.0.0.",
+                    "Reference materials will be added after version 1.0.0.",
+                    lang,
+                ),
+            )
         }
         item {
             ReferencePlaceholderTile(

@@ -80,19 +80,15 @@ fun WorksHubScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                NavPanel(p) {
-                    Text(localized("Судовые работы", "Vessel work", lang),
-                        color = p.text, fontSize = 17.sp)
-                    Spacer(Modifier.height(5.dp))
-                    Text(
-                        localized(
-                            "Рутинные задачи, работы AMOS и обслуживание оборудования — в одном разделе.",
-                            "Routine tasks, AMOS work orders and equipment maintenance in one place.",
-                            lang,
-                        ),
-                        color = p.muted, fontSize = 12.sp,
-                    )
-                }
+                NavInfoSectionBanner(
+                    p = p,
+                    title = localized("Судовые работы", "Vessel work", lang),
+                    description = localized(
+                        "Рутинные задачи, работы AMOS и обслуживание оборудования — в одном разделе.",
+                        "Routine tasks, AMOS work orders and equipment maintenance in one place.",
+                        lang,
+                    ),
+                )
             }
             item {
                 WorkHubTile(

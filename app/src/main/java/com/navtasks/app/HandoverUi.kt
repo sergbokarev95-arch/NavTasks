@@ -59,6 +59,8 @@ fun HandoverScreen(
     personalMode: Boolean = false,
     embeddedInTab: Boolean = false,
     smoothReturnTick: Int = 0,
+    externalAddRequest: Int = 0,
+    onExternalAddHandled: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
@@ -97,6 +99,13 @@ fun HandoverScreen(
         addSection = true
     }
 
+    LaunchedEffect(externalAddRequest) {
+        if (embeddedInTab && externalAddRequest > 0) {
+            openSectionEditor(null)
+            onExternalAddHandled()
+        }
+    }
+
     fun openEntryEditor(sectionId: String, entry: HandoverEntry?) {
         editEntry = sectionId to entry?.id
         entryTitle = entry?.title.orEmpty()
@@ -116,7 +125,7 @@ fun HandoverScreen(
         ) {
             if (embeddedInTab) {
                 Text(localized("Разделы передачи дел", "Handover sections", lang),
-                    color = p.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                    color = p.warningText, fontSize = 16.sp, modifier = Modifier.weight(1f))
             } else {
                 if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
                 else NavGlassCircleButton(p, "back", onClick = onBack)
@@ -290,15 +299,18 @@ fun HandoverScreen(
             }
         }
     }
-    Box(
-        Modifier.align(Alignment.BottomEnd)
-            .navigationBarsPadding()
-            .padding(end = 19.dp, bottom = if (embeddedInTab) 83.dp else 18.dp),
-    ) {
-        if (actionBackdrop != null) {
-            NavLiquidGlassAddButton(p, actionBackdrop) { openSectionEditor(null) }
-        } else {
-            NavGlassAddButton(p, hazeState) { openSectionEditor(null) }
+    // Embedded Handover uses the already captured parent glass backdrop.
+    // Standalone Personal keeps its own FAB, without changing note storage.
+    if (!embeddedInTab) {
+        Box(
+            Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
+                .padding(end = 19.dp, bottom = 18.dp),
+        ) {
+            if (actionBackdrop != null) {
+                NavLiquidGlassAddButton(p, actionBackdrop) { openSectionEditor(null) }
+            } else {
+                NavGlassAddButton(p, hazeState) { openSectionEditor(null) }
+            }
         }
     }
     } // Content and floating Add button share the same glass source.
