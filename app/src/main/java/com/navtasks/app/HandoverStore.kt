@@ -67,6 +67,9 @@ data class HandoverSection(
 class HandoverStore(context: Context, private val profiles: ProfileStore = ProfileStore(context)) {
     private var prefs = profiles.data(profiles.activeId)
 
+    var storageIssue: String? by mutableStateOf(null)
+        private set
+
     var sections: List<HandoverSection> by mutableStateOf(load())
         private set
 
@@ -84,21 +87,26 @@ class HandoverStore(context: Context, private val profiles: ProfileStore = Profi
 
     private fun load(): List<HandoverSection> {
         if (!prefs.contains("sections")) {
+            storageIssue = null
             return if (profiles.active.kind == NavProfileKind.PERSONAL) emptyList()
                 else listOf(HandoverSection(title = "Navigation"), HandoverSection(title = "Medicines"))
         }
-        return runCatching {
-            val arr = JSONArray(prefs.getString("sections", "[]") ?: "[]")
-            (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.let(HandoverSection::fromJson) }
-                .filter { it.title.isNotBlank() }
-        }.getOrDefault(emptyList())
+        val decoded = runCatching {
+            NavStorageRead.sections(prefs.getString("sections", "[]") ?: "[]")
+        }
+        storageIssue = if (decoded.isFailure)
+            "Не удалось прочитать Handover этого профиля. Запись заблокирована. Восстановите полный профиль из копии."
+        else null
+        return decoded.getOrDefault(emptyList())
     }
 
     private fun commit(value: List<HandoverSection>) {
+        ensureNavStorageWritable(storageIssue)
+        val json = JSONArray().apply { value.forEach { put(it.toJson()) } }.toString()
+        check(prefs.edit().putString("sections", json).commit()) {
+            "Не удалось сохранить Handover"
+        }
         sections = value
-        prefs.edit().putString("sections", JSONArray().apply {
-            value.forEach { put(it.toJson()) }
-        }.toString()).apply()
     }
 
     fun saveSection(title: String, existingId: String? = null) {
