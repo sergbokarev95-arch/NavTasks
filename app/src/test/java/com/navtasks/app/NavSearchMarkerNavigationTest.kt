@@ -1,0 +1,30 @@
+package com.navtasks.app
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class NavSearchMarkerNavigationTest {
+    @Test fun marksEachOccurrenceWithCaseInsensitiveNonOverlappingRanges() {
+        assertEquals(listOf(0..2, 8..10), navSearchRanges("AMOS and amos", "aMo"))
+        assertEquals(listOf(0..3, 6..9), navSearchRanges("Тест: тест", "ТЕСТ"))
+        assertTrue(navSearchRanges("hello", "  ").isEmpty())
+        assertTrue(navSearchRanges("hello", "missing").isEmpty())
+    }
+
+    @Test fun arrowsWrapAndZeroMatchesAreInert() {
+        assertEquals(0, navSearchNextIndex(2, 3, 1))
+        assertEquals(2, navSearchNextIndex(0, 3, -1))
+        assertEquals(1, navSearchNextIndex(0, 3, 1))
+        assertEquals(0, navSearchNextIndex(5, 0, 1))
+        assertEquals(0, navSearchNextIndex(5, 0, -1))
+    }
+
+    @Test fun multipleOccurrencesInOneEntryAreNotExtraNavigationCards() {
+        val rows = listOf("Radar radar radar", "Radar")
+        val matchedCards = rows.count { navSearchRanges(it, "radar").isNotEmpty() }
+        val occurrences = rows.sumOf { navSearchRanges(it, "radar").size }
+        assertEquals(2, matchedCards)
+        assertEquals(4, occurrences)
+    }
+}

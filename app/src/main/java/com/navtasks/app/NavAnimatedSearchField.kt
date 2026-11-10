@@ -9,6 +9,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
@@ -40,6 +41,10 @@ internal fun NavAnimatedSearchField(
     p: NavPalette,
     lang: UiLanguage,
     placeholder: String,
+    resultCount: Int = 0,
+    currentResult: Int = 0,
+    onPreviousResult: () -> Unit = {},
+    onNextResult: () -> Unit = {},
 ) {
     // Read actual Compose IME insets. Never intercept the first Back that
     // belongs to the keyboard; our handler is armed only after it closes.
@@ -77,6 +82,15 @@ internal fun NavAnimatedSearchField(
     ) {
         // Retain the existing autofocus/keyboard logic, search filtering and
         // glass styling; only animate the container that reveals the input.
-        NavGlassSearchField(value, onValueChange, p, lang, placeholder)
+        Column {
+            NavGlassSearchField(value, onValueChange, p, lang, placeholder)
+            if (searchOpen && value.trim().isNotEmpty()) {
+                NavSearchMatchControls(
+                    count = resultCount, current = currentResult,
+                    p = p, lang = lang,
+                    onPrevious = onPreviousResult, onNext = onNextResult,
+                )
+            }
+        }
     }
 }
