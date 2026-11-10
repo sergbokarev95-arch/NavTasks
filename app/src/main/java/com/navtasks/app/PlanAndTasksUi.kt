@@ -1098,6 +1098,11 @@ fun SettingsScreen(
     var showDigestWheel by remember { mutableStateOf(false) }
     var showReminderWheel by remember { mutableStateOf(false) }
     var iconTestFeedback by remember { mutableStateOf<String?>(null) }
+    val actualVersion = remember(context) {
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
+        }.getOrDefault("")
+    }
     fun syncSettings() {
         NavNotifications.reschedule(context, store, settings)
         NavWidgetUpdater.updateAll(context, store)
@@ -1252,7 +1257,7 @@ fun SettingsScreen(
                 )
             }
             NavPanel(p) {
-                Text("NavTasks Glass 0.4.44 beta", color = p.text, fontWeight = FontWeight.Medium)
+                Text("NavTasks Glass " + actualVersion, color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
             }
