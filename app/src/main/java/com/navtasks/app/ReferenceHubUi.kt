@@ -32,6 +32,19 @@ internal fun ReferenceHubScreen(
     val later = localized("Материалы будут добавлены позже", "Content coming later", lang)
     val showSire = referencePlaceholderMatches(query, "SIRE 2.0", sireSubtitle, later)
     val showViq = referencePlaceholderMatches(query, "VIQ7", viqSubtitle, later)
+    val searchResults = if (searchOpen && query.isNotBlank()) buildList {
+        if (showSire) add("sire")
+        if (showViq) add("viq")
+    } else emptyList()
+    var searchResultIndex by rememberSaveable { mutableIntStateOf(0) }
+    var searchNavigationSerial by remember { mutableIntStateOf(0) }
+    LaunchedEffect(query) { searchResultIndex = 0 }
+    LaunchedEffect(searchNavigationSerial) {
+        if (searchNavigationSerial > 0 && searchResults.isNotEmpty()) {
+            listState.animateScrollToItem(
+                searchResultIndex.coerceIn(0, searchResults.lastIndex))
+        }
+    }
 
     LaunchedEffect(smoothReturnTick) {
         if (smoothReturnTick > 0) {
@@ -69,6 +82,16 @@ internal fun ReferenceHubScreen(
             onDismiss = { searchOpen = false; searchText = "" },
             p = p, lang = lang,
             placeholder = localized("Поиск по справочнику", "Search references", lang),
+            resultCount = searchResults.size,
+            currentResult = searchResultIndex,
+            onPreviousResult = {
+                searchResultIndex = navSearchNextIndex(searchResultIndex, searchResults.size, -1)
+                searchNavigationSerial++
+            },
+            onNextResult = {
+                searchResultIndex = navSearchNextIndex(searchResultIndex, searchResults.size, 1)
+                searchNavigationSerial++
+            },
         )
         LazyColumn(
             modifier = Modifier.weight(1f)
@@ -91,12 +114,18 @@ internal fun ReferenceHubScreen(
             }
             if (showSire) {
                 item(key = "reference-sire") {
-                    ReferencePlaceholderTile(p, "SIRE 2.0", sireSubtitle, later)
+                    ReferencePlaceholderTile(
+                        p, "SIRE 2.0", sireSubtitle, later, query,
+                        focused = searchResults.getOrNull(searchResultIndex) == "sire",
+                    )
                 }
             }
             if (showViq) {
                 item(key = "reference-viq") {
-                    ReferencePlaceholderTile(p, "VIQ7", viqSubtitle, later)
+                    ReferencePlaceholderTile(
+                        p, "VIQ7", viqSubtitle, later, query,
+                        focused = searchResults.getOrNull(searchResultIndex) == "viq",
+                    )
                 }
             }
         }
@@ -110,6 +139,8 @@ private fun ReferencePlaceholderTile(
     title: String,
     subtitle: String,
     footer: String,
+    query: String = "",
+    focused: Boolean = false,
 ) {
     Row(
         Modifier.fillMaxWidth()
@@ -125,10 +156,12 @@ private fun ReferencePlaceholderTile(
             NavGlassGlyph("reference", p.muted, Modifier.size(22.dp))
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text(title, color = p.text, fontSize = 16.sp)
-            Text(subtitle, color = p.muted, fontSize = 12.sp)
+            NavSearchMarkedText(title, query, p, fontSize = 16.sp, focused = focused)
+            NavSearchMarkedText(subtitle, query, p, color = p.muted,
+                fontSize = 12.sp, focused = focused)
             Spacer(Modifier.height(5.dp))
-            Text(footer, color = p.muted, fontSize = 11.sp)
+            NavSearchMarkedText(footer, query, p, color = p.muted,
+                fontSize = 11.sp, focused = focused)
         }
     }
 }

@@ -6,7 +6,7 @@ import org.junit.Test
 
 class NavSearchMarkerNavigationTest {
     @Test fun marksEachOccurrenceWithCaseInsensitiveNonOverlappingRanges() {
-        assertEquals(listOf(0..2, 8..10), navSearchRanges("AMOS and amos", "aMo"))
+        assertEquals(listOf(0..2, 9..11), navSearchRanges("AMOS and amos", "aMo"))
         assertEquals(listOf(0..3, 6..9), navSearchRanges("Тест: тест", "ТЕСТ"))
         assertTrue(navSearchRanges("hello", "  ").isEmpty())
         assertTrue(navSearchRanges("hello", "missing").isEmpty())

@@ -73,6 +73,24 @@ fun WorkOrdersScreen(
     val filteredOrders = searchAmosTitles(
         filterAmosOverview(activeOrders, today, selectedFilter), searchText)
     val filteredClosed = searchAmosTitles(closedOrders, searchText)
+    val visibleResults = if (showClosed) filteredClosed else filteredOrders
+    val searchResults = if (searchOpen && searchText.isNotBlank())
+        visibleResults else emptyList()
+    var searchResultIndex by rememberSaveable { mutableIntStateOf(0) }
+    var searchNavigationSerial by remember { mutableIntStateOf(0) }
+    LaunchedEffect(searchText, showClosed, selectedFilter) {
+        searchResultIndex = 0
+    }
+    LaunchedEffect(searchNavigationSerial) {
+        if (searchNavigationSerial > 0 && searchResults.isNotEmpty()) {
+            val pos = searchResultIndex.coerceIn(0, searchResults.lastIndex)
+            // Counts, tabs and transient banners occupy the first LazyColumn items.
+            listState.animateScrollToItem(
+                2 + (if (completionNotice != null) 1 else 0) +
+                    (if (feedback != null) 1 else 0) + pos,
+            )
+        }
+    }
     LaunchedEffect(focusWorkOrderId, focusHistoryWorkOrderId) {
         if (focusWorkOrderId != null || focusHistoryWorkOrderId != null) {
             searchText = ""
@@ -157,6 +175,16 @@ fun WorkOrdersScreen(
             onDismiss = { searchOpen = false; searchText = "" },
             p = p, lang = lang,
             placeholder = localized("Поиск по работам", "Search work names", lang),
+            resultCount = searchResults.size,
+            currentResult = searchResultIndex,
+            onPreviousResult = {
+                searchResultIndex = navSearchNextIndex(searchResultIndex, searchResults.size, -1)
+                searchNavigationSerial++
+            },
+            onNextResult = {
+                searchResultIndex = navSearchNextIndex(searchResultIndex, searchResults.size, 1)
+                searchNavigationSerial++
+            },
         )
         LazyColumn(
             Modifier.fillMaxSize()
@@ -223,8 +251,7 @@ fun WorkOrdersScreen(
             feedback?.let { msg ->
                 item { Text(msg, color = p.dangerText, fontSize = 12.sp) }
             }
-            val visible = if (showClosed) filteredClosed else filteredOrders
-            if (visible.isEmpty()) {
+            if (visibleResults.isEmpty()) {
                 item {
                     NavPanel(p) {
                         Text(
@@ -246,6 +273,8 @@ fun WorkOrdersScreen(
                 items(filteredClosed, key = { it.id }) { order ->
                     WorkOrderClosedCard(
                         order, p, lang,
+                        searchQuery = if (searchOpen) searchText else "",
+                        focusedSearchResult = searchResults.getOrNull(searchResultIndex)?.id == order.id,
                         onHistory = { viewingHistory = order },
                         onRestore = {
                             runCatching { workOrders.restore(order.id); reschedule() }
@@ -258,6 +287,8 @@ fun WorkOrdersScreen(
                 items(filteredOrders, key = { it.id }) { order ->
                     WorkOrderCard(
                         order, today, p, lang,
+                        searchQuery = if (searchOpen) searchText else "",
+                        focusedSearchResult = searchResults.getOrNull(searchResultIndex)?.id == order.id,
                         onHistory = { viewingHistory = order },
                         onEdit = { editing = order; editorOpen = true },
                         onComplete = {
@@ -514,6 +545,7 @@ fun WorkOrdersScreen(
 @Composable
 private fun WorkOrderClosedCard(
     order: WorkOrderEntry, p: NavPalette, lang: UiLanguage,
+    searchQuery: String = "", focusedSearchResult: Boolean = false,
     onHistory: () -> Unit, onRestore: () -> Unit, onPurge: () -> Unit,
 ) {
     Column(
@@ -524,7 +556,8 @@ private fun WorkOrderClosedCard(
         Column(Modifier.fillMaxWidth().glassClickable(onClick = onHistory)
             .padding(vertical = 3.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
             Text(localized("Работа", "Work", lang), color = p.blueText, fontSize = 11.sp)
-            Text(order.title, color = p.text, fontSize = 15.sp)
+            NavSearchMarkedText(order.title, searchQuery, p, fontSize = 15.sp,
+                focused = focusedSearchResult)
             order.closedAt?.let {
                 Text(localized("Закрыта: ", "Closed: ", lang) +
                     navDate(it, lang, true), color = p.muted, fontSize = 12.sp)
@@ -567,6 +600,7 @@ private fun WorkOrderCount(
 @Composable
 private fun WorkOrderCard(
     order: WorkOrderEntry, today: LocalDate, p: NavPalette, lang: UiLanguage,
+    searchQuery: String = "", focusedSearchResult: Boolean = false,
     onHistory: () -> Unit, onEdit: () -> Unit, onComplete: () -> Unit,
     onToggleCheck: (String, Boolean) -> Unit,
     onReopen: () -> Unit, onDelete: () -> Unit,
@@ -591,8 +625,11 @@ private fun WorkOrderCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(localized("Работа", "Work", lang), color = p.blueText, fontSize = 12.sp)
-                Text(order.title, color = p.text, fontSize = 15.sp,
-                    maxLines = 3, overflow = TextOverflow.Ellipsis)
+                NavSearchMarkedText(
+                    value = order.title, query = searchQuery, p = p,
+                    fontSize = 15.sp, maxLines = 3, overflow = TextOverflow.Ellipsis,
+                    focused = focusedSearchResult,
+                )
             }
             NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
         }

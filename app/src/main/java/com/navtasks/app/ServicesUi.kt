@@ -76,6 +76,21 @@ fun ServicesScreen(
             now, selectedFilter,
         ), searchText)
     val filteredClosed = searchServiceTitles(closedServices, searchText)
+    val visibleResults = if (selectedView == ServiceListView.CLOSED)
+        filteredClosed else filteredServices
+    val searchResults = if (searchOpen && searchText.isNotBlank())
+        visibleResults else emptyList()
+    var searchResultIndex by rememberSaveable { mutableIntStateOf(0) }
+    var searchNavigationSerial by remember { mutableIntStateOf(0) }
+    LaunchedEffect(searchText, selectedView, selectedFilter) { searchResultIndex = 0 }
+    LaunchedEffect(searchNavigationSerial) {
+        if (searchNavigationSerial > 0 && searchResults.isNotEmpty()) {
+            listState.animateScrollToItem(
+                2 + (if (message != null) 1 else 0) +
+                    searchResultIndex.coerceIn(0, searchResults.lastIndex),
+            )
+        }
+    }
     LaunchedEffect(focusServiceId) {
         if (focusServiceId != null) {
             searchText = ""
@@ -122,6 +137,16 @@ fun ServicesScreen(
             p = p, lang = lang,
             placeholder = localized("Поиск по названию оборудования",
                 "Search equipment names", lang),
+            resultCount = searchResults.size,
+            currentResult = searchResultIndex,
+            onPreviousResult = {
+                searchResultIndex = navSearchNextIndex(searchResultIndex, searchResults.size, -1)
+                searchNavigationSerial++
+            },
+            onNextResult = {
+                searchResultIndex = navSearchNextIndex(searchResultIndex, searchResults.size, 1)
+                searchNavigationSerial++
+            },
         )
         LazyColumn(
             Modifier.fillMaxSize()
@@ -195,9 +220,7 @@ fun ServicesScreen(
             message?.let { msg ->
                 item { Text(msg, color = p.muted, fontSize = 12.sp) }
             }
-            val visible = if (selectedView == ServiceListView.CLOSED)
-                filteredClosed else filteredServices
-            if (visible.isEmpty()) {
+            if (visibleResults.isEmpty()) {
                 item {
                     NavPanel(p) {
                         Text(
@@ -222,6 +245,8 @@ fun ServicesScreen(
             if (selectedView == ServiceListView.CLOSED) {
                 items(filteredClosed, key = { it.id }) { service ->
                     ServiceClosedCard(service, p, lang,
+                        searchQuery = if (searchOpen) searchText else "",
+                        focusedSearchResult = searchResults.getOrNull(searchResultIndex)?.id == service.id,
                         onHistory = { viewingHistory = service },
                         onRestore = {
                             runCatching { services.restore(service.id); reschedule() }
@@ -249,9 +274,12 @@ fun ServicesScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(7.dp).background(accent, RoundedCornerShape(5.dp)))
                         Spacer(Modifier.width(10.dp))
-                        Text(service.equipment, color = p.text, fontSize = 16.sp,
-                            modifier = Modifier.weight(1f), maxLines = 2,
-                            overflow = TextOverflow.Ellipsis)
+                        NavSearchMarkedText(
+                            value = service.equipment, query = if (searchOpen) searchText else "",
+                            p = p, fontSize = 16.sp, modifier = Modifier.weight(1f),
+                            maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            focused = searchResults.getOrNull(searchResultIndex)?.id == service.id,
+                        )
                         NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                     }
                     Text(
@@ -544,6 +572,7 @@ fun ServicesScreen(
 @Composable
 private fun ServiceClosedCard(
     entry: ServiceEntry, p: NavPalette, lang: UiLanguage,
+    searchQuery: String = "", focusedSearchResult: Boolean = false,
     onHistory: () -> Unit, onRestore: () -> Unit, onPurge: () -> Unit,
 ) {
     Column(
@@ -556,7 +585,8 @@ private fun ServiceClosedCard(
                 .padding(vertical = 3.dp),
             verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
-            Text(entry.equipment, color = p.text, fontSize = 15.sp)
+            NavSearchMarkedText(entry.equipment, searchQuery, p, fontSize = 15.sp,
+                focused = focusedSearchResult)
             entry.closedAt?.let {
                 Text(localized("Закрыт: ", "Closed: ", lang) +
                     navDate(it, lang, true), color = p.muted, fontSize = 12.sp)
