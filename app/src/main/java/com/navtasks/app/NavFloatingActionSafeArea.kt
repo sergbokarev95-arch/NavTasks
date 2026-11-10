@@ -25,17 +25,25 @@ internal object NavFloatingActionSafeArea {
     const val standaloneButtonBottomDp = 18f
     const val touchGapDp = 20f
 
-    fun listBottomPaddingDp(navigationBarInsetDp: Float, embeddedInTab: Boolean): Float {
+    fun listBottomPaddingDp(
+        navigationBarInsetDp: Float, embeddedInTab: Boolean,
+        edgeToEdgeStandalone: Boolean = false,
+    ): Float {
         val bottomOffset = if (embeddedInTab) tabButtonBottomDp else standaloneButtonBottomDp
-        val unconsumedInset = if (embeddedInTab) navigationBarInsetDp.coerceAtLeast(0f) else 0f
+        // Services and AMOS render edge-to-edge even without the dock. Their
+        // buttons consume system gesture insets, their lists do not.
+        val unconsumedInset = if (embeddedInTab || edgeToEdgeStandalone)
+            navigationBarInsetDp.coerceAtLeast(0f) else 0f
         return bottomOffset + actionDiameterDp + touchGapDp + unconsumedInset
     }
 }
 
 @Composable
-internal fun navFloatingActionBottomPadding(embeddedInTab: Boolean): Dp {
+internal fun navFloatingActionBottomPadding(
+    embeddedInTab: Boolean, edgeToEdgeStandalone: Boolean = false,
+): Dp {
     val systemBottomInsetDp = WindowInsets.navigationBars
         .asPaddingValues().calculateBottomPadding().value
     return NavFloatingActionSafeArea
-        .listBottomPaddingDp(systemBottomInsetDp, embeddedInTab).dp
+        .listBottomPaddingDp(systemBottomInsetDp, embeddedInTab, edgeToEdgeStandalone).dp
 }
