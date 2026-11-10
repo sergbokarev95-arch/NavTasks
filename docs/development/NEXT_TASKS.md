@@ -524,3 +524,10 @@
 - [ ] HONOR: full profile export before in-place install 0.4.124. Inspect existing Handover Navigation notes count, card title/description and tap editor, Save/Back/Delete confirmation, long-text scroll, original order, preserved old marked notes, section rename/add, vessel and Personal; Today Completed amber day/night, Settings preview absent, button 1.022x press and 1.055x floating press, 0.4.108 dock unchanged, small dialog frosted appearance and battery-saver fallback.
 - [ ] Verify cross-profile notification/widget deep links on 0.4.124; AMOS/Services warning suppression, background widgets, period recurrence, profile import/export, dark/light, keyboard, last cards, Samsung when possible.
 - [ ] Decide final installed app ID/signing and Android backup privacy; add device tests/stress. Do NOT release 1.0.0 until explicit user acceptance. SIRE/VIQ content, manuals, Windows and sync AFTER 1.0.0.
+
+## Final verified 0.4.125 recovery status — 2026-11-10
+
+- **SIGNED CI SUCCESS** https://github.com/sergbokarev95-arch/NavTasks/actions/runs/42757281433 for exact v0.4.122 application-source recovery v0.4.125-beta / versionCode150, source `8c075fd9f9febd26a64f0e28292cb8b77aa9b7a1`.
+- Official verified recovery release: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/v0.4.125-popup-recovery, artifact `NavTasks_Original_0.4.122_Restore_0.4.125_Beta_Update.zip` (12,670,215 bytes), same installed package and Beta key. This rollback is ONLY for rejection of experimental popup blur in v0.4.124; it retains Handover UI/press/Today/Settings improvements of v0.4.122.
+- User must export FULL profiles before updating. Install IN PLACE; NEVER uninstall or clear app storage. If recovery code150 installed, any future same-package update needs **versionCode >=151**. Never confuse latest numeric recovery 0.4.125 with newest functional candidate 0.4.124/code149.
+- Device HONOR/Samsung visual/interaction acceptance still pending. No v1.0.0 published and no `main` application source merge.
