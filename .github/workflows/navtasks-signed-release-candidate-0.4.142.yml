@@ -1,0 +1,128 @@
+name: NavTasks 0.4.142 RC1 — signed non-debuggable in-place package verification
+
+on:
+  push:
+    branches:
+      - feature/navtasks-signed-release-candidate-0.4.142
+    paths:
+      - 'app/**'
+      - '.github/workflows/navtasks-signed-release-candidate-0.4.142.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore ONLY the existing signed Beta keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          chmod 600 "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Freeze existing application data stores, widgets and Liquid Glass
+        run: |
+          set -euo pipefail
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'versionCode = 167' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.142"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-rc1"' app/build.gradle.kts
+          grep -Fq 'isDebuggable = false' app/build.gradle.kts
+          grep -Fq 'signingConfigs.findByName("betaStable")?.let { signingConfig = it }' app/build.gradle.kts
+          test "$(git hash-object app/src/main/AndroidManifest.xml)" = 'c1036f8f4546e4e6a042756071c855740ff43100'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/ProfileStore.kt)" = '6a522893024d0043470fc0ac8b7979faa8e81a95'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/TaskStore.kt)" = 'c5ab3d8aebae8744dba835d21961a6a100287200'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/HandoverStore.kt)" = '0143b677826c7cfab3dcf1b6ffb4a1c0e2e214cb'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/ServiceStore.kt)" = '9302d73141adb644f0ec8fe7210c010da7aae376'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/WorkOrderStore.kt)" = 'e721fd57a42403fefe4fca6d6c325a9c2a8acd46'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavSettings.kt)" = 'a18b16aa8ac02eb3f8df3fc77c3e21b132d85d73'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidDockOptics.kt)" = 'b63f59048d3798f04f4b722c5e862de4814a42ec'
+          test "$(git hash-object app/src/main/java/com/navtasks/app/NavLiquidGlassDock.kt)" = '6b902518051fc8658a323d428d01de454a29d7ce'
+          test -f app/src/test/java/com/navtasks/app/NavReleaseCompatibilityTest.kt
+      - name: Test old profile samples and build the signed release variant
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NAVTASKS_BETA_SIGN_PASSWORD"
+          gradle :app:testDebugUnitTest :app:assembleRelease --no-daemon
+      - name: Verify package, newer code, release security and historical APK signers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/release/app-release.apk"
+          test -s "$APK"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          "$AAPT" dump badging "$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='167' versionName='0.4.142-rc1'"
+          "$AAPT" dump badging "$APK" | grep -F "sdkVersion:'31'"
+          if "$AAPT" dump badging "$APK" | grep -Fq 'application-debuggable'; then
+            echo "::error::The release candidate is debuggable"
+            exit 1
+          fi
+          "$SIGNER" verify --min-sdk-version 31 "$APK"
+          cert_digest() {
+            "$SIGNER" verify --print-certs "$1" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}'
+          }
+          CURRENT_CERT="$(cert_digest "$APK")"
+          test -n "$CURRENT_CERT"
+          mkdir -p "$RUNNER_TEMP/navtasks-baselines"
+          for item in \
+            'v0.4.118-notification-widget-verified|NavTasks_Reliability_0.4.118_Beta_Update.zip|143' \
+            'v0.4.140-personal-search-fix-verified|NavTasks_Personal_Search_Fix_0.4.140_Beta_Update.zip|165'; do
+            IFS='|' read -r TAG ZIP CODE <<< "$item"
+            DIR="$RUNNER_TEMP/navtasks-baselines/$CODE"
+            mkdir -p "$DIR"
+            gh release download "$TAG" --pattern "$ZIP" --repo "$GITHUB_REPOSITORY" --dir "$DIR"
+            test -s "$DIR/$ZIP"
+            test "$(unzip -Z1 "$DIR/$ZIP" | grep -Ec '\.apk$')" -eq 1
+            ENTRY="$(unzip -Z1 "$DIR/$ZIP" | grep -E '\.apk$')"
+            unzip -p "$DIR/$ZIP" "$ENTRY" > "$DIR/baseline.apk"
+            test -s "$DIR/baseline.apk"
+            "$AAPT" dump badging "$DIR/baseline.apk" | grep -F "package: name='com.navtasks.app.glass' versionCode='$CODE'"
+            "$SIGNER" verify --min-sdk-version 31 "$DIR/baseline.apk"
+            BASE_CERT="$(cert_digest "$DIR/baseline.apk")"
+            test -n "$BASE_CERT"
+            if [ "$CURRENT_CERT" != "$BASE_CERT" ]; then
+              echo "::error::APK signer mismatch with historic code $CODE"
+              exit 1
+            fi
+            test 167 -gt "$CODE"
+          done
+          mkdir -p dist
+          cp "$APK" dist/NavTasks_0.4.142_RC1_Signed_Release.apk
+          (cd dist && sha256sum NavTasks_0.4.142_RC1_Signed_Release.apk > NavTasks_0.4.142_RC1_Signed_Release.apk.sha256)
+          (cd dist && sha256sum -c NavTasks_0.4.142_RC1_Signed_Release.apk.sha256)
+          echo "Verified same app ID and signing certificate as 0.4.118 and 0.4.140."
+          echo "No in-place installation/data migration verified by this runner."
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Upload PRIVATE Actions artifact only (NOT stable GitHub Release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: NavTasks-0.4.142-RC1-private-signed-release
+          path: |
+            dist/NavTasks_0.4.142_RC1_Signed_Release.apk
+            dist/NavTasks_0.4.142_RC1_Signed_Release.apk.sha256
+          if-no-files-found: error
+          retention-days: 14
