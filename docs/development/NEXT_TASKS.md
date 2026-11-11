@@ -668,3 +668,9 @@
 - [ ] Verify signed exact RC7 app recovery code177 CI42974037324; do not recommend test target installation without verified higher-code backup.
 - [ ] HONOR: export full profile backups, install RC7/code174 in place, explicitly press test channel, confirm test target code176 shown, Later/Cancel, streaming, permissions/system installer, full data/history/widgets/dock untouched. Samsung optional. Code177 rollback if code176 regression, never uninstall.
 - [ ] Test bad checksums/signers, network interruption, offline, test channel unavailable and direct-skipped-version old snapshots; no claim all version jumps work until migration matrix tested. Implement resumable full APK separately.
+
+## NEXT — Stage4 release safety checkpoint (2026-11-11)
+- [x] Create exact RC7/code174 app-source emergency restore as RC9/code177, signed CI42974037324 SUCCESS, private draft https://github.com/sergbokarev95-arch/NavTasks/releases/tag/untagged-7d0c70ad8ede887bd8b6; full profile backup and IN-PLACE install only.
+- [ ] Create PUBLIC-repo-scoped fine-grained PAT in GitHub UI; store as PRIVATE `NavTasks` Actions secret `NAVTASKS_UPDATES_PUBLISH_TOKEN` (no credentials in chat). Trigger fresh publisher run after this; do not publish from failed run.
+- [ ] Only then verify PUBLIC `test-v0.4.152` prerelease APK and `channels/test.json available:true`; check `channels/stable.json available:false` unchanged and SHA/certificate metadata. Then request HONOR RC7 installation and controlled E2E test.
+- [ ] After code177 emergency restore, future upgrades require code>=178.

@@ -526,3 +526,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Signed target `0.4.152-test1`/code176 exact RC7 app source except version, private draft, SHA256 `43843af02acbab67606a12ba711254db8c38d148e6f4455bd52f73fb5dbd4ed1`, CI42972731198 SUCCESS.
 - Public publisher workflow commit `699e32a` CI42973725649 FAILED PRE-SIDE-EFFECT because `NAVTASKS_UPDATES_PUBLISH_TOKEN` was absent from private source Actions secrets. Required token is fine-grained, scoped exclusively to public updates repository Contents RW, NEVER user-visible. Only after provision/verified publisher run should test manifest become available:true. Stable never touched.
 - RC9/code177 exact RC7 app fallback `5ae489c` in signed CI42974037324 pending. Full E2E and user device acceptance pending, same package/cert preserved.
+
+## 2026-11-11 — Stage4 recovery final CI result
+- Code177 `0.4.153-rc9` exact previous RC7 application code backup CI42974037324 SUCCESS; PRIVATE draft https://github.com/sergbokarev95-arch/NavTasks/releases/tag/untagged-7d0c70ad8ede887bd8b6. This is verified signing/build only, NOT physical install.
+- Stable/test public channels both remain `available:false` and there are still NO public Releases. Private source publisher is correctly fail-closed without `NAVTASKS_UPDATES_PUBLISH_TOKEN`; user GitHub secret setup required next. Latest user-tested phone app remains RC5/code172.
