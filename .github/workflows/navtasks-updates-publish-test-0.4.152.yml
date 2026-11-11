@@ -4,8 +4,10 @@ on:
     branches: [feature/navtasks-updater-stage4b-test-apk-0.4.152]
     paths: ['.github/workflows/navtasks-updates-publish-test-0.4.152.yml']
   workflow_dispatch:
+# GitHub draft releases require push-level visibility in the private source repo.
+# The cross-repo publishing token remains scoped ONLY to NavTasks-Updates.
 permissions:
-  contents: read
+  contents: write
   actions: read
 jobs:
   publish-test:
