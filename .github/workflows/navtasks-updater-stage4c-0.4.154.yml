@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           BASE=536fd3c1608456e029617787cd9be9c9d9a4e39d
           git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
-          if grep -Ev '^(app/src/main/java/com/navtasks/app/(NavUpdateChecker|PlanAndTasksUi)\\.kt|app/build\\.gradle\\.kts|\\.github/workflows/navtasks-updater-stage4c-0\\.4\\.154\\.yml) then
+          if grep -Ev '^(app/src/main/java/com/navtasks/app/(NavUpdateChecker|PlanAndTasksUi)\.kt|app/build\.gradle\.kts|\.github/workflows/navtasks-updater-stage4c-0\.4\.154\.yml)$' changed.txt; then
             echo "::error::Unapproved business/store/Glass source modification"
             exit 1
           fi
