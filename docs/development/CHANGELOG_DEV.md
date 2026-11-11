@@ -287,3 +287,7 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 - 2026-11-11 — HONOR user confirms all NavTasks data/records preserved after in-app `0.4.152-test1`/code176 installed successfully.
 - 2026-11-11 — Stage5 private development started from exact accepted source code176 backup: resumable APK transport code178, .part identity/206 Range validation/200 fallback/3 bounded attempts, full hash/signer validation retained; isolated new JUnit tests; separate exact-code176-source fallback code179. Both signed CI and phone testing not yet claimed. No public feed changes.
+
+- 2026-11-11 — Signed Stage5 private code178 `0.4.156-rc11` CI43014544611 SUCCESS: exact 206 HTTP Range .part resume with strict candidate identity, 200 safe reset, size/hash/installed cert checks retained; HONOR-accepted weak-network test feed fix1 and test1/test2 exact parser preserved. No app data changes.
+- 2026-11-11 — Signed public TEST2 `0.4.158-test2` code180 CI43014737847 SUCCESS, guarded publisher CI43016024100 SUCCESS, public `NavTasks-Updates` prerelease `test-v0.4.158` full APK 28,518,145 bytes SHA256 `0b43f931c80ff515bc59e13bae1c0df4988e7f4ff465460925f315fb46e80f58`; TEST feed code180 minFloor178 activated, stable feed unchanged `available:false`. No user physical resume test yet.
+- 2026-11-11 — Exact signed previously HONOR-accepted TEST1 app-source higher-code181 emergency fallback `0.4.159-rc14`, CI43014926117 SUCCESS, PRIVATE only. Test interruptions and data on HONOR before future stable release.
