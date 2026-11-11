@@ -727,3 +727,14 @@
 - [ ] Additional failure-mode verification without risking production data: repeated cancel, full airplane-mode cut and resume, server responds 200 to Range, malformed 206/Content-Range, cache eviction, bad signature and SHA, installer cancel/retry. Pure unit tests cover safety conditions, physical tests pending.
 - [ ] Test direct version skipping and migration with preserved full profile snapshots from older builds; Samsung; long offline period; persistent auto-offers toggle; import/export; Android backup privacy. No stable 1.0.0 until accepted.
 - [ ] Preserve exact tested app, avoid unnecessary changes to business models and Liquid Glass; current HONOR version code180; future APK over it must code>=181 (if emergency code181 installed, next>=182). Recovery `0.4.159-rc14`/code181 available privately but only for a regression.
+
+## NEXT — 2026-11-12 FINAL TESTS, POLISH, THEN APPROVED 1.0.0
+- [x] User verified TEST2/code180 in-place update + resume and confirmed ALL data present on HONOR.
+- [x] Freeze exact tested source commit `77387fb9f819c57e5291aaeed0c3972f2d67e88f` at `backup/navtasks-0.4.158-test2-honor-accepted`; stable feed stays OFF.
+- [ ] Review signed preflight Actions run 43038747378 at https://github.com/sergbokarev95-arch/NavTasks/actions/runs/43038747378; branch `audit/navtasks-1.0.0-preflight-code180` has ONLY test/doc/workflow changes.
+- [ ] P1: improve stable update-feed retry for weak networks without touching 24h successful-check throttle, opted-out auto offers, or signed APK installation; isolate and test.
+- [ ] P1: protect against corrupted profile index silently falling back to defaults then overwriting previously accessible profile IDs; preserve all preference data and test fail-closed/recovery.
+- [ ] Decide Android cloud backup policy for private task/profile data (`allowBackup=true` without explicit rules) and test preservation/safe restore.
+- [ ] Test actual old profile snapshots and skipped version floor/migration on separate test profile/device; Samsung permission/notifications/widgets/Glass and HONOR airplane-mode/reboot/installer-cancel. Avoid repeatedly reinstalling user-active profile when tests can use test environment.
+- [ ] Final independent UI/UX pass: both themes, date pickers/plan, service/AMOS overdue and history, rich notes, dock optics/animation, bottom safe area, UI stress at Android font scale; fix only reproduced bugs and rerun regressions.
+- [ ] Production stable 1.0.0 needs same package/cert, monotonic versionCode >180, proper signed APK, SHA256, release/metadata first-last transaction, release notes, explicit user approval. Do not build stable from old source-main 0.4.59 or expose tester-only UI. NEVER enable stable before device acceptance.

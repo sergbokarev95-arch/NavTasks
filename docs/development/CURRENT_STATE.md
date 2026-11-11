@@ -562,3 +562,9 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Original RC11 private CI43014544611 SUCCESS; TEST2 source CI43014737847 and publisher CI43016024100 SUCCESS. Public `test-v0.4.158` APK and metadata verified, `test.json` code180 minSupported178; `stable.json available:false` unchanged.
 - User previously verified all data survived first TEST1 upgrade, but has not explicitly verified every data set after TEST2; new device data regression acceptance is still pending.
 - Signed exact previously user-accepted source emergency fallback `0.4.159-rc14` code181 PRIVATE CI43014926117 SUCCESS; do not install without regression. Source private; user currently code180.
+
+## 2026-11-12 — TEST2 full data PASS, source freeze and prerelease test branch
+- User confirmed all profiles, tasks, histories and app records remained after HONOR signed `0.4.158-test2`/code180, with interrupted download successfully resumed. User requested last tests then final visual/functional audit and eventual release.
+- Accepted original code180 source SHA `77387fb9f819c57e5291aaeed0c3972f2d67e88f`, backup `backup/navtasks-0.4.158-test2-honor-accepted`.
+- New isolated QA-only `audit/navtasks-1.0.0-preflight-code180` runs full JVM regressions, synthetic multi-module profile round trip, signed nondebuggable same-certificate code180 build, checks public stable feed still OFF; Actions run 43038747378, final status must be verified.
+- Known pre-release gaps: stable-feed weak network, corrupt profile index read fallback, Android OS backup decision, old-profile migration matrix, Samsung, tester-only UI. No stable publication.
