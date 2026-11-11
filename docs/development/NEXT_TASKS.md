@@ -698,3 +698,13 @@
 - [ ] Confirm data after update: profiles/IDs, tasks/completions, Personal/Handover rich notes, AMOS, Services and work histories, widgets, notifications, schedule/alarms, custom dock/Glass and full profile export/import. User has not yet explicitly reported all.
 - [ ] Explicit adverse cases: airplane mode/offline feed, download cancel/retry, broken network mid-APK, HTTP redirects, truncated/oversize file, corrupted SHA/signature, unknown-sources permission and installer cancel. Download currently starts again after interruption; design bounded resumable full APK separately.
 - [ ] Validate direct skipped-version migration on old real profile snapshots, Samsung, signed code/version lineage and auto-update preference. Keep public stable off until production full acceptance. Phone currently code176; do not deploy any code<=176 over it.
+
+## NEXT — 2026-11-11 user confirmed all data after test update; Stage5 resume QA
+- [x] User explicitly confirmed all app data exists after HONOR in-app signed code175 -> code176 update; no profile/data loss reported.
+- [x] Preserve accepted full app source code176 SHA639fab15d02a41c1dfecb5852f6eeb2977db4c72 at `backup/navtasks-0.4.152-test1-after-honor-e2e`.
+- [x] Prepare isolated Stage5 private code178 resume candidate (new .part identity; exact 206 Range acceptance; 200 reset; bound, retry; final signer checks unchanged) plus pure JUnit tests and CI on `feature/navtasks-updater-stage5-resumable-0.4.156-rc11`.
+- [x] Prepare private exact successful source fallback code179 on `feature/navtasks-updater-0.4.157-rc12-exact-test1-recovery`, signed CI verification still required.
+- [ ] Confirm BOTH CI success and signed nondebuggable APK historical-signer parity before suggesting any installation. No actual user phone test of code178 yet.
+- [ ] Controlled resume E2E requires newer compatible signed public test target code>=180; request separate user permission before publishing ANY new APK or modifying public `channels/test.json`. Existing TEST1 code176 is lower than RC11 code178.
+- [ ] Interrupted Wi-Fi/airplane mode, Range-supported/ignored behaviors, tampered/truncated payload, retry/cancel and cache eviction tests on HONOR; preserve full existing data each time. Samsung and old-version jump migration remain independent.
+- [ ] Final production 1.0.0 release requires security/privacy, onboarding and full regression; stable channel remains off and source private.

@@ -544,3 +544,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-11 — HONOR in-app GitHub TEST1 update passed (user)
 - Verified user screenshots: `0.4.150-rc7-fix1`/code175 manual test-offer for `0.4.152-test1`/code176, download/verification reaches Install button, and Settings afterward shows `0.4.152-test1`; user confirms update succeeded. This establishes on-phone *happy-path* optional signed full-APK update end-to-end. Does not yet establish exhaustive task data/profile/history/widget preservation or download resume/bad-signer/failed-download behavior.
 - `NavTasks-Updates/channels/stable.json` still `available:false`; `channels/test.json` still `available:true` for TEST1, no stable prompt published. Last tested device code176. Next install must use code>=177 (higher if 177 recovery installed).
+
+## 2026-11-11 — User confirmed all NavTasks data survived on-phone TEST1 update; Stage5 private development
+- HONOR user said "Все на месте": data and records preserved after in-app `0.4.152-test1`/code176 installation. Happy-path E2E + visible data survival PASSED.
+- Accepted source 639fab15d02a41c1dfecb5852f6eeb2977db4c72 backed up `backup/navtasks-0.4.152-test1-after-honor-e2e`. Stage5 private candidate `feature/navtasks-updater-stage5-resumable-0.4.156-rc11` code178; private exact accepted-code recovery `feature/navtasks-updater-0.4.157-rc12-exact-test1-recovery` code179. Both CI/build and device QA pending.
+- Scope: only resumable transport for full signed APK via bounded private cache, exact 206 Content-Range and final SHA/signing verification. Public `stable.json` remains inactive; TEST1 remains existing code176, not modified.
