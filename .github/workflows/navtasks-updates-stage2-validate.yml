@@ -1,0 +1,51 @@
+name: Validate NavTasks public update-channel contract (no publication)
+
+on:
+  push:
+    branches: [feature/navtasks-updates-stage2-channel]
+    paths:
+      - 'tools/navtasks_update_feed.py'
+      - 'tools/tests/test_navtasks_update_feed.py'
+      - '.github/workflows/navtasks-updates-stage2-validate.yml'
+      - 'docs/development/UPDATER_STAGE2_CHANNEL.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ensure original accepted RC application files are frozen
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=6c080c5d894b4756f645f72b87623a37ab79a74a
+          git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
+          if grep -Ev '^(tools/navtasks_update_feed\.py|tools/tests/test_navtasks_update_feed\.py|docs/development/UPDATER_STAGE2_CHANNEL\.md|\.github/workflows/navtasks-updates-stage2-validate\.yml)$' changed.txt; then
+            echo "::error::Unexpected app or other source changes in stage 2"
+            exit 1
+          fi
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'versionCode = 167' app/build.gradle.kts
+          grep -Fq 'isDebuggable = false' app/build.gradle.kts
+      - name: Validate stable manifest generator and protective rules
+        run: python3 -m unittest discover -v -s tools/tests -p 'test_navtasks_update_feed.py'
+      - name: Verify anonymous public stable channel is inactive until approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://raw.githubusercontent.com/sergbokarev95-arch/NavTasks-Updates/main/channels/stable.json'
+          curl -fsSL --retry 3 --retry-delay 2 "$URL" -o stable.json
+          python3 - <<'PY'
+          import json
+          with open("stable.json", encoding="utf-8") as f:
+              m = json.load(f)
+          assert m == {"schemaVersion": 1, "channel": "stable", "available": False}, m
+          print("Public channel exists and correctly offers NO unapproved APK.")
+          PY
