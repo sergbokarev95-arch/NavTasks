@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.WindowInsetsController
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
@@ -78,6 +79,7 @@ class MainActivity : ComponentActivity() {
                     flags,
                 )
             }
+            LaunchedEffect(Unit) { NavUpdateChecker.check(applicationContext, manual = false) }
             NavTasksApp(
                 store = taskStore, settings = appSettings, profiles = profileStore,
                 openRequest = openRequest,

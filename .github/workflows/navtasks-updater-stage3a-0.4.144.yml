@@ -1,0 +1,45 @@
+name: NavTasks updater Stage 3A — read-only feed candidate
+
+on:
+  push:
+    branches: [feature/navtasks-updater-stage3a-readonly-0.4.144]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Verify no existing business logic or glass changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=6c080c5d894b4756f645f72b87623a37ab79a74a
+          git fetch origin "$BASE"
+          git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
+          if grep -Ev '^(app/src/main/java/com/navtasks/app/(NavUpdateChecker|MainActivity|PlanAndTasksUi)\.kt|app/src/main/AndroidManifest\.xml|app/build\.gradle\.kts|app/src/test/java/com/navtasks/app/NavUpdateFeedPolicyTest\.kt|\.github/workflows/navtasks-updater-stage3a-0\.4\.144\.yml|docs/development/UPDATER_STAGE3A\.md)$' changed.txt; then
+            echo "::error::Unexpected file changed"
+            exit 1
+          fi
+          grep -Fq 'versionCode = 169' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.144"' app/build.gradle.kts
+          grep -Fq 'isDebuggable = false' app/build.gradle.kts
+      - name: Compile and run regression tests
+        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease --no-daemon
+      - name: Verify no accidental public release or install request permission
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -Fq 'REQUEST_INSTALL_PACKAGES' app/src/main/AndroidManifest.xml
+          ! grep -Fq 'android:exported="true"' app/src/main/AndroidManifest.xml | grep -q 'FileProvider'
+          test -f app/build/outputs/apk/debug/app-debug.apk
+          test -f app/build/outputs/apk/release/app-release-unsigned.apk || test -f app/build/outputs/apk/release/app-release.apk

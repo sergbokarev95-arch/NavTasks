@@ -1,5 +1,7 @@
 package com.navtasks.app
 
+import kotlinx.coroutines.launch
+
 import com.kyant.backdrop.backdrops.layerBackdrop
 
 import android.app.DatePickerDialog
@@ -1218,6 +1220,53 @@ fun SettingsScreen(
                     }, modifier = Modifier.fillMaxWidth()) {
                         Text(localized("Разрешить точные напоминания", "Allow exact reminders", lang))
                     }
+                }
+            }
+            // Read-only GitHub Updates discovery. APK installation is a separate,
+            // gated stage: do not offer a misleading Install button here.
+            NavPanel(p) {
+                Text(localized("Обновления", "Updates", lang),
+                    color = p.text, fontWeight = FontWeight.Medium)
+                Text(localized("Установлена версия", "Installed version", lang) +
+                    ": " + actualVersion, color = p.muted, fontSize = 13.sp)
+                val lastSuccess = NavUpdateChecker.lastSuccess(context)
+                Text(
+                    localized("Последняя проверка", "Last check", lang) + ": " +
+                        if (lastSuccess == 0L) localized("ещё не было", "never", lang)
+                        else java.text.DateFormat.getDateTimeInstance(
+                            java.text.DateFormat.SHORT, java.text.DateFormat.SHORT
+                        ).format(java.util.Date(lastSuccess)),
+                    color = p.muted, fontSize = 12.sp
+                )
+                val update = NavUpdateChecker.candidate
+                if (update != null) {
+                    Text(localized("Доступна версия", "Available version", lang) +
+                        " " + update.versionName, color = p.blue)
+                    Text(if (lang == UiLanguage.RU) update.notesRu else update.notesEn,
+                        color = p.muted, fontSize = 13.sp)
+                    Text(localized("Загрузка и установка появятся после проверки безопасности.",
+                        "Download and installation will be enabled after safety checks.", lang),
+                        color = p.muted, fontSize = 12.sp)
+                }
+                val manualResult = NavUpdateChecker.lastManualMessage
+                if (manualResult != null) {
+                    Text(when (manualResult) {
+                        "available" -> localized("Обновление найдено", "Update found", lang)
+                        "offline" -> localized("Нет соединения. Попробуйте позже.",
+                            "No connection. Try again later.", lang)
+                        else -> localized("Новых совместимых версий нет",
+                            "No compatible updates found", lang)
+                    }, color = p.muted, fontSize = 12.sp)
+                }
+                val scope = rememberCoroutineScope()
+                OutlinedButton(
+                    onClick = { scope.launch { NavUpdateChecker.check(context, manual = true) } },
+                    enabled = !NavUpdateChecker.checking,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(if (NavUpdateChecker.checking)
+                        localized("Проверяем…", "Checking…", lang)
+                        else localized("Проверить обновления", "Check for updates", lang))
                 }
             }
             ProfileExchangePanel(profiles, store, handover, services, workOrders, p, lang)
