@@ -19,6 +19,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
       - name: Verify no existing business logic or glass changes
         shell: bash
         run: |
@@ -34,7 +37,7 @@ jobs:
           grep -Fq 'versionName = "0.4.144"' app/build.gradle.kts
           grep -Fq 'isDebuggable = false' app/build.gradle.kts
       - name: Compile and run regression tests
-        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease --no-daemon
+        run: gradle :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease --no-daemon
       - name: Verify no accidental public release or install request permission
         shell: bash
         run: |
