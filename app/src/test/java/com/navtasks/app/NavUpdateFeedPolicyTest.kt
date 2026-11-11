@@ -22,9 +22,10 @@ class NavUpdateFeedPolicyTest {
         assertTrue(source.contains("connectTimeout = 3500"))
         assertTrue(source.contains("readTimeout = 3500"))
     }
-    @Test fun noInstallPermissionsInReadOnlyStage() {
+    @Test fun downloadAndInstallerRequireExplicitAndroidPermission() {
         assertTrue(manifest.contains("android.permission.INTERNET"))
-        assertFalse(manifest.contains("REQUEST_INSTALL_PACKAGES"))
+        assertTrue(manifest.contains("android.permission.REQUEST_INSTALL_PACKAGES"))
+        assertTrue(manifest.contains(".NavUpdatesFileProvider"))
         assertFalse(source.contains("startActivity("))
         assertFalse(source.contains("FileProvider"))
     }

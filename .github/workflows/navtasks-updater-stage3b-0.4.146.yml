@@ -1,0 +1,138 @@
+name: NavTasks 0.4.146 RC3 — signed in-app updater validation (PRIVATE)
+
+on:
+  push:
+    branches:
+      - feature/navtasks-updater-stage3b-0.4.146-rc3
+    paths:
+      - 'app/**'
+      - 'docs/development/UPDATER_STAGE3B.md'
+      - '.github/workflows/navtasks-updater-stage3b-0.4.146.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK build tools
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore ONLY the existing NavTasks signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          chmod 600 "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Enforce surgical changes and update permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=fd396ac657008c60a0b6988f408e7d34d6831037
+          git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
+          if grep -Ev '^(app/src/main/java/com/navtasks/app/(NavUpdateChecker|NavUpdateInstaller|NavUpdateOffer|MainActivity|PlanAndTasksUi)\.kt|app/src/main/AndroidManifest\.xml|app/src/main/res/xml/navtasks_update_paths\.xml|app/build\.gradle\.kts|app/src/test/java/com/navtasks/app/(NavUpdateFeedPolicyTest|NavUpdateInstallerPolicyTest)\.kt|\.github/workflows/navtasks-updater-stage3b-0\.4\.146\.yml|docs/development/UPDATER_STAGE3B\.md)$' changed.txt; then
+            echo "::error::Unapproved business/store/Glass source modification"
+            exit 1
+          fi
+          grep -Fq 'versionCode = 170' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.146"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-rc3"' app/build.gradle.kts
+          grep -Fq 'isDebuggable = false' app/build.gradle.kts
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'android.permission.REQUEST_INSTALL_PACKAGES' app/src/main/AndroidManifest.xml
+          grep -Fq 'android:authorities="' app/src/main/AndroidManifest.xml
+          grep -Fq 'android:exported="false"' app/src/main/AndroidManifest.xml
+          grep -Fq 'path="navtasks-update/"' app/src/main/res/xml/navtasks_update_paths.xml
+          grep -Fq 'class NavUpdateInstallerPolicyTest' app/src/test/java/com/navtasks/app/NavUpdateInstallerPolicyTest.kt
+          grep -Fq 'MessageDigest.isEqual(installedDigest, archiveDigest)' app/src/main/java/com/navtasks/app/NavUpdateInstaller.kt
+          grep -Fq 'NavUpdateChecker.defer(context, update.versionCode)' app/src/main/java/com/navtasks/app/NavUpdateOffer.kt
+      - name: Test and build signed nondebuggable release APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NAVTASKS_BETA_SIGN_PASSWORD"
+          gradle :app:testDebugUnitTest :app:assembleRelease --no-daemon
+      - name: Verify signed APK and historical signer compatibility
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/release/app-release.apk'
+          test -s "$APK"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          "$AAPT" dump badging "$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='170' versionName='0.4.146-rc3'"
+          "$AAPT" dump badging "$APK" | grep -F "sdkVersion:'31'"
+          ! "$AAPT" dump badging "$APK" | grep -Fq 'application-debuggable'
+          "$SIGNER" verify --min-sdk-version 31 "$APK"
+          cert_digest() {
+            "$SIGNER" verify --print-certs "$1" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}'
+          }
+          CURRENT_CERT="$(cert_digest "$APK")"
+          test -n "$CURRENT_CERT"
+          mkdir -p "$RUNNER_TEMP/navtasks-baselines"
+          for item in \
+            'v0.4.118-notification-widget-verified|NavTasks_Reliability_0.4.118_Beta_Update.zip|143' \
+            'v0.4.140-personal-search-fix-verified|NavTasks_Personal_Search_Fix_0.4.140_Beta_Update.zip|165'; do
+            IFS='|' read -r TAG ZIP CODE <<< "$item"
+            DIR="$RUNNER_TEMP/navtasks-baselines/$CODE"
+            mkdir -p "$DIR"
+            gh release download "$TAG" --pattern "$ZIP" --repo "$GITHUB_REPOSITORY" --dir "$DIR"
+            test -s "$DIR/$ZIP"
+            test "$(unzip -Z1 "$DIR/$ZIP" | grep -Ec '\.apk$')" -eq 1
+            ENTRY="$(unzip -Z1 "$DIR/$ZIP" | grep -E '\.apk$')"
+            unzip -p "$DIR/$ZIP" "$ENTRY" > "$DIR/baseline.apk"
+            "$AAPT" dump badging "$DIR/baseline.apk" | grep -F "package: name='com.navtasks.app.glass' versionCode='$CODE'"
+            "$SIGNER" verify --min-sdk-version 31 "$DIR/baseline.apk"
+            test "$CURRENT_CERT" = "$(cert_digest "$DIR/baseline.apk")"
+            test 170 -gt "$CODE"
+          done
+          mkdir -p dist
+          cp "$APK" dist/NavTasks_0.4.146_RC3_Updater_Private.apk
+          (cd dist && sha256sum NavTasks_0.4.146_RC3_Updater_Private.apk > NavTasks_0.4.146_RC3_Updater_Private.apk.sha256)
+          (cd dist && sha256sum -c NavTasks_0.4.146_RC3_Updater_Private.apk.sha256)
+          echo "CI verified the APK is signed; physical in-app installation remains untested."
+      - name: Delete temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Publish only PRIVATE draft RC; NEVER advertise as stable
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='v0.4.146-rc3-updater-private'
+          SOURCE="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-updater-stage3b-0.4.146-rc3" --jq '.commit.sha')"
+          if [ "$SOURCE" != "$GITHUB_SHA" ]; then
+            echo "::error::Outdated run must not publish"
+            exit 1
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Existing private draft remains untouched"
+          else
+            gh release create "$TAG" \
+              dist/NavTasks_0.4.146_RC3_Updater_Private.apk \
+              dist/NavTasks_0.4.146_RC3_Updater_Private.apk.sha256 \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.146 RC3 · in-app installer PRIVATE QA" \
+              --notes "PRIVATE DRAFT RC3/code170; never stable update feed. Same installed package and signing cert as older Betas. Optional updater includes download progress, SHA+installed signing certificate checks, explicit installer action and unknown-source permission handling. Public stable channel remains available:false. CI only; user must physically verify behavior and FULL profile preservation. Never uninstall/clear data. A higher-code recovery build must be ready before device installation." \
+              --draft --prerelease
+          fi
