@@ -1,4 +1,4 @@
-name: NavTasks 0.4.154 RC10 — signed in-app updater validation (PRIVATE)
+name: NavTasks 0.4.151 RC10 — signed in-app updater validation (PRIVATE)
 
 on:
   push:
@@ -50,8 +50,8 @@ jobs:
             echo "::error::Unapproved business/store/Glass source modification"
             exit 1
           fi
-          grep -Fq 'versionCode = 178' app/build.gradle.kts
-          grep -Fq 'versionName = "0.4.154"' app/build.gradle.kts
+          grep -Fq 'versionCode = 175' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.151"' app/build.gradle.kts
           grep -Fq 'versionNameSuffix = "-rc10"' app/build.gradle.kts
           grep -Fq 'isDebuggable = false' app/build.gradle.kts
           grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
@@ -85,7 +85,7 @@ jobs:
           test -s "$APK"
           AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
           SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
-          "$AAPT" dump badging "$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='178' versionName='0.4.154-rc10'"
+          "$AAPT" dump badging "$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='175' versionName='0.4.151-rc10'"
           "$AAPT" dump badging "$APK" | grep -F "sdkVersion:'31'"
           ! "$AAPT" dump badging "$APK" | grep -Fq 'application-debuggable'
           "$SIGNER" verify --min-sdk-version 31 "$APK"
@@ -109,12 +109,12 @@ jobs:
             "$AAPT" dump badging "$DIR/baseline.apk" | grep -F "package: name='com.navtasks.app.glass' versionCode='$CODE'"
             "$SIGNER" verify --min-sdk-version 31 "$DIR/baseline.apk"
             test "$CURRENT_CERT" = "$(cert_digest "$DIR/baseline.apk")"
-            test 178 -gt "$CODE"
+            test 175 -gt "$CODE"
           done
           mkdir -p dist
-          cp "$APK" dist/NavTasks_0.4.154_RC10_Updater_Private.apk
-          (cd dist && sha256sum NavTasks_0.4.154_RC10_Updater_Private.apk > NavTasks_0.4.154_RC10_Updater_Private.apk.sha256)
-          (cd dist && sha256sum -c NavTasks_0.4.154_RC10_Updater_Private.apk.sha256)
+          cp "$APK" dist/NavTasks_0.4.151_RC10_Updater_Private.apk
+          (cd dist && sha256sum NavTasks_0.4.151_RC10_Updater_Private.apk > NavTasks_0.4.151_RC10_Updater_Private.apk.sha256)
+          (cd dist && sha256sum -c NavTasks_0.4.151_RC10_Updater_Private.apk.sha256)
           echo "CI verified the APK is signed; physical in-app installation remains untested."
       - name: Delete temporary signing key
         if: always()
@@ -124,7 +124,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG='v0.4.154-rc10-updater-private'
+          TAG='v0.4.151-rc10-updater-private'
           SOURCE="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-updater-stage4c-network-diagnostics-0.4.154" --jq '.commit.sha')"
           if [ "$SOURCE" != "$GITHUB_SHA" ]; then
             echo "::error::Outdated run must not publish"
@@ -134,10 +134,10 @@ jobs:
             echo "Existing private draft remains untouched"
           else
             gh release create "$TAG" \
-              dist/NavTasks_0.4.154_RC10_Updater_Private.apk \
-              dist/NavTasks_0.4.154_RC10_Updater_Private.apk.sha256 \
+              dist/NavTasks_0.4.151_RC10_Updater_Private.apk \
+              dist/NavTasks_0.4.151_RC10_Updater_Private.apk.sha256 \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              --title "NavTasks 0.4.154 RC10 · in-app installer PRIVATE QA" \
-              --notes "PRIVATE DRAFT RC10/code178; never stable update feed. Same installed package and signing cert as older Betas. Optional updater includes download progress, SHA+installed signing certificate checks, explicit installer action and unknown-source permission handling. Public stable channel remains available:false. CI only; test channel is manual opt-in and remains private until separately published; HONOR testing pending. Never uninstall/clear data. A higher-code recovery build must be ready before device installation." \
+              --title "NavTasks 0.4.151 RC10 · in-app installer PRIVATE QA" \
+              --notes "PRIVATE DRAFT RC10/code175; never stable update feed. Same installed package and signing cert as older Betas. Optional updater includes download progress, SHA+installed signing certificate checks, explicit installer action and unknown-source permission handling. Public stable channel remains available:false. CI only; test channel is manual opt-in and remains private until separately published; HONOR testing pending. Never uninstall/clear data. A higher-code recovery build must be ready before device installation." \
               --draft --prerelease
           fi
