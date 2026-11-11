@@ -1,0 +1,109 @@
+name: NavTasks 0.4.157 RC12 — exact accepted TEST1 app recovery PRIVATE
+
+on:
+  push:
+    branches: [feature/navtasks-updater-0.4.157-rc12-exact-test1-recovery]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Require same accepted TEST1 application code apart from version
+        run: |
+          set -euo pipefail
+          BASE=639fab15d02a41c1dfecb5852f6eeb2977db4c72
+          git diff --name-only "$BASE" "$GITHUB_SHA" > changes.txt
+          if grep -Ev '^(app/build\.gradle\.kts|\.github/workflows/navtasks-updater-recovery-0\.4\.157\.yml)$' changes.txt; then
+            echo "::error::Application code changed in recovery"
+            exit 1
+          fi
+          grep -Fq 'versionCode = 179' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.157"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-rc12"' app/build.gradle.kts
+          grep -Fq 'isDebuggable = false' app/build.gradle.kts
+          grep -Fq 'REQUEST_INSTALL_PACKAGES' app/src/main/AndroidManifest.xml
+      - name: Decode ONLY original keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          chmod 600 "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Test and build accepted TEST1 source signed as higher code179
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NAVTASKS_BETA_SIGN_PASSWORD"
+          gradle :app:testDebugUnitTest :app:assembleRelease --no-daemon
+      - name: Verify package and installed signing certificate compatibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/release/app-release.apk'
+          test -s "$APK"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          "$AAPT" dump badging "$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='179' versionName='0.4.157-rc12'"
+          ! "$AAPT" dump badging "$APK" | grep -Fq 'application-debuggable'
+          "$SIGNER" verify --min-sdk-version 31 "$APK"
+          cert_digest() {
+            "$SIGNER" verify --print-certs "$1" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}'
+          }
+          CERT="$(cert_digest "$APK")"
+          test -n "$CERT"
+          mkdir -p baseline
+          TAG='v0.4.140-personal-search-fix-verified'
+          ZIP='NavTasks_Personal_Search_Fix_0.4.140_Beta_Update.zip'
+          gh release download "$TAG" --pattern "$ZIP" --repo "$GITHUB_REPOSITORY" --dir baseline
+          NAME="$(unzip -Z1 "baseline/$ZIP" | grep -E '\.apk$')"
+          test "$(unzip -Z1 "baseline/$ZIP" | grep -Ec '\.apk$')" -eq 1
+          unzip -p "baseline/$ZIP" "$NAME" > baseline/historic.apk
+          "$SIGNER" verify --min-sdk-version 31 baseline/historic.apk
+          test "$CERT" = "$(cert_digest baseline/historic.apk)"
+          mkdir -p dist
+          cp "$APK" dist/NavTasks_0.4.157_RC12_Original_0.4.152_Recovery.apk
+          (cd dist && sha256sum NavTasks_0.4.157_RC12_Original_0.4.152_Recovery.apk > NavTasks_0.4.157_RC12_Original_0.4.152_Recovery.apk.sha256)
+          (cd dist && sha256sum -c NavTasks_0.4.157_RC12_Original_0.4.152_Recovery.apk.sha256)
+      - name: Remove signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Publish PRIVATE draft recovery only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='v0.4.157-rc12-recovery-private'
+          SOURCE="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-updater-0.4.157-rc12-exact-test1-recovery" --jq '.commit.sha')"
+          test "$SOURCE" = "$GITHUB_SHA" || { echo "::error::Superseded recovery"; exit 1; }
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Existing draft unchanged"
+          else
+            gh release create "$TAG" \
+              dist/NavTasks_0.4.157_RC12_Original_0.4.152_Recovery.apk \
+              dist/NavTasks_0.4.157_RC12_Original_0.4.152_Recovery.apk.sha256 \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.157 RC12 exact 0.4.152 TEST1 source recovery" \
+              --notes "PRIVATE emergency restore of exact HONOR-accepted 0.4.152-test1 application sources with only Gradle versionCode179/versionName. For regressions in resumable RC11 code178. Full profile export and in-place only; never uninstall or clear data. After code179 future code >=180. Not stable; no public publication." \
+              --draft --prerelease
+          fi
