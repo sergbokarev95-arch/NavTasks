@@ -17,6 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -33,7 +35,7 @@ internal enum class NavUpdateState {
     OFFLINE, ERROR, DOWNLOADING, AWAITING_INSTALL_PERMISSION, INSTALL_READY,
 }
 
-internal class NavUpdateController(
+class NavUpdateController(
     private val context: Context,
     private val scope: CoroutineScope,
 ) {
@@ -44,9 +46,9 @@ internal class NavUpdateController(
     private var downloadedFile: File? = null
     private var waitingForInstallerPermission = false
 
-    var state by mutableStateOf(NavUpdateState.IDLE)
+    internal var state by mutableStateOf(NavUpdateState.IDLE)
         private set
-    var latest by mutableStateOf<NavStableUpdate?>(null)
+    internal var latest by mutableStateOf<NavStableUpdate?>(null)
         private set
     var showOffer by mutableStateOf(false)
         private set
@@ -147,10 +149,14 @@ internal class NavUpdateController(
         state = NavUpdateState.DOWNLOADING
         downloadJob = scope.launch {
             try {
+                var lastPercent = -1
                 val file = withContext(Dispatchers.IO) {
                     navDownloadVerifiedApk(context, candidate) { received ->
                         val percent = (received * 100L / candidate.sizeBytes).toInt().coerceIn(0, 100)
-                        scope.launch { progressPercent = percent }
+                        if (percent != lastPercent) {
+                            lastPercent = percent
+                            scope.launch { progressPercent = percent }
+                        }
                     }
                 }
                 downloadedFile = file
@@ -158,11 +164,19 @@ internal class NavUpdateController(
                 state = NavUpdateState.INSTALL_READY
                 requestSystemInstaller()
             } catch (cancelled: CancellationException) {
+                state = NavUpdateState.IDLE
                 throw cancelled
             } catch (_: Exception) {
                 state = NavUpdateState.ERROR
             }
         }
+    }
+
+    fun cancelDownload() {
+        downloadJob?.cancel()
+        downloadedFile = null
+        progressPercent = 0
+        later()
     }
 
     fun requestSystemInstaller() {
@@ -205,10 +219,14 @@ internal class NavUpdateController(
     }
 
     fun onResumed() {
-        if (waitingForInstallerPermission &&
-            (Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
-                context.packageManager.canRequestPackageInstalls())
-        ) requestSystemInstaller()
+        if (waitingForInstallerPermission) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
+                context.packageManager.canRequestPackageInstalls()
+            ) {
+                requestSystemInstaller()
+            }
+            return
+        }
         checkAutomatically()
     }
 }
@@ -317,7 +335,7 @@ internal fun navVerifyDownloadedApk(context: Context, file: File, update: NavSta
         throw IOException("APK certificate mismatch")
 }
 
-private fun navDownloadVerifiedApk(
+private suspend fun navDownloadVerifiedApk(
     context: Context,
     update: NavStableUpdate,
     reportProgress: (Long) -> Unit,
@@ -336,6 +354,7 @@ private fun navDownloadVerifiedApk(
             partial.outputStream().buffered().use { output ->
                 val buffer = ByteArray(32 * 1024)
                 while (true) {
+                    currentCoroutineContext().ensureActive()
                     val n = input.read(buffer)
                     if (n < 0) break
                     total += n

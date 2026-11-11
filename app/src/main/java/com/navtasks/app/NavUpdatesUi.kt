@@ -31,7 +31,9 @@ internal fun NavUpdateOffer(
     val ru = lang == UiLanguage.RU
     NavGlassAlertDialog(
         p = p,
-        onDismissRequest = { if (!busy) update.later() },
+        onDismissRequest = {
+            if (busy) update.cancelDownload() else update.later()
+        },
         title = { Text(localized("Доступно обновление", "Update available", lang)) },
         text = {
             Column {
@@ -111,8 +113,14 @@ internal fun NavUpdateOffer(
             }
         },
         dismissButton = {
-            TextButton(onClick = { update.later() }, enabled = !busy) {
-                Text(localized("Позже", "Later", lang), color = p.muted)
+            TextButton(onClick = {
+                if (busy) update.cancelDownload() else update.later()
+            }) {
+                Text(
+                    if (busy) localized("Отменить", "Cancel", lang)
+                    else localized("Позже", "Later", lang),
+                    color = p.muted,
+                )
             }
         },
     )
