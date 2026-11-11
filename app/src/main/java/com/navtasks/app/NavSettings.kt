@@ -41,6 +41,14 @@ class NavSettings(context: Context) {
     var groupSimultaneousReminders by mutableStateOf(prefs.getBoolean("group_reminders", true))
         private set
 
+    // Global, not tied to task notifications or a profile.
+    var automaticUpdateOffers by mutableStateOf(prefs.getBoolean("auto_update_offers", true))
+        private set
+    fun setAutomaticUpdateOffers(value: Boolean) {
+        automaticUpdateOffers = value
+        prefs.edit().putBoolean("auto_update_offers", value).apply()
+    }
+
     fun updateLanguage(value: UiLanguage) {
         language = value
         prefs.edit().putString("language", value.name).apply()

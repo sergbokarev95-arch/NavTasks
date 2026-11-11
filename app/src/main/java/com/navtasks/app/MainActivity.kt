@@ -79,7 +79,11 @@ class MainActivity : ComponentActivity() {
                     flags,
                 )
             }
-            LaunchedEffect(Unit) { NavUpdateChecker.check(applicationContext, manual = false) }
+            LaunchedEffect(appSettings.automaticUpdateOffers) {
+                if (appSettings.automaticUpdateOffers) {
+                    NavUpdateChecker.check(applicationContext, manual = false)
+                }
+            }
             NavTasksApp(
                 store = taskStore, settings = appSettings, profiles = profileStore,
                 openRequest = openRequest,

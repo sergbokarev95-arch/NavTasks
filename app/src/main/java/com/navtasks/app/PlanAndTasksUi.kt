@@ -1222,10 +1222,26 @@ fun SettingsScreen(
                     }
                 }
             }
+            ProfileExchangePanel(profiles, store, handover, services, workOrders, p, lang)
+            if (profiles.active.kind == NavProfileKind.VESSEL) {
+                SelectiveExchangePanel(
+                    profiles, store, handover, services, workOrders, settings, p, lang,
+                )
+            }
             // This panel invokes the shared optional update flow. No app-data writes.
             NavPanel(p) {
                 Text(localized("Обновления", "Updates", lang),
                     color = p.text, fontWeight = FontWeight.Medium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(localized("Предлагать обновления", "Offer updates automatically", lang),
+                        color = p.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
+                    Switch(settings.automaticUpdateOffers,
+                        onCheckedChange = { settings.setAutomaticUpdateOffers(it) },
+                        colors = navSwitchColors(p))
+                }
+                Text(localized("Если выключено, при запуске не проверяем обновления. Ручная проверка доступна всегда.",
+                    "When off, startup checks are disabled. Manual checking remains available.", lang),
+                    color = p.muted, fontSize = 12.sp)
                 Text(localized("Установлена версия", "Installed version", lang) +
                     ": " + actualVersion, color = p.muted, fontSize = 13.sp)
                 val lastSuccess = NavUpdateChecker.lastSuccess(context)
@@ -1270,12 +1286,6 @@ fun SettingsScreen(
                         localized("Проверяем…", "Checking…", lang)
                         else localized("Проверить обновления", "Check for updates", lang))
                 }
-            }
-            ProfileExchangePanel(profiles, store, handover, services, workOrders, p, lang)
-            if (profiles.active.kind == NavProfileKind.VESSEL) {
-                SelectiveExchangePanel(
-                    profiles, store, handover, services, workOrders, settings, p, lang,
-                )
             }
             NavPanel(p) {
                 Text("NavTasks Glass " + actualVersion, color = p.text, fontWeight = FontWeight.Medium)

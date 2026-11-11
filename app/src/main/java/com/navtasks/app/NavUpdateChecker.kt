@@ -12,6 +12,10 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.time.Instant
 
+/** Manual checks bypass the disabled automatic offer preference. */
+internal fun navUpdateMayCheck(manual: Boolean, autoOffers: Boolean) = manual || autoOffers
+internal fun navUpdateMayOffer(autoOffers: Boolean, deferred: Boolean) = autoOffers && !deferred
+
 /**
  * Stage 3A: read-only stable feed discovery. Does not download or install APKs.
  * Network errors are deliberately silent on automatic checks; offline remains normal.
@@ -71,8 +75,9 @@ internal object NavUpdateChecker {
     }
 
     suspend fun check(context: Context, manual: Boolean = false) {
-        if (checking) return
         val appContext = context.applicationContext
+        if (!navUpdateMayCheck(manual, NavSettings(appContext).automaticUpdateOffers)) return
+        if (checking) return
         val prefs = appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
         val lastAttempt = prefs.getLong("last_attempt", 0L)
@@ -122,9 +127,11 @@ internal object NavUpdateChecker {
             .edit().putInt("dismissed_code", code).apply()
     }
 
-    fun shouldOfferAutomatically(context: Context, update: Candidate): Boolean =
-        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getInt("dismissed_code", -1) != update.versionCode
+    fun shouldOfferAutomatically(context: Context, update: Candidate,
+                                 autoOffers: Boolean): Boolean =
+        navUpdateMayOffer(autoOffers, context.applicationContext
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt("dismissed_code", -1) == update.versionCode)
 
     fun lastSuccess(context: Context): Long =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

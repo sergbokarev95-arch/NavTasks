@@ -65,7 +65,7 @@ internal fun NavUpdateOffer(
     if (update == null ||
         (hiddenVersion == update.versionCode && !NavUpdateFlow.explicitlyOpened) ||
         (!NavUpdateFlow.explicitlyOpened &&
-            !NavUpdateChecker.shouldOfferAutomatically(context, update))
+            !NavUpdateChecker.shouldOfferAutomatically(context, update, settings.automaticUpdateOffers))
     ) return
 
     fun later() {
