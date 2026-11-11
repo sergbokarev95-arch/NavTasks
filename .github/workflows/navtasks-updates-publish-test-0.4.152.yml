@@ -1,0 +1,102 @@
+name: Publish NavTasks TEST1 to public prerelease (manual test channel only)
+on:
+  push:
+    branches: [feature/navtasks-updater-stage4b-test-apk-0.4.152]
+    paths: ['.github/workflows/navtasks-updates-publish-test-0.4.152.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PUBLIC_TOKEN: ${{ secrets.NAVTASKS_UPDATES_PUBLISH_TOKEN }}
+      SOURCE_REPO: sergbokarev95-arch/NavTasks
+      PUBLIC_REPO: sergbokarev95-arch/NavTasks-Updates
+      SOURCE_SHA: 639fab15d02a41c1dfecb5852f6eeb2977db4c72
+      APK: NavTasks_0.4.152-test1.apk
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Guard exact source, CI, public destination and credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only "$SOURCE_SHA" "$GITHUB_SHA" > changed.txt
+          if grep -Ev '^(\.github/workflows/navtasks-updates-publish-test-0\.4\.152\.yml)$' changed.txt; then
+            echo "::error::Source changed after signed CI; refusing publication"; exit 1
+          fi
+          test -n "$PUBLIC_TOKEN" || { echo "::error::Missing NAVTASKS_UPDATES_PUBLISH_TOKEN scoped to public NavTasks-Updates"; exit 1; }
+          test "$(gh api "repos/$SOURCE_REPO/actions/runs/42972731198" --jq .conclusion)" = success
+          test "$(gh api "repos/$SOURCE_REPO/actions/runs/42972731198" --jq .head_sha)" = "$SOURCE_SHA"
+          test "$(gh release view v0.4.152-test1-private --repo "$SOURCE_REPO" --json isDraft --jq .isDraft)" = true
+          test "$(GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO" --jq .private)" = false
+          ! GH_TOKEN="$PUBLIC_TOKEN" gh release view test-v0.4.152 --repo "$PUBLIC_REPO" >/dev/null 2>&1
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager --install 'build-tools;35.0.0'
+      - name: Download and verify exact private APK, historical certificate, and disabled stable channel
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p stage historic verify
+          gh release download v0.4.152-test1-private --repo "$SOURCE_REPO" --pattern "$APK" --pattern "$APK.sha256" --dir stage
+          (cd stage && sha256sum -c "$APK.sha256")
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          "$SIGNER" verify --min-sdk-version 31 "stage/$APK"
+          "$AAPT" dump badging "stage/$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='176' versionName='0.4.152-test1'"
+          "$AAPT" dump badging "stage/$APK" | grep -F "sdkVersion:'31'"
+          ! "$AAPT" dump badging "stage/$APK" | grep -Fq 'application-debuggable'
+          gh release download v0.4.140-personal-search-fix-verified --repo "$SOURCE_REPO" --pattern NavTasks_Personal_Search_Fix_0.4.140_Beta_Update.zip --dir historic
+          ZIP='historic/NavTasks_Personal_Search_Fix_0.4.140_Beta_Update.zip'
+          test "$(unzip -Z1 "$ZIP" | grep -Ec '\.apk$')" -eq 1
+          ENTRY="$(unzip -Z1 "$ZIP" | grep -E '\.apk$')"
+          unzip -p "$ZIP" "$ENTRY" > historic/old.apk
+          "$SIGNER" verify --min-sdk-version 31 historic/old.apk
+          cert() { "$SIGNER" verify --print-certs "$1" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}'; }
+          test "$(cert "stage/$APK")" = "$(cert historic/old.apk)"
+          cert "stage/$APK" > verify/cert.txt
+          GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO/contents/channels/stable.json" --jq .content | base64 -d > verify/stable.json
+          python3 - <<'PY'
+          import json
+          with open('verify/stable.json') as f: d=json.load(f)
+          assert d == {'schemaVersion':1,'channel':'stable','available':False}, d
+          PY
+      - name: Publish and re-download public TEST prerelease before feed activation
+        shell: bash
+        run: |
+          set -euo pipefail
+          GH_TOKEN="$PUBLIC_TOKEN" gh release create test-v0.4.152 "stage/$APK" "stage/$APK.sha256" --repo "$PUBLIC_REPO" --target main --title "NavTasks 0.4.152-test1 · transport QA ONLY" --notes "TEST PRERELEASE. Signed full APK, code176, package com.navtasks.app.glass. For opt-in updater E2E testing only. No source code or personal data. Never uninstall; stable channel remains inactive." --prerelease --latest=false
+          GH_TOKEN="$PUBLIC_TOKEN" gh release download test-v0.4.152 --repo "$PUBLIC_REPO" --pattern "$APK" --pattern "$APK.sha256" --dir verify
+          (cd verify && sha256sum -c "$APK.sha256")
+          cmp "stage/$APK.sha256" "verify/$APK.sha256"
+      - name: Activate ONLY public test.json after verified signed APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          export APK_SHA="$(sha256sum "stage/$APK" | cut -d' ' -f1)"
+          export APK_BYTES="$(stat -c %s "stage/$APK")"
+          export APK_SIGNER="$(cat verify/cert.txt)"
+          python3 - <<'PY'
+          import json,os
+          data={'schemaVersion':1,'channel':'test','available':True,
+            'applicationId':'com.navtasks.app.glass','versionName':'0.4.152-test1',
+            'versionCode':176,'minSdk':31,'minSupportedVersionCode':174,
+            'apk':{'url':'https://github.com/sergbokarev95-arch/NavTasks-Updates/releases/download/test-v0.4.152/NavTasks_0.4.152-test1.apk',
+                   'sizeBytes':int(os.environ['APK_BYTES']),
+                   'sha256':os.environ['APK_SHA'],'signerSha256':os.environ['APK_SIGNER']},
+            'releaseNotes':{'ru':'Тестирование загрузки, проверки подписи и системной установки.',
+                            'en':'Test signed APK download, integrity validation and Android installation.'}}
+          with open('verify/test.json','w',encoding='utf-8') as f: json.dump(data,f,ensure_ascii=False,indent=2);f.write('\n')
+          PY
+          PREV="$(GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO/contents/channels/test.json" --jq .sha)"
+          test -n "$PREV"
+          B64="$(base64 -w0 verify/test.json)"
+          GH_TOKEN="$PUBLIC_TOKEN" gh api --method PUT "repos/$PUBLIC_REPO/contents/channels/test.json" -f message="test: activate verified 0.4.152-test1 ONLY" -f branch=main -f sha="$PREV" -f content="$B64" >/dev/null
+          GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO/contents/channels/stable.json" --jq .content | base64 -d > verify/stable-after.json
+          cmp verify/stable.json verify/stable-after.json
+          GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO/contents/channels/test.json" --jq .content | base64 -d > verify/test-after.json
+          cmp verify/test.json verify/test-after.json
+          echo "Verified public test metadata active, unchanged stable feed inactive."
