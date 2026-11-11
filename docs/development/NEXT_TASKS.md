@@ -719,3 +719,11 @@
 - [ ] Exercise repeated cancel, Android system installer Cancel/retry, stale/tampered/oversize response, cache eviction and Samsung; automated unit policies are NOT physical device proof.
 - [ ] If RC11/code178 or TEST2/code180 regression: backup FULL profiles, use exact prior accepted source signed code181 RC14 as IN-PLACE recovery, no uninstall; future APK versionCode >=182. Recovery should not be routinely installed.
 - [ ] Test skipped-version migrations from real old profiles, auto-update OFF behavior across restarts, release signing/metadata security, privacy backup policy before approving production stable 1.0.0. Source repo remains private, stable channel disabled.
+
+## NEXT — 2026-11-12 HONOR resume PASS; remaining release gates
+- [x] User opted-in and performed RC11/code178 -> TEST2/code180 in-app update. User explicitly confirmed a mid-download interruption and subsequent restart continued from saved portion. Settings screenshot shows final `0.4.158-test2`. Mark real-device **resumable signed APK happy-path PASS**; no claim of packet-level HTTP206 tracing.
+- [x] CI and gated isolated public TEST2 code180 release verified; `channels/test.json available:true` min floor178, `channels/stable.json available:false`.
+- [ ] Ask user whether all tasks, profiles, completion history, notes/Handover, AMOS/Services, notifications/widgets and Glass are intact after TEST2 (previous TEST1 was accepted).
+- [ ] Additional failure-mode verification without risking production data: repeated cancel, full airplane-mode cut and resume, server responds 200 to Range, malformed 206/Content-Range, cache eviction, bad signature and SHA, installer cancel/retry. Pure unit tests cover safety conditions, physical tests pending.
+- [ ] Test direct version skipping and migration with preserved full profile snapshots from older builds; Samsung; long offline period; persistent auto-offers toggle; import/export; Android backup privacy. No stable 1.0.0 until accepted.
+- [ ] Preserve exact tested app, avoid unnecessary changes to business models and Liquid Glass; current HONOR version code180; future APK over it must code>=181 (if emergency code181 installed, next>=182). Recovery `0.4.159-rc14`/code181 available privately but only for a regression.
