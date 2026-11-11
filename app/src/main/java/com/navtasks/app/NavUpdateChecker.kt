@@ -40,6 +40,9 @@ internal object NavUpdateChecker {
 
     var candidate by mutableStateOf<Candidate?>(null)
         private set
+    // Never participates in automatic update offers.
+    var testCandidate by mutableStateOf<Candidate?>(null)
+        private set
     var checking by mutableStateOf(false)
         private set
     var lastCheckedAt by mutableStateOf(0L)
@@ -117,6 +120,46 @@ internal object NavUpdateChecker {
             if (manual) lastManualMessage = "offline"
         } finally {
             // Failed offline checks must NOT suppress the next online check.
+            checking = false
+        }
+    }
+
+    /** Explicit manual-only check; never modifies the stable candidate or last-success throttle. */
+    suspend fun checkTest(context: Context): Boolean {
+        if (checking) return false
+        checking = true
+        lastManualMessage = null
+        val appContext = context.applicationContext
+        return try {
+            val installed = appContext.packageManager
+                .getPackageInfo(appContext.packageName, 0).longVersionCode.toInt()
+            val body = withContext(Dispatchers.IO) {
+                val connection = (URL(NAV_TEST_FEED).openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                    instanceFollowRedirects = false
+                    setRequestProperty("Accept", "application/json")
+                    setRequestProperty("User-Agent", "NavTasks-Android-Test-Update-Check")
+                }
+                try {
+                    if (connection.responseCode != HttpURLConnection.HTTP_OK)
+                        throw java.io.IOException("Test feed unavailable")
+                    val data = connection.inputStream.bufferedReader(Charsets.UTF_8)
+                        .use { it.readText().take(32769) }
+                    if (data.length > 32768) throw java.io.IOException("Test feed too large")
+                    data
+                } finally {
+                    connection.disconnect()
+                }
+            }
+            testCandidate = navParseTestFeed(body, installed, appContext.packageName)
+            lastManualMessage = if (testCandidate == null) "test_none" else "test_available"
+            testCandidate != null
+        } catch (_: Exception) {
+            testCandidate = null
+            lastManualMessage = "test_offline"
+            false
+        } finally {
             checking = false
         }
     }

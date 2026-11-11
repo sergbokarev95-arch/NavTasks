@@ -39,8 +39,11 @@ import java.io.File
 internal object NavUpdateFlow {
     var explicitlyOpened by mutableStateOf(false)
         private set
-    fun open() { explicitlyOpened = true }
-    fun close() { explicitlyOpened = false }
+    var testChannel by mutableStateOf(false)
+        private set
+    fun open() { testChannel = false; explicitlyOpened = true }
+    fun openTest() { testChannel = true; explicitlyOpened = true }
+    fun close() { explicitlyOpened = false; testChannel = false }
 }
 
 /** Never install without an explicit press and the Android system installer. */
@@ -48,7 +51,8 @@ internal object NavUpdateFlow {
 internal fun NavUpdateOffer(
     settings: NavSettings, dark: Boolean, context: Context,
 ) {
-    val update = NavUpdateChecker.candidate
+    val testChannel = NavUpdateFlow.testChannel
+    val update = if (testChannel) NavUpdateChecker.testCandidate else NavUpdateChecker.candidate
     val scope = rememberCoroutineScope()
     val p = navPalette(dark)
     val lang = settings.language
@@ -62,15 +66,17 @@ internal fun NavUpdateOffer(
     var permissionNeeded by remember(key) { mutableStateOf(false) }
     var installerOpened by remember(key) { mutableStateOf(false) }
     var job by remember(key) { mutableStateOf<Job?>(null) }
-    if (update == null ||
-        (hiddenVersion == update.versionCode && !NavUpdateFlow.explicitlyOpened) ||
-        (!NavUpdateFlow.explicitlyOpened &&
-            !NavUpdateChecker.shouldOfferAutomatically(context, update, settings.automaticUpdateOffers))
+    if (update == null || (testChannel && !NavUpdateFlow.explicitlyOpened) ||
+        (!testChannel && (
+            (hiddenVersion == update.versionCode && !NavUpdateFlow.explicitlyOpened) ||
+            (!NavUpdateFlow.explicitlyOpened &&
+                !NavUpdateChecker.shouldOfferAutomatically(context, update, settings.automaticUpdateOffers))
+        ))
     ) return
 
     fun later() {
         job?.cancel()
-        NavUpdateChecker.defer(context, update.versionCode)
+        if (!testChannel) NavUpdateChecker.defer(context, update.versionCode)
         hiddenVersion = update.versionCode
         NavUpdateFlow.close()
     }
@@ -92,7 +98,9 @@ internal fun NavUpdateOffer(
                     .verticalScroll(rememberScrollState()).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(localized("Доступно обновление", "Update available", lang),
+                Text(localized(
+                    if (testChannel) "Доступна тестовая версия" else "Доступно обновление",
+                    if (testChannel) "Test update available" else "Update available", lang),
                     color = p.text, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 val installed = remember(context) {
                     context.packageManager.getPackageInfo(context.packageName, 0)

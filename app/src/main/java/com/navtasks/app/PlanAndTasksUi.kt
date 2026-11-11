@@ -1272,6 +1272,10 @@ fun SettingsScreen(
                         "available" -> localized("Обновление найдено", "Update found", lang)
                         "offline" -> localized("Нет соединения. Попробуйте позже.",
                             "No connection. Try again later.", lang)
+                        "test_available" -> localized("Найдена тестовая версия", "Test update found", lang)
+                        "test_none" -> localized("Тестовых обновлений нет", "No test updates available", lang)
+                        "test_offline" -> localized("Тестовый канал недоступен",
+                            "Test channel unavailable", lang)
                         else -> localized("Новых совместимых версий нет",
                             "No compatible updates found", lang)
                     }, color = p.muted, fontSize = 12.sp)
@@ -1286,6 +1290,21 @@ fun SettingsScreen(
                         localized("Проверяем…", "Checking…", lang)
                         else localized("Проверить обновления", "Check for updates", lang))
                 }
+                // Stage4 QA ONLY: separate manual test channel, never checked at startup.
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            if (NavUpdateChecker.checkTest(context)) NavUpdateFlow.openTest()
+                        }
+                    },
+                    enabled = !NavUpdateChecker.checking,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(localized("Проверить тестовый канал", "Check test channel", lang))
+                }
+                Text(localized("Тестовые версии устанавливаются только по вашему выбору.",
+                    "Test builds install only after your approval.", lang),
+                    color = p.muted, fontSize = 12.sp)
             }
             NavPanel(p) {
                 Text("NavTasks Glass " + actualVersion, color = p.text, fontWeight = FontWeight.Medium)
