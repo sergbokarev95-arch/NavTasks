@@ -572,3 +572,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-12 — Pre-release QA-only CI SUCCESS
 - Automated preflight run `43038747378` SUCCESS on isolated branch `audit/navtasks-1.0.0-preflight-code180`, source `77387fb9f819c57e5291aaeed0c3972f2d67e88f` unchanged. Full unit/regression matrix, cross-module full profile export/reimport, signed nondebuggable APK packaging and original certificate, and disabled public stable feed verified.
 - User-confirmed HONOR installed `0.4.158-test2`/code180 with all data intact and successful download resumption. App is NOT stable 1.0.0 yet; release blockers include weak-net stable feed, corrupt profile-index fail-safe, Android backup decision, old-snapshot migration and Samsung verification.
+
+## 2026-11-12 — Auto-offer QA RC15 and TEST3 signed; HONOR test outstanding
+- Original stable start check only polls stable.json, which is inactive; explains why manual TEST1/2 worked but no startup popup was shown.
+- Signed RC15 `0.4.160-rc15` code182 private CI43044178187 SUCCESS and TEST3 target `0.4.162-test3` code184 CI43044626615 SUCCESS. TEST3 public-only prerelease https://github.com/sergbokarev95-arch/NavTasks-Updates/releases/tag/test-v0.4.162 and publisher CI43045892670 SUCCESS. Isolated TEST feed now code184 floor182; STABLE feed still OFF. User HONOR remains user-confirmed `0.4.158-test2` code180 until updated.
+- QA switch default OFF, exists solely in signed rc15. Normal auto-offers ON plus QA ON routes next startup check to TEST feed and shows existing Update/Later dialog, per-version separate TEST suppression, no auto-install. Needs physical HONOR proof. Recovery code185 exact accepted TEST2 source pending signed CI; no device install before it is ready.
