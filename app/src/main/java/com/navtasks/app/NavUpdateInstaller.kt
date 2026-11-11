@@ -137,13 +137,13 @@ internal object NavUpdateInstaller {
         if (!identity.isFile) identity.writeText(expected)
         var verified = false
         try {
-            repeat(3) { attempt ->
+            for (attempt in 0..2) {
                 currentCoroutineContext().ensureActive()
                 val existing = if (partial.isFile) partial.length() else 0L
                 withContext(Dispatchers.Main) {
                     onProgress(((existing * 100L) / update.sizeBytes).toInt())
                 }
-                if (existing == update.sizeBytes) return@repeat
+                if (existing == update.sizeBytes) break
                 var current = update.apkUrl
                 var active: HttpURLConnection? = null
                 try {
