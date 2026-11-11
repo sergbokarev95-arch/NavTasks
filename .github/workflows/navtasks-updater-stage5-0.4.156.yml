@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           BASE=639fab15d02a41c1dfecb5852f6eeb2977db4c72
           git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
-          if grep -Ev '^(app/src/main/java/com/navtasks/app/NavUpdateInstaller\.kt|app/src/test/java/com/navtasks/app/NavUpdateResumePolicyTest\.kt|app/build\.gradle\.kts|\.github/workflows/navtasks-updater-stage5-0\.4\.156\.yml|docs/development/UPDATER_STAGE5\.md)$' changed.txt; then
+          if grep -Ev '^(app/src/main/java/com/navtasks/app/(NavUpdateInstaller|NavUpdateChecker|NavTestFeedNetwork|PlanAndTasksUi)\.kt|app/src/test/java/com/navtasks/app/(NavUpdateResumePolicyTest|NavTestFeedNetworkPolicyTest|NavTestUpdateFeedTest)\.kt|app/build\.gradle\.kts|\.github/workflows/navtasks-updater-stage5-0\.4\.156\.yml|docs/development/UPDATER_STAGE5\.md)$' changed.txt; then
             echo "::error::Unapproved business/store/Glass source modification"
             exit 1
           fi
@@ -62,8 +62,11 @@ jobs:
           grep -Fq 'class NavUpdateInstallerPolicyTest' app/src/test/java/com/navtasks/app/NavUpdateInstallerPolicyTest.kt
           grep -Fq 'MessageDigest.isEqual(installedDigest, archiveDigest)' app/src/main/java/com/navtasks/app/NavUpdateInstaller.kt
           grep -Fq 'NavUpdateChecker.defer(context, update.versionCode)' app/src/main/java/com/navtasks/app/NavUpdateOffer.kt
-          grep -Fq 'URL(NAV_TEST_FEED).openConnection()' app/src/main/java/com/navtasks/app/NavUpdateChecker.kt
+          grep -Fq 'NavTestFeedNetwork.read()' app/src/main/java/com/navtasks/app/NavUpdateChecker.kt
           grep -Fq 'if (!testChannel) NavUpdateChecker.defer(context, update.versionCode)' app/src/main/java/com/navtasks/app/NavUpdateOffer.kt
+          test -f app/src/test/java/com/navtasks/app/NavTestFeedNetworkPolicyTest.kt
+          grep -Fq 'connectTimeout = 12_000' app/src/main/java/com/navtasks/app/NavTestFeedNetwork.kt
+          grep -Fq 'readTimeout = 20_000' app/src/main/java/com/navtasks/app/NavTestFeedNetwork.kt
           test -f app/src/test/java/com/navtasks/app/NavUpdateResumePolicyTest.kt
           grep -Fq 'navUpdateTransferMode(' app/src/main/java/com/navtasks/app/NavUpdateInstaller.kt
           grep -Fq 'verifyArchive(context, apk, update)' app/src/main/java/com/navtasks/app/NavUpdateInstaller.kt

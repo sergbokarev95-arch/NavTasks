@@ -17,3 +17,8 @@
 - Signed CI must pass before exposing private RC11. Create higher-code **exact accepted 0.4.152-test1 application-source recovery code>=179** and verify signer before asking user to install RC11.
 - Real resume needs a newer explicitly approved public TEST APK `versionCode >178` with a compatible floor; existing public TEST1/code176 cannot install over RC11. Do NOT publish a new public TEST release or modify test/stable channel without separate user consent.
 - On HONOR: simulate interrupted download, manual resume showing nonzero progress, data remains intact, invalid Content-Range and mismatch fail closed; test Android installer cancel and Samsung later.
+
+## Preserve previously HONOR-accepted weak-network test feed fix1
+- `0.4.152-test1` code176 app source predates HONOR-accepted `0.4.150-rc7-fix1` code175 manual feed retry. Without carrying fix1 forward, next weak-link test feed check could regress.
+- Stage5 therefore also copies ONLY previously signed/validated updater-only test feed networking and RU/EN error messages from commit `b2bf22674d68ed4026ef781d03243d1414ce8f63`: `NavTestFeedNetwork.kt`, `NavUpdateChecker.kt`, `PlanAndTasksUi.kt`, their respective policy/unit tests. No task/storage/notification/Glass source is modified.
+- Test-only HTTPS read is bounded (12 s connect/20 s read, 3 attempts, pinned path/redirect, 32 KiB), stable feed logic untouched. CI tests verify this behavior, in addition to full APK resume.
