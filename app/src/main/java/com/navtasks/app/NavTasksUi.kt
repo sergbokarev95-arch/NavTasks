@@ -229,6 +229,7 @@ fun NavTasksApp(
     store: TaskStore,
     settings: NavSettings,
     profiles: ProfileStore,
+    updates: NavUpdateController,
     openRequest: NavOpenRequest? = null,
     onOpenRequestHandled: (Long) -> Unit = {},
 ) {
@@ -508,7 +509,7 @@ fun NavTasksApp(
             } else if (showSettings) {
                 SettingsScreen(settings, store, palette, onBack = { showSettings = false },
                     profiles = profiles, handover = handoverStore, services = serviceStore,
-                    workOrders = workOrderStore)
+                    workOrders = workOrderStore, updates = updates)
             } else if (profiles.active.kind == NavProfileKind.PERSONAL) {
                 HandoverScreen(handoverStore, store, palette, lang,
                     onBack = { showProfiles = true }, personalMode = true)
@@ -862,6 +863,11 @@ fun NavTasksApp(
                     }
                 },
             )
+        }
+        // The update offer shares the existing frost surface. Never cover a
+        // profile corruption warning with a network-driven update dialog.
+        if (storageWarning == null) {
+            NavUpdateOffer(updates, palette, lang)
         }
         }
     }

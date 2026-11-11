@@ -1092,6 +1092,7 @@ fun SettingsScreen(
     settings: NavSettings, store: TaskStore, p: NavPalette, onBack: () -> Unit,
     profiles: ProfileStore, handover: HandoverStore, services: ServiceStore,
     workOrders: WorkOrderStore,
+    updates: NavUpdateController,
 ) {
     val lang = settings.language
     val context = LocalContext.current
@@ -1226,6 +1227,7 @@ fun SettingsScreen(
                     profiles, store, handover, services, workOrders, settings, p, lang,
                 )
             }
+            NavUpdateSettingsPanel(updates, p, lang)
             NavPanel(p) {
                 Text("NavTasks Glass " + actualVersion, color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
