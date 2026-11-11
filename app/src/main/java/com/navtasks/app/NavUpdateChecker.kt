@@ -133,31 +133,53 @@ internal object NavUpdateChecker {
         return try {
             val installed = appContext.packageManager
                 .getPackageInfo(appContext.packageName, 0).longVersionCode.toInt()
+            // A weak shipboard link must not fail after a single 3.5 s attempt.
+            // Retry only transient network failures, never malformed metadata.
             val body = withContext(Dispatchers.IO) {
-                val connection = (URL(NAV_TEST_FEED).openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 3500
-                    readTimeout = 3500
-                    instanceFollowRedirects = false
-                    setRequestProperty("Accept", "application/json")
-                    setRequestProperty("User-Agent", "NavTasks-Android-Test-Update-Check")
+                var lastError: java.io.IOException? = null
+                var data: String? = null
+                for (attempt in 1..3) {
+                    try {
+                        val connection = (URL(NAV_TEST_FEED).openConnection() as HttpURLConnection).apply {
+                            connectTimeout = 15000
+                            readTimeout = 20000
+                            instanceFollowRedirects = false
+                            setRequestProperty("Accept", "application/json")
+                            setRequestProperty("User-Agent", "NavTasks-Android-Test-Update-Check")
+                        }
+                        try {
+                            val status = connection.responseCode
+                            if (status != HttpURLConnection.HTTP_OK)
+                                throw java.io.IOException("HTTP $status")
+                            data = connection.inputStream.bufferedReader(Charsets.UTF_8)
+                                .use { it.readText().take(32769) }
+                            if (data.length > 32768) throw java.io.IOException("Feed too large")
+                            break
+                        } finally {
+                            connection.disconnect()
+                        }
+                    } catch (e: java.io.IOException) {
+                        lastError = e
+                        if (attempt < 3) kotlinx.coroutines.delay(750L * attempt)
+                    }
                 }
-                try {
-                    if (connection.responseCode != HttpURLConnection.HTTP_OK)
-                        throw java.io.IOException("Test feed unavailable")
-                    val data = connection.inputStream.bufferedReader(Charsets.UTF_8)
-                        .use { it.readText().take(32769) }
-                    if (data.length > 32768) throw java.io.IOException("Test feed too large")
-                    data
-                } finally {
-                    connection.disconnect()
-                }
+                data ?: throw (lastError ?: java.io.IOException("No response"))
             }
             testCandidate = navParseTestFeed(body, installed, appContext.packageName)
             lastManualMessage = if (testCandidate == null) "test_none" else "test_available"
             testCandidate != null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             testCandidate = null
-            lastManualMessage = "test_offline"
+            // Surface a diagnostic category, never raw URLs, tokens or private data.
+            lastManualMessage = when (e) {
+                is java.net.SocketTimeoutException -> "test_timeout"
+                is java.net.UnknownHostException -> "test_dns"
+                is javax.net.ssl.SSLException -> "test_tls"
+                is java.io.IOException -> if (e.message?.startsWith("HTTP ") == true)
+                    "test_http" else "test_network"
+                is org.json.JSONException -> "test_json"
+                else -> "test_error"
+            }
             false
         } finally {
             checking = false
