@@ -619,3 +619,12 @@
 - [ ] Compare actual old exports and representative profile snapshots before/after; test direct in-place from earlier signed package 0.4.118/code143 as well; migration from 1.0.3 to future 3.0.0 remains unverified until versioned migration tests/fixtures introduced.
 - [ ] Stage2: create/approve separate PUBLIC binary-only GitHub repository, safe release feed manifest, SHA256, RU notes, stable-only updater strategy; keep main sources private. No access changes to existing repo.
 - [ ] Stage3+: implement offline-silent updater service, download, FileProvider installer, opt-in settings UI, release channel, security tests. 1.0.0 still blocked on full device/privacy/regression acceptance.
+
+## NEXT — NavTasks updater after Stage 2 channel creation
+- [x] Keep `NavTasks` PRIVATE; create separate PUBLIC https://github.com/sergbokarev95-arch/NavTasks-Updates (binary/metadata only), verify visibility and anonymous access.
+- [x] Initialize `channels/stable.json` with `available:false`; zero APKs/releases publicly until stable approval.
+- [x] Freeze RC1 app at `backup/navtasks-0.4.142-before-update-channel`, prepare isolated manifest builder, unit tests, no-app-change dry-run CI and guarded manual publisher at `feature/navtasks-updates-stage2-channel` SHA `d3a81382`. CI #42940531172 SUCCESS.
+- [ ] Before live cross-repo promotion, user provisions `NAVTASKS_UPDATES_PUBLISH_TOKEN` fine-grained Contents:Read/Write scoped ONLY to public updates repo in PRIVATE NavTasks Actions secrets. No tokens in chat or APK. Verify publish workflow environment/manual approval gate and move tested workflow to suitable trusted release branch.
+- [ ] Finalize stable-v1.0.0 data migration matrix including genuine historical exported profiles, backup/privacy and actual HONOR/Samsung upgrades. Source stable release must be reviewed, NOT draft/RC/recovery; increasing code>=169. Only then publish FULL signed APK, SHA and RU/EN notes into public Releases, with stable.json updated LAST.
+- [ ] Stage3 Android: optional asynchronous periodic update checker, download retry/progress, SHA + signer & package verification, min compatible code guard, secure FileProvider/content URI, Android unknown-app-install permission and installer, Settings UI, offline silence, 24h throttling/"Позже". Do not alter dock, work stores, alarms, widgets or Liquid Glass.
+- [ ] Instrumented device checks: good/no/offline/net-drop/corrupt/later/cancel, in-place profile+history+Handover+AMOS+Services+notes retention, jump across skipped releases and migration failure with no loss.
