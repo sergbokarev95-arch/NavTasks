@@ -1,0 +1,128 @@
+name: Publish TEST3 auto-offer QA to public TEST channel only
+
+on:
+  push:
+    branches:
+      - feature/navtasks-release-qa-test3-target-0.4.162
+    paths:
+      - '.github/workflows/navtasks-publish-test3-0.4.162.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish-test3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PUBLIC_TOKEN: ${{ secrets.NAVTASKS_UPDATES_PUBLISH_TOKEN }}
+      SOURCE_REPO: sergbokarev95-arch/NavTasks
+      PUBLIC_REPO: sergbokarev95-arch/NavTasks-Updates
+      SOURCE_SHA: cd63c8325ac0e89e251c056597584a587a9f9e42
+      SOURCE_APK: NavTasks_0.4.162_TEST3_Auto_Offer_Target_Private.apk
+      APK: NavTasks_0.4.162-test3.apk
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require verified signed source commit and isolated TEST metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only "$SOURCE_SHA" "$GITHUB_SHA" > changed.txt
+          if grep -Ev '^\.github/workflows/navtasks-publish-test3-0\.4\.162\.yml$' changed.txt; then
+            echo "::error::Signed application source changed"; exit 1
+          fi
+          test -n "$PUBLIC_TOKEN"
+          test "$(gh api "repos/$SOURCE_REPO/actions/runs/43044626615" --jq .conclusion)" = success
+          test "$(gh api "repos/$SOURCE_REPO/actions/runs/43044626615" --jq .head_sha)" = "$SOURCE_SHA"
+          test "$(GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO" --jq .private)" = false
+          DRAFT_ID="$(gh api "repos/$SOURCE_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v0.4.162-test3-auto-offer-private" and .draft == true and .prerelease == true and .target_commitish == "cd63c8325ac0e89e251c056597584a587a9f9e42") | .id')"
+          [[ "$DRAFT_ID" =~ ^[0-9]+$ ]] || { echo "::error::Missing unique signed private TEST3 draft"; exit 1; }
+          echo "DRAFT_ID=$DRAFT_ID" >> "$GITHUB_ENV"
+          GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO/contents/channels/test.json" --jq .content | base64 -d > old-test.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('old-test.json'))
+          assert d.get('schemaVersion')==1 and d.get('channel')=='test'
+          assert d.get('available') is True and d.get('versionCode') in (180,184)
+          PY
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager --install 'build-tools;35.0.0'
+      - name: Verify exact signed private source APK and previous certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p source historic stage verify
+          for NAME in "$SOURCE_APK" "$SOURCE_APK.sha256"; do
+            ID="$(gh api "repos/$SOURCE_REPO/releases/$DRAFT_ID" --jq ".assets[] | select(.name == \"$NAME\") | .id")"
+            [[ "$ID" =~ ^[0-9]+$ ]] || { echo "::error::Missing or duplicate source asset"; exit 1; }
+            gh api -H 'Accept: application/octet-stream' "repos/$SOURCE_REPO/releases/assets/$ID" > "source/$NAME"
+            test -s "source/$NAME"
+          done
+          (cd source && sha256sum -c "$SOURCE_APK.sha256")
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          "$AAPT" dump badging "source/$SOURCE_APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='184' versionName='0.4.162-test3'"
+          "$AAPT" dump badging "source/$SOURCE_APK" | grep -F "sdkVersion:'31'"
+          ! "$AAPT" dump badging "source/$SOURCE_APK" | grep -Fq application-debuggable
+          "$SIGNER" verify --min-sdk-version 31 "source/$SOURCE_APK"
+          cert() { "$SIGNER" verify --print-certs "$1" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}'; }
+          CERT="$(cert "source/$SOURCE_APK")"
+          test "$CERT" = 0cb8a3c691e3fb2198682dff8c226aec710e77c7b8fded7d260a92f359a49c54
+          gh release download v0.4.140-personal-search-fix-verified --repo "$SOURCE_REPO" --pattern NavTasks_Personal_Search_Fix_0.4.140_Beta_Update.zip --dir historic
+          ZIP=historic/NavTasks_Personal_Search_Fix_0.4.140_Beta_Update.zip
+          test "$(unzip -Z1 "$ZIP" | grep -Ec '\.apk$')" -eq 1
+          ENTRY="$(unzip -Z1 "$ZIP" | grep -E '\.apk$')"
+          unzip -p "$ZIP" "$ENTRY" > historic/old.apk
+          "$SIGNER" verify --min-sdk-version 31 historic/old.apk
+          test "$CERT" = "$(cert historic/old.apk)"
+          printf '%s' "$CERT" > verify/cert.txt
+          GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO/contents/channels/stable.json" --jq .content | base64 -d > verify/stable.json
+          python3 - <<'PY'
+          import json
+          assert json.load(open('verify/stable.json'))=={'schemaVersion':1,'channel':'stable','available':False}
+          PY
+          cp "source/$SOURCE_APK" "stage/$APK"
+          (cd stage && sha256sum "$APK" > "$APK.sha256")
+          (cd stage && sha256sum -c "$APK.sha256")
+      - name: Publish TEST3 prerelease, verify re-download, then activate test.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          if GH_TOKEN="$PUBLIC_TOKEN" gh release view test-v0.4.162 --repo "$PUBLIC_REPO" >/dev/null 2>&1; then
+            test "$(GH_TOKEN="$PUBLIC_TOKEN" gh release view test-v0.4.162 --repo "$PUBLIC_REPO" --json isPrerelease --jq .isPrerelease)" = true
+          else
+            GH_TOKEN="$PUBLIC_TOKEN" gh release create test-v0.4.162 "stage/$APK" "stage/$APK.sha256" --repo "$PUBLIC_REPO" --target main --title "NavTasks 0.4.162-test3 · startup automatic offer QA" --notes "PUBLIC TEST PRERELEASE ONLY code184. Manually opt in from private RC15/code182 to test opening the optional update offer at app startup, Later, and manual update. Not stable. Original signing key and package, never uninstall or clear data." --prerelease --latest=false
+          fi
+          GH_TOKEN="$PUBLIC_TOKEN" gh release download test-v0.4.162 --repo "$PUBLIC_REPO" --pattern "$APK" --pattern "$APK.sha256" --dir verify
+          (cd verify && sha256sum -c "$APK.sha256")
+          cmp "stage/$APK.sha256" "verify/$APK.sha256"
+          export APK_SHA="$(sha256sum "stage/$APK" | cut -d' ' -f1)"
+          export APK_BYTES="$(stat -c %s "stage/$APK")"
+          export APK_SIGNER="$(cat verify/cert.txt)"
+          python3 - <<'PY'
+          import json,os
+          data={'schemaVersion':1,'channel':'test','available':True,
+            'applicationId':'com.navtasks.app.glass','versionName':'0.4.162-test3',
+            'versionCode':184,'minSdk':31,'minSupportedVersionCode':182,
+            'apk':{'url':'https://github.com/sergbokarev95-arch/NavTasks-Updates/releases/download/test-v0.4.162/NavTasks_0.4.162-test3.apk',
+                   'sizeBytes':int(os.environ['APK_BYTES']),
+                   'sha256':os.environ['APK_SHA'],'signerSha256':os.environ['APK_SIGNER']},
+            'releaseNotes':{'ru':'Проверка автоматического предложения обновления при запуске, кнопок «Обновить» и «Позже».',
+                            'en':'Testing optional automatic update offer on launch, Update and Later.'}}
+          with open('verify/test.json','w',encoding='utf-8') as f:
+            json.dump(data,f,ensure_ascii=False,indent=2);f.write('\n')
+          PY
+          PREV="$(GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO/contents/channels/test.json" --jq .sha)"
+          test -n "$PREV"
+          B64="$(base64 -w0 verify/test.json)"
+          GH_TOKEN="$PUBLIC_TOKEN" gh api --method PUT "repos/$PUBLIC_REPO/contents/channels/test.json" -f message="test: activate signed TEST3 code184 only" -f branch=main -f sha="$PREV" -f content="$B64" >/dev/null
+          GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO/contents/channels/test.json" --jq .content | base64 -d > verify/test-after.json
+          cmp verify/test.json verify/test-after.json
+          GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO/contents/channels/stable.json" --jq .content | base64 -d > verify/stable-after.json
+          cmp verify/stable.json verify/stable-after.json
+          echo "TEST3 active, STABLE OFF, signed APK verified"
