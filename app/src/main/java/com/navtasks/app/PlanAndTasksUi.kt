@@ -1276,6 +1276,20 @@ fun SettingsScreen(
                         "test_none" -> localized("Тестовых обновлений нет", "No test updates available", lang)
                         "test_offline" -> localized("Тестовый канал недоступен",
                             "Test channel unavailable", lang)
+                        "test_timeout" -> localized("Тайм-аут сети. Повторите проверку.",
+                            "Network timeout. Retry the check.", lang)
+                        "test_dns" -> localized("Не удалось найти сервер GitHub (DNS).",
+                            "Cannot resolve GitHub host (DNS).", lang)
+                        "test_tls" -> localized("Ошибка защищённого соединения (TLS).",
+                            "Secure connection failed (TLS).", lang)
+                        "test_http" -> localized("GitHub вернул ошибку HTTP.",
+                            "GitHub returned an HTTP error.", lang)
+                        "test_network" -> localized("Ошибка сети. Повторите проверку.",
+                            "Network error. Retry the check.", lang)
+                        "test_json" -> localized("Ошибка формата ответа GitHub.",
+                            "Invalid GitHub response format.", lang)
+                        "test_error" -> localized("Ошибка проверки тестового канала.",
+                            "Test channel check failed.", lang)
                         else -> localized("Новых совместимых версий нет",
                             "No compatible updates found", lang)
                     }, color = p.muted, fontSize = 12.sp)
