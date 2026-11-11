@@ -1,0 +1,146 @@
+name: NavTasks 0.4.158 TEST2 — signed test-update TARGET verification (PRIVATE)
+
+on:
+  push:
+    branches:
+      - feature/navtasks-updater-stage5b-test2-0.4.158
+    paths:
+      - 'app/**'
+      - 'docs/development/UPDATER_STAGE5B.md'
+      - '.github/workflows/navtasks-updater-stage5b-test2-0.4.158.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK build tools
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore ONLY the existing NavTasks signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          chmod 600 "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Enforce surgical changes and update permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=fc26e83ef9348d62ffc617cb13f4d594dde2ae5d
+          git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
+          if grep -Ev '^(app/build\.gradle\.kts|app/src/test/java/com/navtasks/app/NavTestFeedNetworkPolicyTest\.kt|\.github/workflows/navtasks-updater-stage5b-test2-0\.4\.158\.yml|docs/development/UPDATER_STAGE5B\.md)$' changed.txt; then
+            echo "::error::Unapproved business/store/Glass source modification"
+            exit 1
+          fi
+          grep -Fq 'versionCode = 180' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.158"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-test2"' app/build.gradle.kts
+          grep -Fq 'isDebuggable = false' app/build.gradle.kts
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'android.permission.REQUEST_INSTALL_PACKAGES' app/src/main/AndroidManifest.xml
+          grep -Fq 'android:authorities="' app/src/main/AndroidManifest.xml
+          grep -Fq 'android:exported="false"' app/src/main/AndroidManifest.xml
+          grep -Fq 'path="navtasks-update/"' app/src/main/res/xml/navtasks_update_paths.xml
+          grep -Fq 'class NavUpdateInstallerPolicyTest' app/src/test/java/com/navtasks/app/NavUpdateInstallerPolicyTest.kt
+          grep -Fq 'MessageDigest.isEqual(installedDigest, archiveDigest)' app/src/main/java/com/navtasks/app/NavUpdateInstaller.kt
+          grep -Fq 'NavUpdateChecker.defer(context, update.versionCode)' app/src/main/java/com/navtasks/app/NavUpdateOffer.kt
+          grep -Fq 'NavTestFeedNetwork.read()' app/src/main/java/com/navtasks/app/NavUpdateChecker.kt
+          grep -Fq 'if (!testChannel) NavUpdateChecker.defer(context, update.versionCode)' app/src/main/java/com/navtasks/app/NavUpdateOffer.kt
+          grep -Fq 'test(1|2)' app/src/main/java/com/navtasks/app/NavTestUpdateFeed.kt
+          grep -Fq 'FileOutputStream(partial, append)' app/src/main/java/com/navtasks/app/NavUpdateInstaller.kt
+          test -f app/src/test/java/com/navtasks/app/NavUpdateResumePolicyTest.kt
+          test -f app/src/test/java/com/navtasks/app/NavTestUpdateFeedTest.kt
+          grep -Fq 'NavSettings(appContext).automaticUpdateOffers' app/src/main/java/com/navtasks/app/NavUpdateChecker.kt
+          test -f app/src/test/java/com/navtasks/app/NavTestUpdateFeedTest.kt
+      - name: Test and build signed nondebuggable release APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NAVTASKS_BETA_SIGN_PASSWORD"
+          gradle :app:testDebugUnitTest :app:assembleRelease --no-daemon
+      - name: Verify signed APK and historical signer compatibility
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK='app/build/outputs/apk/release/app-release.apk'
+          test -s "$APK"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          "$AAPT" dump badging "$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='180' versionName='0.4.158-test2'"
+          "$AAPT" dump badging "$APK" | grep -F "sdkVersion:'31'"
+          ! "$AAPT" dump badging "$APK" | grep -Fq 'application-debuggable'
+          "$SIGNER" verify --min-sdk-version 31 "$APK"
+          cert_digest() {
+            "$SIGNER" verify --print-certs "$1" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}'
+          }
+          CURRENT_CERT="$(cert_digest "$APK")"
+          test -n "$CURRENT_CERT"
+          mkdir -p "$RUNNER_TEMP/navtasks-baselines"
+          for item in \
+            'v0.4.118-notification-widget-verified|NavTasks_Reliability_0.4.118_Beta_Update.zip|143' \
+            'v0.4.140-personal-search-fix-verified|NavTasks_Personal_Search_Fix_0.4.140_Beta_Update.zip|165'; do
+            IFS='|' read -r TAG ZIP CODE <<< "$item"
+            DIR="$RUNNER_TEMP/navtasks-baselines/$CODE"
+            mkdir -p "$DIR"
+            gh release download "$TAG" --pattern "$ZIP" --repo "$GITHUB_REPOSITORY" --dir "$DIR"
+            test -s "$DIR/$ZIP"
+            test "$(unzip -Z1 "$DIR/$ZIP" | grep -Ec '\.apk$')" -eq 1
+            ENTRY="$(unzip -Z1 "$DIR/$ZIP" | grep -E '\.apk$')"
+            unzip -p "$DIR/$ZIP" "$ENTRY" > "$DIR/baseline.apk"
+            "$AAPT" dump badging "$DIR/baseline.apk" | grep -F "package: name='com.navtasks.app.glass' versionCode='$CODE'"
+            "$SIGNER" verify --min-sdk-version 31 "$DIR/baseline.apk"
+            test "$CURRENT_CERT" = "$(cert_digest "$DIR/baseline.apk")"
+            test 180 -gt "$CODE"
+          done
+          mkdir -p dist
+          cp "$APK" dist/NavTasks_0.4.158-test2.apk
+          (cd dist && sha256sum NavTasks_0.4.158-test2.apk > NavTasks_0.4.158-test2.apk.sha256)
+          (cd dist && sha256sum -c NavTasks_0.4.158-test2.apk.sha256)
+          echo "CI verified the APK is signed; physical in-app installation remains untested."
+      - name: Delete temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Publish only PRIVATE draft RC; NEVER advertise as stable
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='v0.4.158-test2-private'
+          SOURCE="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-updater-stage5b-test2-0.4.158" --jq '.commit.sha')"
+          if [ "$SOURCE" != "$GITHUB_SHA" ]; then
+            echo "::error::Outdated run must not publish"
+            exit 1
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Existing private draft remains untouched"
+          else
+            gh release create "$TAG" \
+              dist/NavTasks_0.4.158-test2.apk \
+              dist/NavTasks_0.4.158-test2.apk.sha256 \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.158 TEST2 · test update binary PRIVATE QA" \
+              --notes "PRIVATE DRAFT TEST2/code180; never stable update feed. Same installed package and signing cert as older Betas. Optional updater includes download progress, SHA+installed signing certificate checks, explicit installer action and unknown-source permission handling. Public stable channel remains available:false. PRIVATE DRAFT target code180, signed and nondebuggable. Do NOT publish public test APK until explicit gated cross-repo publisher has verified it and stable channel remains inactive. HONOR migration acceptance pending. Never uninstall/clear data. A higher-code recovery build must be ready before device installation." \
+              --draft --prerelease
+          fi

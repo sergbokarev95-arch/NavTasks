@@ -1,0 +1,7 @@
+# Stage5B NavTasks signed TEST2 transport target (code180)
+- Authorized PUBLIC prerelease `0.4.158-test2` by the user, **test channel only**. The private signed target is built from Stage5 RC11 test2-compatible full app commit `fc26e83ef9348d62ffc617cb13f4d594dde2ae5d`, with only `app/build.gradle.kts` versionName/code and test static version expectations changed.
+- `versionName=0.4.158-test2`, `versionCode=180`, `com.navtasks.app.glass`, `minSdk=31`, original installed signing certificate, nondebuggable.
+- The publisher MUST verify this private CI succeeded at this exact SHA, signer compatibility with historical stable keys, signed SHA256 and downloaded binary, and public `stable.json available:false` before releasing the test-only APK.
+- Publish public `test-v0.4.158` APK `NavTasks_0.4.158-test2.apk`, `.sha256`; only afterwards update `channels/test.json` with `minSupportedVersionCode=178`, code180, correct APK URL, size, sha and installed signer hash. Never update stable.json.
+- Existing TEST1/code176 release remains accessible; users still on code176 MUST NOT directly install test2, since the floor is 178 and test2 is only for resumed download from signed RC11/code178.
+- This is NOT full acceptance: physical HONOR resume/interrupt, network failure, integrity and user data preservation remain separate tests. Recovery signed code>=181 required before installing test2 if it regresses. Do not uninstall.
