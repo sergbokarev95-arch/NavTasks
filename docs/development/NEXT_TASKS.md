@@ -682,3 +682,12 @@
 - [ ] User press `Проверить тестовый канал`, expect TEST1/code176, test Later and manual re-open, then Update opt-in APK download/progress, Android unknown-source permission/install consent, verify final version/data/profile notes, AMOS/Services, widgets, Handover, task history, dock. Full on-device E2E NOT yet observed.
 - [ ] If regression, consider PRIVATE signed exact RC7 recovery `0.4.153-rc9`/code177, CI42974037324 SUCCESS; backup FULL profiles before any in-place install; never uninstall/erase data. After installing code177 fallback future update code>=178.
 - [ ] Separate adverse-network/redirect/truncated/corrupt/signer-fail/installer-cancel tests, Samsung, compatibility floor/migration snapshots. Stabilization and production stable 1.0.0 gated on physical acceptance; NEVER publish prerelease on stable.
+
+## NEXT — HONOR manual test feed retest after weak-network fix1/code175
+- [x] User RC7/code174 screenshot: manual test feed "недоступен"; browser screenshot: public test.json is reachable/valid. Root cause cannot be deduced from old generic catch; suspect 3.5s timeouts, but distinguish by new diagnostics.
+- [x] RC7 backup branch `backup/navtasks-0.4.150-rc7-before-weak-network-fix`.
+- [x] Only test feed isolated read with 12s/20s timeout, 3 bounded retry attempts, strict same-path HTTPS redirect handling, classified RU/EN error messages. Unit tests adapted for changed call; source diff restricted, no business/Glass changes; signed CI42984926537 SUCCESS.
+- [x] PRIVATE signed release `0.4.150-rc7-fix1`/code175, APK `NavTasks_0.4.150_RC7_Fix1_WeakNet_Private.apk`, https://github.com/sergbokarev95-arch/NavTasks/releases/tag/untagged-c61cfbfa7436013ce386.
+- [ ] HONOR FULL profile backup and in-place code174 -> code175, use manual `Проверить тестовый канал`, report specific error if any. If TEST1/code176 found, check Later, download progress, cancel/retry, Android installer and data retention. Phone acceptance NOT YET verified.
+- [ ] If regression, exact prior RC7 app-source recovery code177 signed run42974037324 SUCCESS. Do not install code175 RC8 recovery over same-code fix; future code>=178 if 177 installed. No uninstall.
+- [ ] Weak maritime internet full-APK resume is separate later stage; public stable remains `available:false`. Public TEST1 code176 unchanged; no new public release authorized/published.
