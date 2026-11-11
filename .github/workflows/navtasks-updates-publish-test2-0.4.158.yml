@@ -28,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --name-only "$SOURCE_SHA" "$GITHUB_SHA" > changed.txt
-          if grep -Ev '^(\.github/workflows/navtasks-updates-publish-test-0\.4\.152\.yml)$' changed.txt; then
+          if grep -Ev '^(\.github/workflows/navtasks-updates-publish-test2-0\.4\.158\.yml)$' changed.txt; then
             echo "::error::Source changed after signed CI; refusing publication"; exit 1
           fi
           test -n "$PUBLIC_TOKEN" || { echo "::error::Missing NAVTASKS_UPDATES_PUBLISH_TOKEN scoped to public NavTasks-Updates"; exit 1; }
