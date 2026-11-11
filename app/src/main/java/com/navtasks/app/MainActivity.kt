@@ -87,6 +87,7 @@ class MainActivity : ComponentActivity() {
                     if (openRequest?.serial == handledSerial) openRequest = null
                 },
             )
+            NavUpdateOffer(settings = appSettings, dark = dark, context = this)
         }
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED

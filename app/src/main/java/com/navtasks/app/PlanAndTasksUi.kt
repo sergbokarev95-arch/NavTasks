@@ -1222,8 +1222,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            // Read-only GitHub Updates discovery. APK installation is a separate,
-            // gated stage: do not offer a misleading Install button here.
+            // This panel invokes the shared optional update flow. No app-data writes.
             NavPanel(p) {
                 Text(localized("Обновления", "Updates", lang),
                     color = p.text, fontWeight = FontWeight.Medium)
@@ -1244,9 +1243,12 @@ fun SettingsScreen(
                         " " + update.versionName, color = p.blue)
                     Text(if (lang == UiLanguage.RU) update.notesRu else update.notesEn,
                         color = p.muted, fontSize = 13.sp)
-                    Text(localized("Загрузка и установка появятся после проверки безопасности.",
-                        "Download and installation will be enabled after safety checks.", lang),
-                        color = p.muted, fontSize = 12.sp)
+                    OutlinedButton(
+                        onClick = { NavUpdateFlow.open() },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(localized("Обновить", "Update", lang))
+                    }
                 }
                 val manualResult = NavUpdateChecker.lastManualMessage
                 if (manualResult != null) {

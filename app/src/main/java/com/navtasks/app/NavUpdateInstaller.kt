@@ -172,6 +172,19 @@ internal object NavUpdateInstaller {
         if (apk.canonicalFile.parentFile != folder(context).canonicalFile ||
             !apk.isFile || apk.length() != update.sizeBytes ||
             !navUpdateValidSize(update.sizeBytes)) throw IOException("Invalid APK path or size")
+        // Recheck the file immediately before INSTALL: another process or
+        // a stale cache must not replace its verified bytes after download.
+        val digest = MessageDigest.getInstance("SHA-256")
+        apk.inputStream().use { input ->
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                val n = input.read(buffer)
+                if (n < 0) break
+                digest.update(buffer, 0, n)
+            }
+        }
+        if (!digestHex(digest.digest()).equals(update.sha256, ignoreCase = true))
+            throw IOException("Cached APK hash mismatch")
         val pm = context.packageManager
         val archive = pm.getPackageArchiveInfo(
             apk.absolutePath, PackageManager.GET_SIGNING_CERTIFICATES,

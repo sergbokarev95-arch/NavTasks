@@ -104,16 +104,27 @@ internal object NavUpdateChecker {
             }
             candidate = result
             lastCheckedAt = System.currentTimeMillis()
-            prefs.edit().putLong("last_success", lastCheckedAt).apply()
+            prefs.edit().putLong("last_success", lastCheckedAt)
+                .putLong("last_attempt", lastCheckedAt).apply()
             if (manual) lastManualMessage = if (result == null) "up_to_date" else "available"
         } catch (_: Exception) {
             // Never show an error at startup, even if the ship has no internet.
             if (manual) lastManualMessage = "offline"
         } finally {
-            prefs.edit().putLong("last_attempt", System.currentTimeMillis()).apply()
+            // Failed offline checks must NOT suppress the next online check.
             checking = false
         }
     }
+
+    /** Suppress the exact release chosen by Later, not a future update. */
+    fun defer(context: Context, code: Int) {
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putInt("dismissed_code", code).apply()
+    }
+
+    fun shouldOfferAutomatically(context: Context, update: Candidate): Boolean =
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt("dismissed_code", -1) != update.versionCode
 
     fun lastSuccess(context: Context): Long =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
