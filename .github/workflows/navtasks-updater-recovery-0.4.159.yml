@@ -104,6 +104,6 @@ jobs:
               dist/NavTasks_0.4.159_RC14_Original_0.4.152_Recovery.apk.sha256 \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
               --title "NavTasks 0.4.159 RC14 exact 0.4.152 TEST1 source recovery" \
-              --notes "PRIVATE emergency restore of exact HONOR-accepted 0.4.152-test1 application sources with only Gradle versionCode179/versionName. For regressions in resumable RC11 code178. Full profile export and in-place only; never uninstall or clear data. After code181 future code >=182. Not stable; no public publication." \
+              --notes "PRIVATE emergency restore of exact HONOR-accepted 0.4.152-test1 application sources with only Gradle versionCode181/versionName. For regressions after TEST2 code180; restore the user-accepted TEST1 application logic. Full profile export and in-place only; never uninstall or clear data. After code181 future code >=182. Not stable; no public publication." \
               --draft --prerelease
           fi
