@@ -43,6 +43,35 @@ internal fun navUpdateSupportsDirectUpgrade(
 internal fun navUpdateValidSize(sizeBytes: Long): Boolean =
     sizeBytes in 1..(200L * 1024L * 1024L)
 
+/**
+ * A resumed response must identify the exact requested byte range of this
+ * signed full APK. Never append HTTP 200 to an existing partial.
+ */
+internal enum class NavUpdateTransferMode { RESTART, APPEND }
+
+internal fun navUpdateTransferMode(
+    httpStatus: Int, offset: Long, totalSize: Long, contentRange: String?,
+): NavUpdateTransferMode {
+    if (httpStatus == HttpURLConnection.HTTP_OK) return NavUpdateTransferMode.RESTART
+    if (httpStatus != HttpURLConnection.HTTP_PARTIAL || offset <= 0 ||
+        !navUpdateValidSize(totalSize) || offset >= totalSize)
+        throw IOException("Unexpected APK response")
+    val m = Regex("bytes ([0-9]+)-([0-9]+)/([0-9]+)")
+        .matchEntire(contentRange?.trim().orEmpty())
+        ?: throw IOException("Invalid partial Content-Range")
+    val from = m.groupValues[1].toLongOrNull()
+    val end = m.groupValues[2].toLongOrNull()
+    val size = m.groupValues[3].toLongOrNull()
+    if (from != offset || size != totalSize || end == null ||
+        end < offset || end >= totalSize)
+        throw IOException("Mismatched partial Content-Range")
+    return NavUpdateTransferMode.APPEND
+}
+
+internal fun navUpdateResumeIdentity(update: NavUpdateChecker.Candidate): String =
+    "${update.versionCode}|${update.versionName}|${update.sizeBytes}|" +
+        "${update.sha256.lowercase()}|${update.apkUrl}"
+
 /** A private cache subdirectory is the ONLY FileProvider-exported location. */
 internal class NavUpdatesFileProvider : FileProvider()
 
@@ -62,8 +91,13 @@ internal object NavUpdateInstaller {
         bytes.joinToString("") { "%02x".format(it.toInt() and 0xff) }
 
     /**
-     * Download one complete APK. A failed, canceled or tampered transfer never
-     * leaves a trusted "ready" file. No profile/store migration takes place.
+     * One complete, signed APK with opt-in Range resume.
+     *
+     * A .part file is NEVER trusted as an APK: full SHA-256 + installed signer
+     * are revalidated before handing the finished file to Android. Cache is
+     * device-private and may be deleted by Android at any time. Cancel and
+     * transient failures retain a bounded partial, while corrupt candidates
+     * are discarded. No profile or business data is read or modified.
      */
     suspend fun download(
         context: Context,
@@ -77,83 +111,145 @@ internal object NavUpdateInstaller {
                 update.minSupportedVersionCode.toLong(),
             )
         ) throw IOException("Incompatible or invalid update")
+
         val apk = archiveFile(context, update)
         val partial = File(apk.parentFile, apk.name + ".part")
-        partial.delete()
-        apk.delete()
-        var ok = false
-        try {
-            val sha = MessageDigest.getInstance("SHA-256")
-            var bytes = 0L
-            var lastPercent = -1
-            var current = update.apkUrl
-            var connection: HttpURLConnection? = null
+        val identity = File(apk.parentFile, apk.name + ".part.key")
+        val expected = navUpdateResumeIdentity(update)
+        // A ready APK from a previous attempt is reusable ONLY after revalidation.
+        if (apk.isFile) {
             try {
-                for (redirect in 0..5) {
-                    if (!navUpdateAllowedAssetHost(current)) throw IOException("Forbidden redirect")
-                    val opened = URL(current).openConnection() as HttpURLConnection
-                    connection = opened
-                    opened.connectTimeout = 12_000
-                    opened.readTimeout = 15_000
-                    opened.instanceFollowRedirects = false
-                    opened.setRequestProperty("User-Agent", "NavTasks-Android-Updater")
-                    opened.setRequestProperty("Accept-Encoding", "identity")
-                    when (opened.responseCode) {
-                        HttpURLConnection.HTTP_MOVED_PERM,
-                        HttpURLConnection.HTTP_MOVED_TEMP,
-                        HttpURLConnection.HTTP_SEE_OTHER,
-                        307, 308 -> {
-                            val location = opened.getHeaderField("Location")
-                                ?: throw IOException("Redirect without location")
-                            current = URL(URL(current), location).toString()
-                            opened.disconnect()
-                            connection = null
-                            if (redirect == 5) throw IOException("Too many redirects")
-                        }
-                        HttpURLConnection.HTTP_OK -> break
-                        else -> throw IOException("APK download HTTP " + opened.responseCode)
-                    }
+                verifyArchive(context, apk, update)
+                withContext(Dispatchers.Main) { onProgress(100) }
+                return@withContext apk
+            } catch (_: Exception) {
+                apk.delete()
+            }
+        }
+        val stale = !partial.isFile || !identity.isFile ||
+            identity.length() > 2048L ||
+            runCatching { identity.readText() }.getOrNull() != expected ||
+            partial.length() > update.sizeBytes
+        if (stale) {
+            partial.delete()
+            identity.delete()
+        }
+        if (!identity.isFile) identity.writeText(expected)
+        var verified = false
+        try {
+            repeat(3) { attempt ->
+                currentCoroutineContext().ensureActive()
+                val existing = if (partial.isFile) partial.length() else 0L
+                withContext(Dispatchers.Main) {
+                    onProgress(((existing * 100L) / update.sizeBytes).toInt())
                 }
-                val active = connection ?: throw IOException("Missing APK response")
-                if (active.responseCode != HttpURLConnection.HTTP_OK)
-                    throw IOException("APK response not successful")
-                partial.outputStream().buffered().use { output ->
-                    active.inputStream.use { input ->
-                        val chunk = ByteArray(64 * 1024)
-                        while (true) {
-                            currentCoroutineContext().ensureActive()
-                            val len = input.read(chunk)
-                            if (len < 0) break
-                            bytes += len
-                            if (bytes > update.sizeBytes ||
-                                bytes > 200L * 1024L * 1024L)
-                                throw IOException("APK larger than expected")
-                            output.write(chunk, 0, len)
-                            sha.update(chunk, 0, len)
-                            val percent = ((bytes * 100L) / update.sizeBytes).toInt()
-                            if (percent != lastPercent) {
-                                lastPercent = percent
-                                withContext(Dispatchers.Main) { onProgress(percent) }
+                if (existing == update.sizeBytes) return@repeat
+                var current = update.apkUrl
+                var active: HttpURLConnection? = null
+                try {
+                    for (redirect in 0..5) {
+                        if (!navUpdateAllowedAssetHost(current))
+                            throw IOException("Forbidden APK redirect")
+                        val opened = URL(current).openConnection() as HttpURLConnection
+                        active = opened
+                        opened.connectTimeout = 15_000
+                        opened.readTimeout = 30_000
+                        opened.instanceFollowRedirects = false
+                        opened.setRequestProperty("Accept-Encoding", "identity")
+                        opened.setRequestProperty("User-Agent", "NavTasks-Android-Updater")
+                        if (existing > 0) {
+                            opened.setRequestProperty("Range", "bytes=${existing}-")
+                        }
+                        when (val status = opened.responseCode) {
+                            HttpURLConnection.HTTP_MOVED_PERM,
+                            HttpURLConnection.HTTP_MOVED_TEMP,
+                            HttpURLConnection.HTTP_SEE_OTHER, 307, 308 -> {
+                                val location = opened.getHeaderField("Location")
+                                    ?: throw IOException("APK redirect missing target")
+                                current = URL(URL(current), location).toString()
+                                opened.disconnect()
+                                active = null
+                                if (redirect == 5) throw IOException("APK redirect limit")
+                            }
+                            HttpURLConnection.HTTP_OK,
+                            HttpURLConnection.HTTP_PARTIAL -> break
+                            else -> throw IOException("APK HTTP $status")
+                        }
+                    }
+                    val connection = active ?: throw IOException("No APK response")
+                    if (!connection.contentEncoding.isNullOrBlank() &&
+                        connection.contentEncoding != "identity")
+                        throw IOException("Compressed APK response refused")
+                    val mode = navUpdateTransferMode(
+                        connection.responseCode, existing, update.sizeBytes,
+                        connection.getHeaderField("Content-Range"),
+                    )
+                    if (mode == NavUpdateTransferMode.RESTART && existing > 0) {
+                        // Server ignored Range. Reset, never append a full response.
+                        if (!partial.delete()) throw IOException("Cannot reset partial APK")
+                        withContext(Dispatchers.Main) { onProgress(0) }
+                    }
+                    val append = mode == NavUpdateTransferMode.APPEND
+                    var bytes = if (append) existing else 0L
+                    java.io.FileOutputStream(partial, append).buffered().use { output ->
+                        connection.inputStream.use { input ->
+                            val chunk = ByteArray(64 * 1024)
+                            var lastPercent = -1
+                            while (true) {
+                                currentCoroutineContext().ensureActive()
+                                val n = input.read(chunk)
+                                if (n < 0) break
+                                bytes += n
+                                if (bytes > update.sizeBytes)
+                                    throw IOException("APK exceeds expected size")
+                                output.write(chunk, 0, n)
+                                val percent = ((bytes * 100L) / update.sizeBytes).toInt()
+                                if (percent != lastPercent) {
+                                    lastPercent = percent
+                                    withContext(Dispatchers.Main) { onProgress(percent) }
+                                }
                             }
                         }
                     }
+                    if (bytes < update.sizeBytes)
+                        throw IOException("APK transfer interrupted")
+                } catch (e: IOException) {
+                    // Keep a bounded prefix for the next attempt or user retry.
+                    if (partial.length() > update.sizeBytes) {
+                        partial.delete()
+                        identity.delete()
+                    }
+                    if (attempt == 2) throw e
+                    kotlinx.coroutines.delay(1_000L * (attempt + 1))
+                } finally {
+                    active?.disconnect()
                 }
-            } finally {
-                connection?.disconnect()
             }
-            if (bytes != update.sizeBytes ||
-                !digestHex(sha.digest()).equals(update.sha256, ignoreCase = true)
-            ) throw IOException("APK integrity check failed")
+            if (!partial.isFile || partial.length() != update.sizeBytes)
+                throw IOException("Incomplete APK after retries")
             if (!partial.renameTo(apk)) throw IOException("Cannot finalize APK cache")
-            verifyArchive(context, apk, update)
-            ok = true
+            try {
+                verifyArchive(context, apk, update)
+            } catch (e: Exception) {
+                // Integrity/signature errors MUST NOT retain the corrupt candidate.
+                apk.delete()
+                partial.delete()
+                identity.delete()
+                throw e
+            }
+            verified = true
             withContext(Dispatchers.Main) { onProgress(100) }
             apk
         } catch (cancelled: CancellationException) {
+            // Safe resumable prefix remains in private cache until next explicit tap.
             throw cancelled
         } finally {
-            partial.delete()
-            if (!ok) apk.delete()
+            if (verified) {
+                partial.delete()
+                identity.delete()
+            } else {
+                apk.delete()
+            }
         }
     }
 
