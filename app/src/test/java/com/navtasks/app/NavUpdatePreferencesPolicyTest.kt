@@ -29,7 +29,8 @@ class NavUpdatePreferencesPolicyTest {
         assertTrue(update > ui.indexOf("SelectiveExchangePanel("))
         assertTrue(update < ui.indexOf("Text(\"NavTasks Glass \" + actualVersion"))
         assertTrue(ui.contains("settings.updateAutomaticUpdateOffers(it)"))
-        assertTrue(activity.contains("LaunchedEffect(appSettings.automaticUpdateOffers)"))
+        assertTrue(activity.contains("LaunchedEffect(Unit)"))
+        assertTrue(activity.contains("NavUpdateChecker.checkTestAutomatically(applicationContext)"))
         assertTrue(checker.contains("NavSettings(appContext).automaticUpdateOffers"))
         assertTrue(offer.contains("settings.automaticUpdateOffers"))
     }

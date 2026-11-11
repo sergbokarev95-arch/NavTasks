@@ -40,8 +40,18 @@ class NavTestUpdateFeedTest {
         assertNull(navParseTestFeed(test2, 176, "com.navtasks.app.glass", 36))
         assertNull(navParseTestFeed(test2.replace("test-v0.4.158", "test-v0.4.152"),
             178, "com.navtasks.app.glass", 36))
-        assertNull(navParseTestFeed(test2.replace("0.4.158-test2", "0.4.158-test3"),
+        assertNull(navParseTestFeed(test2.replace("0.4.158-test2", "0.4.158-test4"),
             178, "com.navtasks.app.glass", 36))
+    }
+
+    @Test fun test3IsAcceptedOnlyWhenSignedVersionAndPinnedUrlAreCompatible() {
+        val test3 = feed(code = 184, floor = 182)
+            .replace("0.4.152-test1", "0.4.162-test3")
+            .replace("test-v0.4.152", "test-v0.4.162")
+        assertNotNull(navParseTestFeed(test3, 182, "com.navtasks.app.glass", 36))
+        assertNull(navParseTestFeed(test3, 180, "com.navtasks.app.glass", 36))
+        assertNull(navParseTestFeed(test3.replace("test-v0.4.162", "test-v0.4.158"),
+            182, "com.navtasks.app.glass", 36))
     }
 
     @Test fun testDoesNotAlterStableAutomaticFlow() {
