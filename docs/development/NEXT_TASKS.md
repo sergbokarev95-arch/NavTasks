@@ -649,3 +649,10 @@
 - [ ] Controlled private TEST CHANNEL (not public stable) for full end-to-end version discovery, bad network, interrupted and corrupt download, optional installer permission/Cancel/Retry, and real in-place data retention. Public `stable.json` MUST remain `available:false` until approved stable. Never publish private RC/rollback to public stable.
 - [ ] For poor maritime connectivity, consider separately reviewed HTTPS Range/resumable signed-full-APK transfer, with final SHA256+signer revalidation and safe retry. Currently download restarts on interruption. Delta patch architecture deferred; version jumping must remain possible with full APK.
 - [ ] Compatible minSupportedVersionCode and migration matrix using real old profile snapshots, data privacy/Auto Backup decision, release 1.0.0 physical acceptance. If code173 rollback installed, future code>=174.
+
+## NEXT — 2026-11-11 HONOR acceptance of RC5 + controlled updater E2E
+- [x] User installed code172 `0.4.148-rc5` over installed NavTasks and reported all application data/UI still present, with newly added toggle working. This closes basic device acceptance of the settings move/toggle; retains unknowns below.
+- [ ] Verify preference persistence after process kill/reboot, actual absence of background HTTP with OFF, manual check online/offline, automatic ON check throttle and Later across future candidate; user has not expressly reported all network cases.
+- [ ] Stage4 prepare gated test-channel schema and signed full-APK publication process in isolation. No RC/recovery file in public stable, no change to `stable.json` (`available:false`). Seek explicit approval BEFORE making any test APK publicly retrievable.
+- [ ] Controlled test on HONOR of candidate detection/download/cancel/retry, installer permissions/system consent, signature/hash mismatch fail-closed, direct update over skipped versions with full profile/history retention. Samsung if possible.
+- [ ] Evaluate resumable HTTPS Range/If-Range full signed APK with bounded cache/size and SHA256+installed certificate recheck after full assembly; never rely on delta patches for basic upgrades.
