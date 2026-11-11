@@ -674,3 +674,11 @@
 - [ ] Create PUBLIC-repo-scoped fine-grained PAT in GitHub UI; store as PRIVATE `NavTasks` Actions secret `NAVTASKS_UPDATES_PUBLISH_TOKEN` (no credentials in chat). Trigger fresh publisher run after this; do not publish from failed run.
 - [ ] Only then verify PUBLIC `test-v0.4.152` prerelease APK and `channels/test.json available:true`; check `channels/stable.json available:false` unchanged and SHA/certificate metadata. Then request HONOR RC7 installation and controlled E2E test.
 - [ ] After code177 emergency restore, future upgrades require code>=178.
+
+## NEXT — Stage4 test channel published, HONOR end-to-end acceptance
+- [x] Fine-grained public-only repository publishing secret added by user in private GitHub Actions. No token in app/metadata/chat.
+- [x] Signed TEST1/code176 published as PUBLIC prerelease `test-v0.4.152` with APK and .sha256. Source Actions run42978780819 SUCCESS, verified signed full APK against historical signer, public re-download SHA, release asset size and metadata. `test.json` active `available:true`, `minSupportedVersionCode=174`. PUBLIC stable feed still `available:false`.
+- [ ] User export FULL profiles, then install signed PRIVATE RC7/code174 `0.4.150-rc7` over current RC5/code172 without uninstall, preserving app package/signer. Draft: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/untagged-439aaa4ee6cb45e7a7f8. Test Settings now contains `Проверить тестовый канал` separately from ordinary manual check.
+- [ ] User press `Проверить тестовый канал`, expect TEST1/code176, test Later and manual re-open, then Update opt-in APK download/progress, Android unknown-source permission/install consent, verify final version/data/profile notes, AMOS/Services, widgets, Handover, task history, dock. Full on-device E2E NOT yet observed.
+- [ ] If regression, consider PRIVATE signed exact RC7 recovery `0.4.153-rc9`/code177, CI42974037324 SUCCESS; backup FULL profiles before any in-place install; never uninstall/erase data. After installing code177 fallback future update code>=178.
+- [ ] Separate adverse-network/redirect/truncated/corrupt/signer-fail/installer-cancel tests, Samsung, compatibility floor/migration snapshots. Stabilization and production stable 1.0.0 gated on physical acceptance; NEVER publish prerelease on stable.
