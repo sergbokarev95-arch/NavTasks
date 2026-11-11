@@ -1276,7 +1276,27 @@ fun SettingsScreen(
                         "test_none" -> localized("Тестовых обновлений нет", "No test updates available", lang)
                         "test_offline" -> localized("Тестовый канал недоступен",
                             "Test channel unavailable", lang)
-                        else -> localized("Новых совместимых версий нет",
+                        "test_timeout" -> localized("Тестовый канал: время ожидания истекло. Повторите проверку.",
+                            "Test channel timed out. Check again.", lang)
+                        "test_dns" -> localized("Тестовый канал: не удалось найти сервер.",
+                            "Test channel: server address unavailable.", lang)
+                        "test_tls" -> localized("Тестовый канал: ошибка защищённого соединения.",
+                            "Test channel: secure connection failed.", lang)
+                        "test_redirect" -> localized("Тестовый канал: небезопасное перенаправление.",
+                            "Test channel: unsafe redirect.", lang)
+                        "test_bad_feed" -> localized("Тестовый канал: неверные данные ответа.",
+                            "Test channel: invalid response data.", lang)
+                        "test_network" -> localized("Тестовый канал: ошибка соединения. Повторите позже.",
+                            "Test channel: connection failed. Try again.", lang)
+                        "test_security" -> localized("Тестовый канал: доступ запрещён системой.",
+                            "Test channel: access blocked by system.", lang)
+                        else -> if (manualResult.startsWith("test_http_"))
+                            localized("Тестовый канал: ответ сервера HTTP ${manualResult.removePrefix("test_http_")}.",
+                                "Test channel: server returned HTTP ${manualResult.removePrefix("test_http_")}.", lang)
+                        else if (manualResult == "test_error")
+                            localized("Тестовый канал: внутренняя ошибка проверки.",
+                                "Test channel: unexpected checker error.", lang)
+                        else localized("Новых совместимых версий нет",
                             "No compatible updates found", lang)
                     }, color = p.muted, fontSize = 12.sp)
                 }
