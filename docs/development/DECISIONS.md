@@ -255,3 +255,5 @@
 
 - 2026-11-12: User confirmed complete data preservation after `0.4.158-test2` and authorized a final testing phase, followed by separate broad flaw/visual audit and only then possible 1.0.0 release. Exact accepted source is backed up; QA-only isolated branch may add tests/docs/workflow but should not change live app state or public release channels.
 - 2026-11-12: Initial preflight audit treats weak-link stable feed (old 3500ms), corrupted profile-index fallbacks, cloud backup privacy policy, old-to-new migration, and visible test-only settings as explicit release gates; no silent simplification, no unapproved profile changes, no speculative stable launch.
+
+- 2026-11-12: Pre-release synthetic full-profile/regression, signed APK and stable-channel gates passed in QA-only CI43038747378 with no application source modifications. Physical HONOR TEST2 already accepted; not sufficient evidence for Samsung, cloud backup safety, real historic version jumps or production stable publication. Keep stable feed unavailable and all fixes isolated.

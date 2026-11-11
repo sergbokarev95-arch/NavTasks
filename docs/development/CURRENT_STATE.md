@@ -568,3 +568,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Accepted original code180 source SHA `77387fb9f819c57e5291aaeed0c3972f2d67e88f`, backup `backup/navtasks-0.4.158-test2-honor-accepted`.
 - New isolated QA-only `audit/navtasks-1.0.0-preflight-code180` runs full JVM regressions, synthetic multi-module profile round trip, signed nondebuggable same-certificate code180 build, checks public stable feed still OFF; Actions run 43038747378, final status must be verified.
 - Known pre-release gaps: stable-feed weak network, corrupt profile index read fallback, Android OS backup decision, old-profile migration matrix, Samsung, tester-only UI. No stable publication.
+
+## 2026-11-12 — Pre-release QA-only CI SUCCESS
+- Automated preflight run `43038747378` SUCCESS on isolated branch `audit/navtasks-1.0.0-preflight-code180`, source `77387fb9f819c57e5291aaeed0c3972f2d67e88f` unchanged. Full unit/regression matrix, cross-module full profile export/reimport, signed nondebuggable APK packaging and original certificate, and disabled public stable feed verified.
+- User-confirmed HONOR installed `0.4.158-test2`/code180 with all data intact and successful download resumption. App is NOT stable 1.0.0 yet; release blockers include weak-net stable feed, corrupt profile-index fail-safe, Android backup decision, old-snapshot migration and Samsung verification.
