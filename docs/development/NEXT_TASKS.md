@@ -656,3 +656,15 @@
 - [ ] Stage4 prepare gated test-channel schema and signed full-APK publication process in isolation. No RC/recovery file in public stable, no change to `stable.json` (`available:false`). Seek explicit approval BEFORE making any test APK publicly retrievable.
 - [ ] Controlled test on HONOR of candidate detection/download/cancel/retry, installer permissions/system consent, signature/hash mismatch fail-closed, direct update over skipped versions with full profile/history retention. Samsung if possible.
 - [ ] Evaluate resumable HTTPS Range/If-Range full signed APK with bounded cache/size and SHA256+installed certificate recheck after full assembly; never rely on delta patches for basic upgrades.
+
+## NEXT — Stage4A/B test publisher gate and full HONOR updater E2E
+- [x] User approved ONLY public test prerelease (not stable); created public `channels/test.json` `available:false`; verified stable `available:false` and no public releases.
+- [x] Private signed test-channel checker RC7/code174 CI42972399842 SUCCESS; manual Settings-only, no automatic test requests. Backup exact RC5 at `backup/navtasks-0.4.148-before-test-channel`.
+- [x] Exact accepted RC5 app fallback RC8/code175 signed CI42972475636 SUCCESS.
+- [x] Signed test-target full APK `0.4.152-test1`/code176 CI42972731198 SUCCESS with exact RC7 application code, size28,501,761 bytes SHA256 `43843af02acbab67606a12ba711254db8c38d148e6f4455bd52f73fb5dbd4ed1`. Private draft only.
+- [x] Guarded private-to-public prerelease publisher workflow staged; #42973725649 stopped safely due absent `NAVTASKS_UPDATES_PUBLISH_TOKEN`.
+- [ ] User (GitHub UI ONLY): create fine-grained PAT with Contents Read/Write restricted to `sergbokarev95-arch/NavTasks-Updates`; add PRIVATE source repo Actions secret named `NAVTASKS_UPDATES_PUBLISH_TOKEN`; never paste token or key into chat.
+- [ ] After token provision, make fresh workflow-only push to `feature/navtasks-updater-stage4b-test-apk-0.4.152`; require signed CI SHA, signer history, public release `test-v0.4.152` and exact asset verification; update ONLY public `channels/test.json` last, stable:false unchanged.
+- [ ] Verify signed exact RC7 app recovery code177 CI42974037324; do not recommend test target installation without verified higher-code backup.
+- [ ] HONOR: export full profile backups, install RC7/code174 in place, explicitly press test channel, confirm test target code176 shown, Later/Cancel, streaming, permissions/system installer, full data/history/widgets/dock untouched. Samsung optional. Code177 rollback if code176 regression, never uninstall.
+- [ ] Test bad checksums/signers, network interruption, offline, test channel unavailable and direct-skipped-version old snapshots; no claim all version jumps work until migration matrix tested. Implement resumable full APK separately.
