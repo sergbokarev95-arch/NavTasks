@@ -131,7 +131,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG='v0.4.156-rc11-resume-private'
+          TAG='v0.4.156-rc11-weaknet-resume-private'
           SOURCE="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-updater-stage5-resumable-0.4.156-rc11" --jq '.commit.sha')"
           if [ "$SOURCE" != "$GITHUB_SHA" ]; then
             echo "::error::Outdated run must not publish"
@@ -144,7 +144,7 @@ jobs:
               dist/NavTasks_0.4.156_RC11_Resumable_Private.apk \
               dist/NavTasks_0.4.156_RC11_Resumable_Private.apk.sha256 \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              --title "NavTasks 0.4.156 RC11 · resumable APK PRIVATE QA" \
+              --title "NavTasks 0.4.156 RC11 · resumable APK + accepted weak-link fix PRIVATE QA" \
               --notes "PRIVATE DRAFT RC11/code178; never stable update feed. Same installed package and signing cert as older Betas. Optional updater includes download progress, SHA+installed signing certificate checks, explicit installer action and unknown-source permission handling. Public stable channel remains available:false. PRIVATE DRAFT resumable full APK code178, signed and nondebuggable. Do NOT publish any new public APK or change test/stable metadata under this workflow. HONOR resumable-download physical tests pending. Never uninstall/clear data. A higher-code recovery build must be ready before device installation." \
               --draft --prerelease
           fi
