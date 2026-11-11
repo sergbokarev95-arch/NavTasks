@@ -15,8 +15,8 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 174
-        versionName = "0.4.150"
+        versionCode = 178
+        versionName = "0.4.154"
     }
 
     signingConfigs {
@@ -45,7 +45,7 @@ android {
             // does not migrate private app data across different package IDs.
             applicationIdSuffix = ".glass"
             // Release candidate stays clearly distinguishable from stable 1.0.0.
-            versionNameSuffix = "-rc7"
+            versionNameSuffix = "-rc10"
             // Gradle release is non-debuggable; keep the assertion explicit.
             isDebuggable = false
             // Use the EXISTING signing config. CI fails closed if the secret is
