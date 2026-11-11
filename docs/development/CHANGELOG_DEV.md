@@ -300,3 +300,4 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 
 - 2026-11-12 — Signed private auto-offer QA RC15/code182 CI43044178187 SUCCESS: default-OFF opt-in QA startup test feed, separate 24h throttle, Update/Later dialogue and saved per-version test dismiss. Full business/data stores and Liquid Glass unchanged.
 - 2026-11-12 — Signed TEST3/code184 CI43044626615 SUCCESS, gated public TEST prerelease publisher CI43045892670 SUCCESS; isolated test.json code184 min floor182, stable.json available:false. Physical HONOR auto-offer and final release gates pending.
+- 2026-11-12 — Protected exact HONOR-accepted TEST2 source recovery code185 signed CI43045311279 SUCCESS private-only; RC15 signed CI43044178187 SUCCESS and public signed TEST3 code184 TEST-only publisher CI43045892670 SUCCESS, stable feed OFF. Physical automatic dialog acceptance pending.

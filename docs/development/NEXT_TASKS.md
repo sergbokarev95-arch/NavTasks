@@ -755,3 +755,9 @@
 - [ ] Verify private exact accepted-code180 fallback `0.4.163-rc17` code185 CI43045311279 SUCCESS, private draft signing parity, before phone testing; never install downgrade or clear user data.
 - [ ] HONOR FULL export and install rc15/code182 in place; enable both switches; cold restart should auto-show TEST3 offer code184; Later suppress same version, manual test check must reopen, disable auto offers should prevent startup; offline startup quiet. After consent, install TEST3 code184 and reconfirm all data/AMOS/Handover/Services/widgets/dock retained. Actual QA not reported yet.
 - [ ] Final production release cleanup: eliminate tester-only UI and TEST channel from normal 1.0.0; fix weak stable feed network, profile-index corruption fallback, backup policy, old profile migration and Samsung/Android lifecycle; rerun signed CI and full real-device regression; user approves stable 1.0.0 separately.
+## NEXT — 2026-11-12 signed RC15/test3/recovery ready for HONOR
+- [x] Private RC15/code182 signed CI43044178187 SUCCESS: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/untagged-a7ffbdc6242655c1ab1c.
+- [x] Public test3/code184 verified and test channel active floor182; stable still OFF.
+- [x] Exact accepted source emergency recovery code185 CI43045311279 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/untagged-c3d917192472827f56b3.
+- [ ] HONOR: full profile backup; install RC15 *in place*, turn on RC-only QA startup switch and existing auto-offers switch; fully close + relaunch, check *automatic* TEST3 pop-up. Test Later, manual check, toggle OFF and offline. Then optional TEST3 installation and data preservation. No actual device PASS yet.
+- [ ] Subsequent production gate: stable-feed weak network, profile-index fail-safe, backup policy, tester UI removal, real old version jumps/Samsung, release/installer UI polish, final signed QA and separate stable approval.
