@@ -21,7 +21,8 @@
 
 ## Still pending; do not claim done
 - No stable release APK is published; the public channel intentionally says \`available=false\`.
-- No cross-repository publisher credential is configured, no production promotion executed. Stage 2 code validates the manifest but does not publish.
+- A **manual, disabled-on-feature-branches** workflow `.github/workflows/navtasks-updates-publish-stable.yml` is staged. It cannot run live on this feature branch: it requires `github.ref == refs/heads/main`, explicit confirmation `PUBLISH_APPROVED_STABLE`, an approved NOT-draft/NOT-prerelease source release, valid stable `vX.Y.Z`, signature/package/SDK/version and SHA tests, and the PRIVATE `NAVTASKS_UPDATES_PUBLISH_TOKEN` secret with only the public target repository's Contents write permission. Public Release is created as draft, verified, published, and only then `stable.json` is updated. This does NOT execute automatically.
+- No cross-repository publisher credential is configured, no production promotion executed. Stage 2 scripts/workflows validate the release contract but have not published any APK.
 - No Android update checker/download/installer or UI exists yet. The in-app updater is Stage 3.
 - Full direct upgrade from old versions with real archived data is not proven; source-level tests cannot guarantee real-device preservation.
 - Before stable 1.0.0: preserve existing signing key, test profile export/restore, app storage data, histories, notes, AMOS, Services, reminders and widgets on HONOR/Samsung, plus safety on failed migrations; revisit \`allowBackup=true\` privacy.

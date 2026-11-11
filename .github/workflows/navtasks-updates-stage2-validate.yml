@@ -7,6 +7,7 @@ on:
       - 'tools/navtasks_update_feed.py'
       - 'tools/tests/test_navtasks_update_feed.py'
       - '.github/workflows/navtasks-updates-stage2-validate.yml'
+      - '.github/workflows/navtasks-updates-publish-stable.yml'
       - 'docs/development/UPDATER_STAGE2_CHANNEL.md'
   workflow_dispatch:
 
@@ -27,7 +28,7 @@ jobs:
           set -euo pipefail
           BASE=6c080c5d894b4756f645f72b87623a37ab79a74a
           git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
-          if grep -Ev '^(tools/navtasks_update_feed\.py|tools/tests/test_navtasks_update_feed\.py|docs/development/UPDATER_STAGE2_CHANNEL\.md|\.github/workflows/navtasks-updates-stage2-validate\.yml)$' changed.txt; then
+          if grep -Ev '^(tools/navtasks_update_feed\.py|tools/tests/test_navtasks_update_feed\.py|docs/development/UPDATER_STAGE2_CHANNEL\.md|\.github/workflows/navtasks-updates-stage2-validate\.yml|\.github/workflows/navtasks-updates-publish-stable\.yml)$' changed.txt; then
             echo "::error::Unexpected app or other source changes in stage 2"
             exit 1
           fi
