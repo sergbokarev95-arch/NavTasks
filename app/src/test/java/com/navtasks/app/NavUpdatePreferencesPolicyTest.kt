@@ -28,7 +28,7 @@ class NavUpdatePreferencesPolicyTest {
         val update = ui.indexOf("// This panel invokes the shared optional update flow")
         assertTrue(update > ui.indexOf("SelectiveExchangePanel("))
         assertTrue(update < ui.indexOf("Text(\"NavTasks Glass \" + actualVersion"))
-        assertTrue(ui.contains("settings.setAutomaticUpdateOffers(it)"))
+        assertTrue(ui.contains("settings.updateAutomaticUpdateOffers(it)"))
         assertTrue(activity.contains("LaunchedEffect(appSettings.automaticUpdateOffers)"))
         assertTrue(checker.contains("NavSettings(appContext).automaticUpdateOffers"))
         assertTrue(offer.contains("settings.automaticUpdateOffers"))

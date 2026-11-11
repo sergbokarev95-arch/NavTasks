@@ -44,7 +44,7 @@ class NavSettings(context: Context) {
     // Global, not tied to task notifications or a profile.
     var automaticUpdateOffers by mutableStateOf(prefs.getBoolean("auto_update_offers", true))
         private set
-    fun setAutomaticUpdateOffers(value: Boolean) {
+    fun updateAutomaticUpdateOffers(value: Boolean) {
         automaticUpdateOffers = value
         prefs.edit().putBoolean("auto_update_offers", value).apply()
     }

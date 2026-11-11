@@ -1236,7 +1236,7 @@ fun SettingsScreen(
                     Text(localized("Предлагать обновления", "Offer updates automatically", lang),
                         color = p.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
                     Switch(settings.automaticUpdateOffers,
-                        onCheckedChange = { settings.setAutomaticUpdateOffers(it) },
+                        onCheckedChange = { settings.updateAutomaticUpdateOffers(it) },
                         colors = navSwitchColors(p))
                 }
                 Text(localized("Если выключено, при запуске не проверяем обновления. Ручная проверка доступна всегда.",
