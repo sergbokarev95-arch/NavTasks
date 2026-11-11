@@ -691,3 +691,10 @@
 - [ ] HONOR FULL profile backup and in-place code174 -> code175, use manual `Проверить тестовый канал`, report specific error if any. If TEST1/code176 found, check Later, download progress, cancel/retry, Android installer and data retention. Phone acceptance NOT YET verified.
 - [ ] If regression, exact prior RC7 app-source recovery code177 signed run42974037324 SUCCESS. Do not install code175 RC8 recovery over same-code fix; future code>=178 if 177 installed. No uninstall.
 - [ ] Weak maritime internet full-APK resume is separate later stage; public stable remains `available:false`. Public TEST1 code176 unchanged; no new public release authorized/published.
+
+## NEXT — 2026-11-11 HAPPY-PATH HONOR UPDATER E2E USER ACCEPTANCE
+- [x] On HONOR, signed private `0.4.150-rc7-fix1` code175 detected publicly published `0.4.152-test1` code176 via manual test channel. User screenshots: offer dialog with installed/available version, post-download `Установить`, and new installed version in Settings. User reports `Обновление прошло`.
+- [x] Public test channel remains isolated enabled for code176; public stable feed remains `available:false`. No new public assets/tags authorized by this acceptance.
+- [ ] Confirm data after update: profiles/IDs, tasks/completions, Personal/Handover rich notes, AMOS, Services and work histories, widgets, notifications, schedule/alarms, custom dock/Glass and full profile export/import. User has not yet explicitly reported all.
+- [ ] Explicit adverse cases: airplane mode/offline feed, download cancel/retry, broken network mid-APK, HTTP redirects, truncated/oversize file, corrupted SHA/signature, unknown-sources permission and installer cancel. Download currently starts again after interruption; design bounded resumable full APK separately.
+- [ ] Validate direct skipped-version migration on old real profile snapshots, Samsung, signed code/version lineage and auto-update preference. Keep public stable off until production full acceptance. Phone currently code176; do not deploy any code<=176 over it.

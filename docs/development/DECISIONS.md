@@ -241,3 +241,5 @@
 
 - 2026-11-11: Manual test-channel failures on weak internet must be classified rather than silently disguised as "channel unavailable". A dedicated test-only HTTPS helper, pinned to exact public test.json path, uses bounded reconnect retries and localised timeout/DNS/TLS/HTTP/data-error labels. No change to stable automatic checks or app data.
 - 2026-11-11: Hotfix versionCode175 was intentionally selected for user-installed RC7/code174 -> unchanged TEST1/code176. Same code175 exists as unrelated private emergency RC8: **do not use RC8 as rollback**; existing exact RC7 code177 signed RC9 remains the higher-code fallback. Full E2E remains pending HONOR verification, stable still unavailable.
+
+- 2026-11-11: User verified *real HONOR* updater happy path via signed `0.4.150-rc7-fix1` code175 -> manual public TEST1 `0.4.152-test1` code176, full download, verified install-ready action, and new app version in Settings. Mark flow smoke PASS; do not label incomplete data migration, interrupted-transport, negative security, Samsung or stable release tests as complete. Keep `stable.json available:false`. New install requires code>176.
