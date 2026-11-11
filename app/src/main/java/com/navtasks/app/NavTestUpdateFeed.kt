@@ -17,7 +17,7 @@ internal fun navParseTestFeed(
     if (expectedPackage != "com.navtasks.app.glass" ||
         obj.getString("applicationId") != expectedPackage) return null
     val name = obj.getString("versionName")
-    if (!Regex("(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-test(1|2)").matches(name))
+    if (!Regex("(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-test(1|2|3)").matches(name))
         return null
     val code = obj.getInt("versionCode")
     val floor = obj.getInt("minSupportedVersionCode")

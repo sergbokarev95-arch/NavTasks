@@ -43,6 +43,7 @@ internal object NavUpdateFlow {
         private set
     fun open() { testChannel = false; explicitlyOpened = true }
     fun openTest() { testChannel = true; explicitlyOpened = true }
+    fun openTestAutomatically() { testChannel = true; explicitlyOpened = false }
     fun close() { explicitlyOpened = false; testChannel = false }
 }
 
@@ -66,17 +67,21 @@ internal fun NavUpdateOffer(
     var permissionNeeded by remember(key) { mutableStateOf(false) }
     var installerOpened by remember(key) { mutableStateOf(false) }
     var job by remember(key) { mutableStateOf<Job?>(null) }
-    if (update == null || (testChannel && !NavUpdateFlow.explicitlyOpened) ||
-        (!testChannel && (
-            (hiddenVersion == update.versionCode && !NavUpdateFlow.explicitlyOpened) ||
-            (!NavUpdateFlow.explicitlyOpened &&
-                !NavUpdateChecker.shouldOfferAutomatically(context, update, settings.automaticUpdateOffers))
-        ))
+    val automatic = !NavUpdateFlow.explicitlyOpened
+    if (update == null || (automatic && hiddenVersion == update.versionCode) ||
+        (automatic && testChannel &&
+            (!NavUpdateQa.isQaBuild(context) || !settings.qaAutomaticTestOffers ||
+                !NavUpdateChecker.shouldOfferTestAutomatically(
+                    context, update, settings.automaticUpdateOffers))) ||
+        (automatic && !testChannel &&
+            !NavUpdateChecker.shouldOfferAutomatically(
+                context, update, settings.automaticUpdateOffers))
     ) return
 
     fun later() {
         job?.cancel()
         if (!testChannel) NavUpdateChecker.defer(context, update.versionCode)
+        else if (automatic) NavUpdateChecker.deferTest(context, update.versionCode)
         hiddenVersion = update.versionCode
         NavUpdateFlow.close()
     }

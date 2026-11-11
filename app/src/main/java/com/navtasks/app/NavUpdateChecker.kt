@@ -124,11 +124,28 @@ internal object NavUpdateChecker {
         }
     }
 
-    /** Explicit manual-only check; never modifies the stable candidate or last-success throttle. */
-    suspend fun checkTest(context: Context): Boolean {
+    /** QA-only automatic test feed; independent 24h successful-check throttle. */
+    suspend fun checkTestAutomatically(context: Context): Boolean {
+        if (checking) return false
+        val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        val last = prefs.getLong("last_test_auto_success", 0L)
+        if (now >= last && now - last < CHECK_INTERVAL_MS) return false
+        val found = checkTest(context, automatic = true)
+        if (lastTestCheckSucceeded) {
+            prefs.edit().putLong("last_test_auto_success", System.currentTimeMillis()).apply()
+        }
+        return found
+    }
+
+    private var lastTestCheckSucceeded = false
+
+    /** Manual TEST checks always bypass the startup throttle. */
+    suspend fun checkTest(context: Context, automatic: Boolean = false): Boolean {
         if (checking) return false
         checking = true
-        lastManualMessage = null
+        if (!automatic) lastManualMessage = null
+        lastTestCheckSucceeded = false
         val appContext = context.applicationContext
         return try {
             val installed = appContext.packageManager
@@ -136,11 +153,13 @@ internal object NavUpdateChecker {
             // Retries are test-only; stable feed checks and throttling remain untouched.
             val body = NavTestFeedNetwork.read()
             testCandidate = navParseTestFeed(body, installed, appContext.packageName)
-            lastManualMessage = if (testCandidate == null) "test_none" else "test_available"
+            lastTestCheckSucceeded = true
+            if (!automatic) lastManualMessage =
+                if (testCandidate == null) "test_none" else "test_available"
             testCandidate != null
         } catch (error: Exception) {
             testCandidate = null
-            lastManualMessage = navTestFeedErrorCode(error)
+            if (!automatic) lastManualMessage = navTestFeedErrorCode(error)
             false
         } finally {
             checking = false
@@ -152,6 +171,18 @@ internal object NavUpdateChecker {
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit().putInt("dismissed_code", code).apply()
     }
+
+    /** Per-version Later for automatic TEST QA, independent from stable Later. */
+    fun deferTest(context: Context, code: Int) {
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putInt("dismissed_test_code", code).apply()
+    }
+
+    fun shouldOfferTestAutomatically(context: Context, update: Candidate,
+                                     autoOffers: Boolean): Boolean =
+        navUpdateMayOffer(autoOffers, context.applicationContext
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt("dismissed_test_code", -1) == update.versionCode)
 
     fun shouldOfferAutomatically(context: Context, update: Candidate,
                                  autoOffers: Boolean): Boolean =

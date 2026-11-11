@@ -49,6 +49,15 @@ class NavSettings(context: Context) {
         prefs.edit().putBoolean("auto_update_offers", value).apply()
     }
 
+    // Disabled by default and surfaced only in a signed QA-only version.
+    var qaAutomaticTestOffers by mutableStateOf(prefs.getBoolean("qa_auto_test_offers", false))
+        private set
+
+    fun updateQaAutomaticTestOffers(value: Boolean) {
+        qaAutomaticTestOffers = value
+        prefs.edit().putBoolean("qa_auto_test_offers", value).apply()
+    }
+
     fun updateLanguage(value: UiLanguage) {
         language = value
         prefs.edit().putString("language", value.name).apply()

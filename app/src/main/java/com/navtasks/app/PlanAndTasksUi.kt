@@ -1310,7 +1310,22 @@ fun SettingsScreen(
                         localized("Проверяем…", "Checking…", lang)
                         else localized("Проверить обновления", "Check for updates", lang))
                 }
-                // Stage4 QA ONLY: separate manual test channel, never checked at startup.
+                // QA-only control absent from production 1.0.x.
+                if (NavUpdateQa.isQaBuild(context)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(localized("Тестировать предложение при запуске",
+                            "Test startup update offer", lang),
+                            color = p.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
+                        Switch(settings.qaAutomaticTestOffers,
+                            onCheckedChange = { settings.updateQaAutomaticTestOffers(it) },
+                            enabled = settings.automaticUpdateOffers,
+                            colors = navSwitchColors(p))
+                    }
+                    Text(localized("Только RC: при следующем запуске проверяется тестовый канал.",
+                        "RC only: next launch checks the test feed.", lang),
+                        color = p.muted, fontSize = 12.sp)
+                }
+                // TEST channel is otherwise manual-only, including production.
                 OutlinedButton(
                     onClick = {
                         scope.launch {

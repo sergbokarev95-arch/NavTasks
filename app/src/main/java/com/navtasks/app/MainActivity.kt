@@ -79,9 +79,17 @@ class MainActivity : ComponentActivity() {
                     flags,
                 )
             }
-            LaunchedEffect(appSettings.automaticUpdateOffers) {
+            // Startup check only: toggling settings does not produce intrusive popups.
+            LaunchedEffect(Unit) {
                 if (appSettings.automaticUpdateOffers) {
-                    NavUpdateChecker.check(applicationContext, manual = false)
+                    if (NavUpdateQa.isQaBuild(applicationContext) &&
+                        appSettings.qaAutomaticTestOffers) {
+                        if (NavUpdateChecker.checkTestAutomatically(applicationContext)) {
+                            NavUpdateFlow.openTestAutomatically()
+                        }
+                    } else {
+                        NavUpdateChecker.check(applicationContext, manual = false)
+                    }
                 }
             }
             NavTasksApp(
