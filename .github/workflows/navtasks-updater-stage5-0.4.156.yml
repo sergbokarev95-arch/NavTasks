@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           BASE=639fab15d02a41c1dfecb5852f6eeb2977db4c72
           git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
-          if grep -Ev '^(app/src/main/java/com/navtasks/app/(NavUpdateInstaller|NavUpdateChecker|NavTestFeedNetwork|PlanAndTasksUi)\.kt|app/src/test/java/com/navtasks/app/(NavUpdateResumePolicyTest|NavTestFeedNetworkPolicyTest|NavTestUpdateFeedTest)\.kt|app/build\.gradle\.kts|\.github/workflows/navtasks-updater-stage5-0\.4\.156\.yml|docs/development/UPDATER_STAGE5\.md)$' changed.txt; then
+          if grep -Ev '^(app/src/main/java/com/navtasks/app/(NavUpdateInstaller|NavUpdateChecker|NavTestFeedNetwork|NavTestUpdateFeed|PlanAndTasksUi)\.kt|app/src/test/java/com/navtasks/app/(NavUpdateResumePolicyTest|NavTestFeedNetworkPolicyTest|NavTestUpdateFeedTest)\.kt|app/build\.gradle\.kts|\.github/workflows/navtasks-updater-stage5-0\.4\.156\.yml|docs/development/UPDATER_STAGE5\.md)$' changed.txt; then
             echo "::error::Unapproved business/store/Glass source modification"
             exit 1
           fi
@@ -71,6 +71,8 @@ jobs:
           grep -Fq 'navUpdateTransferMode(' app/src/main/java/com/navtasks/app/NavUpdateInstaller.kt
           grep -Fq 'verifyArchive(context, apk, update)' app/src/main/java/com/navtasks/app/NavUpdateInstaller.kt
           grep -Fq 'navUpdateAllowedAssetHost(current)' app/src/main/java/com/navtasks/app/NavUpdateInstaller.kt
+          grep -Fq 'test(1|2)' app/src/main/java/com/navtasks/app/NavTestUpdateFeed.kt
+          grep -Fq 'substringBeforeLast("-test")' app/src/main/java/com/navtasks/app/NavTestUpdateFeed.kt
           test -f app/src/test/java/com/navtasks/app/NavTestUpdateFeedTest.kt
           grep -Fq 'NavSettings(appContext).automaticUpdateOffers' app/src/main/java/com/navtasks/app/NavUpdateChecker.kt
           test -f app/src/test/java/com/navtasks/app/NavTestUpdateFeedTest.kt
@@ -131,7 +133,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG='v0.4.156-rc11-weaknet-resume-private'
+          TAG='v0.4.156-rc11-test2ready-private'
           SOURCE="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-updater-stage5-resumable-0.4.156-rc11" --jq '.commit.sha')"
           if [ "$SOURCE" != "$GITHUB_SHA" ]; then
             echo "::error::Outdated run must not publish"
@@ -144,7 +146,7 @@ jobs:
               dist/NavTasks_0.4.156_RC11_Resumable_Private.apk \
               dist/NavTasks_0.4.156_RC11_Resumable_Private.apk.sha256 \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              --title "NavTasks 0.4.156 RC11 · resumable APK + accepted weak-link fix PRIVATE QA" \
+              --title "NavTasks 0.4.156 RC11 · test2-compatible resumable APK PRIVATE QA" \
               --notes "PRIVATE DRAFT RC11/code178; never stable update feed. Same installed package and signing cert as older Betas. Optional updater includes download progress, SHA+installed signing certificate checks, explicit installer action and unknown-source permission handling. Public stable channel remains available:false. PRIVATE DRAFT resumable full APK code178, signed and nondebuggable. Do NOT publish any new public APK or change test/stable metadata under this workflow. HONOR resumable-download physical tests pending. Never uninstall/clear data. A higher-code recovery build must be ready before device installation." \
               --draft --prerelease
           fi

@@ -22,3 +22,8 @@
 - `0.4.152-test1` code176 app source predates HONOR-accepted `0.4.150-rc7-fix1` code175 manual feed retry. Without carrying fix1 forward, next weak-link test feed check could regress.
 - Stage5 therefore also copies ONLY previously signed/validated updater-only test feed networking and RU/EN error messages from commit `b2bf22674d68ed4026ef781d03243d1414ce8f63`: `NavTestFeedNetwork.kt`, `NavUpdateChecker.kt`, `PlanAndTasksUi.kt`, their respective policy/unit tests. No task/storage/notification/Glass source is modified.
 - Test-only HTTPS read is bounded (12 s connect/20 s read, 3 attempts, pinned path/redirect, 32 KiB), stable feed logic untouched. CI tests verify this behavior, in addition to full APK resume.
+
+## New test2 compatibility gate
+- User authorized a new public prerelease `0.4.158-test2`/code180. The on-device RC11/code178 must accept exact `-test2` suffix while preserving exact pinned release URL, minimum supported versionCode and installed signer checks.
+- Only `NavTestUpdateFeed.kt` and its tests are added to Stage5 scope. Existing test1 preserved, test3 rejected; test2 metadata will require minimum installed code178.
+- Final signed private RC11 draft `v0.4.156-rc11-test2ready-private` supersedes old draft. No public changes before signed target build and controlled publishing gates succeed.

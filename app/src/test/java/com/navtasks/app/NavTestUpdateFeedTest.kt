@@ -32,6 +32,18 @@ class NavTestUpdateFeedTest {
         assertNotNull(navParseTestFeed(feed(),175,"com.navtasks.app.glass",36))
     }
 
+    @Test fun secondTestReleaseAcceptedOnlyForMatchingExactUrlAndCompatibleFloor() {
+        val test2 = feed(code = 180, floor = 178)
+            .replace("0.4.152-test1", "0.4.158-test2")
+            .replace("test-v0.4.152", "test-v0.4.158")
+        assertNotNull(navParseTestFeed(test2, 178, "com.navtasks.app.glass", 36))
+        assertNull(navParseTestFeed(test2, 176, "com.navtasks.app.glass", 36))
+        assertNull(navParseTestFeed(test2.replace("test-v0.4.158", "test-v0.4.152"),
+            178, "com.navtasks.app.glass", 36))
+        assertNull(navParseTestFeed(test2.replace("0.4.158-test2", "0.4.158-test3"),
+            178, "com.navtasks.app.glass", 36))
+    }
+
     @Test fun testDoesNotAlterStableAutomaticFlow() {
         val dir = "src/main/java/com/navtasks/app/"
         val checker = java.io.File(dir+"NavUpdateChecker.kt").readText()

@@ -17,14 +17,14 @@ internal fun navParseTestFeed(
     if (expectedPackage != "com.navtasks.app.glass" ||
         obj.getString("applicationId") != expectedPackage) return null
     val name = obj.getString("versionName")
-    if (!Regex("(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-test1").matches(name))
+    if (!Regex("(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-test(1|2)").matches(name))
         return null
     val code = obj.getInt("versionCode")
     val floor = obj.getInt("minSupportedVersionCode")
     if (!navUpdateSupportsDirectUpgrade(installedCode.toLong(), code.toLong(), floor.toLong()))
         return null
     if (obj.getInt("minSdk") > deviceSdk) return null
-    val baseVersion = name.removeSuffix("-test1")
+    val baseVersion = name.substringBeforeLast("-test")
     val expectedUrl =
         "https://github.com/sergbokarev95-arch/NavTasks-Updates/releases/download/test-v${baseVersion}/NavTasks_${name}.apk"
     val apk = obj.getJSONObject("apk")
