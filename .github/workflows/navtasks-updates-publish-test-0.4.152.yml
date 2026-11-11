@@ -32,7 +32,11 @@ jobs:
           test -n "$PUBLIC_TOKEN" || { echo "::error::Missing NAVTASKS_UPDATES_PUBLISH_TOKEN scoped to public NavTasks-Updates"; exit 1; }
           test "$(gh api "repos/$SOURCE_REPO/actions/runs/42972731198" --jq .conclusion)" = success
           test "$(gh api "repos/$SOURCE_REPO/actions/runs/42972731198" --jq .head_sha)" = "$SOURCE_SHA"
-          test "$(gh release view v0.4.152-test1-private --repo "$SOURCE_REPO" --json isDraft --jq .isDraft)" = true
+          # Private GitHub drafts have no resolvable tag ref until published.
+          # Locate the immutable signed draft by its explicit tag metadata and source commit.
+          DRAFT_ID="$(gh api "repos/$SOURCE_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v0.4.152-test1-private" and .draft == true and .prerelease == true and .target_commitish == "639fab15d02a41c1dfecb5852f6eeb2977db4c72") | .id')"
+          [[ "$DRAFT_ID" =~ ^[0-9]+$ ]] || { echo "::error::Signed source draft missing or ambiguous"; exit 1; }
+          echo "SOURCE_DRAFT_ID=$DRAFT_ID" >> "$GITHUB_ENV"
           test "$(GH_TOKEN="$PUBLIC_TOKEN" gh api "repos/$PUBLIC_REPO" --jq .private)" = false
           ! GH_TOKEN="$PUBLIC_TOKEN" gh release view test-v0.4.152 --repo "$PUBLIC_REPO" >/dev/null 2>&1
       - uses: android-actions/setup-android@v4
@@ -42,7 +46,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p stage historic verify
-          gh release download v0.4.152-test1-private --repo "$SOURCE_REPO" --pattern "$APK" --pattern "$APK.sha256" --dir stage
+          # Download exact binary asset IDs from the private draft release API.
+          # The tag-based gh release download cannot see untagged private drafts.
+          for NAME in "$APK" "$APK.sha256"; do
+            ASSET_ID="$(gh api "repos/$SOURCE_REPO/releases/$SOURCE_DRAFT_ID" --jq ".assets[] | select(.name == \"$NAME\") | .id")"
+            [[ "$ASSET_ID" =~ ^[0-9]+$ ]] || { echo "::error::Missing or ambiguous private draft asset"; exit 1; }
+            gh api -H 'Accept: application/octet-stream' "repos/$SOURCE_REPO/releases/assets/$ASSET_ID" > "stage/$NAME"
+            test -s "stage/$NAME"
+          done
           (cd stage && sha256sum -c "$APK.sha256")
           AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
           SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
