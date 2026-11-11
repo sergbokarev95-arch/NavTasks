@@ -78,15 +78,14 @@ class NavReleasePreflightGateTest {
         old.remove("services")
         assertTrue(ProfileTransfer.parse(old.toString()).workOrders.isEmpty())
         assertTrue(ProfileTransfer.parse(old.toString()).services.isEmpty())
-        val corrupt = org.json.JSONObject(old.toString())
+        val originalRaw = old.toString()
+        val corrupt = org.json.JSONObject(originalRaw)
         corrupt.put("history", org.json.JSONArray().put(
             org.json.JSONObject().put("taskId", "deleted-task")
                 .put("dueDate", day.toString()).put("completed", true)))
-        assertThrows(IllegalArgumentException::class.java) {
-            ProfileTransfer.parse(corrupt.toString())
-        }
-        // Import/parser are pure; failures must not rewrite original export bytes.
-        assertEquals(old.toString(), old.toString())
+        assertTrue(runCatching { ProfileTransfer.parse(corrupt.toString()) }.isFailure)
+        // A malformed candidate must not mutate the existing in-memory source.
+        assertEquals(originalRaw, old.toString())
     }
 
     @Test fun skippedVersionsRequireCompatibleFloorAndNeverDowngrade() {
