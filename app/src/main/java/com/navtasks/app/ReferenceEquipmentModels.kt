@@ -163,7 +163,7 @@ internal data class ReferenceEquipment(
                 serialNumber = value.optString("serialNumber"),
                 location = value.optString("location"),
                 notes = value.optString("notes"),
-                folderId = value.optString("folderId").takeIf { it.isNotBlank() },
+                folderId = if (value.isNull("folderId")) null else value.getString("folderId"),
                 procedures = (0 until rows.length()).map { i ->
                     ReferenceProcedure.fromJson(rows.getJSONObject(i))
                 },
