@@ -281,3 +281,13 @@
 - [ ] Guide user to download BOTH private QA code190 and fallback code191, export installed RC20 profile and install QA190 in-place; do NOT uninstall or clear data.
 - [ ] Collect HONOR on-device QA: existing profile tasks, AMOS/Services, Handover, notifications, Today and 2x2/4x2 stats widgets, Reference SIRE/VIQ PDF/Word/excerpts/cited Equipment, library .navlib and equipment .navref backup/restore, search/zoom/save, Night/Day.
 - [ ] Fix visual/function regressions from user screenshots before future higher-code QA; maintain recovery code hierarchy. Test Samsung separately. Do not publish 1.0.0 automatically.
+
+### User-visible PDF QA defects — 2026-11-13
+- [x] User installed QA190 on HONOR, preexisting data retained.
+- [x] Reproduce from screenshot: PDF reader constrained under dock & app header, page small/horizontally clipped and search hit counter without visible page markers.
+- [x] Stage full-screen edge-to-edge reader that covers dock and app chrome, fits page width without losing aspect, supports touch pinch, pan and button zoom, and draws live rectangles on actual PDF native text-match coordinates with selected result scroll.
+- [x] Add pure JVM tests for aspect/canvas coordinates, maximum bitmap memory and zoom scaling.
+- [ ] Verify final source CI #43277871872 SUCCESS, fix failures. No screen or physical rendering claim until tested on HONOR.
+- [ ] Produce PRIVATE QA signed original-key code>=192 update atop QA190, plus retain rollback recovery191; request user profile backup before next install. No public/stable release.
+- [ ] On HONOR check multiple PDF formats (1/2/8+ pages), 100% entire width, 2–4x zoom, two-axis pan, location-aware search highlight and next/prev results even on same page, Back/keyboard, light/dark and full-screen visibility (dock must not cover PDF).
+- [ ] Samsung older Android <35 PDF text search unsupported in current native path. Scanned PDF requires OCR and has no text matches. Keep these explicit.
