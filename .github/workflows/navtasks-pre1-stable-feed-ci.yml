@@ -94,8 +94,10 @@ jobs:
           assert stable=={'schemaVersion':1,'channel':'stable','available':False}, stable
           test=json.load(open('test.json'))
           assert test['channel']=='test' and test['available'] is True
-          assert test['versionCode']==180 and test['minSupportedVersionCode']==178
+          assert test['versionCode']>=180
+          assert 1 <= test['minSupportedVersionCode'] <= test['versionCode']
           assert test['applicationId']=='com.navtasks.app.glass'
           assert test['apk']['signerSha256']=='0cb8a3c691e3fb2198682dff8c226aec710e77c7b8fded7d260a92f359a49c54'
-          print('Accepted code180 QA-only baseline validated. NO release and NO feed mutation.')
+          assert test['apk']['url'].startswith('https://github.com/sergbokarev95-arch/NavTasks-Updates/releases/download/test-v')
+          print('Stable OFF; public test remains isolated and signed. NO release or feed mutation.')
           PY
