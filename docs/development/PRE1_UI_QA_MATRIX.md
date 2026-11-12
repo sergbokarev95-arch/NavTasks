@@ -53,3 +53,15 @@
 - [ ] Export one equipment to portable .navref: include instructions, citations and excerpt; exclude sender's local folder link and serial number by default; allow explicit serial inclusion.
 - [ ] Reimport preview: detect same ID or probable duplicate, never overwrite automatically; corrupted/oversized/malformed ZIP fails safely, no Zip Slip.
 - [ ] User-facing equipment editing, actual PDF/DOCX import/reading, selective settings import/export, and wide library package are NOT YET implemented. No real-device acceptance claimed.
+
+## 2026-11-13 — Standalone Equipment Reference UI acceptance
+- [ ] On HONOR & Samsung in Day/Night, open Reference > Equipment while active profile is Vessel. SIRE 2.0 and VIQ7 remain unchanged placeholder tiles, no fake manual content.
+- [ ] Add folder, nested folder, rename; search finds nested folder by title. Back first hides keyboard/search then exits nested folder; on retap Reference dock returns to root.
+- [ ] Add equipment title and optional maker/model/serial/location/notes. Reopen after app kill and profile switch; vessel inventories never bleed into another profile.
+- [ ] Add, edit, read and delete cited procedure with manual title, page, section, edition, excerpt and optional step notes. Manual text is read-only in viewing mode, while interval remains informational only.
+- [ ] Reject empty equipment names, excerpt, source title and bad page numbers. Check long (>4000-character) multi-paragraph excerpts with keyboard/scroll selection on HONOR.
+- [ ] Search equipment metadata and procedure excerpts across folders; highlight results, next/previous arrow ordering, no overlay with dock, no invisible tapped row.
+- [ ] Export one equipment .navref via in-card menu and Settings > Reference exchange; verify serial redacted by default and documents are NOT included, only citations/excerpts.
+- [ ] Import .navref on second vessel profile: preview entry and procedures, add-copy, exact-ID explicit replacement, similar name conflict, corrupt ZIP warning. No tasks, service dates, notifications or AMOS changes.
+- [ ] Do not claim complete protection via existing full-profile JSON export: new equipment catalog is separate app-private files. Before final 1.0.0 deliver complete Reference library export/restore (including all equipment, folders and manuals when supported) and test device migration.
+- [ ] SIRE/VIQ PDF/DOCX import/view and general user manuals/excerpts not yet available. These must be implemented and regression-tested before stating the overall Reference feature complete.
