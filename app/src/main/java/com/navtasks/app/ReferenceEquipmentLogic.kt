@@ -108,6 +108,17 @@ internal fun referenceEquipmentSearchPreview(
         .replace("\n", " ") + if (end < matching.length) "…" else ""
 }
 
+/** Folder name search walks all user folders; browsing stays within the open folder. */
+internal fun referenceVisibleFolders(
+    catalog: ReferenceEquipmentCatalog, parentId: String?, query: String,
+): List<ReferenceFolder> {
+    val needle = navEffectiveSearchQuery(query)
+    return catalog.folders.filter {
+        if (needle.isEmpty()) it.parentId == parentId
+        else it.title.contains(needle, ignoreCase = true)
+    }.sortedBy { it.title.lowercase() }
+}
+
 /** Empty query is a browse state; active search searches all folders, not just open one. */
 internal fun referenceEquipmentVisible(
     catalog: ReferenceEquipmentCatalog, folderId: String?, query: String,
