@@ -65,3 +65,11 @@
 - [ ] Import .navref on second vessel profile: preview entry and procedures, add-copy, exact-ID explicit replacement, similar name conflict, corrupt ZIP warning. No tasks, service dates, notifications or AMOS changes.
 - [ ] Do not claim complete protection via existing full-profile JSON export: new equipment catalog is separate app-private files. Before final 1.0.0 deliver complete Reference library export/restore (including all equipment, folders and manuals when supported) and test device migration.
 - [ ] SIRE/VIQ PDF/DOCX import/view and general user manuals/excerpts not yet available. These must be implemented and regression-tested before stating the overall Reference feature complete.
+
+## 2026-11-13 — Original-manual archive release gates
+- [ ] Save shared manual files in SIRE/VIQ/My Materials; navigate nested folders; show cached originals offline after force close, profile switch, airplane mode and reboot.
+- [ ] Export .navlib containing actual original PDF/DOCX bytes; import into another device/profile, verify SHA256 and exact page/table/format fidelity, and do not overwrite existing shared manuals.
+- [ ] Corrupt ZIP, missing DOCX member, path traversal, altered checksum, ZIP bomb and partial file import must never modify the existing catalog.
+- [ ] Validate AndroidX PDF reader search/zoom/bookmarks on HONOR and Samsung, fallback when library unavailable on older devices. Scanned PDFs without text need clear 'search unavailable' state; do not silently invoke network OCR.
+- [ ] DOCX lightweight reading keeps paragraphs/headings/lists/tables where feasible and opens original externally for fidelity fallback; no macro execution or external requests.
+- [ ] Separate vessel Equipment .navref and shared manuals .navlib have independent backup/restore UI; show filenames and accurate scope. Never imply usual Task Profile JSON includes both.
