@@ -164,3 +164,13 @@
 
 ## 2026-11-12 — User correction: Reference must be completely independent
 - Previous assistant-proposed integration of Reference equipment with Tasks, AMOS, Services, Works, Today and job schedules was explicitly REJECTED. Do not implement relationships, buttons, deep links, task IDs, completion states, due dates, overdue status, reminders or import of job data in Reference. The user separately enters actual scheduled work in existing AMOS/Services. When a procedure is needed they manually open Reference, find equipment and consult the cited manual/excerpt. Any intervals in Reference are descriptive, not executable schedules. Shared manuals and selective export/import of reference-only equipment remain approved. See REFERENCE_LIBRARY_WIDGETS_PROPOSAL.md.
+
+## NEXT — Statistics widgets + Equipment foundation build/acceptance
+- [x] Stage no-checkbox 2×2 and 4×2 RemoteViews, Today and Tomorrow progress/status, blue, missed display; remove WIDGET_TOGGLE logic and keep click-only-to-Today.
+- [x] Add pure unit tests for stats, completed/empty days, tomorrow, no task mutations, RU/EN labels and theme colors; confirm calculation uses read-only `dayCounts`.
+- [x] Stage independent ReferenceEquipment/ReferenceProcedure/ReferenceSource and folder hierarchy, per-profile atomic JSON store, safe standalone .navref equipment ZIP (manifest+excerpt+source, without full PDF), duplicate preview, no task IDs.
+- [x] Add unit tests for catalog roundtrip, required excerpt/source, archive tampering/zip limits, duplicate IDs and cycles; harden failed-open read.
+- [ ] Verify CI `43228912162` fully passes (including signing and source tests); diagnose/fix if not.
+- [ ] Install only an eventual higher-code original-key signed candidate after explicit user approval; HONOR/Samsung test widget 2×2/4×2 geometry, nighttime contrast, Tomorrow after Today all completed, midnight/profile/restart refresh, title overflow; no taps complete tasks.
+- [ ] Build independent Reference user-facing Equipment hierarchy/CRUD, manual file storage with library export/import, .navref Settings chooser and conflict preview, PDF/DOCX viewer/search. The standalone one-equipment archive foundation is NOT the final import UI.
+- [ ] Run full regression and separately approve stable 1.0.0; keep public stable feed off.
