@@ -84,11 +84,33 @@ internal object ReferenceManualArchive {
     }
 
     /**
+     * A process crash can leave a large, otherwise inaccessible staging directory.
+     * Only remove OUR precisely named archive staging folders older than seven
+     * days, never recently opened previews or unrelated application files.
+     */
+    internal fun cleanupAbandonedStages(
+        parentDirectory: File, nowMillis: Long = System.currentTimeMillis(),
+    ): Int {
+        val cutoff = nowMillis - 7L * 24 * 60 * 60 * 1000
+        var cleaned = 0
+        for (candidate in parentDirectory.listFiles().orEmpty()) {
+            if (candidate.isDirectory &&
+                candidate.name.startsWith("reference-manuals-") &&
+                candidate.name.endsWith(".staging") &&
+                candidate.lastModified() < cutoff &&
+                candidate.deleteRecursively()
+            ) cleaned++
+        }
+        return cleaned
+    }
+
+    /**
      * Caller must close the returned staging handle. zip entry paths are
      * canonical, based ONLY on validated stored digests, never display names.
      */
     fun stage(input: InputStream, parentDirectory: File): StagedManualArchive {
         require(parentDirectory.mkdirs() || parentDirectory.isDirectory)
+        cleanupAbandonedStages(parentDirectory)
         val stage = File.createTempFile("reference-manuals-", ".staging", parentDirectory)
         require(stage.delete() && stage.mkdir()) { "Could not prepare archive staging" }
         try {
