@@ -222,3 +222,7 @@
 - [ ] Confirm signed CI #43253904642 SUCCESS, repair if failures.
 - [ ] Add user-facing SAF manual import and .navlib backup UI on IO dispatcher, full PDF reader with document search, basic local DOCX viewer, comprehensive Reference search and custom excerpts.
 - [ ] After complete in-app full Reference backup, test replacing phone and retaining manuals + equipment catalogs; export formats are intentionally separate until unified export is accepted. No 1.0.0 release without on-device QA.
+
+### Latest source-test gate — 2026-11-13
+- [ ] Verify signed full JVM/source CI #43254879474 after shared manual ZIP backup + hash/collision validation. Do not use any unchecked APK for phone.
+- [ ] After CI pass, integrate OFFLINE manual picker/reader and .navlib export/import into the Reference UI with IO-dispatched work and safe error handling. PDF beta01 proved compile only on isolated branch and still requires device acceptance.
