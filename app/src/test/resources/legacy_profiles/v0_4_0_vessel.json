@@ -1,0 +1,85 @@
+{
+  "format": "navtasks-full-profile-v1",
+  "schemaVersion": 1,
+  "profile": {
+    "id": "legacy-040",
+    "title": "Legacy 0.4.0 vessel",
+    "kind": "VESSEL"
+  },
+  "tasks": [
+    {
+      "id": "gmdss-040",
+      "title": "Weekly GMDSS test",
+      "frequency": "WEEKLY",
+      "scheduleMode": "CALENDAR",
+      "startDate": "2026-01-02",
+      "dayOfWeek": 5,
+      "dayOfMonth": 1,
+      "intervalCount": 1,
+      "missedPolicy": "HISTORY",
+      "completionMode": "AUTOMATIC",
+      "deadlineTime": "",
+      "notificationsEnabled": true,
+      "remindMinutesBefore": 60,
+      "enabled": true,
+      "checklist": [
+        {
+          "id": "gmdss-040-check",
+          "title": "GMDSS PV/KV test",
+          "required": true,
+          "comment": "Log result"
+        }
+      ]
+    }
+  ],
+  "history": [
+    {
+      "taskId": "gmdss-040",
+      "dueDate": "2026-03-06",
+      "checklist": [
+        {
+          "id": "gmdss-040-check",
+          "title": "GMDSS PV/KV test",
+          "required": true,
+          "comment": "Log result"
+        }
+      ],
+      "checkedIds": [
+        "gmdss-040-check"
+      ],
+      "completed": true,
+      "completedAt": "2026-03-06T14:20:00Z",
+      "skipped": false,
+      "postponedTo": "2026-03-07",
+      "autoTransferred": false,
+      "closedReason": ""
+    }
+  ],
+  "handover": [
+    {
+      "id": "nav-040",
+      "title": "Navigation",
+      "entries": [
+        {
+          "id": "nav-040-entry",
+          "title": "ECDIS license",
+          "notes": "Renewal noted 2026",
+          "mark": "COMPLETED",
+          "completedDate": "2026-03-05"
+        }
+      ]
+    }
+  ],
+  "lastVisit": "2026-03-09",
+  "services": [
+    {
+      "id": "radar-040",
+      "equipment": "Radar magnetron",
+      "lastDate": "2024-01-15",
+      "nextDate": "2029-01-15",
+      "comment": "Five year overhaul",
+      "periodMonths": 60,
+      "remindMonths": 3
+    }
+  ]
+}

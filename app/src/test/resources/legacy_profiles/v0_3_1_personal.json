@@ -1,0 +1,27 @@
+{
+  "format": "navtasks-full-profile-v1",
+  "schemaVersion": 1,
+  "profile": {
+    "id": "personal",
+    "title": "Личное",
+    "kind": "PERSONAL"
+  },
+  "tasks": [],
+  "history": [],
+  "handover": [
+    {
+      "id": "notes-031",
+      "title": "Personal notes",
+      "entries": [
+        {
+          "id": "note-031",
+          "title": "Old personal reminder",
+          "notes": "Remember documents",
+          "mark": "OPEN",
+          "completedDate": ""
+        }
+      ]
+    }
+  ],
+  "lastVisit": "2026-03-09"
+}

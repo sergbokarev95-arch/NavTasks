@@ -1,0 +1,142 @@
+{
+  "format": "navtasks-full-profile-v1",
+  "schemaVersion": 1,
+  "profile": {
+    "id": "legacy-044",
+    "title": "Legacy 0.4.44 vessel",
+    "kind": "VESSEL"
+  },
+  "tasks": [
+    {
+      "id": "gmdss-044",
+      "title": "Weekly GMDSS test",
+      "frequency": "WEEKLY",
+      "scheduleMode": "CALENDAR",
+      "startDate": "2026-01-02",
+      "dayOfWeek": 5,
+      "dayOfMonth": 1,
+      "intervalCount": 1,
+      "missedPolicy": "HISTORY",
+      "completionMode": "AUTOMATIC",
+      "deadlineTime": "",
+      "notificationsEnabled": true,
+      "remindMinutesBefore": 60,
+      "enabled": true,
+      "checklist": [
+        {
+          "id": "gmdss-044-check",
+          "title": "GMDSS PV/KV test",
+          "required": true,
+          "comment": "Check radio"
+        }
+      ]
+    }
+  ],
+  "history": [
+    {
+      "taskId": "gmdss-044",
+      "dueDate": "2026-03-06",
+      "checklist": [
+        {
+          "id": "gmdss-044-check",
+          "title": "GMDSS PV/KV test",
+          "required": true,
+          "comment": "Check radio"
+        }
+      ],
+      "checkedIds": [
+        "gmdss-044-check"
+      ],
+      "completed": true,
+      "completedAt": "2026-03-06T14:20:00Z",
+      "skipped": false,
+      "postponedTo": "2026-03-07",
+      "autoTransferred": false,
+      "closedReason": ""
+    }
+  ],
+  "handover": [
+    {
+      "id": "nav-044",
+      "title": "Navigation",
+      "entries": [
+        {
+          "id": "nav-044-entry",
+          "title": "ECDIS license",
+          "notes": "Renewal noted 2026",
+          "mark": "COMPLETED",
+          "completedDate": "2026-03-05"
+        }
+      ]
+    }
+  ],
+  "lastVisit": "2026-03-09",
+  "services": [
+    {
+      "id": "radar-044",
+      "equipment": "Radar magnetron",
+      "lastDate": "2026-01-10",
+      "nextDate": "2027-01-10",
+      "comment": "Annual radar check",
+      "periodMonths": 12,
+      "remindMonths": 2,
+      "requestNumber": "REQ-044",
+      "completedAt": null,
+      "closedAt": null,
+      "serviceHistory": [
+        {
+          "scheduledDate": "2025-01-10",
+          "completedAt": "2025-01-11",
+          "requestNumber": "REQ-043",
+          "equipment": "Radar magnetron",
+          "comment": "Prior service",
+          "intervalMonths": 12
+        }
+      ]
+    }
+  ],
+  "workOrders": [
+    {
+      "id": "amos-044",
+      "reference": "AMOS-044",
+      "startDate": "2025-08-01",
+      "title": "Gyro calibration",
+      "dueDate": "2026-08-01",
+      "createdAt": "2025-07-01",
+      "completedAt": null,
+      "closedAt": null,
+      "comment": "Calibrate by crew",
+      "checklist": [
+        {
+          "id": "amos-044-check",
+          "title": "GMDSS PV/KV test",
+          "required": true,
+          "comment": "Document gyro deviation"
+        }
+      ],
+      "checkedItemIds": [],
+      "remindDaysBefore": 7,
+      "repeatDays": 0,
+      "repeatMonths": 12,
+      "executionHistory": [
+        {
+          "id": "amos-cycle-043",
+          "dueDate": "2025-08-01",
+          "completedAt": "2025-08-02",
+          "checklist": [
+            {
+              "id": "amos-044-check",
+              "title": "GMDSS PV/KV test",
+              "required": true,
+              "comment": "Document gyro deviation"
+            }
+          ],
+          "checkedItemIds": [
+            "amos-044-check"
+          ],
+          "scheduleAnchorBefore": "2025-08-01"
+        }
+      ]
+    }
+  ]
+}

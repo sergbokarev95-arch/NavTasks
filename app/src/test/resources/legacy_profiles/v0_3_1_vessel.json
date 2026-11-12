@@ -1,0 +1,72 @@
+{
+  "format": "navtasks-full-profile-v1",
+  "schemaVersion": 1,
+  "profile": {
+    "id": "legacy-031",
+    "title": "Legacy 0.3.1 vessel",
+    "kind": "VESSEL"
+  },
+  "tasks": [
+    {
+      "id": "gmdss-031",
+      "title": "Weekly GMDSS test",
+      "frequency": "WEEKLY",
+      "scheduleMode": "CALENDAR",
+      "startDate": "2026-01-02",
+      "dayOfWeek": 5,
+      "dayOfMonth": 1,
+      "intervalCount": 1,
+      "missedPolicy": "HISTORY",
+      "completionMode": "AUTOMATIC",
+      "deadlineTime": "",
+      "notificationsEnabled": true,
+      "remindMinutesBefore": 60,
+      "enabled": true,
+      "checklist": [
+        {
+          "id": "gmdss-031-check",
+          "title": "GMDSS PV/KV test",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "history": [
+    {
+      "taskId": "gmdss-031",
+      "dueDate": "2026-03-06",
+      "checklist": [
+        {
+          "id": "gmdss-031-check",
+          "title": "GMDSS PV/KV test",
+          "required": true
+        }
+      ],
+      "checkedIds": [
+        "gmdss-031-check"
+      ],
+      "completed": true,
+      "completedAt": "2026-03-06T14:20:00Z",
+      "skipped": false,
+      "postponedTo": "2026-03-07",
+      "autoTransferred": false,
+      "closedReason": ""
+    }
+  ],
+  "handover": [
+    {
+      "id": "nav-031",
+      "title": "Navigation",
+      "entries": [
+        {
+          "id": "nav-031-entry",
+          "title": "ECDIS license",
+          "notes": "Renewal noted 2026",
+          "mark": "COMPLETED",
+          "completedDate": "2026-03-05"
+        }
+      ]
+    }
+  ],
+  "lastVisit": "2026-03-09"
+}
