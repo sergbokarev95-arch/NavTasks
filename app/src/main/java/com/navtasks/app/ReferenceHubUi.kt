@@ -48,9 +48,14 @@ internal fun ReferenceHubScreen(
     val later = localized("Материалы будут добавлены позже", "Content coming later", lang)
     val manualMatches = if (query.isBlank()) emptyList()
         else manuals?.let { referenceManualSearch(it, query) }.orEmpty()
-    val sireHits = manualMatches.count { it.sectionId == NavReferenceSections.SIRE }
-    val viqHits = manualMatches.count { it.sectionId == NavReferenceSections.VIQ7 }
-    val personalHits = manualMatches.count { it.sectionId == NavReferenceSections.PERSONAL }
+    val excerptMatches = if (query.isBlank()) emptyList()
+        else manuals?.excerpts?.filter { referenceExcerptMatches(it, query) }.orEmpty()
+    val sireHits = manualMatches.count { it.sectionId == NavReferenceSections.SIRE } +
+        excerptMatches.count { it.sectionId == NavReferenceSections.SIRE }
+    val viqHits = manualMatches.count { it.sectionId == NavReferenceSections.VIQ7 } +
+        excerptMatches.count { it.sectionId == NavReferenceSections.VIQ7 }
+    val personalHits = manualMatches.count { it.sectionId == NavReferenceSections.PERSONAL } +
+        excerptMatches.count { it.sectionId == NavReferenceSections.PERSONAL }
     val showSire = referencePlaceholderMatches(query, "SIRE 2.0", sireSubtitle) || sireHits > 0
     val showViq = referencePlaceholderMatches(query, "VIQ7", viqSubtitle) || viqHits > 0
     val personalName = localized("Мои материалы", "My materials", lang)
@@ -76,9 +81,10 @@ internal fun ReferenceHubScreen(
     ) + if (query.isBlank()) emptyList() else
         equipmentMatches.map {
             NavReferenceSearchHit("equipment", NavReferenceField.TITLE, 0)
-        } + manualMatches.map { file ->
+        } + (manualMatches.map { it.sectionId } +
+            excerptMatches.map { it.sectionId }).map { section ->
             NavReferenceSearchHit(
-                when (file.sectionId) {
+                when (section) {
                     NavReferenceSections.SIRE -> "sire"
                     NavReferenceSections.VIQ7 -> "viq"
                     else -> "personal"
@@ -194,7 +200,8 @@ internal fun ReferenceHubScreen(
                     ReferencePlaceholderTile(
                         p, "SIRE 2.0", sireSubtitle,
                         localized("Документов: ", "Documents: ", lang) +
-                            manuals?.documents.orEmpty().count { it.sectionId == NavReferenceSections.SIRE },
+                            (manuals?.documents.orEmpty().count { it.sectionId == NavReferenceSections.SIRE } +
+                                manuals?.excerpts.orEmpty().count { it.sectionId == NavReferenceSections.SIRE }),
                         query,
                         activeHit = focusedSearchHit?.takeIf { it.sectionId == "sire" },
                         onClick = {
@@ -209,7 +216,8 @@ internal fun ReferenceHubScreen(
                     ReferencePlaceholderTile(
                         p, "VIQ7", viqSubtitle,
                         localized("Документов: ", "Documents: ", lang) +
-                            manuals?.documents.orEmpty().count { it.sectionId == NavReferenceSections.VIQ7 },
+                            (manuals?.documents.orEmpty().count { it.sectionId == NavReferenceSections.VIQ7 } +
+                                manuals?.excerpts.orEmpty().count { it.sectionId == NavReferenceSections.VIQ7 }),
                         query,
                         activeHit = focusedSearchHit?.takeIf { it.sectionId == "viq" },
                         onClick = {
@@ -258,9 +266,11 @@ internal fun ReferenceHubScreen(
                             p, personalName,
                             localized("Свои PDF, Word и папки", "Your PDF, Word and folders", lang),
                             localized("Документов: ", "Documents: ", lang) +
-                                manuals.documents.count {
+                                (manuals.documents.count {
                                     it.sectionId == NavReferenceSections.PERSONAL
-                                }, query,
+                                } + manuals.excerpts.count {
+                                    it.sectionId == NavReferenceSections.PERSONAL
+                                }), query,
                             activeHit = focusedSearchHit?.takeIf { it.sectionId == "personal" },
                             onClick = {
                                 manualSection = NavReferenceSections.PERSONAL
