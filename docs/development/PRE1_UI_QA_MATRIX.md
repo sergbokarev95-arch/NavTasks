@@ -87,3 +87,10 @@
 - [ ] Edit excerpt and ensure stable ID and preservation of title, body and source; delete with confirmation only; no task, reminder or completion status.
 - [ ] Restore .navlib on another device and verify excerpt-only archives, nested folder placements, non-destructive copy IDs and all citations, as well as original PDF/DOCX.
 - [ ] Old v1 manual catalog without excerpts field still loads; archive with unexpected task/reminder fields is rejected.
+
+### 2026-11-13 HONOR PDF reader correction
+- [ ] Full-screen PDF and DOCX reader must cover NavTasks title/profile tabs/floating dock while preserving system status/nav insets and a visible Back control.
+- [ ] Unzoomed PDF fully fits available screen width at 100%, preserves page aspect ratio, no clipping left or right; page tall can scroll vertically; support portrait/landscape PDF.
+- [ ] Pinch zoom and 1x-4x controls, zoomed PDF two-axis scroll/pan, no flashing on page changes, known 1/2/8 page counters and bounded last-page button.
+- [ ] Search native API35+ PDF text: exact found count, highlight all matches on page (blue), selected match (orange), scroll to current hit; next/previous across same page and pages; query changes cancel stale scans. Scanned image PDF may return 0 without OCR.
+- [ ] Test large PDFs for memory and search responsiveness, dark background plus white document, keyboard/back, app data after relaunch. No other task/business system touched.
