@@ -1,0 +1,106 @@
+package com.navtasks.app
+
+/** All transformations are confined to reference equipment; there are no scheduler calls. */
+internal fun referenceSaveEquipment(
+    catalog: ReferenceEquipmentCatalog, updated: ReferenceEquipment,
+): ReferenceEquipmentCatalog {
+    updated.validate()
+    val previous = catalog.equipment.indexOfFirst { it.id == updated.id }
+    val records = catalog.equipment.toMutableList()
+    if (previous < 0) records.add(updated) else records[previous] = updated
+    return catalog.copy(equipment = records).also { it.validate() }
+}
+
+internal fun referenceDeleteEquipment(
+    catalog: ReferenceEquipmentCatalog, equipmentId: String,
+): ReferenceEquipmentCatalog = catalog.copy(
+    equipment = catalog.equipment.filterNot { it.id == equipmentId },
+).also { it.validate() }
+
+internal fun referenceSaveFolder(
+    catalog: ReferenceEquipmentCatalog, updated: ReferenceFolder,
+): ReferenceEquipmentCatalog {
+    updated.validate()
+    val previous = catalog.folders.indexOfFirst { it.id == updated.id }
+    val folders = catalog.folders.toMutableList()
+    if (previous < 0) folders.add(updated) else folders[previous] = updated
+    return catalog.copy(folders = folders).also { it.validate() }
+}
+
+/** Never delete a folder if it still contains equipment or nested folders. */
+internal fun referenceDeleteEmptyFolder(
+    catalog: ReferenceEquipmentCatalog, folderId: String,
+): ReferenceEquipmentCatalog {
+    require(catalog.folders.none { it.parentId == folderId }) { "Folder contains subfolders" }
+    require(catalog.equipment.none { it.folderId == folderId }) { "Folder contains equipment" }
+    return catalog.copy(folders = catalog.folders.filterNot { it.id == folderId })
+        .also { it.validate() }
+}
+
+internal fun referenceSaveProcedure(
+    equipment: ReferenceEquipment, updated: ReferenceProcedure,
+): ReferenceEquipment {
+    updated.validate()
+    val index = equipment.procedures.indexOfFirst { it.id == updated.id }
+    val procedures = equipment.procedures.toMutableList()
+    if (index < 0) procedures.add(updated) else procedures[index] = updated
+    return equipment.copy(procedures = procedures).also { it.validate() }
+}
+
+internal fun referenceRemoveProcedure(
+    equipment: ReferenceEquipment, procedureId: String,
+): ReferenceEquipment = equipment.copy(
+    procedures = equipment.procedures.filterNot { it.id == procedureId },
+).also { it.validate() }
+
+/** A search matches equipment metadata, full procedure text, and cited manuals. */
+internal fun referenceMatchesEquipment(item: ReferenceEquipment, query: String): Boolean {
+    val needle = navEffectiveSearchQuery(query)
+    if (needle.isEmpty()) return true
+    val fields = buildList {
+        add(item.title)
+        add(item.manufacturer)
+        add(item.model)
+        add(item.serialNumber)
+        add(item.location)
+        add(item.notes)
+        item.procedures.forEach { p ->
+            add(p.title)
+            add(p.intervalDescription)
+            add(p.excerpt)
+            add(p.instructions)
+            add(p.source.documentTitle)
+            add(p.source.section)
+            add(p.source.edition)
+        }
+    }
+    return fields.any { it.contains(needle, ignoreCase = true) }
+}
+
+/** Empty query is a browse state; active search searches all folders, not just open one. */
+internal fun referenceEquipmentVisible(
+    catalog: ReferenceEquipmentCatalog, folderId: String?, query: String,
+): List<ReferenceEquipment> =
+    catalog.equipment.filter {
+        if (navEffectiveSearchQuery(query).isEmpty()) it.folderId == folderId
+        else referenceMatchesEquipment(it, query)
+    }.sortedBy { it.title.lowercase() }
+
+/**
+ * Importing a shared equipment card never moves its originating folder
+ * and never creates a task. Caller chooses add-copy or explicit replace.
+ */
+internal fun referenceImportEquipment(
+    catalog: ReferenceEquipmentCatalog,
+    incoming: ReferenceEquipment,
+    targetFolderId: String?,
+    replaceSameId: Boolean = false,
+): ReferenceEquipmentCatalog {
+    val local = if (replaceSameId) incoming.copy(folderId = targetFolderId)
+        else incoming.copy(
+            id = navReferenceId(),
+            folderId = targetFolderId,
+            procedures = incoming.procedures.map { it.copy(id = navReferenceId()) },
+        )
+    return referenceSaveEquipment(catalog, local)
+}
