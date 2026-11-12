@@ -239,3 +239,6 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-13 — Complete original-manual transport backend staged (CI pending)
 - Reference shared PDF/DOCX metadata, original-file streaming copy/sha validation, and `ReferenceManualArchive` .navlib byte-inclusive export with staged verification/restoration have been added. Manual reader/SAF UI still NOT wired; no user manuals were imported.
 - Archive scope: shared original manual files and nested folders; per-vessel Equipment catalog backup is separate .navref. Neither ever includes Tasks, AMOS, Services or notification state. Last manual transport source CI #43253904642 pending; released RC20 untouched.
+
+### Latest staged code — 2026-11-13
+- Manual originals and .navlib backup/verified restore are backend only, now hardened against duplicate-SHA inconsistent size and corrupt existing hash-named blobs. Latest CI #43254879474 pending. No SAF import UI added and no installed app changes.
