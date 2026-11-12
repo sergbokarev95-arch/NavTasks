@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   signed-recovery:
@@ -58,13 +58,19 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --min-sdk-version 31 "$APK"
           ACTUAL="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}')"
           test "$ACTUAL" = 0cb8a3c691e3fb2198682dff8c226aec710e77c7b8fded7d260a92f359a49c54
-      - name: Upload PRIVATE QA APK (NOT a public release)
-        uses: actions/upload-artifact@v4
-        with:
-          name: NavTasks-0.4.170-qa1-code190
-          path: app/build/outputs/apk/release/app-release.apk
-          retention-days: 30
-          if-no-files-found: error
+      - name: Save verified QA APK as PRIVATE DRAFT release (not latest, not stable)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/NavTasks-0.4.170-qa1-code190.apk"
+          gh release create "navtasks-private-qa-code190" \
+            "$RUNNER_TEMP/NavTasks-0.4.170-qa1-code190.apk" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft --latest=false \
+            --target "$GITHUB_SHA" \
+            --title "PRIVATE NavTasks 0.4.170-qa1 code190 (DO NOT PUBLISH)" \
+            --notes "Internal device-QA artifact only. Requires existing accepted RC20 package and signer; back up user profiles first. Not stable 1.0.0 and never advertised via public update feed."
       - name: Erase temporary signing key
         if: always()
         run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
