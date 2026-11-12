@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -58,10 +59,13 @@ internal fun ReferenceManualLibraryScreen(
     var deleteDocument by remember { mutableStateOf<ReferenceManualDocument?>(null) }
     var deleteFolder by remember { mutableStateOf<ReferenceManualFolder?>(null) }
     var stagedImport by remember { mutableStateOf<StagedManualArchive?>(null) }
+    // During restore, its coroutine owns the staged files until the copy finishes.
+    // Disposal of the dialog must not delete originals while they are being read.
+    var restoringArchive by remember { mutableStateOf(false) }
 
     DisposableEffect(stagedImport) {
         val stage = stagedImport
-        onDispose { stage?.close() }
+        onDispose { if (!restoringArchive) stage?.close() }
     }
 
     fun finish(result: Result<ReferenceManualCatalog>, success: String) {
@@ -144,7 +148,8 @@ internal fun ReferenceManualLibraryScreen(
                 val result = withContext(Dispatchers.IO) {
                     runCatching {
                         context.contentResolver.openInputStream(uri)?.use { source ->
-                            ReferenceManualArchive.stage(source, context.cacheDir)
+                            ReferenceManualArchive.stage(
+                                source, java.io.File(context.filesDir, "navtasks-reference/staging"))
                         } ?: throw IOException("Could not open library archive")
                     }
                 }
@@ -187,6 +192,7 @@ internal fun ReferenceManualLibraryScreen(
     }
 
     fun navigateBack() {
+        if (busy || restoringArchive) return
         when {
             documentId != null -> documentId = null
             excerptId != null -> excerptId = null
@@ -214,7 +220,7 @@ internal fun ReferenceManualLibraryScreen(
             }
             if (selectedDocument == null && selectedExcerpt == null && current != null) {
                 Box {
-                    NavGlassCircleButton(p, "plus") { menuOpen = true }
+                    NavGlassCircleButton(p, "plus") { if (!busy) menuOpen = true }
                     NavPopoverMenu(p, expanded = menuOpen,
                         onDismissRequest = { menuOpen = false }) {
                         NavPopoverAction(localized("Добавить PDF / Word",
@@ -245,6 +251,7 @@ internal fun ReferenceManualLibraryScreen(
                 }
                 Spacer(Modifier.width(7.dp))
                 NavGlassCircleButton(p, "search") {
+                    if (busy) return@NavGlassCircleButton
                     showSearch = !showSearch
                     if (!showSearch) search = ""
                 }
@@ -482,7 +489,7 @@ internal fun ReferenceManualLibraryScreen(
     }
     stagedImport?.let { staged ->
         NavGlassAlertDialog(p, onDismissRequest = {
-            stagedImport = null
+            if (!busy && !restoringArchive) stagedImport = null
         }, title = {
             Text(localized("Восстановить мануалы", "Restore manuals", lang))
         }, text = {
@@ -500,18 +507,27 @@ internal fun ReferenceManualLibraryScreen(
             }
         }, confirmButton = {
             TextButton(enabled = !busy, onClick = {
+                restoringArchive = true
+                busy = true
                 scope.launch {
-                    busy = true
-                    val result = withContext(Dispatchers.IO) {
-                        runCatching { store.restoreArchive(staged); store.read() }
+                    try {
+                        val result = withContext(Dispatchers.IO) {
+                            runCatching { store.restoreArchive(staged); store.read() }
+                        }
+                        finish(result, localized("Мануалы восстановлены.",
+                            "Manual library restored.", lang))
+                    } finally {
+                        // Cleanup must run even if the screen is disposed mid-restore.
+                        withContext(NonCancellable + Dispatchers.IO) { staged.close() }
+                        stagedImport = null
+                        restoringArchive = false
+                        busy = false
                     }
-                    stagedImport = null
-                    finish(result, localized("Мануалы восстановлены.",
-                        "Manual library restored.", lang))
                 }
             }) { Text(localized("Добавить копии", "Add copies", lang), color = p.blueText) }
         }, dismissButton = {
-            TextButton(onClick = { stagedImport = null }) {
+            TextButton(enabled = !busy && !restoringArchive,
+                onClick = { stagedImport = null }) {
                 Text(localized("Отмена", "Cancel", lang), color = p.muted)
             }
         })
