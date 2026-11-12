@@ -57,6 +57,11 @@ internal data class ReferenceManualExcerpt(
     }
 }
 
+/** Editing must preserve the excerpt's original folder, including the root (null). */
+internal fun referenceExcerptFolderForSave(
+    original: ReferenceManualExcerpt?, currentFolderId: String?,
+): String? = if (original != null) original.folderId else currentFolderId
+
 internal fun referenceExcerptMatches(excerpt: ReferenceManualExcerpt, query: String): Boolean {
     val needle = navEffectiveSearchQuery(query)
     return needle.isEmpty() || listOf(
