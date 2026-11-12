@@ -92,6 +92,7 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     var page by remember(file.path) { mutableIntStateOf(0) }
+    var knownPageCount by remember(file.path) { mutableIntStateOf(0) }
     var zoom by remember(file.path) { mutableFloatStateOf(1f) }
     var query by remember(file.path) { mutableStateOf("") }
     var matches by remember(file.path) { mutableStateOf<List<NavPdfMatch>>(emptyList()) }
@@ -105,17 +106,15 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
 
     val vertical = rememberScrollState()
     val horizontal = rememberScrollState()
-    val active = matches.getOrNull(selected)
-
     Column(Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val availableWidth = maxWidth
+        Box(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                 TextButton(enabled = page > 0, onClick = { page-- }) {
                     Text("‹", color = p.blueText, fontSize = 25.sp)
                 }
-                Text(localized("Стр. ", "Page ", lang) + "${page + 1}",
+                Text(localized("Стр. ", "Page ", lang) +
+                    "${page + 1} / ${knownPageCount.takeIf { it > 0 } ?: "…"}",
                     color = p.text, fontSize = 14.sp,
                     modifier = Modifier.weight(1f))
                 TextButton(onClick = {
@@ -125,7 +124,10 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
                 TextButton(onClick = {
                     zoom = (zoom * 1.4f).coerceAtMost(4f)
                 }) { Text("+", color = p.blueText, fontSize = 23.sp) }
-                TextButton(onClick = { page++ }) {
+                TextButton(
+                    enabled = knownPageCount > 0 && page < knownPageCount - 1,
+                    onClick = { page++ },
+                ) {
                     Text("›", color = p.blueText, fontSize = 25.sp)
                 }
             }
@@ -208,6 +210,9 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
             }
             val render = loaded?.getOrNull()?.takeIf { it.pageIndex == page }
             val pageCount = render?.pageCount ?: 0
+            LaunchedEffect(pageCount) {
+                if (pageCount > 0) knownPageCount = pageCount
+            }
             // A page-change button never points to a nonexistent page.
             LaunchedEffect(pageCount, page) {
                 if (pageCount > 0 && page >= pageCount) page = pageCount - 1
