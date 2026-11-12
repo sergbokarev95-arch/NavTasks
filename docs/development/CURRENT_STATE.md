@@ -231,3 +231,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 
 ### Verified 2026-11-13
 - Equipment catalog archive CI #43250406239 SUCCESS. The work branch compiled and passed signed no-publish gate; release feed remains off. PDF compatibility in isolated lab: first build failed at AAR metadata (compileSdkExtension19), retest #43251678681 pending; no production source change.
+
+## 2026-11-13 — Shared manuals staging, no user-visible import yet
+- `ReferenceManualModels.kt` / `ReferenceManualStore.kt` create independent shared PDF/DOCX metadata + safe original-file storage, not wired into ReferenceHub UI. No binary-inclusive archive or reader yet. Store physically under app files not cache; existing equipment profile JSON unchanged.
+- PDF beta01 dependency CI isolated #43251678681 SUCCESS after compileSdkExtension19. Work branch dependencies remain unchanged. Main CI #43252927005 pending; release channel off. HONOR still signed RC20/code188.
