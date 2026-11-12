@@ -220,3 +220,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Feature branch `fix/rc20-pre1-handover-tasks-ui` now includes source UI for vessel equipment library: folder hierarchy, create/edit/delete equipment, procedures with required source+excerpt, read-only procedure reader, text search, Android document picker export/import of one self-contained .navref, import conflict preview and Settings import/export panel. Existing Reference SIRE 2.0/VIQ7 placeholders are retained.
 - No Reference linkage to AMOS, Services, tasks, Today, scheduling, reminders, or task-run state; source-only interval metadata. Personal and vessel task JSON formats untouched. Per-vessel equipment JSON in independent app-private directory; common PDF/DOCX library not yet implemented.
 - New UI source stage pending CI `43246741027`, no real HONOR test or release; stable feed remains disabled and installed RC20 unchanged.
+
+## 2026-11-13 — UX search follow-up and backup limitation
+- Initial new Reference UI code/Settings exchange signed CI #43246741027 SUCCESS. Subsequent narrow changes improve folder-title search and Back ordering while adding no tasks/business logic; latest CI #43248144577 pending. Physical HONOR acceptance still outstanding.
+- Reference equipment uses independent app-private storage and IS NOT part of old 10-MB Full Profile JSON exports. Individual .navref one-equipment exchange works at backend/UI level; complete library+manuals export/backup is an outstanding pre-release gate.
