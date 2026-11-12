@@ -65,6 +65,16 @@ class ReferenceManualModelsTest {
         assertTrue(runCatching { cross.validate() }.isFailure)
     }
 
+    @Test fun sameHashCannotHaveConflictingOriginalSizes() {
+        val first = sire().copy(folderId = null)
+        val second = first.copy(id = "other", bytes = first.bytes + 10)
+        assertTrue(runCatching {
+            ReferenceManualCatalog(documents = listOf(first, second)).validate()
+        }.isFailure)
+        ReferenceManualCatalog(documents = listOf(first, second.copy(bytes = first.bytes)))
+            .validate()
+    }
+
     @Test fun schemaDoesNotAcceptAdditionalTaskFields() {
         val original = ReferenceManualCatalog(
             folders = listOf(ReferenceManualFolder("sire-chapter", "Navigation",
