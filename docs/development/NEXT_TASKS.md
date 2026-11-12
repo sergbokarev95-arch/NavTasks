@@ -816,3 +816,11 @@
 - [x] User approved KEEPING automatic Android backup (`allowBackup=true`) as secondary insurance to full manual profile export; no restriction to cloud/D2D and no manifest change now. No APK needed for this policy decision.
 - [ ] On a separate spare Android device/profile, verify actual system backup/restore coverage and manual export/import, without erasing user data or touching current HONOR profile.
 - [ ] Next: old-version profile migration with fixture snapshots, Samsung compatibility if available, tester-only UI exclusion from 1.0.0, final detailed functional/visual regression; production release only after explicit approval. Public stable feed stays OFF.
+
+## NEXT — 2026-11-12 old-profile matrix CI PASS, final release blockers
+- [x] Historical-export schema review: 0.3.1 -> 0.4.0 -> 0.4.44 all use `navtasks-full-profile-v1` with optional Services and AMOS. Four synthetic fixture files, 8 pure JVM tests, parse/export/reparse, histories and invalid input. CI43172846537 SUCCESS, no app source or public feed writes.
+- [ ] Old REAL profile export + isolated older-APK Android device migration: explicit tester-provided redacted sample or emulator, never overwrite user's active profile; qualify direct skipped-version claim by true supported `minSupportedVersionCode`.
+- [ ] Stable 1.0.0 Settings must NOT display `Проверить тестовый канал`; RC18 retains it unconditionally. Preserve normal automatic stable offer ON/OFF and manual `Проверить обновления`. QA toggle already RC15 gated. Test in signed 1.0.0 candidate.
+- [ ] User previously requested *after successful APK replacement*, one-time localized `NavTasks обновлён до 1.0.x` acknowledgment on next launch. Existing system installer ends externally; don't promise silent self-install on all Android versions; scope a safe first-launch version comparison, no data alteration.
+- [ ] Physical Samsung compatibility if available, true Android Auto Backup restore on separate device, final HIG/light-dark/Glass/calendar/AMOS/Services/Handover insets/search/notes review. Do not change functioning dock or modules without a reproduced defect and approval.
+- [ ] Signed 1.0.0 release code >187, package `com.navtasks.app.glass`, original certificate, user-approved full CI/HONOR acceptance before any stable.json change. Current public stable feed remains `available:false`.
