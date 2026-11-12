@@ -236,3 +236,12 @@
 - [ ] Check latest signed CI #43258709724 until full JVM+APK identity SUCCESS, fix errors, then document exactly which reader features are available.
 - [ ] Replace inert library search result arrows with actual first/next hit scrolling; root search should deep-open matching document, not only category. Add general user snippets/excerpts with independent sources. PDF on Android31-34 needs dependable full text search fallback or compatible AndroidX beta viewer path.
 - [ ] Security/visual QA: 250MB manual import, PDF 500+ pages, corrupt PDF/DOCX, scanned PDF, locked file, device low disk, archive restore across profiles, HONOR & Samsung Day/Night spacing/scroll/navigation. User-installed RC20 not changed; 1.0.0 publication requires separate approval.
+
+## NEXT — 2026-11-13 manual library UI + excerpts stage
+- [x] Add standalone user excerpts in SIRE/VIQ/My materials (title/body required, optional citation/page/edition). Keep informational only; no Tasks/AMOS/Services links.
+- [x] Excerpt CRUD/read/search in shared Reference screen, include in .navlib archive & non-destructive restore; allow loading older v1 catalog without excerpt field while rejecting unknown task fields.
+- [x] Add regression for citations, old schema, invalid pages, cross-section folder, excerpt-only ZIP backup and remapped folder IDs.
+- [ ] Confirm complete signed no-publish CI #43260910863 PASS, repair compile/tests if needed; do not say ready until verified.
+- [ ] HONOR/Samsung device tests: import large PDF, DOCX, standalone excerpts, folders, search arrows, source fields, every nav/back gesture, save/reopen/reboot, archive import to spare device, day/night; PDF pages and large Word docs must scroll above dock.
+- [ ] PDF on Android31-34 needs real text-search fallback; current native Page.searchText requires API35+. Full PDF text index and precise search highlights not yet implemented; scanned PDF OCR later. Rich DOCX tables/images not yet supported; original bytes preserved.
+- [ ] Before stable 1.0.0: full global functionality review incl recurrence/AMOS/Services/Handover/notifications/widgets, icon/widget appearance acceptance, release signing code>189 & separate explicit user approval.
