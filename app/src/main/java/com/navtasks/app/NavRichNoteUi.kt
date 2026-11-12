@@ -1,8 +1,11 @@
 package com.navtasks.app
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.material3.ProvideTextStyle
@@ -31,6 +34,15 @@ internal val NavIdentifierKeyboard = KeyboardOptions(
     capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false)
 internal const val NavRichHtmlMax = 24000
 
+internal enum class NavRichPaletteMode { TEXT, HIGHLIGHT }
+
+/** Both text and marker use one predictable, high-contrast eight-color palette. */
+internal fun navRichNoteSwatches(p: NavPalette): List<Color> = listOf(
+    Color.Black, Color.White, p.blue, p.systemOrange,
+    Color(0xFFFF453A), Color(0xFF30A46C),
+    Color(0xFFAF52DE), Color(0xFFFFD60A),
+)
+
 /** Full-page note body is larger; small work-comment fields retain 14/20sp. */
 internal object NavRichNoteTypography {
     const val fullPageBodySp = 17
@@ -57,7 +69,7 @@ internal fun NavRichNoteEditor(
 ) {
     val state = rememberRichTextState()
     var ready by remember(entryKey) { mutableStateOf(false) }
-    var showColors by remember(entryKey) { mutableStateOf(false) }
+    var paletteMode by remember(entryKey) { mutableStateOf<NavRichPaletteMode?>(null) }
     LaunchedEffect(entryKey) {
         ready = false
         state.setHtml(initialHtml.takeIf { it.isNotBlank() } ?: navEscapeNoteHtml(initialPlain))
@@ -75,20 +87,37 @@ internal fun NavRichNoteEditor(
             NavRichTool("I", p, selected = state.currentSpanStyle.fontStyle == FontStyle.Italic) { state.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) }
             NavRichTool("U̲", p, selected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.Underline) == true) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline)) }
             NavRichTool("S̶", p, selected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) }
-            NavRichTool("◉", p, selected = showColors) { showColors = !showColors }
-            NavRichTool("▰", p, selected = state.currentSpanStyle.background != Color.Unspecified) {
-                state.toggleSpanStyle(SpanStyle(background = Color(0xFFFFD86B).copy(alpha = .55f)))
+            NavRichTool("◉", p, selected = paletteMode == NavRichPaletteMode.TEXT) {
+                paletteMode = if (paletteMode == NavRichPaletteMode.TEXT) null
+                    else NavRichPaletteMode.TEXT
+            }
+            NavRichTool("▰", p, selected = paletteMode == NavRichPaletteMode.HIGHLIGHT) {
+                paletteMode = if (paletteMode == NavRichPaletteMode.HIGHLIGHT) null
+                    else NavRichPaletteMode.HIGHLIGHT
             }
         }
-        if (showColors) Row(Modifier.horizontalScroll(rememberScrollState()),
+        if (paletteMode != null) Row(Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(Color.Unspecified, p.blue, Color(0xFFC04949),
-                Color(0xFF2B9069), Color(0xFFBE852D)).forEach { color ->
-                NavRichTool("●", p, fg = if (color == Color.Unspecified) p.text else color) {
-                    if (color == Color.Unspecified)
-                        state.removeSpanStyle(SpanStyle(color = state.currentSpanStyle.color))
-                    else state.addSpanStyle(SpanStyle(color = color))
-                    showColors = false
+            val mode = paletteMode
+            (listOf<Color?>(null) + navRichNoteSwatches(p)).forEach { color ->
+                NavRichColorSwatch(color, p) {
+                    when (mode) {
+                        NavRichPaletteMode.TEXT -> {
+                            val oldColor = state.currentSpanStyle.color
+                            if (oldColor != Color.Unspecified)
+                                state.removeSpanStyle(SpanStyle(color = oldColor))
+                            if (color != null) state.addSpanStyle(SpanStyle(color = color))
+                        }
+                        NavRichPaletteMode.HIGHLIGHT -> {
+                            val oldBackground = state.currentSpanStyle.background
+                            if (oldBackground != Color.Unspecified)
+                                state.removeSpanStyle(SpanStyle(background = oldBackground))
+                            if (color != null)
+                                state.addSpanStyle(SpanStyle(background = color.copy(alpha = .48f)))
+                        }
+                        null -> Unit
+                    }
+                    paletteMode = null
                 }
             }
         }
@@ -125,6 +154,20 @@ internal fun NavRichNoteEditor(
                 p.muted else p.dangerText, fontSize = 11.sp)
     }
 }
+/** Visible black/white swatches in both themes; first chip resets formatting. */
+@Composable
+private fun NavRichColorSwatch(color: Color?, p: NavPalette, onClick: () -> Unit) {
+    Box(Modifier.size(42.dp).navGlass(p, radius = 11.dp, role = GlassRole.CONTROL)
+        .glassClickable(onClick), contentAlignment = Alignment.Center) {
+        if (color == null) {
+            Text("×", color = p.muted, fontSize = 23.sp)
+        } else {
+            Box(Modifier.size(22.dp).background(color, CircleShape)
+                .border(1.dp, p.muted.copy(alpha = .75f), CircleShape))
+        }
+    }
+}
+
 @Composable
 private fun NavRichTool(label: String, p: NavPalette, fg: Color = p.text,
     selected: Boolean = false, onClick: () -> Unit) {
