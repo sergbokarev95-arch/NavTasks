@@ -811,3 +811,8 @@
 - [ ] Validate old profile export/migration with actual safe legacy sample snapshots; test on separate profile, not user's live one.
 - [ ] Samsung test for package installer, notifications, widgets, battery optimization, Glass; test HONOR offline stable feed, reboot time/timezone, cancellation and completed/missed cards.
 - [ ] Final meticulous Apple HIG visual audit/day-night consistency, spacing, system bars, safe bottom inset, calendar, AMOS, Services and Handover; bugfix only reproducible defects. Production stable 1.0.0 requires code>186 (and >187 if recovery installed), existing package/cert, remove production QA-only startup/test controls, full CI, backup and migration acceptance, separate user approval. Keep public `stable.json available:false`.
+
+## NEXT — 2026-11-12 backup decision closed (no app change)
+- [x] User approved KEEPING automatic Android backup (`allowBackup=true`) as secondary insurance to full manual profile export; no restriction to cloud/D2D and no manifest change now. No APK needed for this policy decision.
+- [ ] On a separate spare Android device/profile, verify actual system backup/restore coverage and manual export/import, without erasing user data or touching current HONOR profile.
+- [ ] Next: old-version profile migration with fixture snapshots, Samsung compatibility if available, tester-only UI exclusion from 1.0.0, final detailed functional/visual regression; production release only after explicit approval. Public stable feed stays OFF.
