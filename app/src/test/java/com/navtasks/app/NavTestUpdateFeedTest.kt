@@ -49,7 +49,7 @@ class NavTestUpdateFeedTest {
         val checker = java.io.File(dir+"NavUpdateChecker.kt").readText()
         val offer = java.io.File(dir+"NavUpdateOffer.kt").readText()
         val settings = java.io.File(dir+"PlanAndTasksUi.kt").readText()
-        assertTrue(checker.contains("val connection = (URL(FEED).openConnection()"))
+        assertTrue(checker.contains("NavStableFeedNetwork.read()"))
         assertTrue(checker.contains("NavTestFeedNetwork.read()"))
         val network = java.io.File(dir+"NavTestFeedNetwork.kt").readText()
         assertTrue(network.contains("URL(url).openConnection()"))
