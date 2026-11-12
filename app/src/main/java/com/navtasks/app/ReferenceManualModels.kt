@@ -113,6 +113,11 @@ internal data class ReferenceManualCatalog(
         require(folders.size <= 5000 && documents.size <= 10000)
         require(folders.map { it.id }.distinct().size == folders.size)
         require(documents.map { it.id }.distinct().size == documents.size)
+        // One hash+MIME points to exactly one immutable original byte stream;
+        // repeated cards cannot silently disagree about its expected length.
+        require(documents.groupBy { it.sha256 to it.mimeType }.values.all { group ->
+            group.map { it.bytes }.distinct().size == 1
+        }) { "Conflicting metadata for the same original manual" }
         val byId = folders.associateBy { it.id }
         folders.forEach { folder ->
             folder.validate()
