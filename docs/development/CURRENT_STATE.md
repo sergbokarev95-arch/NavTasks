@@ -254,3 +254,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 
 ### Verified 2026-11-13 — source CI completed
 - #43260910863 SUCCESS for complete Reference manuals+standalone excerpts UI/source as of commit 8ac9b86; all tests and signed private release identity verification passed. Subsequent changes limited to documentation. This is NOT proof of app UI acceptance on HONOR/Samsung, PDF search older Android, or 1.0.0 release readiness.
+
+## 2026-11-13 — Pre-QA stability pass after library feature work
+- Since signed success #43260910863 (source 8ac9b86), narrow fixes only in Reference manual archive staging lifecycle, abandoned crash staging cleanup, cancellable stale PDF searches and original excerpt-folder preservation; tests added for stage cleanup and root-folder edit.
+- Source-branch signed CI #43265305900 PENDING, not accepted until PASS. User's installed RC20/code188, signed baseline and public stable feed OFF. No new app installed, no data migrated.
