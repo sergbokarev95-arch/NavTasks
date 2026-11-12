@@ -132,3 +132,13 @@
 - [x] Backup R1 `backup/dockpreview-r1-before-soft-blur` and signed R2 https://github.com/sergbokarev95-arch/NavTasks/releases/download/dockpreview-v0.4.59-r2/NavTasks_LiquidGlass_Dock_Preview_R2.apk; CI 42398375900 SUCCESS.
 - [ ] User HONOR test in day/night with task titles and card borders scrolling under dock: text should be sufficiently blurred so the four button captions stay easy to read; no new ghosting/shimmer; lens growth 1.30x and grey rest unchanged.
 - [ ] After approval, plan integration + reusable glass for circular '+' / calendar / settings one at a time, preserving all existing controls/data. Main stays stable 0.4.59 until signed migration approved.
+
+## NEXT — 2026-11-12 user-approved full pre-1.0.0 polish, phase 1 CI PASS
+- [x] Record RC20/code188 installed on HONOR and success receipt appeared. Still verify no repeat after subsequent cold start.
+- [x] Back up exact RC20 baseline to `backup/navtasks-0.4.166-rc20-before-pre1-polish`; keep user's installation unchanged.
+- [x] On separate feature branch implement compact nested Handover vessel entries (tap row to expand/tap text to edit), maintain Personal notes, auto-expand search hits, top-align active result; inactive task strikethrough/sort and blue manual update button; independent text/highlight swatches with black/white. No business/storage edits.
+- [x] Test: `43211482395` signed full JVM+APK identity `SUCCESS`, NO publish, no package install.
+- [ ] Fix HONOR RichTextEditor selection-handle dragging after isolated dependency compatibility/source investigation. Do NOT claim palette alone fixes selection; guard HTML/formatting and keep existing Kotlin/Compose versions unless retested.
+- [ ] When a future user-approved higher-version signed QA build is ready, verify nested Handover: closed/open/empty, text tap editor, Personal notes unchanged, repeated search hits and title notes, last search occurrence top-alignment, day/night; palette text and marker persistence, keyboard/selection.
+- [ ] Decide new NavTasks adaptive/monochrome launcher icon with user, redesign responsive RemoteViews widgets and theme accents; prepare functional Reference scaffold, defer SIRE/VIQ content after stable 1.0.0.
+- [ ] Complete recurrence, AMOS, Services, Handover, notifications/widgets, profile/import, data safety, Samsung/old-version compatibility and Apple HIG glass geometry audit before independent signed 1.0.0 candidate. Keep public `stable.json available:false`; candidate code >189; never publish or install same-code188 development APK.
