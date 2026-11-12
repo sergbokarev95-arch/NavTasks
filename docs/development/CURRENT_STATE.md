@@ -251,3 +251,6 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-13 — Reference offline library staged with user excerpts
 - Source includes SIRE/VIQ/My materials shared PDF/DOCX offline file import with safe .navlib full original-byte export/restore, folder management, native PDF reader/page navigation (API35+ text search), simplified DOCX paragraph/heading reader and user-defined excerpts with optional manual citation. All independent of vessel profile Task/AMOS/Services; equipment remains per vessel with its separate .navref exchange.
 - Source-only CI #43258709724 succeeded before excerpt changes; current complete CI #43260910863 pending. No HONOR or Samsung UX acceptance, no release. Older Android pdf search fallback and rich rendering require more work before final 1.0.0.
+
+### Verified 2026-11-13 — source CI completed
+- #43260910863 SUCCESS for complete Reference manuals+standalone excerpts UI/source as of commit 8ac9b86; all tests and signed private release identity verification passed. Subsequent changes limited to documentation. This is NOT proof of app UI acceptance on HONOR/Samsung, PDF search older Android, or 1.0.0 release readiness.
