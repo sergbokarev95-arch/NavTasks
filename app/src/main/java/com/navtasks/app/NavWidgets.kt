@@ -21,6 +21,10 @@ private const val WIDGET_TOGGLE = "com.navtasks.app.WIDGET_TOGGLE"
 internal fun widgetUsesColumns(widthDp: Int): Boolean = widthDp >= 350
 internal fun widgetMissedVisible(count: Int): Boolean = count > 0
 
+/** Same semantic NavTasks blue used for readable labels in Day/Night. */
+internal fun widgetAccentColor(dark: Boolean): Int =
+    if (dark) 0xFF5CB8FF.toInt() else 0xFF0071E3.toInt()
+
 internal fun widgetHeaderDate(date: LocalDate, language: UiLanguage): String {
     val locale = if (language == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
     return date.format(DateTimeFormatter.ofPattern(
@@ -102,7 +106,7 @@ object NavWidgetUpdater {
         val language = settings.language
         val textColor = if (dark) 0xFFF2F8FF.toInt() else 0xFF193147.toInt()
         val muted = if (dark) 0xFFAFC4D8.toInt() else 0xFF5E7489.toInt()
-        val accent = if (dark) 0xFF69D4BE.toInt() else 0xFF218E87.toInt()
+        val accent = widgetAccentColor(dark)
 
         // Never distribute spare widget height between task rows. The row
         // group is centred as one block in the XML; each task stays compact.
