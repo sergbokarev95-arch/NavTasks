@@ -48,8 +48,10 @@ internal fun ReferenceEquipmentScreen(
     val matches = remember(catalog, folderId, query) {
         referenceEquipmentVisible(catalog, folderId, query)
     }
-    val folders = if (query.isBlank()) catalog.folders
-        .filter { it.parentId == folderId }.sortedBy { it.title.lowercase() } else emptyList()
+    val folders = remember(catalog, folderId, query) {
+        referenceVisibleFolders(catalog, folderId, query)
+    }
+    val totalSearchMatches = if (query.isBlank()) 0 else folders.size + matches.size
     var addMenu by remember { mutableStateOf(false) }
     var folderEditor by remember { mutableStateOf<ReferenceFolder?>(null) }
     var newFolder by remember { mutableStateOf(false) }
@@ -67,8 +69,8 @@ internal fun ReferenceEquipmentScreen(
         when {
             procedureId != null -> procedureId = null
             equipmentId != null -> equipmentId = null
-            folderId != null -> folderId = folder?.parentId
             searchOpen -> { searchOpen = false; searchText = "" }
+            folderId != null -> folderId = folder?.parentId
             else -> onBack()
         }
     }
@@ -143,10 +145,9 @@ internal fun ReferenceEquipmentScreen(
 
     LaunchedEffect(query) { searchIndex = 0 }
     LaunchedEffect(searchSerial) {
-        if (searchSerial > 0 && matches.isNotEmpty() && equipment == null) {
+        if (searchSerial > 0 && totalSearchMatches > 0 && equipment == null) {
             listState.animateScrollToItem(
-                (if (query.isBlank()) folders.size else 0) +
-                    searchIndex.coerceIn(0, matches.lastIndex))
+                searchIndex.coerceIn(0, totalSearchMatches - 1))
         }
     }
     val sectionTitle = when {
@@ -276,14 +277,14 @@ internal fun ReferenceEquipmentScreen(
                     p = p, lang = lang,
                     placeholder = localized("Поиск по оборудованию и инструкциям",
                         "Search equipment and procedures", lang),
-                    resultCount = if (query.isBlank()) 0 else matches.size,
+                    resultCount = totalSearchMatches,
                     currentResult = searchIndex,
                     onPreviousResult = {
-                        searchIndex = navSearchNextIndex(searchIndex, matches.size, -1)
+                        searchIndex = navSearchNextIndex(searchIndex, totalSearchMatches, -1)
                         searchSerial++
                     },
                     onNextResult = {
-                        searchIndex = navSearchNextIndex(searchIndex, matches.size, 1)
+                        searchIndex = navSearchNextIndex(searchIndex, totalSearchMatches, 1)
                         searchSerial++
                     },
                 )
