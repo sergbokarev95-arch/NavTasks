@@ -73,3 +73,11 @@
 - [ ] Validate AndroidX PDF reader search/zoom/bookmarks on HONOR and Samsung, fallback when library unavailable on older devices. Scanned PDFs without text need clear 'search unavailable' state; do not silently invoke network OCR.
 - [ ] DOCX lightweight reading keeps paragraphs/headings/lists/tables where feasible and opens original externally for fidelity fallback; no macro execution or external requests.
 - [ ] Separate vessel Equipment .navref and shared manuals .navlib have independent backup/restore UI; show filenames and accurate scope. Never imply usual Task Profile JSON includes both.
+
+## 2026-11-13 — PDF/Word manual UI and exact limitations
+- [ ] SIRE, VIQ7, My materials open respective shared PDF/DOCX folder lists; import PDF 100-250 MB through system picker, verify remains after force stop and switching profiles.
+- [ ] Create/rename nested manuals folder, search its name, delete only empty folder, delete document record with confirmation. Verify no hidden full-profile export dependency.
+- [ ] Internal PDF viewer on HONOR: 500+ page opening/page jumps/zoom without OOM, portrait/landscape, font margins, day/night, bottom safe inset. API35+ search returns correct pages/match count and never blocks UI. API31-34 fallback lacks text search and needs further design acceptance.
+- [ ] Word DOCX reader headings/paragraphs and search, nonexecuted macros/external linked content, complex tables/images explicitly not pixel-accurate. Validate Cyrillic, tables, multi-column text.
+- [ ] Export full .navlib original-byte package, verify intact PDF/DOCX from archive on another device, idempotent duplicate handling and folder remap, and fail-closed checksum/zip-slip/zip-bomb cases. Separate equipment .navref and shared manuals .navlib both need explicit backup on device switch.
+- [ ] User-authored standalone excerpts outside equipment are not implemented yet and remain release scope.
