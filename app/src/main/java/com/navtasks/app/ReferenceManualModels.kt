@@ -108,11 +108,13 @@ internal data class ReferenceManualDocument(
 internal data class ReferenceManualCatalog(
     val folders: List<ReferenceManualFolder> = emptyList(),
     val documents: List<ReferenceManualDocument> = emptyList(),
+    val excerpts: List<ReferenceManualExcerpt> = emptyList(),
 ) {
     fun validate() {
-        require(folders.size <= 5000 && documents.size <= 10000)
+        require(folders.size <= 5000 && documents.size <= 10000 && excerpts.size <= 15000)
         require(folders.map { it.id }.distinct().size == folders.size)
         require(documents.map { it.id }.distinct().size == documents.size)
+        require(excerpts.map { it.id }.distinct().size == excerpts.size)
         // One hash+MIME points to exactly one immutable original byte stream;
         // repeated cards cannot silently disagree about its expected length.
         require(documents.groupBy { it.sha256 to it.mimeType }.values.all { group ->
@@ -143,6 +145,16 @@ internal data class ReferenceManualCatalog(
                 }
             }
         }
+        excerpts.forEach { excerpt ->
+            excerpt.validate()
+            if (excerpt.folderId != null) {
+                val folder = byId[excerpt.folderId]
+                    ?: throw IllegalArgumentException("Missing excerpt folder")
+                require(folder.sectionId == excerpt.sectionId) {
+                    "Excerpt belongs to a different Reference section"
+                }
+            }
+        }
     }
 
     fun toJson(): JSONObject {
@@ -152,22 +164,29 @@ internal data class ReferenceManualCatalog(
             .put("schemaVersion", 1)
             .put("folders", JSONArray().apply { folders.forEach { put(it.toJson()) } })
             .put("documents", JSONArray().apply { documents.forEach { put(it.toJson()) } })
+            .put("excerpts", JSONArray().apply { excerpts.forEach { put(it.toJson()) } })
     }
 
     companion object {
         fun fromJson(obj: JSONObject): ReferenceManualCatalog {
-            require(obj.length() == 4)
+            // Accept earlier v1 catalogs (before excerpts existed) without migration.
+            require(obj.length() == 4 || obj.length() == 5)
             require(obj.getString("format") == "navtasks-reference-manuals")
             require(obj.getInt("schemaVersion") == 1)
             val folders = obj.getJSONArray("folders")
             val documents = obj.getJSONArray("documents")
-            require(folders.length() <= 5000 && documents.length() <= 10000)
+            val excerpts = obj.optJSONArray("excerpts") ?: JSONArray()
+            require(folders.length() <= 5000 && documents.length() <= 10000 &&
+                excerpts.length() <= 15000)
             return ReferenceManualCatalog(
                 folders = (0 until folders.length()).map {
                     ReferenceManualFolder.fromJson(folders.getJSONObject(it))
                 },
                 documents = (0 until documents.length()).map {
                     ReferenceManualDocument.fromJson(documents.getJSONObject(it))
+                },
+                excerpts = (0 until excerpts.length()).map {
+                    ReferenceManualExcerpt.fromJson(excerpts.getJSONObject(it))
                 },
             ).also { it.validate() }
         }
