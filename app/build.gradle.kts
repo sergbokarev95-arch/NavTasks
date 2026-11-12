@@ -83,6 +83,8 @@ dependencies {
     implementation("io.github.kyant0:backdrop:1.0.6")
     implementation("io.github.kyant0:shapes:1.2.0")
     implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc14")
+    // EXPERIMENT ONLY: check offline PDF viewer compatibility with existing app toolchain.
+    implementation("androidx.pdf:pdf-viewer-fragment:1.0.0-beta01")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
     // Real JSON parser for local JVM profile serialization regression tests.
