@@ -39,7 +39,7 @@ jobs:
           set -euo pipefail
           BASE=77387fb9f819c57e5291aaeed0c3972f2d67e88f
           git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
-          if grep -Ev '^(app/src/main/java/com/navtasks/app/NavUpdateChecker\.kt|app/src/main/java/com/navtasks/app/NavStableFeedNetwork\.kt|app/src/test/java/com/navtasks/app/NavStableFeedNetworkTest\.kt|\.github/workflows/navtasks-pre1-stable-feed-ci\.yml)$' changed.txt; then
+          if grep -Ev '^(app/src/main/java/com/navtasks/app/(NavUpdateChecker|NavStableFeedNetwork)\.kt|app/src/test/java/com/navtasks/app/(NavStableFeedNetworkTest|NavTestFeedNetworkPolicyTest|NavTestUpdateFeedTest|NavUpdateFeedPolicyTest)\.kt|\.github/workflows/navtasks-pre1-stable-feed-ci\.yml)$' changed.txt; then
             echo "::error::App logic, profile stores, manifest or dock changed during read-only preflight"
             exit 1
           fi
