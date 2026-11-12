@@ -45,11 +45,15 @@ internal fun ReferenceManualLibraryScreen(
     var error by remember { mutableStateOf(false) }
     var folderId by rememberSaveable(sectionId) { mutableStateOf<String?>(null) }
     var documentId by rememberSaveable(sectionId) { mutableStateOf<String?>(null) }
+    var excerptId by rememberSaveable(sectionId) { mutableStateOf<String?>(null) }
     var search by rememberSaveable(sectionId) { mutableStateOf(initialQuery) }
     var showSearch by rememberSaveable(sectionId) { mutableStateOf(initialQuery.isNotBlank()) }
     var menuOpen by remember { mutableStateOf(false) }
     var folderEdit by remember { mutableStateOf<ReferenceManualFolder?>(null) }
     var newFolder by remember { mutableStateOf(false) }
+    var newExcerpt by remember { mutableStateOf(false) }
+    var editingExcerpt by remember { mutableStateOf<ReferenceManualExcerpt?>(null) }
+    var deleteExcerpt by remember { mutableStateOf<ReferenceManualExcerpt?>(null) }
     var folderName by remember { mutableStateOf("") }
     var deleteDocument by remember { mutableStateOf<ReferenceManualDocument?>(null) }
     var deleteFolder by remember { mutableStateOf<ReferenceManualFolder?>(null) }
@@ -154,6 +158,7 @@ internal fun ReferenceManualLibraryScreen(
     val current = catalog
     val activeFolder = current?.folders?.firstOrNull { it.id == folderId }
     val selectedDocument = current?.documents?.firstOrNull { it.id == documentId }
+    val selectedExcerpt = current?.excerpts?.firstOrNull { it.id == excerptId }
     val q = if (showSearch) navEffectiveSearchQuery(search) else ""
     val folders = current?.folders.orEmpty().filter {
         if (q.isBlank()) it.parentId == folderId && it.sectionId == sectionId
@@ -167,7 +172,12 @@ internal fun ReferenceManualLibraryScreen(
             it.notes.contains(q, ignoreCase = true))
     }.sortedBy { it.title.lowercase() }
 
-    val totalSearchResults = if (q.isBlank()) 0 else folders.size + documents.size
+    val excerpts = current?.excerpts.orEmpty().filter {
+        if (q.isBlank()) it.folderId == folderId && it.sectionId == sectionId
+        else it.sectionId == sectionId && referenceExcerptMatches(it, q)
+    }.sortedBy { it.title.lowercase() }
+    val totalSearchResults = if (q.isBlank()) 0 else
+        folders.size + documents.size + excerpts.size
     LaunchedEffect(q, folderId) { selectedSearchResult = 0 }
     fun moveSearchResult(direction: Int) {
         if (totalSearchResults <= 0) return
@@ -179,6 +189,7 @@ internal fun ReferenceManualLibraryScreen(
     fun navigateBack() {
         when {
             documentId != null -> documentId = null
+            excerptId != null -> excerptId = null
             showSearch -> { showSearch = false; search = "" }
             folderId != null -> folderId = activeFolder?.parentId
             else -> onBack()
@@ -201,7 +212,7 @@ internal fun ReferenceManualLibraryScreen(
                 }, color = p.text, fontSize = 20.sp, maxLines = 1,
                     overflow = TextOverflow.Ellipsis)
             }
-            if (selectedDocument == null && current != null) {
+            if (selectedDocument == null && selectedExcerpt == null && current != null) {
                 Box {
                     NavGlassCircleButton(p, "plus") { menuOpen = true }
                     NavPopoverMenu(p, expanded = menuOpen,
@@ -211,6 +222,11 @@ internal fun ReferenceManualLibraryScreen(
                             menuOpen = false
                             addDocument.launch(arrayOf(
                                 ReferenceManualMime.PDF, ReferenceManualMime.DOCX))
+                        }
+                        NavPopoverAction(localized("Новая выдержка", "New excerpt", lang), p) {
+                            menuOpen = false
+                            editingExcerpt = null
+                            newExcerpt = true
                         }
                         NavPopoverAction(localized("Новая папка", "New folder", lang), p) {
                             menuOpen = false; folderName = ""; folderEdit = null; newFolder = true
@@ -250,6 +266,12 @@ internal fun ReferenceManualLibraryScreen(
             ReferenceManualReader(
                 document = selectedDocument,
                 store = store, p = p, lang = lang,
+            )
+        } else if (selectedExcerpt != null) {
+            ReferenceManualExcerptReader(
+                selectedExcerpt, p, lang,
+                onEdit = { editingExcerpt = selectedExcerpt; newExcerpt = true },
+                onRemove = { deleteExcerpt = selectedExcerpt },
             )
         } else {
             if (current == null) {
@@ -292,7 +314,7 @@ internal fun ReferenceManualLibraryScreen(
                             }
                         }
                     }
-                    if (folders.isEmpty() && documents.isEmpty()) item {
+                    if (folders.isEmpty() && documents.isEmpty() && excerpts.isEmpty()) item {
                         NavPanel(p) {
                             Text(if (q.isNotBlank())
                                 localized("Ничего не найдено.", "No matching documents.", lang)
@@ -317,9 +339,71 @@ internal fun ReferenceManualLibraryScreen(
                             onRemove = { deleteDocument = doc },
                         )
                     }
+                    items(excerpts, key = { "excerpt-" + it.id }) { excerpt ->
+                        ReferenceManualListRow(
+                            excerpt.title,
+                            if (q.isBlank())
+                                localized("Выдержка", "Excerpt", lang)
+                            else listOf(excerpt.text, excerpt.sourceTitle)
+                                .firstOrNull { it.contains(q, ignoreCase = true) }
+                                ?.take(110)
+                                ?: localized("Выдержка", "Excerpt", lang),
+                            p, query = q, onClick = { excerptId = excerpt.id },
+                            onRemove = { deleteExcerpt = excerpt },
+                        )
+                    }
                 }
             }
         }
+    }
+
+    if (newExcerpt) {
+        ReferenceManualExcerptEditor(
+            original = editingExcerpt, sectionId = sectionId,
+            folderId = folderId, p = p, lang = lang,
+            onDismiss = { newExcerpt = false; editingExcerpt = null },
+            onSave = { excerpt ->
+                scope.launch {
+                    busy = true
+                    val result = withContext(Dispatchers.IO) {
+                        runCatching { store.saveExcerpt(excerpt); store.read() }
+                    }
+                    finish(result, localized("Выдержка сохранена.",
+                        "Excerpt saved.", lang))
+                    if (result.isSuccess) {
+                        newExcerpt = false
+                        editingExcerpt = null
+                    }
+                }
+            },
+        )
+    }
+    if (deleteExcerpt != null) {
+        val excerpt = deleteExcerpt!!
+        NavGlassAlertDialog(p, onDismissRequest = { deleteExcerpt = null },
+            title = { Text(localized("Удалить выдержку?", "Delete excerpt?", lang)) },
+            text = { Text(localized("Удаление нельзя отменить.",
+                "This action cannot be undone.", lang)) },
+            confirmButton = {
+                TextButton(enabled = !busy, onClick = {
+                    scope.launch {
+                        busy = true
+                        val result = withContext(Dispatchers.IO) {
+                            runCatching { store.removeExcerpt(excerpt.id); store.read() }
+                        }
+                        finish(result, localized("Выдержка удалена.",
+                            "Excerpt deleted.", lang))
+                        if (result.isSuccess) {
+                            deleteExcerpt = null
+                            excerptId = null
+                        }
+                    }
+                }) { Text(localized("Удалить", "Delete", lang), color = p.systemRed) }
+            },
+            dismissButton = { TextButton(onClick = { deleteExcerpt = null }) {
+                Text(localized("Отмена", "Cancel", lang), color = p.muted)
+            } },
+        )
     }
 
     if (newFolder) {
