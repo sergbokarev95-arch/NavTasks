@@ -59,6 +59,13 @@ class ReferenceManualExcerptTest {
         }.title)
     }
 
+    @Test fun editingRootExcerptDoesNotSilentlyMoveItIntoOpenSearchFolder() {
+        val rootExcerpt = excerpt.copy(folderId = null)
+        assertEquals(null, referenceExcerptFolderForSave(rootExcerpt, "opened-folder"))
+        assertEquals("nav", referenceExcerptFolderForSave(excerpt, "other-folder"))
+        assertEquals("opened-folder", referenceExcerptFolderForSave(null, "opened-folder"))
+    }
+
     @Test fun emptyExcerptAndCrossSectionFolderAreRejected() {
         assertTrue(runCatching { excerpt.copy(text = "").validate() }.isFailure)
         assertTrue(runCatching { excerpt.copy(sourcePage = -1).validate() }.isFailure)
