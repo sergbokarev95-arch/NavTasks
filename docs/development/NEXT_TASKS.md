@@ -831,3 +831,15 @@
 - [x] Exact RC18 business-source higher-code189 recovery RC21 signed CI43175147103 SUCCESS; private draft `untagged-e36512369014a9f004a8`. Do not install unless RC20 regression, keep full profile exports; never uninstall/clear.
 - [ ] HONOR: full profile export then in-place install RC20/code188 over RC18/code186. Verify first launch `NavTasks обновлён` version 0.4.166-rc20; tap `Готово`; cold restart no repeat; normal Settings has `Предлагать обновления`, `Проверить обновления` but no TEST entry; profile/task history/AMOS/Services/Handover/Glass all retained, offline silent.
 - [ ] If RC20 accepted, complete light/dark Apple HIG geometry and bottom-inset audit, notifications/widgets and Samsung (or explicit unverified device support), old APK direct-skipped upgrades and Android Auto Backup restore on spare device, production 1.0.0 code>189 signed candidate then explicit user approval before public stable enable.
+
+## NEXT — 2026-11-12 user-approved 1.0.0 completion plan and RC22 device gate
+- [x] RC20/code188 installed on HONOR; user observed one-time success notice. Settings screenshot shows normal update settings with TEST entry hidden.
+- [x] Save exact RC20 source at backup/navtasks-0.4.166-rc20-honor-accepted.
+- [x] Handover nested entry accordion and active search-hit top alignment isolated in RC22/code190; signed CI43201998585 SUCCESS and private signed APK draft untagged-8f09580bd121fce8f879; public stable stays OFF.
+- [x] Higher-code191 exact RC20-source recovery RC23 signed CI43201351567 SUCCESS; private draft untagged-f133618d1cd1599b02ba. Emergency only.
+- [ ] HONOR: full profile export; install RC22 over RC20 without uninstall. Check 2-level collapse, note editor/saving rich text, active search hit near top for off/on-screen occurrences with fixed search bar/keyboard, personal notes still expanded, profiles/data, day/night, last item above dock. Report pass or defects before next code change.
+- [ ] Separate next stage: improve rich note selection gesture handles and text/background marker palettes without replacing HTML model or breaking IME/save.
+- [ ] Apple-blue manual update-check outlined control; reversible inactive recurring-template strike and active-first stable ordering; independent tests.
+- [ ] New icon design approval; redesigned compact/wide widgets for useful information, NavTasks blue instead of legacy turquoise, test both themes/sizes and click behavior.
+- [ ] Prepare Reference architecture only; content for SIRE2/VIQ7 remains post-1.0.0.
+- [ ] Full tasks/AMOS/Services/Handover/notifications/widgets functional regression, Apple HIG day/night geometry/Glass/bottom insets, backup/migration and Samsung qualification, signed 1.0.0 candidate with code >191 if recovery installed, separate user approval before stable feed enabled.
