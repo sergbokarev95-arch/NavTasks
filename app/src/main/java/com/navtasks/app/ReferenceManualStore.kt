@@ -59,6 +59,35 @@ internal class ReferenceManualStore(context: Context) {
         }
     }
 
+    /** Explicit user folder changes, isolated from equipment and task stores. */
+    fun saveFolder(folder: ReferenceManualFolder) {
+        folder.validate()
+        val previous = read()
+        val index = previous.folders.indexOfFirst { it.id == folder.id }
+        val folders = previous.folders.toMutableList()
+        if (index < 0) folders.add(folder) else folders[index] = folder
+        write(previous.copy(folders = folders))
+    }
+
+    /** Never remove a folder with children or documents. */
+    fun deleteEmptyFolder(folderId: String) {
+        val previous = read()
+        require(previous.folders.none { it.parentId == folderId }) {
+            "Folder has child folders"
+        }
+        require(previous.documents.none { it.folderId == folderId }) {
+            "Folder contains documents"
+        }
+        write(previous.copy(folders = previous.folders.filterNot { it.id == folderId }))
+    }
+
+    /** Remove a catalog record, but retain original hash-named bytes for other references. */
+    fun removeDocument(documentId: String) {
+        val previous = read()
+        require(previous.documents.any { it.id == documentId }) { "Document no longer exists" }
+        write(previous.copy(documents = previous.documents.filterNot { it.id == documentId }))
+    }
+
     fun findOriginal(document: ReferenceManualDocument): File {
         document.validate()
         val extension = when (document.mimeType) {
