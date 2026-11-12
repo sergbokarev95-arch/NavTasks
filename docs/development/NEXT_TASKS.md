@@ -194,3 +194,10 @@
 - [ ] Verify updated signed CI #43248144577 SUCCESS. Do not claim physically accepted.
 - [ ] Provide all-library .navref (folders/equipment/excerpts and optional original manual files) export/restore and safe migration tests; current profile JSON excludes Reference catalog, which is a significant pre-1.0.0 release risk.
 - [ ] Implement shared offline PDF/DOCX import and viewers and global Reference excerpt management. Separate from task scheduling. Verify large file storage limits, hash, backup and offline search.
+
+## NEXT — 2026-11-13 catalog safety checkpoint
+- [x] Standalone full EQUIPMENT catalog ZIP backup and restore: all nested folders, devices, manual-cited procedures and serials (explicit warning); checksum/size/schema validation and merge-copies preserving existing entries. Does NOT contain PDF/DOCX files yet.
+- [x] Add pure tests of catalog archive integrity, nested structure, clone identity, corrupt/bomb/zip-slip rejection and no task identifiers.
+- [ ] Verify complete signed CI #43250406239 and isolated PDF dependency test #43251052670 before accepting code. Regressions must pass without changing installed RC20.
+- [ ] Shared offline PDF/DOCX document storage, user-managed manual folders, efficient search/indexing, readable PDF viewer using compatible approach (AndroidX PDF beta evaluated separately), DOCX basic reader, personal excerpts, standalone whole-library backup WITH file bytes and restore (including files where permitted).
+- [ ] Device/launcher acceptance on HONOR and Samsung before RC >189. Explicit user sign-off required for 1.0.0 publication.
