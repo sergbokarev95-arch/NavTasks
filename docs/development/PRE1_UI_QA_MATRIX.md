@@ -36,3 +36,20 @@
 - [ ] Full profile export/import, Android Auto Backup restore if possible on spare device, actual legacy sample compatibility, Samsung package/UI/notifications/widgets.
 - [ ] AMOS, Services, calendar and Today cross-module regression, bottom safe insets, Liquid Glass behavior unchanged.
 - [ ] User approves final 1.0.0 build, GitHub stable manifest separately toggled only after signed build and checksum/identity verification.
+
+## 2026-11-12 — Stats-only launcher widgets (2×2 and 4×2)
+- [ ] HONOR and Samsung provider picker shows exactly the two intended layouts, not a 3×2 third preset. Check host target-cell geometry and padding.
+- [ ] Compact: Today count and blue progress bar, remaining label or Tomorrow count after all today's jobs are completed; no checkboxes anywhere.
+- [ ] Wide: same Today total/percent with up to 2 pending names as plain TEXT, no tap-to-complete; after completion show Tomorrow count and explanatory text.
+- [ ] Tap the widget body opens NavTasks Today; no completion writes from any widget surface or leftover legacy PendingIntent.
+- [ ] At 00:00 new local day replaces Yesterday, Tomorrow count recomputed, unchanged schedules, profile switch and restart update the widget.
+- [ ] Empty Today, completed Today, partial Today, backlog present/absent, RU plural forms and EN labels, night/day contrast on bright/complex wallpaper.
+- [ ] Verify RemoteViews on two system launchers and 2x2/4x2 positions; Android host grid sizes may vary, use actual device acceptance.
+
+## 2026-11-12 — Reference equipment foundation (backend only)
+- [ ] Catalog per vessel profile, shared manuals later: changing vessel profile never silently shares its equipment inventory with another profile.
+- [ ] Create nested equipment folders; refuse cycles, duplicate IDs and missing parents without erasing existing catalog.
+- [ ] Manual excerpt and source title required for every procedure; period stored only as descriptive text; NO task IDs, AMOS, Services, Today links, reminders, or scheduling.
+- [ ] Export one equipment to portable .navref: include instructions, citations and excerpt; exclude sender's local folder link and serial number by default; allow explicit serial inclusion.
+- [ ] Reimport preview: detect same ID or probable duplicate, never overwrite automatically; corrupted/oversized/malformed ZIP fails safely, no Zip Slip.
+- [ ] User-facing equipment editing, actual PDF/DOCX import/reading, selective settings import/export, and wide library package are NOT YET implemented. No real-device acceptance claimed.
