@@ -82,7 +82,7 @@ dependencies {
     // Direct-scene Backdrop 1.0.6 accepted in Glass Lab 0.1.5.
     implementation("io.github.kyant0:backdrop:1.0.6")
     implementation("io.github.kyant0:shapes:1.2.0")
-    implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc14")
+    implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
     // Real JSON parser for local JVM profile serialization regression tests.
