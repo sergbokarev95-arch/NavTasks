@@ -32,7 +32,7 @@ class ReferenceManualArchiveTest {
     }
 
     @Test fun shareAllOriginalDocumentsWithoutReformattingOrTaskData() {
-        val root = createTempDir(prefix = "navref-manual-")
+        val root = java.nio.file.Files.createTempDirectory("navref-manual-").toFile()
         try {
             val pdf = pdf()
             val docx = docx()
@@ -89,7 +89,7 @@ class ReferenceManualArchiveTest {
     }
 
     @Test fun missingOrForgedOriginalIsRejectedAndStagingRemoved() {
-        val root = createTempDir(prefix = "navref-fraud-")
+        val root = java.nio.file.Files.createTempDirectory("navref-fraud-").toFile()
         try {
             val data = pdf()
             val doc = ReferenceManualDocument(
@@ -119,7 +119,7 @@ class ReferenceManualArchiveTest {
     }
 
     @Test fun wrongZipEntryOrderOrUnexpectedFilesFailClosed() {
-        val root = createTempDir(prefix = "navref-order-")
+        val root = java.nio.file.Files.createTempDirectory("navref-order-").toFile()
         try {
             assertTrue(runCatching {
                 ReferenceManualArchive.stage(ByteArrayInputStream(writeArchive(
