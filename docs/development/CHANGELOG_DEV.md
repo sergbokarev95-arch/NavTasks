@@ -105,3 +105,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-13 — Hardened deduped manual metadata consistency and existing-original real SHA verification; added pure regression. Latest no-publish full CI #43254879474 pending; PDF compatibility experiment #43251678681 SUCCESS.
 
 - 2026-11-13 — Fixed deprecated temp-dir JVM test compile failure. Added SIRE/VIQ/My materials file/folder UI, safe SAF PDF/DOCX import and .navlib backup/restore; internal native per-page PDF renderer with API35 text search and simplified DOCX text viewer, parser XXE test. Staged CI #43258709724 pending. No user APK/production release.
+
+- 2026-11-13 — Added manual library user excerpts model, independent glass edit/reader, source citations, global folder/excerpt search, persistence and portable .navlib restore preserving sources and folder hierarchy; backward-compatible old v1 manual catalog. Latest signed CI #43260910863 pending; earlier PDF/DOCX reader CI #43258709724 PASS; no user binary distributed.
