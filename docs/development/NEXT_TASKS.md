@@ -767,3 +767,10 @@
 - [ ] Press `Позже`, cold-start again (no popup expected), confirm manual `Проверить тестовый канал` still finds TEST3; use unit/new-code test to independently prove Later per-version suppression vs 24-hour auto-check throttle. Check auto-offer toggle OFF, offline silent and re-enable. Then optionally install TEST3 with data validation.
 - [x] Isolated hardened stable-feed transport CI43142231890 SUCCESS. Keep it isolated until integrated into newer signed code>184 release candidate with focused regression/device check; do not include test-only QA controls in stable 1.0.x.
 - [ ] Finish corrupt-profile-index protection, backup privacy decision, skipped-version migration, HONOR and Samsung E2E, last visual/functional audit, then obtain explicit user acceptance before 1.0.0 stable publishing.
+
+## NEXT — 2026-11-12 automatic popup and Later accepted on HONOR
+- [x] RC15/code182 normal startup automatically offered public TEST3/code184, screenshot confirmed.
+- [x] User confirms `Позже`/subsequent launch and manual `Проверить тестовый канал` behaved correctly; settings screenshot confirms manual popup still available. Reminder: no-repeat is also explained by independent 24h successful-check throttle, so per-version suppression should remain unit tested.
+- [x] TEST3 public release `test-v0.4.162` code184 compatible floor182 with correct pinned URL/hash/signer; stable feed `available:false`; exact prior TEST2 app-source recovery RC17 code185 CI SUCCESS private.
+- [ ] After full export, in-place install TEST3/code184 using Update, verify all profiles/tasks/history/AMOS/Services/Handover and settings. User currently installed RC15/code182; do not install recovery unless a regression.
+- [ ] Final blockers: integrate stable-feed weak-net correction (isolated CI43142231890 SUCCESS), corrupted profile-index fail-safe, Android OS backup policy, old-version skipped upgrade migration, Samsung, final HIG/UI check, signed release candidate and explicit 1.0.0 approval.
