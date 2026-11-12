@@ -261,3 +261,10 @@
 - [ ] Stress test on HONOR: large PDFs, archive export/import/back-pressure, cancellation/low disk, night/day reader, 2×2/4×2 widgets. Samsung older Android PDF search and text extraction still unresolved.
 - [ ] Global Reference search currently covers metadata/user excerpts, not full PDF contents; implement safe full-text index or clarify supported search scope before 1.0.0. DOCX simplified reader is not a pixel-exact Office renderer.
 - [ ] Only after reliable private build & full functional checks, prepare original-key code>189 QA APK (not stable release). Keep rollback and live profile backup.
+
+### Quality-first versioned QA build gate — 2026-11-13
+- [x] Preserve true RC20 original source in separate `qa/navtasks-rc20-recovery-code191` with ONLY code191 and private artifact workflow; no main/stable changes.
+- [ ] Confirm recovery CI #43266688902 PASS, certificate SHA and package and APK artifact visible; test version metadata before using.
+- [ ] Confirm latest feature source CI #43265672215 PASS, correct any compiler/test failure, review final diff.
+- [ ] ONLY THEN create QA code190 from verified feature SHA with same historic signer/package and private artifact upload workflow. Never enable public stable feed. Ensure current RC20 profile export before installing test APK and provide recovery191 artifact in case of failures.
+- [ ] Real HONOR and Samsung device checks remain mandatory: current widgets, Reference offline import/export, big PDFs, DOCX, Handover text selection and task recurrence/notifications. PDF older Android full text search not yet completed.
