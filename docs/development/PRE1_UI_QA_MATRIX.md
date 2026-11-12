@@ -81,3 +81,9 @@
 - [ ] Word DOCX reader headings/paragraphs and search, nonexecuted macros/external linked content, complex tables/images explicitly not pixel-accurate. Validate Cyrillic, tables, multi-column text.
 - [ ] Export full .navlib original-byte package, verify intact PDF/DOCX from archive on another device, idempotent duplicate handling and folder remap, and fail-closed checksum/zip-slip/zip-bomb cases. Separate equipment .navref and shared manuals .navlib both need explicit backup on device switch.
 - [ ] User-authored standalone excerpts outside equipment are not implemented yet and remain release scope.
+
+## 2026-11-13 — User excerpts acceptance gate
+- [ ] Add a standalone excerpt into SIRE/VIQ/My Materials with Russian+English, multiline text, optional manual title/section/page/revision; save/reopen/restart and search from root and inside folder.
+- [ ] Edit excerpt and ensure stable ID and preservation of title, body and source; delete with confirmation only; no task, reminder or completion status.
+- [ ] Restore .navlib on another device and verify excerpt-only archives, nested folder placements, non-destructive copy IDs and all citations, as well as original PDF/DOCX.
+- [ ] Old v1 manual catalog without excerpts field still loads; archive with unexpected task/reminder fields is rejected.
