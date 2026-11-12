@@ -232,15 +232,18 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
                     val imageWidthPx = with(density) { imageWidth.toPx() }
                     val imageHeightPx = with(density) { imageHeight.toPx() }
 
+                    LaunchedEffect(page) {
+                        // Reset page origin ONLY when changing pages, not for every
+                        // incremental pinch-zoom gesture (which would cause jumps).
+                        vertical.scrollTo(0)
+                        horizontal.scrollTo(0)
+                    }
                     LaunchedEffect(page, selected, matches, zoom, render.bitmap) {
-                        // Wait until new document/page dimensions and scroll ranges are committed.
-                        withFrameNanos { }
-                        val chosen = matches.getOrNull(selected)?.takeIf { it.pageIndex == page }
-                        val rectangle = chosen?.bounds?.firstOrNull()
-                        if (rectangle == null) {
-                            vertical.scrollTo(0)
-                            horizontal.scrollTo(0)
-                        } else {
+                        val rectangle = matches.getOrNull(selected)
+                            ?.takeIf { it.pageIndex == page }?.bounds?.firstOrNull()
+                        if (rectangle != null) {
+                            // Let Compose measure the larger scrollable page first.
+                            withFrameNanos { }
                             val targetY = (rectangle.centerY() * imageHeightPx /
                                 render.pageHeight - viewportHeightPx * .35f).toInt()
                             val targetX = (rectangle.centerX() * imageWidthPx /
