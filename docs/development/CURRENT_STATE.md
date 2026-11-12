@@ -215,3 +215,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 
 ### CI verification outcome — 2026-11-12
 - Previously marked pending run #43228912162 **COMPLETED SUCCESS** for all JVM tests, signed APK assembly and original package/signature verification. No release, feed update or installation. Both stat widgets and Reference backend are staged, not HONOR accepted.
+
+## 2026-11-13 — Reference Equipment interface staged but unaccepted
+- Feature branch `fix/rc20-pre1-handover-tasks-ui` now includes source UI for vessel equipment library: folder hierarchy, create/edit/delete equipment, procedures with required source+excerpt, read-only procedure reader, text search, Android document picker export/import of one self-contained .navref, import conflict preview and Settings import/export panel. Existing Reference SIRE 2.0/VIQ7 placeholders are retained.
+- No Reference linkage to AMOS, Services, tasks, Today, scheduling, reminders, or task-run state; source-only interval metadata. Personal and vessel task JSON formats untouched. Per-vessel equipment JSON in independent app-private directory; common PDF/DOCX library not yet implemented.
+- New UI source stage pending CI `43246741027`, no real HONOR test or release; stable feed remains disabled and installed RC20 unchanged.
