@@ -224,3 +224,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-13 — UX search follow-up and backup limitation
 - Initial new Reference UI code/Settings exchange signed CI #43246741027 SUCCESS. Subsequent narrow changes improve folder-title search and Back ordering while adding no tasks/business logic; latest CI #43248144577 pending. Physical HONOR acceptance still outstanding.
 - Reference equipment uses independent app-private storage and IS NOT part of old 10-MB Full Profile JSON exports. Individual .navref one-equipment exchange works at backend/UI level; complete library+manuals export/backup is an outstanding pre-release gate.
+
+## 2026-11-13 — Reference catalog backup stage
+- Working feature branch now includes explicit .navref equipment-catalog backup & non-destructive restore in Settings; all device folders and cited procedures roundtrip and keep per-profile separation. This does NOT back up future manual PDF/DOCX binaries. No profile JSON or existing TaskStore/AMOS/Services update. Run #43250406239 in progress at latest check, avoid asserting completed.
+- Independent experimental PDF viewer dependency branch `experiment/navtasks-reference-pdf-viewer-beta01` running #43251052670, not merged. Original installed RC20 and stable manifest remain unchanged.
