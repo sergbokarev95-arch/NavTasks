@@ -187,3 +187,10 @@
 - [ ] HONOR device acceptance using future signed higher-code build (>189): app navigation/back/search keyboard, large snippets, form save/reopen, new folder/nested folder, corrupted storage alert, export+import same/another vessel, duplicate conflict, zero AMOS/Services side effects, RU/EN and day/night.
 - [ ] Add shared manual PDF/DOCX file store, import/view/search, reference folder manager and excerpts not tied to equipment; selective full-folder/library .navref packaging with size/security and library backup rules. Until implemented do NOT imply PDFs/DOCX are imported or included in single-equipment archive.
 - [ ] Continue icon approval, rich editor handle-drag device check, complete app regression and separately approve stable 1.0.0.
+
+## NEXT — Post Reference UI implementation
+- [x] Initial Reference Equipment UI and Settings one-card import/export signed no-publish #43246741027 SUCCESS.
+- [x] Fix equipment folder-title search and Back ordering and add pure test.
+- [ ] Verify updated signed CI #43248144577 SUCCESS. Do not claim physically accepted.
+- [ ] Provide all-library .navref (folders/equipment/excerpts and optional original manual files) export/restore and safe migration tests; current profile JSON excludes Reference catalog, which is a significant pre-1.0.0 release risk.
+- [ ] Implement shared offline PDF/DOCX import and viewers and global Reference excerpt management. Separate from task scheduling. Verify large file storage limits, hash, backup and offline search.
