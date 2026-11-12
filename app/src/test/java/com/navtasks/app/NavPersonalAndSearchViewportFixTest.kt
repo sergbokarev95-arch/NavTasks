@@ -17,6 +17,13 @@ class NavPersonalAndSearchViewportFixTest {
         assertEquals(62f, navSearchListScrollDelta(720f, 100f, 700f, 42f), 0.001f)
     }
 
+    @Test fun handoverSearchMovesVisibleHitsToTopWithoutMovingTheSearchBar() {
+        assertEquals(238f, navHandoverSearchTopScrollDelta(380f, 100f, 42f), 0.001f)
+        assertEquals(0f, navHandoverSearchTopScrollDelta(145f, 100f, 42f), 0.001f)
+        assertEquals(-30f, navHandoverSearchTopScrollDelta(112f, 100f, 42f), 0.001f)
+        assertEquals(558f, navHandoverSearchTopScrollDelta(700f, 100f, 42f), 0.001f)
+    }
+
     @Test fun shortViewportStillProducesFiniteScroll() {
         assertEquals(15f, navSearchListScrollDelta(160f, 100f, 170f, 45f), 0.001f)
     }

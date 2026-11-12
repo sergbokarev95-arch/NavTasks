@@ -55,6 +55,10 @@ internal fun handoverNotebookEntries(entries: List<HandoverEntry>): List<Handove
 internal fun nextExpandedHandoverSection(current: String?, tapped: String): String? =
     if (current == tapped) null else tapped
 
+/** Entry accordion is presentation-only: stored note text, rich HTML and ordering do not change. */
+internal fun nextExpandedHandoverEntry(current: String?, tapped: String): String? =
+    if (current == tapped) null else tapped
+
 @Composable
 fun HandoverScreen(
     handover: HandoverStore,
@@ -95,7 +99,8 @@ fun HandoverScreen(
                 if (sectionIndex >= 0) {
                     // Avoid jumping to the section top for each repeated
                     // occurrence in the same long note.
-                    if (listState.firstVisibleItemIndex != sectionIndex)
+                    if (hit.field == NavHandoverField.SECTION_TITLE ||
+                        listState.firstVisibleItemIndex != sectionIndex)
                         listState.animateScrollToItem(sectionIndex)
                     entryRevealSerial = searchNavigationSerial
                 }
@@ -105,6 +110,7 @@ fun HandoverScreen(
     // A compact accordion: all sections start closed; each profile keeps
     // its current open section when the activity is recreated.
     var expandedSectionId by rememberSaveable { mutableStateOf<String?>(null) }
+    var expandedEntryId by rememberSaveable { mutableStateOf<String?>(null) }
     var editSectionId by remember { mutableStateOf<String?>(null) }
     var addSection by remember { mutableStateOf(false) }
     var sectionName by remember { mutableStateOf("") }
@@ -118,6 +124,7 @@ fun HandoverScreen(
             listState.animateScrollToItem(0)
             // A fresh Handover starts with its sections folded.
             expandedSectionId = null
+            expandedEntryId = null
             searchOpen = false
             searchText = ""
         }
@@ -242,9 +249,11 @@ fun HandoverScreen(
                         Row(
                             Modifier.weight(1f)
                                 .glassClickable {
-                                    expandedSectionId = nextExpandedHandoverSection(
+                                    val nextSection = nextExpandedHandoverSection(
                                         expandedSectionId, section.id,
                                     )
+                                    if (nextSection != expandedSectionId) expandedEntryId = null
+                                    expandedSectionId = nextSection
                                 }
                                 .padding(vertical = 10.dp, horizontal = 3.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -356,9 +365,8 @@ fun HandoverScreen(
                                                 ).top else 0f
                                             val wordY = target.positionInWindow().y + localY
                                             val viewportTop = viewport.positionInWindow().y
-                                            val delta = navSearchListScrollDelta(
+                                            val delta = navHandoverSearchTopScrollDelta(
                                                 matchY = wordY, top = viewportTop,
-                                                bottom = viewportTop + viewport.size.height,
                                                 margin = matchMarginPx,
                                             )
                                             handledSearchSerial = entryRevealSerial
@@ -366,56 +374,94 @@ fun HandoverScreen(
                                         }
                                     }
                                 }
-                                Row(
-                                    Modifier.fillMaxWidth()
-                                        .navGlass(p, radius = 13.dp, role = GlassRole.TASK)
-                                        .glassClickable { openEntryEditor(section.id, entry) }
-                                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Column(Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                                val expandedEntry = personalMode || expandedEntryId == entry.id ||
+                                    (searchOpen && focusedEntryHit?.field == NavHandoverField.ENTRY_NOTES)
+                                val entryChevronRotation by animateFloatAsState(
+                                    targetValue = if (expandedEntry) 180f else 0f,
+                                    animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
+                                    label = "handoverEntryChevron",
+                                )
+                                Column(Modifier.fillMaxWidth()
+                                    .navGlass(p, radius = 13.dp, role = GlassRole.TASK)) {
+                                    Row(
+                                        Modifier.fillMaxWidth()
+                                            .glassClickable {
+                                                if (personalMode) openEntryEditor(section.id, entry)
+                                                else expandedEntryId = nextExpandedHandoverEntry(
+                                                    expandedEntryId, entry.id,
+                                                )
+                                            }
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
                                         NavSearchMarkedText(
                                             entry.title, query, p,
-                                            modifier = Modifier.onGloballyPositioned {
-                                                titleCoordinates = it
-                                            },
+                                            modifier = Modifier.weight(1f)
+                                                .onGloballyPositioned { titleCoordinates = it },
                                             color = p.text, fontSize = 15.sp,
                                             fontWeight = FontWeight.Medium,
                                             activeMatchStart = focusedEntryHit?.takeIf {
                                                 it.field == NavHandoverField.ENTRY_TITLE
                                             }?.start,
                                         )
-                                        if (entry.notes.isNotBlank()) {
-                                            if (query.isNotEmpty() &&
-                                                navSearchRanges(entry.notes, query).isNotEmpty()
-                                            ) {
-                                                // Only search rendering is plain/marked.
-                                                // Stored rich HTML and the editor remain intact.
-                                                NavSearchMarkedText(
-                                                    entry.notes, query, p,
-                                                    modifier = Modifier.fillMaxWidth()
-                                                        .onGloballyPositioned {
-                                                            noteCoordinates = it
-                                                        },
+                                        Spacer(Modifier.width(8.dp))
+                                        NavGlassGlyph(
+                                            if (personalMode) "chevron-right" else "chevron-down",
+                                            p.muted.copy(alpha = 0.72f),
+                                            Modifier.size(16.dp)
+                                                .rotate(if (personalMode) 0f else entryChevronRotation),
+                                        )
+                                    }
+                                    AnimatedVisibility(
+                                        visible = expandedEntry,
+                                        enter = expandVertically(
+                                            spring(dampingRatio = 1f, stiffness = 550f),
+                                        ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
+                                        exit = shrinkVertically(
+                                            spring(dampingRatio = 1f, stiffness = 550f),
+                                        ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
+                                    ) {
+                                        Column(
+                                            Modifier.fillMaxWidth()
+                                                .glassClickable { openEntryEditor(section.id, entry) }
+                                                .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
+                                            verticalArrangement = Arrangement.spacedBy(7.dp),
+                                        ) {
+                                            Spacer(Modifier.fillMaxWidth().height(1.dp)
+                                                .background(p.border.copy(alpha = 0.45f)))
+                                            if (entry.notes.isNotBlank()) {
+                                                if (query.isNotEmpty() &&
+                                                    navSearchRanges(entry.notes, query).isNotEmpty()
+                                                ) {
+                                                    // Search highlights are display-only: never edit saved HTML.
+                                                    NavSearchMarkedText(
+                                                        entry.notes, query, p,
+                                                        modifier = Modifier.fillMaxWidth()
+                                                            .onGloballyPositioned {
+                                                                noteCoordinates = it
+                                                            },
+                                                        color = p.muted, fontSize = 12.sp,
+                                                        activeMatchStart = focusedEntryHit?.takeIf {
+                                                            it.field == NavHandoverField.ENTRY_NOTES
+                                                        }?.start,
+                                                        onTextLayout = { noteLayout = it },
+                                                    )
+                                                } else {
+                                                    NavRichNoteText(
+                                                        entry.notes, entry.notesHtml, p,
+                                                        fontSize = 12.sp,
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                    )
+                                                }
+                                            } else if (!personalMode) {
+                                                Text(
+                                                    localized("Нажми, чтобы добавить описание",
+                                                        "Tap to add details", lang),
                                                     color = p.muted, fontSize = 12.sp,
-                                                    activeMatchStart = focusedEntryHit?.takeIf {
-                                                        it.field == NavHandoverField.ENTRY_NOTES
-                                                    }?.start,
-                                                    onTextLayout = { noteLayout = it },
-                                                )
-                                            } else {
-                                                NavRichNoteText(
-                                                    entry.notes, entry.notesHtml, p,
-                                                    fontSize = 12.sp,
-                                                    modifier = Modifier.fillMaxWidth(),
                                                 )
                                             }
                                         }
                                     }
-                                    Spacer(Modifier.width(8.dp))
-                                    NavGlassGlyph("chevron-right",
-                                        p.muted.copy(alpha = 0.72f), Modifier.size(16.dp))
                                 }
                         }
                     }

@@ -62,6 +62,17 @@ internal fun navSearchListScrollDelta(
     }
 }
 
+/** Handover arrows deliberately align each hit near the top, even if already visible.
+ * The fixed search bar is outside the LazyColumn and must never be moved.
+ * Unlike other search screens, merely keeping the hit inside the viewport is not enough.
+ */
+internal fun navHandoverSearchTopScrollDelta(
+    matchY: Float, top: Float, margin: Float,
+): Float {
+    val delta = matchY - (top + margin)
+    return if (kotlin.math.abs(delta) <= 6f) 0f else delta
+}
+
 internal fun navSearchNextIndex(current: Int, count: Int, delta: Int): Int =
     if (count <= 0) 0 else Math.floorMod(current.coerceIn(0, count - 1) + delta, count)
 
