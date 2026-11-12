@@ -178,3 +178,12 @@
 ### Current verification — 2026-11-12
 - [x] Confirmed signed, no-publish CI #43228912162 SUCCESS for code commit aa67869 (all JVM tests, original signer, nondebuggable app identity).
 - [ ] HONOR/Samsung acceptance of 2×2/4×2 launcher widgets and later Reference equipment UI/import remains outstanding. No APK download yet. All original task, AMOS, Services, notifications, Handover records preserved.
+
+## 2026-11-13 — Reference equipment UI acceptance gate
+- [x] Add standalone equipment folders, equipment & procedure UI, source citations and descriptive intervals, search by procedure/excerpt/manual text; create/edit/delete with confirmation.
+- [x] Add .navref one-equipment Android SAF export/import in equipment screen and Settings, with preview, duplicate detection, add copy or explicit replace, no automatic tasks and no serial numbers by default.
+- [x] Add pure operations and JVM tests for folder cycle protection, equipment/procedure ID retention, archive-only semantics and text search.
+- [ ] Confirm signed no-publish CI `43246741027` conclusion, fix compile/runtime issues until SUCCESS. No device acceptance yet.
+- [ ] HONOR device acceptance using future signed higher-code build (>189): app navigation/back/search keyboard, large snippets, form save/reopen, new folder/nested folder, corrupted storage alert, export+import same/another vessel, duplicate conflict, zero AMOS/Services side effects, RU/EN and day/night.
+- [ ] Add shared manual PDF/DOCX file store, import/view/search, reference folder manager and excerpts not tied to equipment; selective full-folder/library .navref packaging with size/security and library backup rules. Until implemented do NOT imply PDFs/DOCX are imported or included in single-equipment archive.
+- [ ] Continue icon approval, rich editor handle-drag device check, complete app regression and separately approve stable 1.0.0.
