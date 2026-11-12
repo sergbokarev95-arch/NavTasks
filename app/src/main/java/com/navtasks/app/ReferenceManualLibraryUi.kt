@@ -38,6 +38,8 @@ internal fun ReferenceManualLibraryScreen(
     val loaded = remember(store) { runCatching { store.read() } }
     var catalog by remember(store) { mutableStateOf(loaded.getOrNull()) }
     val scope = rememberCoroutineScope()
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    var selectedSearchResult by remember { mutableIntStateOf(0) }
     var busy by remember { mutableStateOf(false) }
     var feedback by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf(false) }
@@ -165,6 +167,15 @@ internal fun ReferenceManualLibraryScreen(
             it.notes.contains(q, ignoreCase = true))
     }.sortedBy { it.title.lowercase() }
 
+    val totalSearchResults = if (q.isBlank()) 0 else folders.size + documents.size
+    LaunchedEffect(q, folderId) { selectedSearchResult = 0 }
+    fun moveSearchResult(direction: Int) {
+        if (totalSearchResults <= 0) return
+        selectedSearchResult = navSearchNextIndex(
+            selectedSearchResult, totalSearchResults, direction)
+        scope.launch { listState.animateScrollToItem(selectedSearchResult) }
+    }
+
     fun navigateBack() {
         when {
             documentId != null -> documentId = null
@@ -255,13 +266,14 @@ internal fun ReferenceManualLibraryScreen(
                     p = p, lang = lang,
                     placeholder = localized("Поиск по названиям документов",
                         "Search document titles", lang),
-                    resultCount = if (q.isEmpty()) 0 else folders.size + documents.size,
-                    currentResult = 0,
-                    onPreviousResult = {},
-                    onNextResult = {},
+                    resultCount = totalSearchResults,
+                    currentResult = selectedSearchResult,
+                    onPreviousResult = { moveSearchResult(-1) },
+                    onNextResult = { moveSearchResult(1) },
                 )
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
+                    state = listState,
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
                         top = 8.dp, bottom = 125.dp),
                     verticalArrangement = Arrangement.spacedBy(11.dp),
@@ -292,6 +304,7 @@ internal fun ReferenceManualLibraryScreen(
                     items(folders, key = { "folder-" + it.id }) { item ->
                         ReferenceManualListRow(
                             item.title, localized("Папка", "Folder", lang), p,
+                            query = q,
                             onClick = { folderId = item.id; showSearch = false; search = "" },
                         )
                     }
@@ -300,7 +313,7 @@ internal fun ReferenceManualLibraryScreen(
                             doc.title,
                             if (doc.mimeType == ReferenceManualMime.PDF) "PDF"
                                 else "Word DOCX",
-                            p, onClick = { documentId = doc.id },
+                            p, query = q, onClick = { documentId = doc.id },
                             onRemove = { deleteDocument = doc },
                         )
                     }
@@ -424,7 +437,7 @@ internal fun ReferenceManualLibraryScreen(
 @Composable
 private fun ReferenceManualListRow(
     title: String, subtitle: String, p: NavPalette,
-    onClick: () -> Unit, onRemove: (() -> Unit)? = null,
+    query: String = "", onClick: () -> Unit, onRemove: (() -> Unit)? = null,
 ) {
     Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp, role = GlassRole.TASK)
         .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -434,9 +447,9 @@ private fun ReferenceManualListRow(
             NavGlassGlyph("reference", p.blueText, Modifier.size(24.dp))
             Spacer(Modifier.width(11.dp))
             Column(Modifier.weight(1f)) {
-                Text(title, color = p.text, fontSize = 15.sp, maxLines = 2,
-                    overflow = TextOverflow.Ellipsis)
-                Text(subtitle, color = p.muted, fontSize = 12.sp)
+                NavSearchMarkedText(title, query, p, color = p.text, fontSize = 15.sp,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                NavSearchMarkedText(subtitle, query, p, color = p.muted, fontSize = 12.sp)
             }
             NavGlassGlyph("chevron-right", p.muted, Modifier.size(18.dp))
         }
