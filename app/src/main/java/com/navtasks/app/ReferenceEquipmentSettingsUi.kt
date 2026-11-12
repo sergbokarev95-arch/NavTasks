@@ -112,6 +112,14 @@ internal fun ReferenceEquipmentSettingsPanel(
             Text(localized("Оборудования в этом профиле: ",
                 "Equipment in this profile: ", lang) + catalog!!.equipment.size,
                 color = p.muted, fontSize = 11.sp)
+            HorizontalDivider(
+                color = p.border.copy(alpha = .4f),
+                modifier = Modifier.padding(vertical = 6.dp),
+            )
+            ReferenceCatalogBackupPanel(
+                p = p, lang = lang, catalog = catalog!!,
+                onRestore = { restored -> save(restored) },
+            )
         }
         if (status != null) {
             Text(status.orEmpty(), color = if (failure) p.systemRed else p.blueText,
