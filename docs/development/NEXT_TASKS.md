@@ -206,3 +206,11 @@
 - [x] Signed nonpublishing CI #43250406239 SUCCESS for full equipment-only catalog backup and restoration (all JVM regressions, original signer/package).
 - [ ] Verify experimental AndroidX PDF #43251678681 after SDK extension 19. Initial attempt #43251052670 FAILED due AAR metadata requiring compileSdkExtension19; no change to accepted code or end-user package.
 - [ ] Before UI PDF import, build shared original-file store and FULL Reference library archival export with hashes and file bytes; verify rollback and offline restore. Only then expose PDF/DOCX import to users so documents are portable.
+
+## NEXT — shared PDF/DOCX manual milestone, 2026-11-13
+- [x] Add isolated shared manual document schema and folder validation, safe file names and checksums; metadata title/filename search. NO full-text PDF search yet.
+- [x] Add private original-file import backend (streams bytes with 250MB cap and SHA256, verifies PDF/DOCX package, atomic catalog); no UI until portable archive works.
+- [x] PDF library beta compile proof #43251678681 SUCCESS with SDK extension 19, but no HONOR reader acceptance. Never merge experimental version blindly.
+- [ ] Confirm feature-source CI #43252927005; fix failures if any.
+- [ ] Implement bounded-streaming whole-manual-library ZIP export+restore including original file bytes, hashes, and folder structure; check multi-GB/zip bomb limits and corrupt package rollback. Maintain equipment full catalog separately until unified Reference backup is designed.
+- [ ] Add SAF import and library screens, PDF/Word offline reading and document search; device QA on HONOR and Samsung; no changes to tasks/business logic.
