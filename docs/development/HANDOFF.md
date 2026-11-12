@@ -329,3 +329,7 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - Signed no-publish workflow #43253904642 IN PROGRESS at documentation time. Verify status and fix any compile/test regression before accepting.
 - Initial PDF library compatibility proof CI #43251678681 SUCCESS only on isolated branch with compileSdkExtension19, not merged; no plugin dependency or SDK change to user branch. Stable feed available:false, signed RC20/code188 untouched.
 - Next: when CI green, expose safe shared-manual archive export/import + manual import UI via SAF using Dispatchers.IO. Integrate approved PDF reader and DOCX basic reader without rewriting main activity, test HONOR/Samsung both themes. Keep SIRE/VIQ originals content entirely user-supplied; never bundle copyrighted manuals.
+
+### Safety hardening after manual archive stage — 2026-11-13
+- ReferenceManualCatalog.validate() now rejects inconsistent file sizes for multiple document cards referencing the same SHA-256/MIME; avoids archives pointing to incomplete binaries. ReferenceManualStore.importOriginal verifies existing hash-named originals by real SHA-256 as well as size, and handles zero-byte stream reads.
+- Added regression for conflicting identical-sha metadata. Newest SOURCE signed non-publishing CI #43254879474 was IN PROGRESS at last check (previous intermediate jobs cancelled due deliberate concurrency); verify conclusion and do not claim shipped UI. Signed RC20 on HONOR and public stable manifest remain untouched.
