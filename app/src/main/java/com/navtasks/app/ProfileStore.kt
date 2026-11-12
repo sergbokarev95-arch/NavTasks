@@ -97,6 +97,41 @@ object ProfileTransfer {
     }
 }
 
+
+/**
+ * The profile index is only an address book. Individual task/handover/AMOS/Services
+ * data lives in different preferences and must NEVER be cleared on parse failures.
+ */
+internal data class NavProfileIndexResult(
+    val items: List<NavProfile>,
+    val raw: String,
+    val fromBackup: Boolean,
+)
+
+internal fun navValidateProfileIndex(raw: String?): List<NavProfile> {
+    require(!raw.isNullOrBlank() && raw.length <= 512_000) { "Missing or oversized profile index" }
+    val arr = JSONArray(raw)
+    require(arr.length() in 1..1000) { "Empty or oversized profile index" }
+    val result = (0 until arr.length()).map { NavProfile.fromJson(arr.getJSONObject(it)) }
+    require(result.map { it.id }.toSet().size == result.size) { "Duplicate profile IDs" }
+    return result
+}
+
+internal fun navChooseProfileIndex(primary: String?, backup: String?): NavProfileIndexResult {
+    val current = runCatching { navValidateProfileIndex(primary) }.getOrNull()
+    if (current != null) return NavProfileIndexResult(current, primary!!, false)
+    val rescued = try {
+        navValidateProfileIndex(backup)
+    } catch (error: Exception) {
+        // Never silently substitute default profiles or write an empty index.
+        throw IllegalStateException(
+            "Profile index is damaged; no verified backup. Existing profile data was not erased.",
+            error,
+        )
+    }
+    return NavProfileIndexResult(rescued, backup!!, true)
+}
+
 /**
  * Choose a valid remaining profile, preferring another vessel and finally
  * Personal. This works even if the original default ship was deleted.
@@ -120,6 +155,8 @@ internal fun profileAfterDeletion(
 class ProfileStore(context: Context) {
     private val app = context.applicationContext
     private val index = app.getSharedPreferences("navtasks-profiles-v1", Context.MODE_PRIVATE)
+    // Independent address-book safety copy, not a duplicate of personal task data.
+    private val safeIndex = app.getSharedPreferences("navtasks-profiles-safety-v1", Context.MODE_PRIVATE)
 
     companion object {
         const val DEFAULT_SHIP = "ship-default"
@@ -138,7 +175,11 @@ class ProfileStore(context: Context) {
     }
 
     init {
-        if (!index.getBoolean("initialized", false)) {
+        // Recover even if Android lost the index's initialized flag: never replace
+        // existing profile IDs with initial defaults when a valid index exists.
+        val present = runCatching { index.getString("profiles", null) }.getOrNull()
+        val safety = runCatching { safeIndex.getString("profiles", null) }.getOrNull()
+        if (!index.getBoolean("initialized", false) && present == null && safety == null) {
             val original = app.getSharedPreferences("navtasks-v1", Context.MODE_PRIVATE)
             val notes = app.getSharedPreferences("navtasks-handover-v1", Context.MODE_PRIVATE)
             val shipData = app.getSharedPreferences("navtasks-profile-" + DEFAULT_SHIP, Context.MODE_PRIVATE)
@@ -162,20 +203,36 @@ class ProfileStore(context: Context) {
                 .putString("activeId", DEFAULT_SHIP).putBoolean("initialized", true)
                 .commit()) { "Unable to initialize profiles" }
         }
-        val list = runCatching {
-            val arr = JSONArray(index.getString("profiles", "[]"))
-            (0 until arr.length()).map { NavProfile.fromJson(arr.getJSONObject(it)) }
-        }.getOrDefault(emptyList())
-        profiles = if (list.isEmpty()) listOf(
-            NavProfile(DEFAULT_SHIP, "Основной", NavProfileKind.VESSEL),
-            NavProfile(PERSONAL_ID, "Личное", NavProfileKind.PERSONAL),
-        ) else list
-        activeId = index.getString("activeId", DEFAULT_SHIP)
-            .takeIf { value -> profiles.any { it.id == value } } ?: profiles.first().id
+        val verified = navChooseProfileIndex(
+            runCatching { index.getString("profiles", null) }.getOrNull(),
+            runCatching { safeIndex.getString("profiles", null) }.getOrNull(),
+        )
+        profiles = verified.items
+        activeId = runCatching { index.getString("activeId", DEFAULT_SHIP) }.getOrNull()
+            .takeIf { value -> profiles.any { it.id == value } }
+            ?: runCatching { safeIndex.getString("activeId", DEFAULT_SHIP) }.getOrNull()
+                .takeIf { value -> profiles.any { it.id == value } }
+            ?: profiles.first().id
+        if (verified.fromBackup || !index.getBoolean("initialized", false)) {
+            // Only a validated previously saved list may repair the primary index.
+            check(index.edit().putString("profiles", verified.raw)
+                .putString("activeId", activeId).putBoolean("initialized", true)
+                .commit()) { "Cannot recover validated profile index" }
+        }
+        // First launch on an existing installation seeds the independent copy.
+        // Backing up only the validated IDs never touches actual profile records.
+        safeIndex.edit().putString("profiles", verified.raw)
+            .putString("activeId", activeId).commit()
     }
 
     private fun saveIndex(value: List<NavProfile> = profiles, active: String = activeId) {
+        require(value.isNotEmpty() && value.map { it.id }.toSet().size == value.size &&
+            value.any { it.id == active }) { "Invalid profile index update" }
         val encoded = JSONArray().apply { value.forEach { put(it.toJson()) } }.toString()
+        // Stage the complete validated list in a separate SharedPreferences file
+        // BEFORE changing the main index. A failed safety write aborts the edit.
+        check(safeIndex.edit().putString("profiles", encoded)
+            .putString("activeId", active).commit()) { "Could not back up profile index" }
         check(index.edit().putString("profiles", encoded).putString("activeId", active).commit()) {
             "Could not save profiles"
         }
