@@ -268,3 +268,10 @@
 - [ ] Confirm latest feature source CI #43265672215 PASS, correct any compiler/test failure, review final diff.
 - [ ] ONLY THEN create QA code190 from verified feature SHA with same historic signer/package and private artifact upload workflow. Never enable public stable feed. Ensure current RC20 profile export before installing test APK and provide recovery191 artifact in case of failures.
 - [ ] Real HONOR and Samsung device checks remain mandatory: current widgets, Reference offline import/export, big PDFs, DOCX, Handover text selection and task recurrence/notifications. PDF older Android full text search not yet completed.
+
+### QA APK delivery status — 2026-11-13
+- [x] Source code CI #43265672215 SUCCESS, no TaskStore/AMOS/Services changes in quality audit.
+- [x] Prepared private QA code190 and original-RC20 recovery code191 branches/workflows; version-only source diff and original-key/signature checks.
+- [x] Identified GitHub Actions artifact quota error (not code failure); switched isolated workflows to PRIVATE DRAFT GitHub release assets, never stable channel.
+- [ ] Confirm private draft CI #43269056417 recovery and #43269120575 QA both SUCCESS; verify Release status DRAFT, attached APK size, original package/cert and version codes. Do not supply installation links unless assets actually exist.
+- [ ] After verified, give user direct private-draft APK links and one concise backup/install/recovery procedure; ask for physical HONOR testing, keep RC20 profiles backup.
