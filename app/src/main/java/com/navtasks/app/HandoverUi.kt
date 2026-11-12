@@ -55,6 +55,16 @@ internal fun handoverNotebookEntries(entries: List<HandoverEntry>): List<Handove
 internal fun nextExpandedHandoverSection(current: String?, tapped: String): String? =
     if (current == tapped) null else tapped
 
+/** Compact Handover entries are UI-only: no task state or saved note data changes. */
+internal fun nextExpandedHandoverEntry(current: String?, tapped: String): String? =
+    if (current == tapped) null else tapped
+
+/** Keep Personal notes fully visible; search opens note matches automatically. */
+internal fun handoverEntryShowsNotes(
+    personalMode: Boolean, expandedEntryId: String?, entry: HandoverEntry, query: String,
+): Boolean = personalMode || expandedEntryId == entry.id ||
+    (query.isNotBlank() && navSearchRanges(entry.notes, query).isNotEmpty())
+
 @Composable
 fun HandoverScreen(
     handover: HandoverStore,
@@ -105,6 +115,7 @@ fun HandoverScreen(
     // A compact accordion: all sections start closed; each profile keeps
     // its current open section when the activity is recreated.
     var expandedSectionId by rememberSaveable { mutableStateOf<String?>(null) }
+    var expandedEntryId by rememberSaveable { mutableStateOf<String?>(null) }
     var editSectionId by remember { mutableStateOf<String?>(null) }
     var addSection by remember { mutableStateOf(false) }
     var sectionName by remember { mutableStateOf("") }
@@ -118,6 +129,7 @@ fun HandoverScreen(
             listState.animateScrollToItem(0)
             // A fresh Handover starts with its sections folded.
             expandedSectionId = null
+            expandedEntryId = null
             searchOpen = false
             searchText = ""
         }
@@ -313,6 +325,14 @@ fun HandoverScreen(
                                 val focusedEntryHit = focusedSearchHit?.takeIf {
                                     it.sectionId == section.id && it.entryId == entry.id
                                 }
+                                val entryExpanded = handoverEntryShowsNotes(
+                                    personalMode, expandedEntryId, entry, query,
+                                )
+                                val entryChevronRotation by animateFloatAsState(
+                                    targetValue = if (entryExpanded) 180f else 0f,
+                                    animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
+                                    label = "handoverEntryChevron",
+                                )
                                 var titleCoordinates by remember(section.id, entry.id) {
                                     mutableStateOf<LayoutCoordinates?>(null)
                                 }
@@ -367,32 +387,65 @@ fun HandoverScreen(
                                         }
                                     }
                                 }
-                                Row(
+                                Column(
                                     Modifier.fillMaxWidth()
                                         .navGlass(p, radius = 13.dp, role = GlassRole.TASK)
-                                        .glassClickable { openEntryEditor(section.id, entry) }
-                                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp),
                                 ) {
-                                    Column(Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                                    Row(
+                                        Modifier.fillMaxWidth()
+                                            .glassClickable {
+                                                if (personalMode) openEntryEditor(section.id, entry)
+                                                else expandedEntryId = nextExpandedHandoverEntry(
+                                                    expandedEntryId, entry.id,
+                                                )
+                                            }
+                                            .padding(vertical = 3.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
                                         NavSearchMarkedText(
                                             entry.title, query, p,
-                                            modifier = Modifier.onGloballyPositioned {
-                                                titleCoordinates = it
-                                            },
+                                            modifier = Modifier.weight(1f)
+                                                .onGloballyPositioned { titleCoordinates = it },
                                             color = p.text, fontSize = 15.sp,
                                             fontWeight = FontWeight.Medium,
                                             activeMatchStart = focusedEntryHit?.takeIf {
                                                 it.field == NavHandoverField.ENTRY_TITLE
                                             }?.start,
                                         )
-                                        if (entry.notes.isNotBlank()) {
-                                            if (query.isNotEmpty() &&
+                                        Spacer(Modifier.width(8.dp))
+                                        NavGlassGlyph(
+                                            if (personalMode) "chevron-right" else "chevron-down",
+                                            p.muted.copy(alpha = 0.72f),
+                                            Modifier.size(17.dp)
+                                                .rotate(if (personalMode) 0f else entryChevronRotation),
+                                        )
+                                    }
+                                    AnimatedVisibility(
+                                        visible = entryExpanded,
+                                        enter = expandVertically(
+                                            spring(dampingRatio = 1f, stiffness = 550f),
+                                        ) + fadeIn(spring(dampingRatio = 1f, stiffness = 550f)),
+                                        exit = shrinkVertically(
+                                            spring(dampingRatio = 1f, stiffness = 550f),
+                                        ) + fadeOut(spring(dampingRatio = 1f, stiffness = 550f)),
+                                    ) {
+                                        Column(
+                                            Modifier.fillMaxWidth()
+                                                .glassClickable { openEntryEditor(section.id, entry) }
+                                                .padding(top = 6.dp, bottom = 4.dp),
+                                        ) {
+                                            if (entry.notes.isBlank()) {
+                                                Text(
+                                                    localized("Нажми, чтобы добавить описание",
+                                                        "Tap to add a description", lang),
+                                                    color = p.muted, fontSize = 12.sp,
+                                                )
+                                            } else if (query.isNotEmpty() &&
                                                 navSearchRanges(entry.notes, query).isNotEmpty()
                                             ) {
-                                                // Only search rendering is plain/marked.
-                                                // Stored rich HTML and the editor remain intact.
+                                                // Mark search text only; never mutate saved HTML.
                                                 NavSearchMarkedText(
                                                     entry.notes, query, p,
                                                     modifier = Modifier.fillMaxWidth()
@@ -414,9 +467,6 @@ fun HandoverScreen(
                                             }
                                         }
                                     }
-                                    Spacer(Modifier.width(8.dp))
-                                    NavGlassGlyph("chevron-right",
-                                        p.muted.copy(alpha = 0.72f), Modifier.size(16.dp))
                                 }
                         }
                     }
