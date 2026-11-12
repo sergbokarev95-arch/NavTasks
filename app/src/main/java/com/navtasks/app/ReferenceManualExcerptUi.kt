@@ -68,7 +68,7 @@ internal fun ReferenceManualExcerptEditor(
                         title = title.trim(),
                         text = text.trim(),
                         sectionId = original?.sectionId ?: sectionId,
-                        folderId = original?.folderId ?: folderId,
+                        folderId = referenceExcerptFolderForSave(original, folderId),
                         sourceTitle = source.trim(),
                         sourceSection = section.trim(),
                         sourcePage = page.toIntOrNull(),
