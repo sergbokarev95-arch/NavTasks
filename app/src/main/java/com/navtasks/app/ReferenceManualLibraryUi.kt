@@ -149,7 +149,7 @@ internal fun ReferenceManualLibraryScreen(
                     runCatching {
                         context.contentResolver.openInputStream(uri)?.use { source ->
                             ReferenceManualArchive.stage(
-                                source, java.io.File(context.filesDir, "navtasks-reference/staging"))
+                                source, java.io.File(context.noBackupFilesDir, "navtasks-reference/staging"))
                         } ?: throw IOException("Could not open library archive")
                     }
                 }
