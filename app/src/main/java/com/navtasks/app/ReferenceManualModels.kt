@@ -169,8 +169,16 @@ internal data class ReferenceManualCatalog(
 
     companion object {
         fun fromJson(obj: JSONObject): ReferenceManualCatalog {
-            // Accept earlier v1 catalogs (before excerpts existed) without migration.
+            // Accept earlier v1 catalogs (before excerpts existed) without migration,
+            // but NEVER accept unrecognized fields such as task IDs or reminders.
+            val allowed = setOf("format", "schemaVersion", "folders", "documents", "excerpts")
+            val keys = obj.keys()
+            while (keys.hasNext()) require(keys.next() in allowed) {
+                "Unknown Reference library field"
+            }
             require(obj.length() == 4 || obj.length() == 5)
+            require(obj.has("format") && obj.has("schemaVersion") &&
+                obj.has("folders") && obj.has("documents"))
             require(obj.getString("format") == "navtasks-reference-manuals")
             require(obj.getInt("schemaVersion") == 1)
             val folders = obj.getJSONArray("folders")
