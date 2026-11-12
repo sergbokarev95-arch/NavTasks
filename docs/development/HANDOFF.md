@@ -280,3 +280,15 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - Signed no-publish UI + Reference foundation CI **#43228912162 SUCCESS**: https://github.com/sergbokarev95-arch/NavTasks/actions/runs/43228912162
 - Steps confirmed: all JVM regressions and release APK assembly SUCCESS, existing signing key restored and removed SUCCESS, package identity/nondebuggable/signature verification SUCCESS. This validates source commit `aa67869e0f855693336e9a3d6a7672f20d1b90c0` including statistical widgets and independent Reference backend.
 - Documentation-only commits after that source commit do not change runtime. User has not received or installed this build; device UX and reader/import UI still pending. Future installable candidate requires versionCode>189 and explicit user test approval; stable feed not enabled.
+
+## 2026-11-13 — Equipment Reference UI and Settings exchange staged (CI pending)
+- Accepted user decision remains absolute: Reference NEVER links to Tasks, Today, AMOS, Services or scheduler. User manually opens Reference to read procedures, with source manual/excerpt and informational interval only.
+- New files on isolated RC20-based feature branch:
+  - `ReferenceEquipmentLogic.kt`: immutable operations to add/rename/delete empty folders, add/edit/remove equipment/procedures, global search of equipment/procedure/source text, conflict-safe local import; no task calls.
+  - `ReferenceEquipmentEditorUi.kt`: localized glass dialogs for folders/equipment/procedures, manual title + nonblank excerpt required.
+  - `ReferenceEquipmentUi.kt`: fully offline equipment browser, nested folders, equipment detail, cited procedure reader, text search, create/edit/delete with confirmation, Android SAF one-item .navref export and previewed import with duplicate warning/copy/explicit replacement.
+  - `ReferenceEquipmentSettingsUi.kt`: Settings > Reference Import / Export for active vessel profile; one-equipment selection, `.navref` preview, add-copy/replace explicit only, no task data.
+- Existing `ReferenceHubUi.kt` modified minimally to open Equipment inside existing Reference tab, keeping SIRE 2.0 and VIQ7 placeholders and search; `NavTasksUi.kt` now passes active vessel profile ID; `PlanAndTasksUi.kt` adds Reference exchange panel only for Vessel.
+- Existing new backend `ReferenceEquipmentStore.kt` still owns per-vessel independent atomic JSON; no old profile JSON schema changes. Original manual PDF/DOCX viewer and common shared library file manager are NOT implemented; one-equipment .navref exports ONLY excerpts/citations/instructions, not full PDF. No UI linking to tasks/works.
+- Pure test `ReferenceEquipmentInteractionTest.kt` checks folder operations, procedure replacement, search, imported copies and zero scheduler IDs.
+- Signed no-publish source CI run `43246741027` was IN PROGRESS at documentation time; DO NOT claim success until verified. No APK downloaded, published, installed; original HONOR accepted RC20 code188 remains. Device QA and updated versionCode >189 are mandatory before installation.
