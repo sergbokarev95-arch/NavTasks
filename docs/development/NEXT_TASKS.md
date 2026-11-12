@@ -150,3 +150,13 @@
 - [x] Stage widget visual cleanup only: NavTasks system blue accent in both modes and top-aligned RemoteViews rows, no click/store changes; add JVM accent test.
 - [ ] Confirm UI signed CI #43215461681, then physical HONOR dark/light widget sizing/safe click/test after future higher-code signed QA build (installed RC20 code188; exact fallback RC21 code189 exists).
 - [ ] Larger widget concepts and adaptive launcher icon still need design review and user sign-off. Reference placeholders may be prepared for content; SIRE/VIQ documents after 1.0.0. Stable 1.0.0 only following broad functional and visual audits and explicit approval.
+
+## 2026-11-12 — Reference equipment and statistics widgets approved direction
+- [x] User accepts 2×2 / 4×2 statistics-only widgets, no on-widget checkmarks, Today completed/total + remaining, show Tomorrow count after all today's jobs done, NavTasks/Apple visual style. Legacy turquoise removal/top alignment is only a preliminary visual step; NOT the finished statistical widget.
+- [x] User accepts shared manual library with default SIRE 2.0 and VIQ7; all additional manuals/excerpts/equipment data supplied and managed by end users.
+- [x] Equipment reference design: optional nested equipment folders, equipment identity, descriptive maintenance/check procedures (monthly/quarterly/yearly) each with mandatory explanatory excerpt and source citation; offline instruction deep-link to existing Today/Works tasks. Reference stores no completion/due dates/reminders; existing scheduler remains sole source of truth.
+- [ ] Implement isolated Reference storage and selected-item offline export/import (.navref with schema, excerpts, optional original PDFs/DOCX, checksums, duplicate/conflict resolution). Shared files, vessel-profile inventory. Never import/activate somebody else's scheduled jobs automatically.
+- [ ] Implement Equipment card/procedure browser, PDF/source links, search index and local task link mapping; leave pre-created equipment data empty.
+- [ ] Implement 2×2 and 4×2 read-only stats widgets; remove WIDGET_TOGGLE behavior from widget surface, update launcher provider dimensions and background. Test midnight boundary, empty task days, 100%-done Today, tomorrow count, Missed, profile changes, HONOR/Samsung.
+- [ ] Run signed no-publish CI and device acceptance, maintain stable 1.0.0 publication as separate explicit user decision.
+- Document: docs/development/REFERENCE_LIBRARY_WIDGETS_PROPOSAL.md
