@@ -97,3 +97,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-13 — Added whole equipment-catalog checksum-verified .navref export and non-destructive merge restore in Settings (separate from one-card share). New tests for folder hierarchy, sources, SHA integrity, ZIP bombs and accidental overwrite. PDF viewer 1.0.0-beta01 isolated compile experiment branch and CI; no runtime PDF functionality yet. CI #43250406239 pending; no APK released.
 
 - 2026-11-13 — Signed CI #43250406239 SUCCESS for checksum/size-verified full equipment catalog backup & non-destructive restore (still excludes PDFs/DOCX). PDF viewer beta compatibility sandbox initially blocked by Android SDK Extension 19 metadata, correcting isolated build toolchain only; production unaffected.
+
+- 2026-11-13 — Staged shared offline PDF/DOCX original-file store+metadata models with SHA256 dedup and input safety tests; no import UI yet. Isolated AndroidX PDF beta01 build CI #43251678681 SUCCESS after compileSdkExtension19; not merged. Main Reference shared-store CI #43252927005 pending and no APK published.
