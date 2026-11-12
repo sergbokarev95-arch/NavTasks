@@ -781,3 +781,9 @@
 - [ ] P1 ProfileStore malformed initialized profile-index must never cause silent overwrite of profile IDs on next save; preserve old profile preference files and block risky writes or use verified recovery snapshot. Exact code in `app/src/main/java/com/navtasks/app/ProfileStore.kt` lines165–183; separate backed-up branch and pure regression tests; no mass storage rewrite.
 - [ ] Integrate signed stable-feed weak-net fix after separate CI43142231890 PASS, and remove QA-only auto TEST control in production; rerun all tests with code >184 and signer parity.
 - [ ] Cloud backup policy, historical profile/skip-version migration, Samsung, notification/widget lifecycle and Apple HIG visual stress review; 1.0.0 stable public release only on separate approval.
+
+## NEXT — 2026-11-12 signed TEST3 HONOR data PASS; profile-index P1 safety QA
+- [x] User confirms ALL user data exists after signed `0.4.162-test3`/code184 installation. Startup auto-offer, Later/manual reopen and in-place TEST3 update user-accepted.
+- [x] Back up exact accepted source `cd63c8325ac0e89e251c056597584a587a9f9e42` at `backup/navtasks-0.4.162-test3-honor-accepted`.
+- [ ] Complete no-publish CI #43166894862 and any targeted fixes for `feature/navtasks-pre1-profile-index-recovery`, new corrupt-index/validated-backup safety test matrix. Do not touch current user's code184/data.
+- [ ] Integrate separately proven weak-link stable feed improvement, decide Android OS backup privacy, check historical export/skip-version migration and Samsung, finish dark/light UI and Glass audit. Produce signed candidate code >184 with original app ID/cert, QA on real devices/data then separate explicit stable 1.0.0 approval. Keep `stable.json available:false`.
