@@ -228,3 +228,6 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-13 — Reference catalog backup stage
 - Working feature branch now includes explicit .navref equipment-catalog backup & non-destructive restore in Settings; all device folders and cited procedures roundtrip and keep per-profile separation. This does NOT back up future manual PDF/DOCX binaries. No profile JSON or existing TaskStore/AMOS/Services update. Run #43250406239 in progress at latest check, avoid asserting completed.
 - Independent experimental PDF viewer dependency branch `experiment/navtasks-reference-pdf-viewer-beta01` running #43251052670, not merged. Original installed RC20 and stable manifest remain unchanged.
+
+### Verified 2026-11-13
+- Equipment catalog archive CI #43250406239 SUCCESS. The work branch compiled and passed signed no-publish gate; release feed remains off. PDF compatibility in isolated lab: first build failed at AAR metadata (compileSdkExtension19), retest #43251678681 pending; no production source change.
