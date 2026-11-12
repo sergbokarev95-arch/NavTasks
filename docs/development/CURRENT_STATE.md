@@ -262,3 +262,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ### 2026-11-13 — Recovery-first private QA staging
 - Reference-only safety polish code HEAD `d804884` undergoing signed CI #43265672215. Source code changes: noninterruptible staged restores with non-cache/no-backup temp path and abortable large-PDF searches; no existing task business changes. User-facing installed RC20/code188 intact.
 - Branch `qa/navtasks-rc20-recovery-code191` from original accepted source contains ONLY versionCode191/release suffix and private artifact CI #43266688902 pending. Intended downgrade-safe fallback after future QA code190 install. Neither artifacts nor test APK yet delivered.
+
+### 2026-11-13 — first safe private QA install set ready for device testing
+- Candidate `0.4.170-qa1` code190 private DRAFT APK and original-RC20-based fallback code191 private DRAFT APK both built with original cert, release non-debuggable, identical package, JVM tests PASS and artifact asset bytes present. CI #43269120575 / #43269056417 SUCCESS. Stable feed OFF.
+- No device installs yet. User should download both and export existing profile before updating; Android downgrade to code188 is blocked after QA190 so use code191 recovery if required. QA is NOT stable 1.0.0.
