@@ -258,3 +258,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-13 — Pre-QA stability pass after library feature work
 - Since signed success #43260910863 (source 8ac9b86), narrow fixes only in Reference manual archive staging lifecycle, abandoned crash staging cleanup, cancellable stale PDF searches and original excerpt-folder preservation; tests added for stage cleanup and root-folder edit.
 - Source-branch signed CI #43265305900 PENDING, not accepted until PASS. User's installed RC20/code188, signed baseline and public stable feed OFF. No new app installed, no data migrated.
+
+### 2026-11-13 — Recovery-first private QA staging
+- Reference-only safety polish code HEAD `d804884` undergoing signed CI #43265672215. Source code changes: noninterruptible staged restores with non-cache/no-backup temp path and abortable large-PDF searches; no existing task business changes. User-facing installed RC20/code188 intact.
+- Branch `qa/navtasks-rc20-recovery-code191` from original accepted source contains ONLY versionCode191/release suffix and private artifact CI #43266688902 pending. Intended downgrade-safe fallback after future QA code190 install. Neither artifacts nor test APK yet delivered.
