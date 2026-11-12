@@ -178,8 +178,9 @@ internal class ReferenceManualStore(context: Context) {
                 while (true) {
                     val n = input.read(buffer)
                     if (n < 0) break
+                    if (n == 0) continue
                     total += n
-                    require(total in 1..fileLimit) { "Manual exceeds 250 MB" }
+                    require(total <= fileLimit) { "Manual exceeds 250 MB" }
                     digest.update(buffer, 0, n)
                     output.write(buffer, 0, n)
                 }
@@ -196,8 +197,9 @@ internal class ReferenceManualStore(context: Context) {
             if (!final.exists()) {
                 check(temp.renameTo(final)) { "Could not store manual file" }
             } else {
-                require(final.isFile && final.length() == total) {
-                    "Hash matched but stored file is incomplete"
+                require(final.isFile && final.length() == total &&
+                    sha256File(final) == hash) {
+                    "Existing original manual is incomplete or corrupted"
                 }
             }
             val updated = previous.copy(documents = previous.documents + document)
