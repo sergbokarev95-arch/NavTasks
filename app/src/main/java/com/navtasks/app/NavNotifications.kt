@@ -569,6 +569,10 @@ class NavAlarmReceiver : BroadcastReceiver() {
 
 class NavSystemTimeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        // Store the system-confirmed replacement before notification rescheduling.
+        if (intent.action == Intent.ACTION_MY_PACKAGE_REPLACED) {
+            NavUpdateReceipt.recordPackageReplaced(context)
+        }
         if (intent.action in listOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_TIME_CHANGED,
                 Intent.ACTION_TIMEZONE_CHANGED, Intent.ACTION_DATE_CHANGED, Intent.ACTION_MY_PACKAGE_REPLACED,
                 AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED)) {

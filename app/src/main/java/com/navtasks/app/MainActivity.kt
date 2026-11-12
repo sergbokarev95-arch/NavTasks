@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
     private val profileStore by lazy { ProfileStore(this) }
     private val taskStore by lazy { TaskStore(this, profileStore) }
     private val appSettings by lazy { NavSettings(this) }
+    private var installedUpdateNotice by mutableStateOf<String?>(null)
     // One request object prevents profile and record routing from racing.
     // A serial guarantees repeated taps on the same notification are handled.
     private var nextOpenSerial = 0L
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
             Color.parseColor(if (savedDark) "#000000" else "#E6E8EC")
         ))
         receiveOpenIntent(intent)
+        installedUpdateNotice = NavUpdateReceipt.pending(this)
         setContent {
             // Sync status/navigation icon foregrounds to the actual selected app
             // theme, not only to Android's global Day/Night setting.
@@ -99,7 +101,19 @@ class MainActivity : ComponentActivity() {
                     if (openRequest?.serial == handledSerial) openRequest = null
                 },
             )
-            NavUpdateOffer(settings = appSettings, dark = dark, context = this)
+            val receipt = installedUpdateNotice
+            if (receipt != null) {
+                NavUpdateInstalledNotice(
+                    version = receipt, dark = dark, language = appSettings.language,
+                    onAcknowledge = {
+                        if (NavUpdateReceipt.acknowledge(this, receipt)) {
+                            installedUpdateNotice = null
+                        }
+                    },
+                )
+            } else {
+                NavUpdateOffer(settings = appSettings, dark = dark, context = this)
+            }
         }
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED

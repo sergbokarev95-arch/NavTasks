@@ -1325,21 +1325,24 @@ fun SettingsScreen(
                         "RC only: next launch checks the test feed.", lang),
                         color = p.muted, fontSize = 12.sp)
                 }
-                // TEST channel is otherwise manual-only, including production.
-                OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            if (NavUpdateChecker.checkTest(context)) NavUpdateFlow.openTest()
-                        }
-                    },
-                    enabled = !NavUpdateChecker.checking,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(localized("Проверить тестовый канал", "Check test channel", lang))
+                // TEST discovery stays available for the original signed RC15 QA build,
+                // but is hidden from every ordinary production 1.0.x Settings screen.
+                if (NavUpdateQa.isQaBuild(context)) {
+                    OutlinedButton(
+                        onClick = {
+                            scope.launch {
+                                if (NavUpdateChecker.checkTest(context)) NavUpdateFlow.openTest()
+                            }
+                        },
+                        enabled = !NavUpdateChecker.checking,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(localized("Проверить тестовый канал", "Check test channel", lang))
+                    }
+                    Text(localized("Тестовые версии устанавливаются только по вашему выбору.",
+                        "Test builds install only after your approval.", lang),
+                        color = p.muted, fontSize = 12.sp)
                 }
-                Text(localized("Тестовые версии устанавливаются только по вашему выбору.",
-                    "Test builds install only after your approval.", lang),
-                    color = p.muted, fontSize = 12.sp)
             }
             NavPanel(p) {
                 Text("NavTasks Glass " + actualVersion, color = p.text, fontWeight = FontWeight.Medium)
