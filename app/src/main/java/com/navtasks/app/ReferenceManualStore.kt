@@ -78,7 +78,26 @@ internal class ReferenceManualStore(context: Context) {
         require(previous.documents.none { it.folderId == folderId }) {
             "Folder contains documents"
         }
+        require(previous.excerpts.none { it.folderId == folderId }) {
+            "Folder contains excerpts"
+        }
         write(previous.copy(folders = previous.folders.filterNot { it.id == folderId }))
+    }
+
+    /** Save a standalone excerpt without changing any manual original or task store. */
+    fun saveExcerpt(excerpt: ReferenceManualExcerpt) {
+        excerpt.validate()
+        val previous = read()
+        val index = previous.excerpts.indexOfFirst { it.id == excerpt.id }
+        val updated = previous.excerpts.toMutableList()
+        if (index < 0) updated.add(excerpt) else updated[index] = excerpt
+        write(previous.copy(excerpts = updated))
+    }
+
+    fun removeExcerpt(excerptId: String) {
+        val previous = read()
+        require(previous.excerpts.any { it.id == excerptId }) { "Excerpt no longer exists" }
+        write(previous.copy(excerpts = previous.excerpts.filterNot { it.id == excerptId }))
     }
 
     /** Remove a catalog record, but retain original hash-named bytes for other references. */
