@@ -731,6 +731,7 @@ fun NavTasksApp(
                                         onExternalAddHandled = { handoverAddRequest = 0 },
                                     )
                                     else -> ReferenceHubScreen(palette, lang,
+                                        profileId = profiles.activeId,
                                         smoothReturnTick = referenceReturnTick)
                                 }
                             }
