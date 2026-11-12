@@ -24,6 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -74,11 +77,12 @@ private fun readReferencePdfPage(file: File, index: Int, targetWidth: Int): Refe
 }
 
 /** API 35+ supports text extraction/search. Older devices retain offline page reading. */
-private fun searchReferencePdf(file: File, query: String): List<ReferencePdfHit> {
+private suspend fun searchReferencePdf(file: File, query: String): List<ReferencePdfHit> {
     if (Build.VERSION.SDK_INT < 35) return emptyList()
     val results = ArrayList<ReferencePdfHit>()
     PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)).use { pdf ->
         for (pageIndex in 0 until pdf.pageCount) {
+            currentCoroutineContext().ensureActive()
             pdf.openPage(pageIndex).use { page ->
                 val found = page.searchText(query)
                 repeat(found.size) { results += ReferencePdfHit(pageIndex) }
@@ -100,8 +104,12 @@ private fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
     var query by remember(file.path) { mutableStateOf("") }
     var results by remember(file.path) { mutableStateOf<List<ReferencePdfHit>>(emptyList()) }
     var matchIndex by remember(file.path) { mutableIntStateOf(0) }
-    var searching by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf<String?>(null) }
+    var searching by remember(file.path) { mutableStateOf(false) }
+    var searchJob by remember(file.path) { mutableStateOf<Job?>(null) }
+    var message by remember(file.path) { mutableStateOf<String?>(null) }
+    DisposableEffect(file.path) {
+        onDispose { searchJob?.cancel() }
+    }
     val screenWidth = configuration.screenWidthDp.dp
     val raster by produceState<Result<ReferencePdfRaster>?>(null, file.path, currentPage, zoom, baseWidth) {
         value = null
@@ -137,27 +145,42 @@ private fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 Box(Modifier.weight(1f)) {
                     NavGlassInput(query, {
+                        // Ignore stale results when the user edits a query during a
+                        // long scan of a multi-hundred-page PDF.
+                        searchJob?.cancel()
+                        searchJob = null
                         query = it.take(120)
+                        searching = false
                         results = emptyList()
                         matchIndex = 0
+                        message = null
                     }, p, placeholder = localized("Поиск по PDF", "Search PDF", lang),
                         modifier = Modifier.fillMaxWidth())
                 }
                 TextButton(enabled = query.trim().length >= 2 && !searching,
                     onClick = {
-                        scope.launch {
-                            searching = true
-                            val found = withContext(Dispatchers.IO) {
-                                runCatching { searchReferencePdf(file, query.trim()) }
+                        val requested = query.trim()
+                        searchJob?.cancel()
+                        searching = true
+                        searchJob = scope.launch {
+                            try {
+                                val found = withContext(Dispatchers.IO) {
+                                    runCatching { searchReferencePdf(file, requested) }
+                                }
+                                if (query.trim() != requested) return@launch
+                                found.onSuccess {
+                                    results = it
+                                    matchIndex = 0
+                                    if (it.isNotEmpty()) currentPage = it.first().page
+                                    message = if (it.isEmpty())
+                                        localized("Совпадений нет.", "No matches.", lang) else null
+                                }.onFailure {
+                                    if (it !is kotlinx.coroutines.CancellationException)
+                                        message = it.localizedMessage
+                                }
+                            } finally {
+                                if (query.trim() == requested) searching = false
                             }
-                            searching = false
-                            found.onSuccess {
-                                results = it
-                                matchIndex = 0
-                                if (it.isNotEmpty()) currentPage = it.first().page
-                                message = if (it.isEmpty())
-                                    localized("Совпадений нет.", "No matches.", lang) else null
-                            }.onFailure { message = it.localizedMessage }
                         }
                     }) { Text(localized("Найти", "Find", lang), color = p.blueText) }
             }
