@@ -109,3 +109,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-13 — Added manual library user excerpts model, independent glass edit/reader, source citations, global folder/excerpt search, persistence and portable .navlib restore preserving sources and folder hierarchy; backward-compatible old v1 manual catalog. Latest signed CI #43260910863 pending; earlier PDF/DOCX reader CI #43258709724 PASS; no user binary distributed.
 
 - 2026-11-13 — Confirmed final signed no-publish CI #43260910863 SUCCESS at source 8ac9b86, original package/signing compatibility and all JVM tests. Source includes independent Reference PDF/DOCX/excerpts and stat-only widgets; no user installation or release. Remaining priority: large PDF full-text search and HONOR/Samsung QA.
+
+- 2026-11-13 — Targeted Reference data-safety polish: prevent deleting staging while restoring, prune only 7-day abandoned import stages, cancel stale large-PDF searches and stop excerpt root folder moving on edit. Regression tests added. No task/domain/notification logic changed. Latest private signed full CI #43265305900 pending; user RC20 untouched.
