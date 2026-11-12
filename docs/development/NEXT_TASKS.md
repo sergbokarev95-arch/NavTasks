@@ -761,3 +761,9 @@
 - [x] Exact accepted source emergency recovery code185 CI43045311279 SUCCESS https://github.com/sergbokarev95-arch/NavTasks/releases/tag/untagged-c3d917192472827f56b3.
 - [ ] HONOR: full profile backup; install RC15 *in place*, turn on RC-only QA startup switch and existing auto-offers switch; fully close + relaunch, check *automatic* TEST3 pop-up. Test Later, manual check, toggle OFF and offline. Then optional TEST3 installation and data preservation. No actual device PASS yet.
 - [ ] Subsequent production gate: stable-feed weak network, profile-index fail-safe, backup policy, tester UI removal, real old version jumps/Samsung, release/installer UI polish, final signed QA and separate stable approval.
+
+## NEXT — 2026-11-12 HONOR automatic update popup verified
+- [x] Screenshot confirms RC15/code182 showing automatic startup TEST3/code184 update popup with `Обновить` and `Позже` on Today screen. Do NOT confuse startup TEST QA popup with Android task notifications.
+- [ ] Press `Позже`, cold-start again (no popup expected), confirm manual `Проверить тестовый канал` still finds TEST3; use unit/new-code test to independently prove Later per-version suppression vs 24-hour auto-check throttle. Check auto-offer toggle OFF, offline silent and re-enable. Then optionally install TEST3 with data validation.
+- [x] Isolated hardened stable-feed transport CI43142231890 SUCCESS. Keep it isolated until integrated into newer signed code>184 release candidate with focused regression/device check; do not include test-only QA controls in stable 1.0.x.
+- [ ] Finish corrupt-profile-index protection, backup privacy decision, skipped-version migration, HONOR and Samsung E2E, last visual/functional audit, then obtain explicit user acceptance before 1.0.0 stable publishing.
