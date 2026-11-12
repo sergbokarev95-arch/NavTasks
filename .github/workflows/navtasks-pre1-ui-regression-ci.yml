@@ -9,6 +9,10 @@ on:
       - '.github/workflows/navtasks-pre1-ui-regression-ci.yml'
   workflow_dispatch:
 
+concurrency:
+  group: navtasks-pre1-ui-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
