@@ -275,3 +275,8 @@ While testing 0.4.49, user requests `Сервисы > Новый сервис` t
 - Tests updated `NavWidgetCapacityTest.kt` and new `ReferenceEquipmentExchangeTest.kt` cover Today/Tomorrow/empty, no widget completion, archive safety, excerpt/citation and folder validation.
 - Last code commit `aa67869e0f855693336e9a3d6a7672f20d1b90c0`. Signed no-publish CI run `43228912162` was IN PROGRESS when first documented; check its final result before claiming ready. Earlier intermediate jobs cancelled by branch concurrency, not failures.
 - No APK published/installed, HONOR remains signed RC20/code188; release stable manifest remains disabled. Next installable candidate must be code >189 with original signer. Preserve backup `backup/navtasks-0.4.166-rc20-before-pre1-polish`.
+
+### VERIFIED after run completion — 2026-11-12
+- Signed no-publish UI + Reference foundation CI **#43228912162 SUCCESS**: https://github.com/sergbokarev95-arch/NavTasks/actions/runs/43228912162
+- Steps confirmed: all JVM regressions and release APK assembly SUCCESS, existing signing key restored and removed SUCCESS, package identity/nondebuggable/signature verification SUCCESS. This validates source commit `aa67869e0f855693336e9a3d6a7672f20d1b90c0` including statistical widgets and independent Reference backend.
+- Documentation-only commits after that source commit do not change runtime. User has not received or installed this build; device UX and reader/import UI still pending. Future installable candidate requires versionCode>189 and explicit user test approval; stable feed not enabled.
