@@ -774,3 +774,10 @@
 - [x] TEST3 public release `test-v0.4.162` code184 compatible floor182 with correct pinned URL/hash/signer; stable feed `available:false`; exact prior TEST2 app-source recovery RC17 code185 CI SUCCESS private.
 - [ ] After full export, in-place install TEST3/code184 using Update, verify all profiles/tasks/history/AMOS/Services/Handover and settings. User currently installed RC15/code182; do not install recovery unless a regression.
 - [ ] Final blockers: integrate stable-feed weak-net correction (isolated CI43142231890 SUCCESS), corrupted profile-index fail-safe, Android OS backup policy, old-version skipped upgrade migration, Samsung, final HIG/UI check, signed release candidate and explicit 1.0.0 approval.
+
+## NEXT — 2026-11-12 TEST3 code184 installed on HONOR
+- [x] User screenshot proves `0.4.162-test3` / code184 in Settings after in-app update RC15/code182; normal `Предлагать обновления` toggle still enabled. Startup offer, Later and manual reopen were already reported PASS.
+- [ ] Obtain explicit user confirmation that tasks/profiles/completion history/AMOS/Services/Handover still present after TEST3; do not infer from Settings alone.
+- [ ] P1 ProfileStore malformed initialized profile-index must never cause silent overwrite of profile IDs on next save; preserve old profile preference files and block risky writes or use verified recovery snapshot. Exact code in `app/src/main/java/com/navtasks/app/ProfileStore.kt` lines165–183; separate backed-up branch and pure regression tests; no mass storage rewrite.
+- [ ] Integrate signed stable-feed weak-net fix after separate CI43142231890 PASS, and remove QA-only auto TEST control in production; rerun all tests with code >184 and signer parity.
+- [ ] Cloud backup policy, historical profile/skip-version migration, Samsung, notification/widget lifecycle and Apple HIG visual stress review; 1.0.0 stable public release only on separate approval.
