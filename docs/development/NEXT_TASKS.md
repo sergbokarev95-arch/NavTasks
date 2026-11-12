@@ -787,3 +787,10 @@
 - [x] Back up exact accepted source `cd63c8325ac0e89e251c056597584a587a9f9e42` at `backup/navtasks-0.4.162-test3-honor-accepted`.
 - [ ] Complete no-publish CI #43166894862 and any targeted fixes for `feature/navtasks-pre1-profile-index-recovery`, new corrupt-index/validated-backup safety test matrix. Do not touch current user's code184/data.
 - [ ] Integrate separately proven weak-link stable feed improvement, decide Android OS backup privacy, check historical export/skip-version migration and Samsung, finish dark/light UI and Glass audit. Produce signed candidate code >184 with original app ID/cert, QA on real devices/data then separate explicit stable 1.0.0 approval. Keep `stable.json available:false`.
+
+## NEXT — 2026-11-12 index-safety CI complete, still NOT shipped
+- [x] Full user acceptance of TEST3 code184 on HONOR including all data preservation and auto-update path.
+- [x] Exact source backup `backup/navtasks-0.4.162-test3-honor-accepted`.
+- [x] Isolated index-protection patch CI43166894862 SUCCESS: strict validated profile index, independent last-good copy, no default profile substitution, no deletion of user data; no publish.
+- [ ] Integrate independent stable weak-network patch CI43142231890 with this safety patch in higher-code signed release candidate (code>=186, since recovery code185 exists), run full tests and verify signer, then test in-place without uninstall.
+- [ ] Decide Android `allowBackup`/cloud privacy policy and validate export/restoration, old-version profile migration on separate sample, Samsung updates/widgets/notifications, final full day/night HIG audit; publish 1.0.0 stable only after explicit approval.
