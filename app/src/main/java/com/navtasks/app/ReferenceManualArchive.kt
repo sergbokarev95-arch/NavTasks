@@ -189,8 +189,15 @@ internal fun referenceMergeManualCatalogCopies(
             folderId = doc.folderId?.let { folderIds.getValue(it) },
         )
     }
+    val excerpts = incoming.excerpts.map { excerpt ->
+        excerpt.copy(
+            id = navReferenceId(),
+            folderId = excerpt.folderId?.let { folderIds.getValue(it) },
+        )
+    }
     return local.copy(
         folders = local.folders + folders,
         documents = local.documents + documents,
+        excerpts = local.excerpts + excerpts,
     ).also { it.validate() }
 }
