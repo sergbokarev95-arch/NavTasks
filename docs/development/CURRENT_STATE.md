@@ -242,3 +242,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 
 ### Latest staged code — 2026-11-13
 - Manual originals and .navlib backup/verified restore are backend only, now hardened against duplicate-SHA inconsistent size and corrupt existing hash-named blobs. Latest CI #43254879474 pending. No SAF import UI added and no installed app changes.
+
+## 2026-11-13 — PDF/DOCX manual UI + native readers in branch, CI pending
+- Full shared manual original-file storage/streaming .navlib backup now has SAF import/export UI and Reference category navigation (SIRE 2.0, VIQ7, My materials) in staged code. One file import verifies PDF/DOCX signatures and uses private non-cache originals; shared across all NavTasks profiles. Existing Equipment catalog independent and vessel-scoped.
+- PDF internal renderer uses native one-page-at-a-time Android PdfRenderer, zoom/page navigation, API35+ native text search. Android 31-34 have page view only pending compatible full-search fallback; DOCX local simplified paragraph/heading reader only. These are NOT physical-device tested.
+- Signed nonpublish CI #43258709724 pending after additional DOCX regression test. Previous CI #43254879474 failure was deprecated createTempDir only; corrected. Stable feed OFF and installed RC20 unchanged.
