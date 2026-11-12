@@ -75,6 +75,18 @@ class ReferenceEquipmentInteractionTest {
         assertEquals(1, catalog.equipment.size) // caller explicitly persists, no side effects
     }
 
+    @Test fun searchFindsNestedFolderTitlesAcrossHierarchy() {
+        val catalog = ReferenceEquipmentCatalog(folders = listOf(
+            ReferenceFolder("root", "Navigation"),
+            ReferenceFolder("child", "Gas detection", "root"),
+            ReferenceFolder("other", "Engine"),
+        ))
+        assertEquals(listOf("root"), referenceVisibleFolders(catalog, null, "").map { it.id })
+        assertEquals(listOf("child"), referenceVisibleFolders(catalog, "root", "").map { it.id })
+        assertEquals(listOf("child"), referenceVisibleFolders(catalog, null, "DETECT").map { it.id })
+        assertTrue(referenceVisibleFolders(catalog, null, "unknown").isEmpty())
+    }
+
     @Test fun folderCycleEditIsRejected() {
         val initial = ReferenceEquipmentCatalog(folders = listOf(
             ReferenceFolder("one", "One"), ReferenceFolder("two", "Two", "one")))
