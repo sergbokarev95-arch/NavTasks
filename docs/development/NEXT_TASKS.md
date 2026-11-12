@@ -201,3 +201,8 @@
 - [ ] Verify complete signed CI #43250406239 and isolated PDF dependency test #43251052670 before accepting code. Regressions must pass without changing installed RC20.
 - [ ] Shared offline PDF/DOCX document storage, user-managed manual folders, efficient search/indexing, readable PDF viewer using compatible approach (AndroidX PDF beta evaluated separately), DOCX basic reader, personal excerpts, standalone whole-library backup WITH file bytes and restore (including files where permitted).
 - [ ] Device/launcher acceptance on HONOR and Samsung before RC >189. Explicit user sign-off required for 1.0.0 publication.
+
+### CI results and PDF compatibility — 2026-11-13
+- [x] Signed nonpublishing CI #43250406239 SUCCESS for full equipment-only catalog backup and restoration (all JVM regressions, original signer/package).
+- [ ] Verify experimental AndroidX PDF #43251678681 after SDK extension 19. Initial attempt #43251052670 FAILED due AAR metadata requiring compileSdkExtension19; no change to accepted code or end-user package.
+- [ ] Before UI PDF import, build shared original-file store and FULL Reference library archival export with hashes and file bytes; verify rollback and offline restore. Only then expose PDF/DOCX import to users so documents are portable.
