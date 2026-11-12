@@ -26,7 +26,7 @@ internal object ReferenceEquipmentExchange {
 
     private fun sha256(bytes: ByteArray): String =
         MessageDigest.getInstance("SHA-256").digest(bytes)
-            .joinToString("") { "%02x".format(it) }
+            .joinToString("") { "%02x".format(it.toInt() and 0xFF) }
 
     fun encode(equipment: ReferenceEquipment, includeSerialNumber: Boolean = false): ByteArray {
         equipment.validate()
