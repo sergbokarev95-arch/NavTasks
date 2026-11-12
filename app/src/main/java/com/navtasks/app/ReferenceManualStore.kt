@@ -73,6 +73,73 @@ internal class ReferenceManualStore(context: Context) {
         }
     }
 
+    /** Streams a complete shared manual backup including ORIGINAL PDF/DOCX bytes. */
+    fun exportArchive(output: java.io.OutputStream) {
+        val snapshot = read()
+        ReferenceManualArchive.export(snapshot, ::findOriginal, output)
+    }
+
+    /**
+     * Restore a previously stage-validated archive, adding copies instead of
+     * overwriting existing user folders and document records.
+     *
+     * Runs on Dispatchers.IO. Files are committed before the atomic catalog;
+     * if metadata writing fails the old catalog remains intact, leaving only
+     * harmless unreferenced blobs. The staging handle is closed by the caller.
+     */
+    fun restoreArchive(staged: StagedManualArchive) {
+        val previous = read()
+        val merged = referenceMergeManualCatalogCopies(previous, staged.catalog)
+        require(originals.mkdirs() || originals.isDirectory)
+        val unique = staged.catalog.documents.distinctBy(ReferenceManualArchive::blobName)
+        for (manual in unique) {
+            val archiveKey = ReferenceManualArchive.blobName(manual)
+            val stagedFile = staged.originals[archiveKey]
+                ?: throw IllegalArgumentException("Missing verified original in staging")
+            require(stagedFile.isFile && stagedFile.length() == manual.bytes)
+            val suffix = if (manual.mimeType == ReferenceManualMime.PDF) "pdf" else "docx"
+            val target = File(originals, "${manual.sha256}.$suffix")
+            if (target.exists()) {
+                // Never silently overwrite a known original. Verify that an
+                // existing identical-name blob is byte-for-byte the same.
+                require(target.isFile && target.length() == manual.bytes &&
+                    sha256File(target) == manual.sha256) {
+                    "Existing original manual does not match its checksum"
+                }
+                continue
+            }
+            val temporary = File.createTempFile("verified-import-", ".part", originals)
+            try {
+                stagedFile.inputStream().use { source ->
+                    temporary.outputStream().use { dest -> source.copyTo(dest, 64 * 1024) }
+                }
+                require(temporary.length() == manual.bytes &&
+                    sha256File(temporary) == manual.sha256) {
+                    "Restored original manual checksum mismatch"
+                }
+                check(temporary.renameTo(target)) { "Could not commit restored original" }
+            } finally {
+                temporary.delete()
+            }
+        }
+        write(merged)
+    }
+
+    private fun sha256File(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                val n = input.read(buffer)
+                if (n < 0) break
+                if (n > 0) digest.update(buffer, 0, n)
+            }
+        }
+        return digest.digest().joinToString("") {
+            "%02x".format(it.toInt() and 0xFF)
+        }
+    }
+
     /**
      * Streams a picked original into app-private, non-cache storage.
      * Checksum-based filenames prevent traversal, accidental replacing and duplicate bytes.
