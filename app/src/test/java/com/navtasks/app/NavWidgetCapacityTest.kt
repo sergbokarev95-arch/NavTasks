@@ -26,6 +26,11 @@ class NavWidgetCapacityTest {
         assertTrue(widgetUsesColumns(410))
     }
 
+    @Test fun widgetAccentMatchesNavTasksSystemBlueInBothThemes() {
+        assertEquals(0xFF5CB8FF.toInt(), widgetAccentColor(dark = true))
+        assertEquals(0xFF0071E3.toInt(), widgetAccentColor(dark = false))
+    }
+
     @Test fun noRedMissedPillWhenCountIsZero() {
         assertFalse(widgetMissedVisible(0))
         assertTrue(widgetMissedVisible(1))
