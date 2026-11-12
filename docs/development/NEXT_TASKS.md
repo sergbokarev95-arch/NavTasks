@@ -245,3 +245,10 @@
 - [ ] HONOR/Samsung device tests: import large PDF, DOCX, standalone excerpts, folders, search arrows, source fields, every nav/back gesture, save/reopen/reboot, archive import to spare device, day/night; PDF pages and large Word docs must scroll above dock.
 - [ ] PDF on Android31-34 needs real text-search fallback; current native Page.searchText requires API35+. Full PDF text index and precise search highlights not yet implemented; scanned PDF OCR later. Rich DOCX tables/images not yet supported; original bytes preserved.
 - [ ] Before stable 1.0.0: full global functionality review incl recurrence/AMOS/Services/Handover/notifications/widgets, icon/widget appearance acceptance, release signing code>189 & separate explicit user approval.
+
+### Current next actions after CI #43260910863 — 2026-11-13
+- [x] Full signed nonpublishing CI #43260910863 SUCCESS for PDF/DOCX library, standalone excerpts, equipment and widgets.
+- [ ] Audit Reference reader search/navigation and PDF performance with large 500+ page manuals. Global query currently indexes document metadata and user excerpts only, not every page of all PDFs. Plan off-UI-thread full text indexing and older Android 31-34 fallback without rewriting existing Tasks.
+- [ ] Verify .navlib shared manuals+excerpts and .navref vessel equipment as TWO separate backup scopes; assess whether Settings needs a combined backup before stable release, and document correct user-facing migration instructions.
+- [ ] Prepare once-only signed private device QA candidate (versionCode >189, same package/signer), but do NOT publish or request user to install until source and visual QA gates are ready. Keep accepted RC20 rollback branch.
+- [ ] HONOR and Samsung physical testing: widgets 2x2/4x2, light/dark, offline manual imports and backup recovery, PDF page zoom/find, DOCX readability, keyboard/selection, task recurrence, AMOS, Services, Handover, notification timing; approve 1.0.0 only after user confirmation.
