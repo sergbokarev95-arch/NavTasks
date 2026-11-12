@@ -10,6 +10,8 @@ plugins {
 android {
     namespace = "com.navtasks.app"
     compileSdk = 36
+    // EXPERIMENT ONLY: AndroidX PDF beta requires SDK extension 19.
+    compileSdkExtension = 19
 
     defaultConfig {
         applicationId = "com.navtasks.app"
