@@ -135,13 +135,13 @@ internal fun referenceMergeCatalogCopies(
     val newFolders = imported.folders.map { original ->
         original.copy(
             id = folderIds.getValue(original.id),
-            parentId = original.parentId?.let(folderIds::getValue),
+            parentId = original.parentId?.let { folderIds.getValue(it) },
         )
     }
     val newEquipment = imported.equipment.map { item ->
         item.copy(
             id = navReferenceId(),
-            folderId = item.folderId?.let(folderIds::getValue),
+            folderId = item.folderId?.let { folderIds.getValue(it) },
             procedures = item.procedures.map { it.copy(id = navReferenceId()) },
         )
     }
