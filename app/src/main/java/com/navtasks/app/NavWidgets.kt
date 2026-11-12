@@ -1,13 +1,10 @@
 package com.navtasks.app
 
-import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
@@ -15,15 +12,31 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private const val WIDGET_TOGGLE = "com.navtasks.app.WIDGET_TOGGLE"
-
-/** Two columns only if the launcher grants enough width for readable task names. */
-internal fun widgetUsesColumns(widthDp: Int): Boolean = widthDp >= 350
+/** Widgets display statistics only. Completion remains exclusively inside NavTasks. */
+internal const val NAV_WIDGET_DIRECT_COMPLETE = false
 internal fun widgetMissedVisible(count: Int): Boolean = count > 0
-
-/** Same semantic NavTasks blue used for readable labels in Day/Night. */
 internal fun widgetAccentColor(dark: Boolean): Int =
     if (dark) 0xFF5CB8FF.toInt() else 0xFF0071E3.toInt()
+
+internal data class NavWidgetStats(
+    val total: Int,
+    val completed: Int,
+    val tomorrowTotal: Int,
+    val missed: Int,
+) {
+    val remaining: Int get() = (total - completed).coerceAtLeast(0)
+    val allCompleted: Boolean get() = total > 0 && remaining == 0
+    val percentage: Int get() = if (total == 0) 0
+        else (completed.coerceIn(0, total) * 100 / total)
+}
+
+internal fun widgetStats(today: DayCounts, tomorrow: DayCounts, missed: Int): NavWidgetStats =
+    NavWidgetStats(
+        total = today.total.coerceAtLeast(0),
+        completed = today.done.coerceIn(0, today.total.coerceAtLeast(0)),
+        tomorrowTotal = tomorrow.total.coerceAtLeast(0),
+        missed = missed.coerceAtLeast(0),
+    )
 
 internal fun widgetHeaderDate(date: LocalDate, language: UiLanguage): String {
     val locale = if (language == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
@@ -31,20 +44,39 @@ internal fun widgetHeaderDate(date: LocalDate, language: UiLanguage): String {
         if (language == UiLanguage.RU) "d MMM" else "MMM d", locale))
 }
 
-/**
- * Capacity uses the space actually available for the task list, not a fixed
- * "compact == 2" assumption. Both widget types support four rows.
- * Rows are 28dp tall; header and footer together occupy roughly 55dp.
- */
-internal fun widgetTaskCapacity(heightDp: Int): Int = when {
-    heightDp >= 170 -> 4
-    heightDp >= 140 -> 3
-    else -> 2
+private fun widgetRuTaskCount(value: Int): String {
+    val v = value.coerceAtLeast(0)
+    val word = when {
+        v % 100 in 11..14 -> "задач"
+        v % 10 == 1 -> "задача"
+        v % 10 in 2..4 -> "задачи"
+        else -> "задач"
+    }
+    return "$v $word"
 }
 
-internal fun widgetHiddenTaskCount(pendingCount: Int, displayedCount: Int): Int =
-    (pendingCount - displayedCount).coerceAtLeast(0)
+internal fun widgetSummaryLabel(stats: NavWidgetStats, language: UiLanguage): String = when {
+    stats.remaining > 0 -> if (language == UiLanguage.RU)
+        "Осталось ${widgetRuTaskCount(stats.remaining)}" else
+        "${stats.remaining} remaining"
+    stats.tomorrowTotal > 0 -> if (language == UiLanguage.RU)
+        "Завтра ${widgetRuTaskCount(stats.tomorrowTotal)}" else
+        "Tomorrow: ${stats.tomorrowTotal} tasks"
+    stats.allCompleted -> localized("Всё выполнено", "All done", language)
+    else -> localized("Сегодня нет задач", "No tasks today", language)
+}
 
+internal fun widgetWideDetail(
+    stats: NavWidgetStats, pendingTitles: List<String>, language: UiLanguage,
+): List<String> = when {
+    stats.remaining > 0 -> pendingTitles.take(2)
+    stats.tomorrowTotal > 0 -> listOf(
+        localized("Сегодня всё выполнено", "All done today", language),
+        localized("План на завтра", "Tomorrow's plan", language),
+    )
+    stats.allCompleted -> listOf(localized("Сегодня всё выполнено", "All done today", language))
+    else -> listOf(localized("Свободный день", "No tasks today", language))
+}
 
 open class NavBaseWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -52,42 +84,19 @@ open class NavBaseWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onAppWidgetOptionsChanged(
-        context: Context, manager: AppWidgetManager, id: Int, newOptions: Bundle
+        context: Context, manager: AppWidgetManager, id: Int, newOptions: Bundle,
     ) {
         super.onAppWidgetOptionsChanged(context, manager, id, newOptions)
         NavWidgetUpdater.updateAll(context, TaskStore(context))
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
-        if (intent.action == WIDGET_TOGGLE) {
-            if (intent.getStringExtra("profileId") != ProfileStore(context).activeId) return
-            val key = intent.getStringExtra("runKey") ?: return
-            val store = TaskStore(context)
-            val run = store.runs[key] ?: return
-            if (run.checklist.isEmpty()) store.setSimpleComplete(key, !run.completed)
-            NavWidgetUpdater.updateAll(context, store)
-            NavNotifications.reschedule(context, store, NavSettings(context))
-        }
-    }
+    // Intentionally NO WIDGET_TOGGLE receiver. The launcher cannot alter task state.
 }
 
 class NavCompactWidgetProvider : NavBaseWidgetProvider()
 class NavWideWidgetProvider : NavBaseWidgetProvider()
 
 object NavWidgetUpdater {
-    private fun togglePending(context: Context, runKey: String): PendingIntent {
-        val profileId = ProfileStore(context).activeId
-        val intent = Intent(context, NavCompactWidgetProvider::class.java).apply {
-            action = WIDGET_TOGGLE
-            data = Uri.parse("navtasks://widget/" + Uri.encode(profileId) + "/" + Uri.encode(runKey))
-            putExtra("profileId", profileId)
-            putExtra("runKey", runKey)
-        }
-        return PendingIntent.getBroadcast(context, ("widget:" + profileId + ":" + runKey).hashCode(), intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-    }
-
     private fun darkWidget(context: Context, settings: NavSettings) = when (settings.theme) {
         UiTheme.DARK -> true
         UiTheme.LIGHT -> false
@@ -97,117 +106,60 @@ object NavWidgetUpdater {
 
     fun updateAll(context: Context, store: TaskStore = TaskStore(context)) {
         val manager = AppWidgetManager.getInstance(context)
+        val today = LocalDate.now()
+        // dayCounts is read-only, including unmaterialized future calendar events:
+        // tomorrow's number must not create tasks or modify schedule persistence.
+        val stats = widgetStats(
+            today = store.dayCounts(today),
+            tomorrow = store.dayCounts(today.plusDays(1)),
+            missed = store.missed().size,
+        )
+        val pendingTitles = store.forDate(today)
+            .filterNot { it.second.completed }
+            .map { it.first.title }
         val settings = NavSettings(context)
-        val rows = store.forDate(LocalDate.now())
-        val completed = rows.count { it.second.completed }
-        val pending = rows.filterNot { it.second.completed }
-        val missedCount = store.missed().size
         val dark = darkWidget(context, settings)
         val language = settings.language
-        val textColor = if (dark) 0xFFF2F8FF.toInt() else 0xFF193147.toInt()
-        val muted = if (dark) 0xFFAFC4D8.toInt() else 0xFF5E7489.toInt()
+        val foreground = if (dark) 0xFFF4F6FA.toInt() else 0xFF20252E.toInt()
+        val muted = if (dark) 0xFFB1BDCE.toInt() else 0xFF697383.toInt()
         val accent = widgetAccentColor(dark)
+        val warning = if (dark) 0xFFFF9C96.toInt() else 0xFFBD4238.toInt()
+        val detail = widgetWideDetail(stats, pendingTitles, language)
 
-        // Never distribute spare widget height between task rows. The row
-        // group is centred as one block in the XML; each task stays compact.
-        val rowIdsCompact = listOf(
-            Triple(R.id.nav_widget_row_one, R.id.nav_widget_task_one, R.id.nav_widget_check_one),
-            Triple(R.id.nav_widget_row_two, R.id.nav_widget_task_two, R.id.nav_widget_check_two),
-        )
-        // Both layouts expose up to four task rows; the measured height decides
-        // how many are shown without leaving a huge unused central block.
-        val rowIds = rowIdsCompact + listOf(
-            Triple(R.id.nav_widget_row_three, R.id.nav_widget_task_three, R.id.nav_widget_check_three),
-            Triple(R.id.nav_widget_row_four, R.id.nav_widget_task_four, R.id.nav_widget_check_four),
-        )
         for (wide in listOf(false, true)) {
             val component = ComponentName(context,
                 if (wide) NavWideWidgetProvider::class.java else NavCompactWidgetProvider::class.java)
-            val ids = manager.getAppWidgetIds(component)
-            for (id in ids) {
-                val options = manager.getAppWidgetOptions(id)
-                val minHeight = options.getInt(
-                    AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, if (wide) 120 else 110)
-                val maxHeight = options.getInt(
-                    AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, minHeight)
-                val availableWidth = options.getInt(
-                    AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, if (wide) 300 else 180)
-                val useColumns = wide && widgetUsesColumns(availableWidth)
-                // On portrait phones, maxHeight reflects the portrait cell
-                // geometry. In landscape use the smaller bound to avoid clipping.
-                val availableHeight = if (context.resources.configuration.orientation ==
-                    Configuration.ORIENTATION_LANDSCAPE) minHeight else maxOf(minHeight, maxHeight)
-                val capacity = widgetTaskCapacity(availableHeight)
-                val count = if (pending.isEmpty()) 1 else minOf(capacity, pending.size)
-
-                val view = RemoteViews(context.packageName,
-                    if (useColumns) R.layout.navtasks_widget_wide else R.layout.navtasks_widget_compact)
+            val layoutId = if (wide) R.layout.navtasks_widget_wide else R.layout.navtasks_widget_compact
+            for (id in manager.getAppWidgetIds(component)) {
+                val view = RemoteViews(context.packageName, layoutId)
                 view.setInt(R.id.nav_widget_root, "setBackgroundResource",
                     if (dark) R.drawable.navtasks_widget_bg else R.drawable.navtasks_widget_bg_light)
                 view.setTextViewText(R.id.nav_widget_title,
-                    localized("Сегодня", "Today", language) + " · " +
-                        widgetHeaderDate(LocalDate.now(), language))
-                view.setTextViewText(R.id.nav_widget_progress, "$completed/${rows.size}")
-                view.setTextColor(R.id.nav_widget_title, textColor)
-                view.setTextColor(R.id.nav_widget_progress, accent)
-                view.setProgressBar(R.id.nav_widget_bar, rows.size.coerceAtLeast(1), completed, false)
-                view.setOnClickPendingIntent(R.id.nav_widget_root, NavNotifications.openTask(context))
-
-                for ((index, idsForRow) in rowIds.withIndex()) {
-                    val (rowId, nameId, checkId) = idsForRow
-                    if (index >= count) {
-                        view.setViewVisibility(rowId, View.GONE)
-                        continue
-                    }
-                    view.setViewVisibility(rowId, View.VISIBLE)
-                    val pair = pending.getOrNull(index)
-                    if (pair == null) {
-                        view.setTextViewText(nameId,
-                            if (rows.isEmpty()) localized("Нет задач на сегодня", "No tasks today", language)
-                            else localized("Всё выполнено", "All done", language))
-                        view.setTextViewText(checkId, "✓")
-                        view.setOnClickPendingIntent(nameId, NavNotifications.openTask(context))
-                        view.setOnClickPendingIntent(checkId, NavNotifications.openTask(context))
-                    } else {
-                        val (task, run) = pair
-                        view.setTextViewText(nameId, task.title)
-                        // Simple tasks toggle; a checklist always opens its editor.
-                        view.setTextViewText(checkId, if (run.checklist.isEmpty()) "○" else "☷")
-                        val action = if (run.checklist.isEmpty()) togglePending(context, run.key)
-                            else NavNotifications.openTask(context, run.key)
-                        view.setOnClickPendingIntent(checkId, action)
-                        // Tapping a title must never silently complete a task.
-                        view.setOnClickPendingIntent(
-                            nameId, NavNotifications.openTask(context, run.key))
-                    }
-                    view.setTextColor(nameId, textColor)
-                    view.setTextColor(checkId, accent)
-                }
-
-                val hidden = widgetHiddenTaskCount(pending.size, count)
-                val status = when {
-                    rows.isEmpty() -> localized("Добавить задачи", "Add tasks", language)
-                    pending.isEmpty() -> localized("Все выполнено", "All done", language)
-                    hidden > 0 -> localized("Ещё $hidden", "$hidden more", language)
-                    else -> localized("Все задачи", "All tasks", language)
-                }
-                val secondary = if (widgetMissedVisible(missedCount))
-                    localized("Пропущено: $missedCount", "Missed: $missedCount", language)
-                else ""
-                view.setTextViewText(R.id.nav_widget_status, status)
-                view.setTextViewText(R.id.nav_widget_secondary, secondary)
-                view.setTextColor(R.id.nav_widget_status, accent)
-                view.setOnClickPendingIntent(R.id.nav_widget_status, NavNotifications.openTask(context))
-                view.setTextColor(R.id.nav_widget_secondary,
-                    if (dark) 0xFFFFB1A6.toInt() else 0xFFB13B32.toInt())
-                view.setInt(R.id.nav_widget_secondary, "setBackgroundResource",
-                    if (dark) R.drawable.navtasks_widget_missed_dark
-                    else R.drawable.navtasks_widget_missed_light)
+                    localized("Сегодня", "Today", language))
+                view.setTextViewText(R.id.nav_widget_date, widgetHeaderDate(today, language))
+                view.setTextViewText(R.id.nav_widget_progress, "${stats.completed}/${stats.total}")
+                view.setTextViewText(R.id.nav_widget_status, widgetSummaryLabel(stats, language))
+                view.setTextColor(R.id.nav_widget_title, foreground)
+                view.setTextColor(R.id.nav_widget_date, muted)
+                view.setTextColor(R.id.nav_widget_progress, foreground)
+                view.setTextColor(R.id.nav_widget_status, if (stats.remaining == 0) accent else muted)
+                view.setProgressBar(R.id.nav_widget_bar, stats.total.coerceAtLeast(1),
+                    stats.completed, false)
+                view.setTextViewText(R.id.nav_widget_secondary, localized(
+                    "Пропущено: ${stats.missed}", "Missed: ${stats.missed}", language))
+                view.setTextColor(R.id.nav_widget_secondary, warning)
                 view.setViewVisibility(R.id.nav_widget_secondary,
-                    if (widgetMissedVisible(missedCount)) View.VISIBLE else View.GONE)
-                if (widgetMissedVisible(missedCount)) {
-                    view.setOnClickPendingIntent(R.id.nav_widget_secondary,
-                        NavNotifications.openMissed(context))
+                    if (widgetMissedVisible(stats.missed)) View.VISIBLE else View.GONE)
+                view.setOnClickPendingIntent(R.id.nav_widget_root,
+                    NavNotifications.openTask(context))
+                // NO row clicks, checkboxes or completion PendingIntents in either size.
+                if (wide) {
+                    view.setTextViewText(R.id.nav_widget_detail_one, detail.getOrNull(0) ?: "")
+                    view.setTextViewText(R.id.nav_widget_detail_two, detail.getOrNull(1) ?: "")
+                    view.setTextColor(R.id.nav_widget_detail_one, foreground)
+                    view.setTextColor(R.id.nav_widget_detail_two, muted)
+                    view.setTextViewText(R.id.nav_widget_percent, "${stats.percentage}%")
+                    view.setTextColor(R.id.nav_widget_percent, accent)
                 }
                 manager.updateAppWidget(id, view)
             }
