@@ -142,3 +142,11 @@
 - [ ] When a future user-approved higher-version signed QA build is ready, verify nested Handover: closed/open/empty, text tap editor, Personal notes unchanged, repeated search hits and title notes, last search occurrence top-alignment, day/night; palette text and marker persistence, keyboard/selection.
 - [ ] Decide new NavTasks adaptive/monochrome launcher icon with user, redesign responsive RemoteViews widgets and theme accents; prepare functional Reference scaffold, defer SIRE/VIQ content after stable 1.0.0.
 - [ ] Complete recurrence, AMOS, Services, Handover, notifications/widgets, profile/import, data safety, Samsung/old-version compatibility and Apple HIG glass geometry audit before independent signed 1.0.0 candidate. Keep public `stable.json available:false`; candidate code >189; never publish or install same-code188 development APK.
+
+## NEXT — 2026-11-12 selection compatibility + widget polish stage
+- [x] Compare upstream Rich Editor RC14 vs 1.0.0 and official Kotlin/Compose compatibility; upstream changelog includes drag-selection stabilization. Do not swap library on user's accepted build blindly.
+- [x] Create isolated `experiment/navtasks-editor-selection-1.0.0-compat` with Kotlin 2.4.0 and Rich Editor 1.0.0; compilation/signing/regressions CI #43214672555 SUCCESS. Additional synthetic saved HTML and selection-only regressions CI #43214884950 SUCCESS.
+- [ ] Verify physically on HONOR that newly compiled editor actually fixes finger-drag selection without format damage, IME/toolbar regressions or altered HTML. Keep experimental branch separate until accepted.
+- [x] Stage widget visual cleanup only: NavTasks system blue accent in both modes and top-aligned RemoteViews rows, no click/store changes; add JVM accent test.
+- [ ] Confirm UI signed CI #43215461681, then physical HONOR dark/light widget sizing/safe click/test after future higher-code signed QA build (installed RC20 code188; exact fallback RC21 code189 exists).
+- [ ] Larger widget concepts and adaptive launcher icon still need design review and user sign-off. Reference placeholders may be prepared for content; SIRE/VIQ documents after 1.0.0. Stable 1.0.0 only following broad functional and visual audits and explicit approval.
