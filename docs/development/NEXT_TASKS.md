@@ -275,3 +275,9 @@
 - [x] Identified GitHub Actions artifact quota error (not code failure); switched isolated workflows to PRIVATE DRAFT GitHub release assets, never stable channel.
 - [ ] Confirm private draft CI #43269056417 recovery and #43269120575 QA both SUCCESS; verify Release status DRAFT, attached APK size, original package/cert and version codes. Do not supply installation links unless assets actually exist.
 - [ ] After verified, give user direct private-draft APK links and one concise backup/install/recovery procedure; ask for physical HONOR testing, keep RC20 profiles backup.
+
+### QA handoff status — 2026-11-13
+- [x] CI source full PASS #43265672215; QA artifact #43269120575 and recovery artifact #43269056417 both SUCCESS with original cert/identity and private draft assets verified. Stable feed available:false.
+- [ ] Guide user to download BOTH private QA code190 and fallback code191, export installed RC20 profile and install QA190 in-place; do NOT uninstall or clear data.
+- [ ] Collect HONOR on-device QA: existing profile tasks, AMOS/Services, Handover, notifications, Today and 2x2/4x2 stats widgets, Reference SIRE/VIQ PDF/Word/excerpts/cited Equipment, library .navlib and equipment .navref backup/restore, search/zoom/save, Night/Day.
+- [ ] Fix visual/function regressions from user screenshots before future higher-code QA; maintain recovery code hierarchy. Test Samsung separately. Do not publish 1.0.0 automatically.
