@@ -5,7 +5,7 @@ on:
     branches:
       - feature/navtasks-pre1-integrated-0.4.164-rc18
     paths:
-      - 'app/src/test/java/com/navtasks/app/NavProfileIndexRecoveryTest.kt'
+      - 'app/**'
       - 'docs/development/PROFILE_INDEX_SAFETY.md'
       - '.github/workflows/navtasks-pre1-integrated-rc18-ci.yml'
   workflow_dispatch:
