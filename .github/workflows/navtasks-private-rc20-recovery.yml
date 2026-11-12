@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   signed-recovery:
@@ -58,13 +58,19 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --min-sdk-version 31 "$APK"
           ACTUAL="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}')"
           test "$ACTUAL" = 0cb8a3c691e3fb2198682dff8c226aec710e77c7b8fded7d260a92f359a49c54
-      - name: Upload private RECOVERY APK (NOT a public release)
-        uses: actions/upload-artifact@v4
-        with:
-          name: NavTasks-RC20-recovery-code191
-          path: app/build/outputs/apk/release/app-release.apk
-          retention-days: 7
-          if-no-files-found: error
+      - name: Save verified APK as PRIVATE DRAFT release (not latest, not stable)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/NavTasks-RC20-recovery-code191.apk"
+          gh release create "navtasks-private-qa-recovery-code191" \
+            "$RUNNER_TEMP/NavTasks-RC20-recovery-code191.apk" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft --latest=false \
+            --target "$GITHUB_SHA" \
+            --title "PRIVATE RC20 recovery code191 (DO NOT PUBLISH)" \
+            --notes "Internal emergency rollback based on accepted RC20 only. Same signing key and package. Not a stable updater release; do not publish or install before private QA plan."
       - name: Erase temporary signing key
         if: always()
         run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
