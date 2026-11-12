@@ -174,3 +174,7 @@
 - [ ] Install only an eventual higher-code original-key signed candidate after explicit user approval; HONOR/Samsung test widget 2×2/4×2 geometry, nighttime contrast, Tomorrow after Today all completed, midnight/profile/restart refresh, title overflow; no taps complete tasks.
 - [ ] Build independent Reference user-facing Equipment hierarchy/CRUD, manual file storage with library export/import, .navref Settings chooser and conflict preview, PDF/DOCX viewer/search. The standalone one-equipment archive foundation is NOT the final import UI.
 - [ ] Run full regression and separately approve stable 1.0.0; keep public stable feed off.
+
+### Current verification — 2026-11-12
+- [x] Confirmed signed, no-publish CI #43228912162 SUCCESS for code commit aa67869 (all JVM tests, original signer, nondebuggable app identity).
+- [ ] HONOR/Samsung acceptance of 2×2/4×2 launcher widgets and later Reference equipment UI/import remains outstanding. No APK download yet. All original task, AMOS, Services, notifications, Handover records preserved.
