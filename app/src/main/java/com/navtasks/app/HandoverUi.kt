@@ -356,11 +356,12 @@ fun HandoverScreen(
                                                 ).top else 0f
                                             val wordY = target.positionInWindow().y + localY
                                             val viewportTop = viewport.positionInWindow().y
-                                            val delta = navSearchListScrollDelta(
-                                                matchY = wordY, top = viewportTop,
-                                                bottom = viewportTop + viewport.size.height,
-                                                margin = matchMarginPx,
-                                            )
+                                            // Keep the active occurrence near the top of
+                                            // the list viewport, even when it was already
+                                            // visible lower down. Only the LazyColumn scrolls;
+                                            // the search field remains fixed above it.
+                                            val targetTop = viewportTop + matchMarginPx
+                                            val delta = wordY - targetTop
                                             handledSearchSerial = entryRevealSerial
                                             if (delta != 0f) listState.animateScrollBy(delta)
                                         }
