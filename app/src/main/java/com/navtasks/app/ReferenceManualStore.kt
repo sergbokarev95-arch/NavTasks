@@ -95,7 +95,6 @@ internal class ReferenceManualStore(context: Context) {
             sha256 = "0".repeat(64), bytes = 1,
         )
         candidate.validate()
-        require(previous.folders.none { it.id == folderId } || folderId != null)
         require(folderId == null || previous.folders.any {
             it.id == folderId && it.sectionId == sectionId
         }) { "Unknown manual folder" }
@@ -147,7 +146,11 @@ internal class ReferenceManualStore(context: Context) {
 /** Validate content without executing macros, Office scripts or external references. */
 internal fun validateReferenceManualSignature(file: File, mimeType: String) {
     require(file.isFile && file.length() > 0)
-    val signature = file.inputStream().use { it.readNBytes(8) }
+    val signature = file.inputStream().use { input ->
+        val bytes = ByteArray(8)
+        val count = input.read(bytes)
+        bytes.copyOf(count.coerceAtLeast(0))
+    }
     when (mimeType) {
         ReferenceManualMime.PDF -> require(
             signature.size >= 5 && signature.copyOfRange(0, 5)
