@@ -252,3 +252,12 @@
 - [ ] Verify .navlib shared manuals+excerpts and .navref vessel equipment as TWO separate backup scopes; assess whether Settings needs a combined backup before stable release, and document correct user-facing migration instructions.
 - [ ] Prepare once-only signed private device QA candidate (versionCode >189, same package/signer), but do NOT publish or request user to install until source and visual QA gates are ready. Keep accepted RC20 rollback branch.
 - [ ] HONOR and Samsung physical testing: widgets 2x2/4x2, light/dark, offline manual imports and backup recovery, PDF page zoom/find, DOCX readability, keyboard/selection, task recurrence, AMOS, Services, Handover, notification timing; approve 1.0.0 only after user confirmation.
+
+## NEXT — 2026-11-13 targeted quality audit and private QA build
+- [x] Protect active original-manual archive restore from Cancel/Back and stage disposal; test crash staging cleanup.
+- [x] Abort stale PDF full-text scans on query changes; no old results after a new query.
+- [x] Prevent excerpt edit-after-search from silently changing its folder; add JVM test for root-null and existing folder cases.
+- [ ] Confirm signed CI #43265305900 after all 3 fixes and pure regression tests; inspect failure logs and patch only if needed.
+- [ ] Stress test on HONOR: large PDFs, archive export/import/back-pressure, cancellation/low disk, night/day reader, 2×2/4×2 widgets. Samsung older Android PDF search and text extraction still unresolved.
+- [ ] Global Reference search currently covers metadata/user excerpts, not full PDF contents; implement safe full-text index or clarify supported search scope before 1.0.0. DOCX simplified reader is not a pixel-exact Office renderer.
+- [ ] Only after reliable private build & full functional checks, prepare original-key code>189 QA APK (not stable release). Keep rollback and live profile backup.
