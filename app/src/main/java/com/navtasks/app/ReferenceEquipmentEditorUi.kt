@@ -115,7 +115,7 @@ internal fun ReferenceProcedureEditor(
     var edition by remember(original?.id) { mutableStateOf(original?.source?.edition.orEmpty()) }
     var excerpt by remember(original?.id) { mutableStateOf(original?.excerpt.orEmpty()) }
     var steps by remember(original?.id) { mutableStateOf(original?.instructions.orEmpty()) }
-    val validPage = page.isBlank() || page.toIntOrNull() in 1..100000
+    val validPage = page.isBlank() || (page.toIntOrNull()?.let { it in 1..100000 } == true)
     val canSave = title.isNotBlank() && manual.isNotBlank() && excerpt.isNotBlank() && validPage
 
     NavGlassAlertDialog(p, onDismissRequest = onDismiss,
