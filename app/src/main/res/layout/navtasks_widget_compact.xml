@@ -15,17 +15,17 @@
             android:maxLines="1" android:ellipsize="end" />
         <TextView android:id="@+id/nav_widget_progress"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="0/0" android:textColor="#69D4BE" android:textSize="14sp" />
+            android:text="0/0" android:textColor="#5CB8FF" android:textSize="14sp" />
     </LinearLayout>
     <ProgressBar android:id="@+id/nav_widget_bar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent" android:layout_height="4dp"
         android:layout_marginTop="0dp" android:layout_marginBottom="0dp"
         android:visibility="gone"
-        android:progressTint="#69D4BE" android:progressBackgroundTint="#52677B" />
+        android:progressTint="#5CB8FF" android:progressBackgroundTint="#52677B" />
     <LinearLayout android:layout_width="match_parent"
         android:layout_height="0dp" android:layout_weight="1"
-        android:gravity="center_vertical" android:orientation="vertical">
+        android:gravity="top" android:paddingTop="8dp" android:orientation="vertical">
 
         <LinearLayout android:id="@+id/nav_widget_row_one"
             android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
             <TextView android:id="@+id/nav_widget_check_one"
                 android:layout_width="34dp" android:layout_height="28dp"
                 android:gravity="center" android:text="○"
-                android:textColor="#69D4BE" android:textSize="23sp" />
+                android:textColor="#5CB8FF" android:textSize="23sp" />
             <TextView android:id="@+id/nav_widget_task_one"
                 android:layout_width="0dp" android:layout_weight="1"
                 android:layout_height="wrap_content"
@@ -50,7 +50,7 @@
             <TextView android:id="@+id/nav_widget_check_two"
                 android:layout_width="34dp" android:layout_height="28dp"
                 android:gravity="center" android:text="○"
-                android:textColor="#69D4BE" android:textSize="23sp" />
+                android:textColor="#5CB8FF" android:textSize="23sp" />
             <TextView android:id="@+id/nav_widget_task_two"
                 android:layout_width="0dp" android:layout_weight="1"
                 android:layout_height="wrap_content"
@@ -65,7 +65,7 @@
             <TextView android:id="@+id/nav_widget_check_three"
                 android:layout_width="34dp" android:layout_height="28dp"
                 android:gravity="center" android:text="○"
-                android:textColor="#69D4BE" android:textSize="23sp" />
+                android:textColor="#5CB8FF" android:textSize="23sp" />
             <TextView android:id="@+id/nav_widget_task_three"
                 android:layout_width="0dp" android:layout_weight="1"
                 android:layout_height="wrap_content"
@@ -80,7 +80,7 @@
             <TextView android:id="@+id/nav_widget_check_four"
                 android:layout_width="34dp" android:layout_height="28dp"
                 android:gravity="center" android:text="○"
-                android:textColor="#69D4BE" android:textSize="23sp" />
+                android:textColor="#5CB8FF" android:textSize="23sp" />
             <TextView android:id="@+id/nav_widget_task_four"
                 android:layout_width="0dp" android:layout_weight="1"
                 android:layout_height="wrap_content"
