@@ -21,8 +21,6 @@ internal fun navUpdateMayOffer(autoOffers: Boolean, deferred: Boolean) = autoOff
  * Network errors are deliberately silent on automatic checks; offline remains normal.
  */
 internal object NavUpdateChecker {
-    private const val FEED =
-        "https://raw.githubusercontent.com/sergbokarev95-arch/NavTasks-Updates/main/channels/stable.json"
     private const val PREFS = "navtasks-update-check"
     private const val CHECK_INTERVAL_MS = 24L * 60L * 60L * 1000L
 
@@ -89,27 +87,8 @@ internal object NavUpdateChecker {
         if (manual) lastManualMessage = null
         try {
             val code = appContext.packageManager.getPackageInfo(appContext.packageName, 0).longVersionCode
-            val result = withContext(Dispatchers.IO) {
-                val connection = (URL(FEED).openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 3500
-                    readTimeout = 3500
-                    instanceFollowRedirects = false
-                    setRequestProperty("Accept", "application/json")
-                    setRequestProperty("User-Agent", "NavTasks-Android-Update-Check")
-                }
-                try {
-                    if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                        throw java.io.IOException("Update channel unavailable")
-                    }
-                    val body = connection.inputStream.bufferedReader(Charsets.UTF_8).use {
-                        it.readText().take(32769)
-                    }
-                    if (body.length > 32768) throw java.io.IOException("Update feed too large")
-                    parseStableFeed(body, code.toInt(), appContext.packageName)
-                } finally {
-                    connection.disconnect()
-                }
-            }
+            val body = NavStableFeedNetwork.read()
+            val result = parseStableFeed(body, code.toInt(), appContext.packageName)
             candidate = result
             lastCheckedAt = System.currentTimeMillis()
             prefs.edit().putLong("last_success", lastCheckedAt)

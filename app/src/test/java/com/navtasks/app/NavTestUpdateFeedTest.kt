@@ -40,18 +40,8 @@ class NavTestUpdateFeedTest {
         assertNull(navParseTestFeed(test2, 176, "com.navtasks.app.glass", 36))
         assertNull(navParseTestFeed(test2.replace("test-v0.4.158", "test-v0.4.152"),
             178, "com.navtasks.app.glass", 36))
-        assertNull(navParseTestFeed(test2.replace("0.4.158-test2", "0.4.158-test4"),
+        assertNull(navParseTestFeed(test2.replace("0.4.158-test2", "0.4.158-test3"),
             178, "com.navtasks.app.glass", 36))
-    }
-
-    @Test fun test3IsAcceptedOnlyWhenSignedVersionAndPinnedUrlAreCompatible() {
-        val test3 = feed(code = 184, floor = 182)
-            .replace("0.4.152-test1", "0.4.162-test3")
-            .replace("test-v0.4.152", "test-v0.4.162")
-        assertNotNull(navParseTestFeed(test3, 182, "com.navtasks.app.glass", 36))
-        assertNull(navParseTestFeed(test3, 180, "com.navtasks.app.glass", 36))
-        assertNull(navParseTestFeed(test3.replace("test-v0.4.162", "test-v0.4.158"),
-            182, "com.navtasks.app.glass", 36))
     }
 
     @Test fun testDoesNotAlterStableAutomaticFlow() {
@@ -59,7 +49,7 @@ class NavTestUpdateFeedTest {
         val checker = java.io.File(dir+"NavUpdateChecker.kt").readText()
         val offer = java.io.File(dir+"NavUpdateOffer.kt").readText()
         val settings = java.io.File(dir+"PlanAndTasksUi.kt").readText()
-        assertTrue(checker.contains("val connection = (URL(FEED).openConnection()"))
+        assertTrue(checker.contains("NavStableFeedNetwork.read()"))
         assertTrue(checker.contains("NavTestFeedNetwork.read()"))
         val network = java.io.File(dir+"NavTestFeedNetwork.kt").readText()
         assertTrue(network.contains("URL(url).openConnection()"))

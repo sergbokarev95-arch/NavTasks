@@ -50,7 +50,8 @@ class NavTestFeedNetworkPolicyTest {
         val settings = java.io.File(dir + "PlanAndTasksUi.kt").readText()
         val app = java.io.File("build.gradle.kts").readText()
         assertTrue(checker.contains("val body = NavTestFeedNetwork.read()"))
-        assertTrue(checker.contains("val connection = (URL(FEED).openConnection()"))
+        assertTrue(checker.contains("val body = NavStableFeedNetwork.read()"))
+        assertTrue(java.io.File(dir + "NavStableFeedNetwork.kt").readText().contains("NAV_STABLE_FEED"))
         assertTrue(checker.contains("parseStableFeed(body, code.toInt(), appContext.packageName)"))
         assertTrue(checker.contains("lastManualMessage = navTestFeedErrorCode(error)"))
         assertTrue(transport.contains("readTimeout = 20_000"))
@@ -58,7 +59,7 @@ class NavTestFeedNetworkPolicyTest {
         assertTrue(transport.contains("for (attempt in 0..2)"))
         assertTrue(settings.contains("\"test_timeout\""))
         assertTrue(settings.contains("\"test_bad_feed\""))
-        assertTrue(app.contains("versionCode = 184"))
-        assertTrue(app.contains("versionNameSuffix = \"-test3\""))
+        assertTrue(app.contains("versionCode = 186"))
+        assertTrue(app.contains("versionNameSuffix = \"-rc18\""))
     }
 }
