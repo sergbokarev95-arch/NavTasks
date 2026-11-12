@@ -34,6 +34,11 @@ internal fun ReferenceHubScreen(
     var catalog by remember(equipmentStore) { mutableStateOf(loaded.getOrNull()) }
     var equipmentOpen by rememberSaveable(profileId) { mutableStateOf(false) }
     var equipmentSearch by rememberSaveable(profileId) { mutableStateOf("") }
+    val manualStore = remember(context) { ReferenceManualStore(context) }
+    var manualSection by rememberSaveable { mutableStateOf<String?>(null) }
+    var manualSearch by rememberSaveable { mutableStateOf("") }
+    val manualSnapshot = remember(manualSection) { runCatching { manualStore.read() } }
+    val manuals = manualSnapshot.getOrNull()
     val listState = rememberLazyListState()
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchText by rememberSaveable { mutableStateOf("") }
@@ -41,8 +46,17 @@ internal fun ReferenceHubScreen(
     val sireSubtitle = localized("Подготовка к инспекциям", "Inspection preparation", lang)
     val viqSubtitle = localized("Архивный справочник", "Historical reference", lang)
     val later = localized("Материалы будут добавлены позже", "Content coming later", lang)
-    val showSire = referencePlaceholderMatches(query, "SIRE 2.0", sireSubtitle, later)
-    val showViq = referencePlaceholderMatches(query, "VIQ7", viqSubtitle, later)
+    val manualMatches = if (query.isBlank()) emptyList()
+        else manuals?.let { referenceManualSearch(it, query) }.orEmpty()
+    val sireHits = manualMatches.count { it.sectionId == NavReferenceSections.SIRE }
+    val viqHits = manualMatches.count { it.sectionId == NavReferenceSections.VIQ7 }
+    val personalHits = manualMatches.count { it.sectionId == NavReferenceSections.PERSONAL }
+    val showSire = referencePlaceholderMatches(query, "SIRE 2.0", sireSubtitle) || sireHits > 0
+    val showViq = referencePlaceholderMatches(query, "VIQ7", viqSubtitle) || viqHits > 0
+    val personalName = localized("Мои материалы", "My materials", lang)
+    val showPersonal = referencePlaceholderMatches(query, personalName,
+        localized("Свои PDF, Word и папки", "Your PDF, Word and folders", lang)) ||
+        personalHits > 0
     val equipmentSubtitle = localized("Процедуры и выдержки из мануалов",
         "Equipment, procedures and manual excerpts", lang)
     val equipmentMatches = if (query.isBlank()) emptyList()
@@ -56,10 +70,20 @@ internal fun ReferenceHubScreen(
             NavReferenceSearchRow("viq", "VIQ7", viqSubtitle, later),
             NavReferenceSearchRow("equipment", localized("Оборудование", "Equipment", lang),
                 equipmentSubtitle, ""),
+            NavReferenceSearchRow("personal", personalName,
+                localized("Мануалы и файлы", "Manuals and files", lang), ""),
         ), query,
-    ) + if (query.isBlank()) emptyList() else equipmentMatches.map {
-        NavReferenceSearchHit("equipment", NavReferenceField.TITLE, 0)
-    }
+    ) + if (query.isBlank()) emptyList() else
+        equipmentMatches.map {
+            NavReferenceSearchHit("equipment", NavReferenceField.TITLE, 0)
+        } + manualMatches.map { file ->
+            NavReferenceSearchHit(
+                when (file.sectionId) {
+                    NavReferenceSections.SIRE -> "sire"
+                    NavReferenceSections.VIQ7 -> "viq"
+                    else -> "personal"
+                }, NavReferenceField.TITLE, 0)
+        }
     var searchResultIndex by rememberSaveable { mutableIntStateOf(0) }
     val focusedSearchHit = searchResults.getOrNull(searchResultIndex)
     var searchNavigationSerial by remember { mutableIntStateOf(0) }
@@ -67,12 +91,14 @@ internal fun ReferenceHubScreen(
     LaunchedEffect(searchNavigationSerial) {
         if (searchNavigationSerial > 0 && searchResults.isNotEmpty()) {
             val hit = searchResults[searchResultIndex.coerceIn(0, searchResults.lastIndex)]
-            val itemIndex = when (hit.sectionId) {
-                "sire" -> 0
-                "viq" -> if (showSire) 1 else 0
-                else -> (if (showSire) 1 else 0) + (if (showViq) 1 else 0)
+            val visible = buildList {
+                if (showSire) add("sire")
+                if (showViq) add("viq")
+                if (showEquipment) add("equipment")
+                if (showPersonal) add("personal")
             }
-            listState.animateScrollToItem(itemIndex)
+            val index = visible.indexOf(hit.sectionId)
+            if (index >= 0) listState.animateScrollToItem(index)
         }
     }
 
@@ -83,9 +109,17 @@ internal fun ReferenceHubScreen(
             searchText = ""
             equipmentOpen = false
             equipmentSearch = ""
+            manualSection = null
+            manualSearch = ""
         }
     }
-    if (equipmentOpen && catalog != null) {
+    if (manualSection != null) {
+        ReferenceManualLibraryScreen(
+            sectionId = manualSection!!, p = p, lang = lang,
+            initialQuery = manualSearch,
+            onBack = { manualSection = null; manualSearch = "" },
+        )
+    } else if (equipmentOpen && catalog != null) {
         ReferenceEquipmentScreen(
             catalog = catalog!!, p = p, lang = lang,
             initialQuery = equipmentSearch,
@@ -105,8 +139,8 @@ internal fun ReferenceHubScreen(
                 p = p,
                 title = localized("Материалы для работы", "Working references", lang),
                 description = localized(
-                    "SIRE 2.0 и VIQ7 пока ожидают материалы. Оборудование можно добавлять самостоятельно.",
-                    "SIRE 2.0 and VIQ7 await manuals. You can add your own equipment.",
+                    "Мануалы PDF/Word и инструкции к оборудованию. Всё доступно офлайн.",
+                    "PDF/Word manuals and equipment procedures. Available offline.",
                     lang,
                 ),
                 modifier = Modifier.weight(1f),
@@ -145,7 +179,8 @@ internal fun ReferenceHubScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (query.isNotBlank() && !showSire && !showViq && !showEquipment) {
+            if (query.isNotBlank() && !showSire && !showViq &&
+                !showEquipment && !showPersonal) {
                 item {
                     NavPanel(p) {
                         Text(localized("Разделов по запросу не найдено.",
@@ -157,16 +192,30 @@ internal fun ReferenceHubScreen(
             if (showSire) {
                 item(key = "reference-sire") {
                     ReferencePlaceholderTile(
-                        p, "SIRE 2.0", sireSubtitle, later, query,
+                        p, "SIRE 2.0", sireSubtitle,
+                        localized("Документов: ", "Documents: ", lang) +
+                            manuals?.documents.orEmpty().count { it.sectionId == NavReferenceSections.SIRE },
+                        query,
                         activeHit = focusedSearchHit?.takeIf { it.sectionId == "sire" },
+                        onClick = {
+                            manualSection = NavReferenceSections.SIRE
+                            manualSearch = query
+                        },
                     )
                 }
             }
             if (showViq) {
                 item(key = "reference-viq") {
                     ReferencePlaceholderTile(
-                        p, "VIQ7", viqSubtitle, later, query,
+                        p, "VIQ7", viqSubtitle,
+                        localized("Документов: ", "Documents: ", lang) +
+                            manuals?.documents.orEmpty().count { it.sectionId == NavReferenceSections.VIQ7 },
+                        query,
                         activeHit = focusedSearchHit?.takeIf { it.sectionId == "viq" },
+                        onClick = {
+                            manualSection = NavReferenceSections.VIQ7
+                            manualSearch = query
+                        },
                     )
                 }
             }
@@ -196,11 +245,36 @@ internal fun ReferenceHubScreen(
                     }
                 }
             }
+            if (showPersonal) {
+                item(key = "reference-personal") {
+                    if (manuals == null) {
+                        NavPanel(p) {
+                            Text(localized("Библиотека требует проверки. Данные не перезаписаны.",
+                                "Manual library needs inspection. Data was preserved.", lang),
+                                color = p.systemRed, fontSize = 13.sp)
+                        }
+                    } else {
+                        ReferencePlaceholderTile(
+                            p, personalName,
+                            localized("Свои PDF, Word и папки", "Your PDF, Word and folders", lang),
+                            localized("Документов: ", "Documents: ", lang) +
+                                manuals.documents.count {
+                                    it.sectionId == NavReferenceSections.PERSONAL
+                                }, query,
+                            activeHit = focusedSearchHit?.takeIf { it.sectionId == "personal" },
+                            onClick = {
+                                manualSection = NavReferenceSections.PERSONAL
+                                manualSearch = query
+                            },
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
-/** Existing SIRE/VIQ placeholders remain read-only; Equipment tile opens its own catalog. */
+/** Reference category tiles open independent manual and equipment catalogs. */
 @Composable
 private fun ReferencePlaceholderTile(
     p: NavPalette,
