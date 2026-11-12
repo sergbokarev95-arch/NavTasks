@@ -3,50 +3,76 @@ package com.navtasks.app
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import java.time.LocalDate
 import org.junit.Test
+import java.time.LocalDate
 
 class NavWidgetCapacityTest {
-    @Test fun shortWidgetsNeverForceFourRowsIntoRestrictedHeight() {
-        assertEquals(2, widgetTaskCapacity(110))
-        assertEquals(2, widgetTaskCapacity(139))
+    @Test fun widgetsCannotCompleteTasksFromLauncher() {
+        assertFalse(NAV_WIDGET_DIRECT_COMPLETE)
     }
 
-    @Test fun tallHomeWidgetsUseSpareSpaceForActualTasks() {
-        assertEquals(3, widgetTaskCapacity(140))
-        assertEquals(3, widgetTaskCapacity(169))
-        assertEquals(4, widgetTaskCapacity(170))
-        assertEquals(4, widgetTaskCapacity(250))
+    @Test fun countsAreClampedAndProgressIsStableOnEmptyDays() {
+        val empty = widgetStats(DayCounts(0, 0), DayCounts(6, 0), missed = 0)
+        assertEquals(0, empty.percentage)
+        assertEquals(0, empty.remaining)
+        assertFalse(empty.allCompleted)
+        assertEquals("Завтра 6 задач", widgetSummaryLabel(empty, UiLanguage.RU))
+        val partial = widgetStats(DayCounts(12, 10), DayCounts(6, 0), missed = 2)
+        assertEquals(2, partial.remaining)
+        assertEquals(83, partial.percentage)
+        assertFalse(partial.allCompleted)
+        assertEquals(2, partial.missed)
+        val invalid = widgetStats(DayCounts(2, 99), DayCounts(-2, 0), missed = -5)
+        assertEquals(2, invalid.completed)
+        assertEquals(100, invalid.percentage)
+        assertEquals(0, invalid.tomorrowTotal)
+        assertEquals(0, invalid.missed)
     }
 
-    @Test fun readableWideLayoutNeedsSufficientHorizontalSpace() {
-        assertFalse(widgetUsesColumns(300))
-        assertFalse(widgetUsesColumns(349))
-        assertTrue(widgetUsesColumns(350))
-        assertTrue(widgetUsesColumns(410))
+    @Test fun todayRemainsVisibleAfterCompletionAndTomorrowBecomesSecondary() {
+        val complete = widgetStats(DayCounts(12, 12), DayCounts(6, 0), missed = 0)
+        assertTrue(complete.allCompleted)
+        assertEquals("Завтра 6 задач", widgetSummaryLabel(complete, UiLanguage.RU))
+        assertEquals("Tomorrow: 6 tasks", widgetSummaryLabel(complete, UiLanguage.EN))
+        assertEquals(
+            listOf("Сегодня всё выполнено", "План на завтра"),
+            widgetWideDetail(complete, emptyList(), UiLanguage.RU),
+        )
+        assertEquals("Всё выполнено", widgetSummaryLabel(
+            widgetStats(DayCounts(12, 12), DayCounts(0, 0), 0), UiLanguage.RU))
     }
 
-    @Test fun widgetAccentMatchesNavTasksSystemBlueInBothThemes() {
+    @Test fun unfinishedTodayTakesPriorityAndWidePreviewIsReadOnly() {
+        val stats = widgetStats(DayCounts(5, 3), DayCounts(17, 0), 1)
+        assertEquals("Осталось 2 задачи", widgetSummaryLabel(stats, UiLanguage.RU))
+        assertEquals("2 remaining", widgetSummaryLabel(stats, UiLanguage.EN))
+        assertEquals(listOf("Navarea/Navtex", "Сводная корректура"),
+            widgetWideDetail(stats, listOf("Navarea/Navtex", "Сводная корректура", "ECDIS"), UiLanguage.RU))
+    }
+
+    @Test fun russianCountGrammarAndNoTasksAreHandled() {
+        for ((count, expected) in listOf(
+            1 to "Осталось 1 задача", 2 to "Осталось 2 задачи",
+            5 to "Осталось 5 задач", 11 to "Осталось 11 задач", 21 to "Осталось 21 задача",
+        )) {
+            val stats = widgetStats(DayCounts(count, 0), DayCounts(0, 0), 0)
+            assertEquals(expected, widgetSummaryLabel(stats, UiLanguage.RU))
+        }
+        assertEquals("Сегодня нет задач", widgetSummaryLabel(
+            widgetStats(DayCounts(0, 0), DayCounts(0, 0), 0), UiLanguage.RU))
+    }
+
+    @Test fun widgetUsesNavTasksBlueAndHidesZeroMissedBadge() {
         assertEquals(0xFF5CB8FF.toInt(), widgetAccentColor(dark = true))
         assertEquals(0xFF0071E3.toInt(), widgetAccentColor(dark = false))
-    }
-
-    @Test fun noRedMissedPillWhenCountIsZero() {
         assertFalse(widgetMissedVisible(0))
         assertTrue(widgetMissedVisible(1))
         assertTrue(widgetMissedVisible(12))
     }
 
-    @Test fun widgetHeaderShowsLocalizedDate() {
-        val day = LocalDate.of(2026, 11, 7)
-        assertTrue(widgetHeaderDate(day, UiLanguage.RU).startsWith("7"))
-        assertTrue(widgetHeaderDate(day, UiLanguage.EN).endsWith("7"))
-    }
-
-    @Test fun footerCountsTasksBeyondVisibleRowsWithoutGoingNegative() {
-        assertEquals(7, widgetHiddenTaskCount(10, 3))
-        assertEquals(6, widgetHiddenTaskCount(10, 4))
-        assertEquals(0, widgetHiddenTaskCount(2, 4))
-        assertEquals(0, widgetHiddenTaskCount(0, 2))
+    @Test fun dateAlwaysUsesSelectedLanguage() {
+        val day = LocalDate.of(2026, 11, 12)
+        assertTrue(widgetHeaderDate(day, UiLanguage.RU).startsWith("12"))
+        assertTrue(widgetHeaderDate(day, UiLanguage.EN).endsWith("12"))
     }
 }
