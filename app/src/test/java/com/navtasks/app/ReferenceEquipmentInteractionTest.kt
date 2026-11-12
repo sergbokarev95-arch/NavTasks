@@ -81,7 +81,7 @@ class ReferenceEquipmentInteractionTest {
             ReferenceFolder("child", "Gas detection", "root"),
             ReferenceFolder("other", "Engine"),
         ))
-        assertEquals(listOf("root"), referenceVisibleFolders(catalog, null, "").map { it.id })
+        assertEquals(listOf("other", "root"), referenceVisibleFolders(catalog, null, "").map { it.id })
         assertEquals(listOf("child"), referenceVisibleFolders(catalog, "root", "").map { it.id })
         assertEquals(listOf("child"), referenceVisibleFolders(catalog, null, "DETECT").map { it.id })
         assertTrue(referenceVisibleFolders(catalog, null, "unknown").isEmpty())
