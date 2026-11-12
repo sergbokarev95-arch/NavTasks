@@ -58,7 +58,7 @@ class NavTestFeedNetworkPolicyTest {
         assertTrue(transport.contains("for (attempt in 0..2)"))
         assertTrue(settings.contains("\"test_timeout\""))
         assertTrue(settings.contains("\"test_bad_feed\""))
-        assertTrue(app.contains("versionCode = 184"))
-        assertTrue(app.contains("versionNameSuffix = \"-test3\""))
+        assertTrue(app.contains("versionCode = 187"))
+        assertTrue(app.contains("versionNameSuffix = \"-rc19\""))
     }
 }
