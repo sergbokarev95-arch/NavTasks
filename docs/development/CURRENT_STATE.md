@@ -580,3 +580,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-12 — RC15/TEST3 signed and emergency code185 recovery ready
 - RC15 private `0.4.160-rc15` code182 CI43044178187 SUCCESS (draft untagged-a7ffbdc6242655c1ab1c). TEST3 public `0.4.162-test3` code184 CI43044626615 and publication CI43045892670 SUCCESS, test.json floor182. Exact accepted previous TEST2 code180 application source signed as emergency `0.4.163-rc17` code185 CI43045311279 SUCCESS (draft untagged-c3d917192472827f56b3). Stable OFF.
 - Waiting for actual HONOR startup auto-offer acceptance and data checks; user's current reported installed code180.
+
+## 2026-11-12 — HONOR startup auto-offer shown in RC15
+- User screenshot at 15:45 shows normal Today screen under **automatic** dialog `Доступна тестовая версия`, installed `0.4.160-rc15` (versionCode182), offered `0.4.162-test3` (versionCode184), buttons `Обновить` / `Позже` and release notes. This proves on-phone startup automatic discovery/dialog from QA-only test channel, without manual Settings check; first key requirement PASS.
+- Pending: user to press `Позже`, cold-relaunch and check suppression; manual TEST check must continue working. Important distinction: suppression alone may be caused by 24h successful-check throttle, so per-version Later logic should also be validated by unit tests and a newly versioned target.
+- Separate isolated stable-feed weak-network patch `feature/navtasks-pre1-stable-feed-resilience` CI43142231890 **SUCCESS** with full JVM/signed build/regression; NOT merged into QA RC15 or installed phone yet. Public stable.json remains disabled; no production 1.0.0 release yet.
