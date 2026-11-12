@@ -77,6 +77,37 @@ internal fun referenceMatchesEquipment(item: ReferenceEquipment, query: String):
     return fields.any { it.contains(needle, ignoreCase = true) }
 }
 
+/** Short context for a global search result; whole procedure text remains in the reader. */
+internal fun referenceEquipmentSearchPreview(
+    item: ReferenceEquipment, query: String,
+): String {
+    val needle = navEffectiveSearchQuery(query)
+    if (needle.isEmpty()) {
+        val caption = listOf(item.manufacturer, item.model).filter { it.isNotBlank() }
+            .joinToString(" · ")
+        return caption.ifBlank { "${item.procedures.size} процедур" }
+    }
+    val texts = buildList {
+        add(item.model)
+        add(item.location)
+        add(item.notes)
+        item.procedures.forEach { p ->
+            add(p.title)
+            add(p.intervalDescription)
+            add(p.source.documentTitle)
+            add(p.excerpt)
+            add(p.instructions)
+        }
+    }
+    val matching = texts.firstOrNull { it.contains(needle, ignoreCase = true) }
+        ?: return "${item.procedures.size} процедур"
+    val offset = matching.indexOf(needle, ignoreCase = true)
+    val start = (offset - 28).coerceAtLeast(0)
+    val end = (offset + needle.length + 65).coerceAtMost(matching.length)
+    return (if (start > 0) "…" else "") + matching.substring(start, end)
+        .replace("\n", " ") + if (end < matching.length) "…" else ""
+}
+
 /** Empty query is a browse state; active search searches all folders, not just open one. */
 internal fun referenceEquipmentVisible(
     catalog: ReferenceEquipmentCatalog, folderId: String?, query: String,
