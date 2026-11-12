@@ -266,3 +266,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ### 2026-11-13 — first safe private QA install set ready for device testing
 - Candidate `0.4.170-qa1` code190 private DRAFT APK and original-RC20-based fallback code191 private DRAFT APK both built with original cert, release non-debuggable, identical package, JVM tests PASS and artifact asset bytes present. CI #43269120575 / #43269056417 SUCCESS. Stable feed OFF.
 - No device installs yet. User should download both and export existing profile before updating; Android downgrade to code188 is blocked after QA190 so use code191 recovery if required. QA is NOT stable 1.0.0.
+
+### 2026-11-13 — PDF full-screen correction staged for user screenshot findings
+- On installed QA190 HONOR, imported PDF originals and page navigation work; document is squeezed under app title/dock, cropped horizontally in some cases and search matches not highlighted. User explicitly expects full-screen reader.
+- Staged Reference-only full-screen Dialog reader, fit-width page geometry, bounded memory, pinch/zoom/scroll, per-match native API35 PDF coordinate highlighting/auto-scroll. DOCX also opens full screen, but simplified text mode unchanged; minSdk31 PDF search fallback still pending.
+- Source CI #43277871872 pending. New private QA device APK must have code>=192 (device already on 190; recovery code191 existing). No code190 binary modification. Stable feed off.
