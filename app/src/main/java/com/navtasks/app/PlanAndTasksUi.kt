@@ -459,7 +459,7 @@ fun TasksScreenV2(
     )
     val filtered = store.templates.filter {
         TaskSchedule.effectiveFrequency(it, LocalDate.now()) == filter
-    }
+    }.sortedBy { if (it.enabled) 0 else 1 }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Frequency.entries.forEachIndexed { i, freq ->
@@ -503,7 +503,9 @@ fun TasksScreenV2(
                     // Templates are not executable, so no fake empty checkbox or checkbox icon here.
                     Spacer(Modifier.width(1.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(task.title, color = if (task.enabled) p.text else p.muted, fontSize = 14.sp)
+                        Text(task.title, color = if (task.enabled) p.text else p.muted, fontSize = 14.sp,
+                            textDecoration = if (task.enabled) androidx.compose.ui.text.style.TextDecoration.None
+                                else androidx.compose.ui.text.style.TextDecoration.LineThrough)
                         Text(
                             when {
                                 TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.EXTRA -> navDate(task.startDate, lang)
@@ -1305,6 +1307,8 @@ fun SettingsScreen(
                     onClick = { scope.launch { NavUpdateChecker.check(context, manual = true) } },
                     enabled = !NavUpdateChecker.checking,
                     modifier = Modifier.fillMaxWidth(),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, p.blue),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = p.blueText),
                 ) {
                     Text(if (NavUpdateChecker.checking)
                         localized("Проверяем…", "Checking…", lang)
