@@ -5,6 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
@@ -270,10 +273,9 @@ internal fun ReferenceManualLibraryScreen(
         }
 
         if (selectedDocument != null) {
-            ReferenceManualReader(
-                document = selectedDocument,
-                store = store, p = p, lang = lang,
-            )
+            // The PDF/DOCX viewer owns a separate full-screen dialog window,
+            // above the application's toolbar and floating dock.
+            Spacer(Modifier.weight(1f))
         } else if (selectedExcerpt != null) {
             ReferenceManualExcerptReader(
                 selectedExcerpt, p, lang,
@@ -360,6 +362,43 @@ internal fun ReferenceManualLibraryScreen(
                         )
                     }
                 }
+            }
+        }
+    }
+
+    selectedDocument?.let { document ->
+        Dialog(
+            onDismissRequest = { documentId = null },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnClickOutside = false,
+                decorFitsSystemWindows = false,
+            ),
+        ) {
+            Column(
+                Modifier.fillMaxSize()
+                    .background(p.background)
+                    .safeDrawingPadding(),
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(
+                        start = 12.dp, end = 12.dp, top = 5.dp, bottom = 6.dp
+                    ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    NavGlassCircleButton(p, "back") { documentId = null }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(localized("Чтение документа", "Document reader", lang),
+                            fontSize = 12.sp, color = p.blueText)
+                        Text(document.title, color = p.text, fontSize = 17.sp,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+                ReferenceManualReader(
+                    document = document,
+                    store = store, p = p, lang = lang,
+                )
             }
         }
     }
