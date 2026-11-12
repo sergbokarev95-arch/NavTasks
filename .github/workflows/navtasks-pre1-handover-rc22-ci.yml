@@ -37,7 +37,107 @@ jobs:
           set -euo pipefail
           BASE=3bfa259379cfb393a6e4e35703d7e15e1f088989
           git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
-          if grep -Ev '^(app/build\\.gradle\\.kts|app/src/main/java/com/navtasks/app/(HandoverUi|NavSearchMarkers)\\.kt|app/src/test/java/com/navtasks/app/(HandoverAccordionTest|NavPersonalAndSearchViewportFixTest)\\.kt|docs/development/HANDOVER_RC22\\.md|\\.github/workflows/navtasks-pre1-handover-rc22-ci\\.yml)$' changed.txt; then
+          if grep -Ev '^(app/build\.gradle\.kts|app/src/main/java/com/navtasks/app/(HandoverUi|NavSearchMarkers)\.kt|app/src/test/java/com/navtasks/app/(HandoverAccordionTest|NavPersonalAndSearchViewportFixTest)\.kt|docs/development/HANDOVER_RC22\.md|\.github/workflows/navtasks-pre1-handover-rc22-ci\.yml)
+            echo "::error::Unapproved business, UI, manifest, or updater changes"
+            exit 1
+          fi
+          grep -Fq 'versionCode = 190' app/build.gradle.kts
+          grep -Fq 'versionName = "0.4.168"' app/build.gradle.kts
+          grep -Fq 'versionNameSuffix = "-rc22"' app/build.gradle.kts
+          grep -Fq 'applicationIdSuffix = ".glass"' app/build.gradle.kts
+          grep -Fq 'isDebuggable = false' app/build.gradle.kts
+          test -f app/src/test/java/com/navtasks/app/NavProfileIndexRecoveryTest.kt
+          test -f app/src/test/java/com/navtasks/app/NavStableFeedNetworkTest.kt
+          grep -Fq 'NavStableFeedNetwork.read()' app/src/main/java/com/navtasks/app/NavUpdateChecker.kt
+          grep -Fq 'navChooseProfileIndex(' app/src/main/java/com/navtasks/app/ProfileStore.kt
+          grep -Fq 'NavUpdateReceipt.recordPackageReplaced(context)' app/src/main/java/com/navtasks/app/NavNotifications.kt
+          grep -Fq 'NavUpdateInstalledNotice(' app/src/main/java/com/navtasks/app/MainActivity.kt
+          test -f app/src/test/java/com/navtasks/app/NavUpdateInstalledReceiptTest.kt
+          grep -Fq 'navHandoverSearchTopScrollDelta(' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'nextExpandedHandoverEntry(' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'entryExpanded' app/src/main/java/com/navtasks/app/HandoverUi.kt
+      - name: Restore ONLY existing signed NavTasks key
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          chmod 600 "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: All JVM regressions plus signed APK assembly (NO PUBLISH)
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NAVTASKS_BETA_SIGN_PASSWORD"
+          gradle :app:testDebugUnitTest :app:assembleRelease --no-daemon
+      - name: Verify exact installed identity, signer, and nondebuggable APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/release/app-release.apk
+          test -s "$APK"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          SIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          "$AAPT" dump badging "$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='190' versionName='0.4.168-rc22'"
+          "$AAPT" dump badging "$APK" | grep -F "sdkVersion:'31'"
+          ! "$AAPT" dump badging "$APK" | grep -Fq 'application-debuggable'
+          "$SIGNER" verify --min-sdk-version 31 "$APK"
+          ACTUAL="$("$SIGNER" verify --print-certs "$APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}')"
+          EXPECTED=0cb8a3c691e3fb2198682dff8c226aec710e77c7b8fded7d260a92f359a49c54
+          test "$ACTUAL" = "$EXPECTED"
+      - name: Verify public TEST only and STABLE remains OFF (read-only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=https://raw.githubusercontent.com/sergbokarev95-arch/NavTasks-Updates/main/channels
+          curl -fLSs --retry 2 --max-time 30 "$BASE/stable.json" > stable.json
+          curl -fLSs --retry 2 --max-time 30 "$BASE/test.json" > test.json
+          python3 - <<'PY'
+          import json
+          stable=json.load(open('stable.json'))
+          assert stable=={'schemaVersion':1,'channel':'stable','available':False}, stable
+          test=json.load(open('test.json'))
+          assert test['channel']=='test' and test['available'] is True
+          assert test['versionCode']>=184 and test['minSupportedVersionCode']>=182
+          assert test['applicationId']=='com.navtasks.app.glass'
+          assert test['apk']['signerSha256']=='0cb8a3c691e3fb2198682dff8c226aec710e77c7b8fded7d260a92f359a49c54'
+          print('Signed RC22/code190 Handover nested UI and top-position search gates passed; stable channel OFF. NO release and NO feed mutation.')
+          PY
+
+      - name: Securely erase temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Publish exact verified signed APK to PRIVATE DRAFT only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=v0.4.168-rc22-handover-private
+          APK=app/build/outputs/apk/release/app-release.apk
+          SOURCE="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature/navtasks-pre1-handover-0.4.168-rc22" --jq '.commit.sha')"
+          if [ "$SOURCE" != "$GITHUB_SHA" ]; then
+            echo "::error::Stale CI run cannot publish"
+            exit 1
+          fi
+          mkdir -p dist
+          cp "$APK" dist/NavTasks_0.4.168_RC22_Handover_Private.apk
+          (cd dist && sha256sum NavTasks_0.4.168_RC22_Handover_Private.apk > NavTasks_0.4.168_RC22_Handover_Private.apk.sha256)
+          (cd dist && sha256sum -c NavTasks_0.4.168_RC22_Handover_Private.apk.sha256)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Private draft already exists; not overwriting"
+          else
+            gh release create "$TAG" \
+              dist/NavTasks_0.4.168_RC22_Handover_Private.apk \
+              dist/NavTasks_0.4.168_RC22_Handover_Private.apk.sha256 \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "NavTasks 0.4.168 RC22 — private Handover accordion and search" \
+              --notes "PRIVATE signed nondebuggable code190 from HONOR-installed RC20/code188. Handover nested entry accordion and search hit top-alignment only. No stored Handover/profile/task/AMOS/Services/Glass changes. NOT device accepted; do not install before higher-code signed recovery code191. Stable channel OFF." \
+              --draft --prerelease
+          fi
+ changed.txt; then
             echo "::error::Unapproved business, UI, manifest, or updater changes"
             exit 1
           fi
