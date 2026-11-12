@@ -101,3 +101,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-13 — Staged shared offline PDF/DOCX original-file store+metadata models with SHA256 dedup and input safety tests; no import UI yet. Isolated AndroidX PDF beta01 build CI #43251678681 SUCCESS after compileSdkExtension19; not merged. Main Reference shared-store CI #43252927005 pending and no APK published.
 
 - 2026-11-13 — Added streaming .navlib original PDF/DOCX shared-library backup and staged safe restore, hashes, size/entry whitelist, and roundtrip/negative archive tests; no UI yet. Last CI #43253904642 pending; earlier equipment-only archive #43250406239 PASS.
+
+- 2026-11-13 — Hardened deduped manual metadata consistency and existing-original real SHA verification; added pure regression. Latest no-publish full CI #43254879474 pending; PDF compatibility experiment #43251678681 SUCCESS.
