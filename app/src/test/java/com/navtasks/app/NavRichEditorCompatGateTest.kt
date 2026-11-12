@@ -23,11 +23,19 @@ class NavRichEditorCompatGateTest {
             val first = RichTextState()
             first.setHtml(html)
             val before = first.annotatedString.text
+            val beforeStyles = first.annotatedString.spanStyles
             val stored = first.toHtml()
             val reloaded = RichTextState()
             reloaded.setHtml(stored)
             assertEquals("Round-trip changed text for $html", before, reloaded.annotatedString.text)
             assertTrue("Unexpectedly empty HTML after round trip", stored.isNotBlank())
+            if (html.contains("<strong") || html.contains("<em") ||
+                html.contains("<u>") || html.contains("<span")) {
+                assertTrue("Formatted input lost all spans before saving: $html",
+                    beforeStyles.isNotEmpty())
+                assertEquals("Formatting changed on HTML round-trip: $html",
+                    beforeStyles, reloaded.annotatedString.spanStyles)
+            }
         }
     }
 
