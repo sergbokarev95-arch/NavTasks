@@ -118,6 +118,34 @@ class ReferenceManualArchiveTest {
         } finally { root.deleteRecursively() }
     }
 
+    @Test fun abandonedStagingCleanupKeepsRecentAndUnrelatedFiles() {
+        val root = java.nio.file.Files.createTempDirectory("navref-stage-cleanup-").toFile()
+        try {
+            val now = 1_900_000_000_000L
+            val old = File(root, "reference-manuals-old.staging").apply {
+                mkdirs()
+                File(this, "temporary.pdf").writeText("orphaned")
+                setLastModified(now - 8L * 24 * 60 * 60 * 1000)
+            }
+            val active = File(root, "reference-manuals-active.staging").apply {
+                mkdirs()
+                File(this, "temporary.pdf").writeText("keep")
+                setLastModified(now - 60_000)
+            }
+            val unrelated = File(root, "important-user-data").apply {
+                mkdirs()
+                setLastModified(now - 12L * 24 * 60 * 60 * 1000)
+            }
+            assertEquals(1, ReferenceManualArchive.cleanupAbandonedStages(root, now))
+            assertFalse(old.exists())
+            assertTrue(active.isDirectory)
+            assertTrue(File(active, "temporary.pdf").exists())
+            assertTrue(unrelated.isDirectory)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
     @Test fun wrongZipEntryOrderOrUnexpectedFilesFailClosed() {
         val root = java.nio.file.Files.createTempDirectory("navref-order-").toFile()
         try {
