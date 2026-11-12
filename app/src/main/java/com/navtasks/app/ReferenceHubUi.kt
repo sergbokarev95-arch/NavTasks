@@ -105,8 +105,8 @@ internal fun ReferenceHubScreen(
                 p = p,
                 title = localized("Материалы для работы", "Working references", lang),
                 description = localized(
-                    "Справочник будет постепенно наполняться после релиза 1.0.0.",
-                    "Reference materials will be added after version 1.0.0.",
+                    "SIRE 2.0 и VIQ7 пока ожидают материалы. Оборудование можно добавлять самостоятельно.",
+                    "SIRE 2.0 and VIQ7 await manuals. You can add your own equipment.",
                     lang,
                 ),
                 modifier = Modifier.weight(1f),
@@ -200,7 +200,7 @@ internal fun ReferenceHubScreen(
     }
 }
 
-/** Still non-clickable; real reference content is deferred until after v1.0.0. */
+/** Existing SIRE/VIQ placeholders remain read-only; Equipment tile opens its own catalog. */
 @Composable
 private fun ReferencePlaceholderTile(
     p: NavPalette,
