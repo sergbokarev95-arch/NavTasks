@@ -30,7 +30,7 @@ jobs:
           set -euo pipefail
           BASE=3bfa259379cfb393a6e4e35703d7e15e1f088989
           git diff --name-only "$BASE" "$GITHUB_SHA" > changes.txt
-          if grep -Ev '^(app/build\.gradle\.kts|app/src/test/java/com/navtasks/app/NavTestFeedNetworkPolicyTest\.kt|\.github/workflows/navtasks-recovery-0\.4\.167\.yml)$' changes.txt; then
+          if grep -Ev '^(app/build\.gradle\.kts|app/src/test/java/com/navtasks/app/NavTestFeedNetworkPolicyTest\.kt|\.github/workflows/navtasks-recovery-0\.4\.169\.yml)$' changes.txt; then
             echo "::error::Application code changed in recovery"
             exit 1
           fi
