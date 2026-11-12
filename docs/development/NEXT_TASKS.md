@@ -794,3 +794,11 @@
 - [x] Isolated index-protection patch CI43166894862 SUCCESS: strict validated profile index, independent last-good copy, no default profile substitution, no deletion of user data; no publish.
 - [ ] Integrate independent stable weak-network patch CI43142231890 with this safety patch in higher-code signed release candidate (code>=186, since recovery code185 exists), run full tests and verify signer, then test in-place without uninstall.
 - [ ] Decide Android `allowBackup`/cloud privacy policy and validate export/restoration, old-version profile migration on separate sample, Samsung updates/widgets/notifications, final full day/night HIG audit; publish 1.0.0 stable only after explicit approval.
+
+## NEXT — 2026-11-12 signed integrated RC18 is ready for HONOR validation
+- [x] Full TEST3 code184 data accepted on HONOR, protected accepted source and known signing cert.
+- [x] RC18/code186 integrates only stable feed weak-net hardening and profile-index safety, all current TEST3 unit tests restored. Signed CI43169515052 SUCCESS and PRIVATE APK draft `untagged-8410913265242890d745`. Public stable remains off; test feed TEST3 code184.
+- [x] PRIVATE exact accepted TEST3-source fallback RC19/code187 signed CI43169194383 SUCCESS, draft `untagged-78d81ebbde4f0d1fba02`.
+- [ ] User FULL export, then install RC18 over existing TEST3 **IN PLACE** (no uninstall). Verify profiles/task history/AMOS/Services/Handover and dock day/night. Manual stable check with internet and offline, no erroneous startup prompt while stable unavailable. Check reminders/widgets/click flows.
+- [ ] If RC18 regression, in-place reinstall signed code187 RC19 exact accepted source after backup; future code >=188 if used. DO NOT install fallback routinely.
+- [ ] Android OS backup privacy policy, historical skip-version migration on independent test profile, Samsung, tester-only UI gating in production, system PackageInstaller limitations/post-update acknowledgment and complete UI/UX audit before separate approved production 1.0.0 signed release.
