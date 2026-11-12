@@ -214,3 +214,11 @@
 - [ ] Confirm feature-source CI #43252927005; fix failures if any.
 - [ ] Implement bounded-streaming whole-manual-library ZIP export+restore including original file bytes, hashes, and folder structure; check multi-GB/zip bomb limits and corrupt package rollback. Maintain equipment full catalog separately until unified Reference backup is designed.
 - [ ] Add SAF import and library screens, PDF/Word offline reading and document search; device QA on HONOR and Samsung; no changes to tasks/business logic.
+
+## NEXT — 2026-11-13 original-document backup gate
+- [x] Implement bounded streaming .navlib archive of shared manual originals (PDF/DOCX) and metadata, SHA integrity and ZIP-safe staging.
+- [x] Restore hashed binary blobs then commit shared catalog atomically, merge remapped folder/document IDs rather than replace; preserve existing data on corrupt archive.
+- [x] Add pure JVM roundtrip/staging security tests for exact PDF/DOCX bytes, nested folders, missing/corrupt/unknown files.
+- [ ] Confirm signed CI #43253904642 SUCCESS, repair if failures.
+- [ ] Add user-facing SAF manual import and .navlib backup UI on IO dispatcher, full PDF reader with document search, basic local DOCX viewer, comprehensive Reference search and custom excerpts.
+- [ ] After complete in-app full Reference backup, test replacing phone and retaining manuals + equipment catalogs; export formats are intentionally separate until unified export is accepted. No 1.0.0 release without on-device QA.
