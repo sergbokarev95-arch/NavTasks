@@ -235,3 +235,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 ## 2026-11-13 — Shared manuals staging, no user-visible import yet
 - `ReferenceManualModels.kt` / `ReferenceManualStore.kt` create independent shared PDF/DOCX metadata + safe original-file storage, not wired into ReferenceHub UI. No binary-inclusive archive or reader yet. Store physically under app files not cache; existing equipment profile JSON unchanged.
 - PDF beta01 dependency CI isolated #43251678681 SUCCESS after compileSdkExtension19. Work branch dependencies remain unchanged. Main CI #43252927005 pending; release channel off. HONOR still signed RC20/code188.
+
+## 2026-11-13 — Complete original-manual transport backend staged (CI pending)
+- Reference shared PDF/DOCX metadata, original-file streaming copy/sha validation, and `ReferenceManualArchive` .navlib byte-inclusive export with staged verification/restoration have been added. Manual reader/SAF UI still NOT wired; no user manuals were imported.
+- Archive scope: shared original manual files and nested folders; per-vessel Equipment catalog backup is separate .navref. Neither ever includes Tasks, AMOS, Services or notification state. Last manual transport source CI #43253904642 pending; released RC20 untouched.
