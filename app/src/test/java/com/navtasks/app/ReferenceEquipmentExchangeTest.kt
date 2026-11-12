@@ -143,4 +143,30 @@ class ReferenceEquipmentExchangeTest {
             ReferenceEquipmentExchange.decode(archiveWith("manifest.json", enormous))
         }.isFailure)
     }
+    @Test fun storedCatalogRoundTripsWithoutAnyTaskData() {
+        val source = ReferenceEquipmentCatalog(
+            folders = listOf(
+                ReferenceFolder(id = "safety", title = "Safety"),
+                ReferenceFolder(id = "detection", title = "Detection", parentId = "safety"),
+            ),
+            equipment = listOf(sample().copy(folderId = "detection")),
+        )
+        val encoded = source.toJson().toString()
+        assertFalse(encoded.contains("taskId"))
+        assertFalse(encoded.contains("workOrderId"))
+        assertFalse(encoded.contains("reminder"))
+        assertEquals(source, ReferenceEquipmentCatalog.fromJson(JSONObject(encoded)))
+    }
+
+    @Test fun invalidCatalogCannotOverwriteMissingFolderOrDuplicateEquipment() {
+        val missingFolder = ReferenceEquipmentCatalog(equipment = listOf(sample()))
+        assertTrue(runCatching { missingFolder.validate() }.isFailure)
+        val duplicate = ReferenceEquipmentCatalog(
+            folders = listOf(ReferenceFolder(id = "ship-safety", title = "Safety")),
+            equipment = listOf(sample(), sample()),
+        )
+        assertTrue(runCatching { duplicate.validate() }.isFailure)
+    }
+
+
 }
