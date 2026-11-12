@@ -37,7 +37,7 @@ jobs:
           set -euo pipefail
           BASE=3bfa259379cfb393a6e4e35703d7e15e1f088989
           git diff --name-only "$BASE" "$GITHUB_SHA" > changed.txt
-          if grep -Ev '^(app/build\.gradle\.kts|app/src/main/java/com/navtasks/app/(HandoverUi|NavSearchMarkers)\.kt|app/src/test/java/com/navtasks/app/(HandoverAccordionTest|NavPersonalAndSearchViewportFixTest)\.kt|docs/development/HANDOVER_RC22\.md|\.github/workflows/navtasks-pre1-handover-rc22-ci\.yml)$' changed.txt; then
+          if grep -Ev '^(app/build\.gradle\.kts|app/src/main/java/com/navtasks/app/(HandoverUi|NavSearchMarkers)\.kt|app/src/test/java/com/navtasks/app/(HandoverAccordionTest|NavPersonalAndSearchViewportFixTest|NavTestFeedNetworkPolicyTest)\.kt|docs/development/HANDOVER_RC22\.md|\.github/workflows/navtasks-pre1-handover-rc22-ci\.yml)$' changed.txt; then
             echo "::error::Unapproved business, UI, manifest, or updater changes"
             exit 1
           fi
@@ -55,7 +55,7 @@ jobs:
           test -f app/src/test/java/com/navtasks/app/NavUpdateInstalledReceiptTest.kt
           grep -Fq 'navHandoverSearchTopScrollDelta(' app/src/main/java/com/navtasks/app/HandoverUi.kt
           grep -Fq 'nextExpandedHandoverEntry(' app/src/main/java/com/navtasks/app/HandoverUi.kt
-          grep -Fq 'entryExpanded' app/src/main/java/com/navtasks/app/HandoverUi.kt
+          grep -Fq 'expandedEntry' app/src/main/java/com/navtasks/app/HandoverUi.kt
           echo 'RC22 source allowlist and protected profile/update invariants OK'
       - name: Restore ONLY existing signed NavTasks key
         env:
