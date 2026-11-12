@@ -64,7 +64,7 @@ A chief officer requests a user-managed hierarchy of equipment. Example: Equipme
 - Equipment card shows its own descriptions of monthly, quarterly or annual maintenance/check procedures and their cited manuals, but NEVER lists actual scheduled tasks and NEVER provides navigation into Tasks/AMOS/Services/Today. Users open and search the Reference manually when needed.
 - Procedure/maintenance instruction is entirely standalone reference content: title; operation type (maintenance/check/calibration/etc), optional recommended interval (month / quarter / year / custom) as descriptive text ONLY; supporting source excerpt explaining purpose or steps; source title and optionally document/page/edition; structured steps, safety cautions and comments. The interval is not a deadline or schedule.
 - Creating, editing, viewing, importing or exporting Reference equipment MUST NOT create, link, update or modify any tasks, recurring jobs, AMOS requests, Services entries, reminders, schedules or due dates. No 'Create task', 'Link task', 'Open in Today/Works', or 'Instruction' shortcut from Tasks to Reference, now or as an implicit later feature.
-- Optional inventory fields: equipment name, maker, model, serial number, location, identifier/tag, vessel remarks. Avoid requiring sensitive serial data for sharing. Show linked planned jobs, without standalone checkboxes.
+- Optional inventory fields: equipment name, maker, model, serial number, location, identifier/tag, vessel remarks. Avoid requiring sensitive serial data for sharing. Show only standalone informational procedures with source excerpts; NEVER show or link scheduled jobs and NEVER provide checkboxes.
 
 ### Proposed minimal hierarchy and UI
 Root: SIRE 2.0 | VIQ7 | Equipment | My materials | custom folders.
