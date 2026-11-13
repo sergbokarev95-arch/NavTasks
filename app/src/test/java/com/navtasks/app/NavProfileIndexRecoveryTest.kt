@@ -13,6 +13,31 @@ class NavProfileIndexRecoveryTest {
     private fun index(vararg items: NavProfile): String =
         JSONArray().apply { items.forEach { put(it.toJson()) } }.toString()
 
+    @Test fun twoDifferentShipsWithSharedDefaultIdMustNeverReplaceEachOther() {
+        val local = listOf(
+            NavProfile("ship-default", "Yuri Senkevich", NavProfileKind.VESSEL),
+            NavProfile("personal", "Личное", NavProfileKind.PERSONAL),
+        )
+        val foreign = NavProfile("ship-default", "2/O Kapitan Kostichev",
+            NavProfileKind.VESSEL)
+        assertNull(matchingProfileByName(local, foreign))
+        assertEquals("Yuri Senkevich", local.first().title)
+    }
+
+    @Test fun onlySameTrimmedCaseInsensitiveNameAndKindMayReplace() {
+        val local = listOf(
+            NavProfile("ship-default", "2/O Kapitan Kostichev", NavProfileKind.VESSEL),
+            NavProfile("personal", "Личное", NavProfileKind.PERSONAL),
+        )
+        val foreign = NavProfile("other-id", " 2/o kapitan kostichev ",
+            NavProfileKind.VESSEL)
+        assertEquals(local.first(), matchingProfileByName(local, foreign))
+        assertNull(matchingProfileByName(local, NavProfile("personal",
+            "Other ship", NavProfileKind.VESSEL)))
+        assertNull(matchingProfileByName(local, NavProfile("ship-default",
+            "2/O Kapitan Kostichev", NavProfileKind.PERSONAL)))
+    }
+
     @Test fun verifiedPrimaryAlwaysWinsOverOlderBackup() {
         val current = index(profile("ship-1"), profile("ship-2"),
             profile("personal", NavProfileKind.PERSONAL))
