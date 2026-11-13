@@ -139,30 +139,28 @@ object NavWidgetUpdater {
         val dark = darkWidget(context, settings)
         val language = settings.language
         val detail = widgetWideDetail(stats, pendingTitles, language)
-        // API 31+ can carry BOTH night/day colors in RemoteViews so the host
-        // chooses them when reapplying the widget after a system UI mode switch.
-        // Explicit NavTasks theme overrides intentionally use one fixed color.
+        // QA7 defect: dynamic day/night text repainted in the host while the
+        // cached root background stayed dark. Apply one explicit palette to
+        // both text and layout in a FULL RemoteViews update. No intermediate
+        // unreadable dark-on-dark state when an OEM delays a widget refresh.
         fun RemoteViews.color(viewId: Int, light: Int, darkColor: Int) {
-            if (settings.theme == UiTheme.SYSTEM) {
-                setColorInt(viewId, "setTextColor", light, darkColor)
-            } else {
-                // Apply just the selected palette when the app theme is pinned.
-                setTextColor(viewId, if (dark) darkColor else light)
-            }
+            setTextColor(viewId, if (dark) darkColor else light)
         }
 
         for (wide in listOf(false, true)) {
             val component = ComponentName(context,
                 if (wide) NavWideWidgetProvider::class.java else NavCompactWidgetProvider::class.java)
-            val layoutId = if (wide) R.layout.navtasks_widget_wide else R.layout.navtasks_widget_compact
+            // Distinct layout RESOURCE IDs force a full reinflation on a theme
+            // transition. OEM launchers may cache the background drawable of
+            // an existing root view even after setBackgroundResource() calls.
+            val layoutId = when {
+                wide && dark -> R.layout.navtasks_widget_wide_dark
+                wide -> R.layout.navtasks_widget_wide_light
+                dark -> R.layout.navtasks_widget_compact_dark
+                else -> R.layout.navtasks_widget_compact_light
+            }
             for (id in manager.getAppWidgetIds(component)) {
                 val view = RemoteViews(context.packageName, layoutId)
-                // Pick an explicit background for each refresh. On some OEM
-                // launchers the generic drawable-night resource remains cached
-                // when system theme changes and widget inflation is reused.
-                view.setInt(R.id.nav_widget_root, "setBackgroundResource",
-                    if (dark) R.drawable.navtasks_widget_bg_dark
-                    else R.drawable.navtasks_widget_bg_light)
                 view.setTextViewText(R.id.nav_widget_title,
                     localized("Сегодня", "Today", language))
                 view.setTextViewText(R.id.nav_widget_date, widgetHeaderDate(today, language))
@@ -180,9 +178,6 @@ object NavWidgetUpdater {
                 view.setTextViewText(R.id.nav_widget_secondary, localized(
                     "Пропущено: ${stats.missed}", "Missed: ${stats.missed}", language))
                 view.color(R.id.nav_widget_secondary, 0xFFBD4238.toInt(), 0xFFFF9C96.toInt())
-                view.setInt(R.id.nav_widget_secondary, "setBackgroundResource",
-                    if (dark) R.drawable.navtasks_widget_missed_dark
-                    else R.drawable.navtasks_widget_missed_light)
                 view.setViewVisibility(R.id.nav_widget_secondary,
                     if (widgetMissedVisible(stats.missed)) View.VISIBLE else View.GONE)
                 view.setOnClickPendingIntent(R.id.nav_widget_root,
