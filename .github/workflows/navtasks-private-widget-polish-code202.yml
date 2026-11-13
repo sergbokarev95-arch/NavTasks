@@ -64,7 +64,7 @@ jobs:
         run: |
           set -euo pipefail
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/NavTasks-0.4.177-qa7-code202.apk"
-          gh release create "navtasks-private-continuous-pdf-qa6-code200" \
+          gh release create "navtasks-private-qa7-widget-polish-code202" \
             "$RUNNER_TEMP/NavTasks-0.4.177-qa7-code202.apk" \
             --repo "$GITHUB_REPOSITORY" \
             --draft --latest=false \
