@@ -453,3 +453,11 @@
 - [ ] HONOR ↔ Samsung: 2 differently named vessel profiles with shared default ID (must ADD, not replace), same-name confirmed replace, personal unaffected; service and AMOS request roundtrip; equipment .navref with real PDF/DOCX original; Handover DOCX/PDF opens on Android, iPhone/PC with Cyrillic. Test offline, preserve source backups.
 - [ ] Final independent code/security/regression audit and user sign-off before 1.0.0. main and public stable channel stay unchanged until approval.
 - [ ] AFTER 1.0.0 only: opt-in curated shared seafarer reference catalog with downloadable content, Handover photo attachments.
+
+### QA15 PRIVATE CI PASS — next HONOR & Samsung signoff
+- [x] Signed QA15/code218 CI #43472806069 SUCCESS (original key/package, all JVM tests and release); SHA256 `2f974f9f5680820467495ecd377d99d47d3112c0140bc36b7115712e8dc2521a`, draft `untagged-8910b70a567452e8a658`. First CI failed restricted Compose scope, fixed; only successful artifact is distributable.
+- [x] QA14 exact-source recovery/code219 CI #43472078535 SUCCESS, app logic untouched; SHA256 `f772bc175f8d0dc2268de8a3639cb41360439287b30b30f3f78db868cb19a471`, draft `untagged-fb68cac5e5480e56d2e4`.
+- [x] Main untouched, public stable feed `available:false`.
+- [ ] HONOR FULL profile backup and separate .navlib; download both verified APKs; install ONLY code218 without uninstall/clear. Pinch/scroll PDF multiple pages, paged mode with search, swipe one finger and landscape, compare original old behavior.
+- [ ] Samsung ↔ HONOR roundtrip: 2 different-named vessel profiles same `ship-default` ID; same-name confirmed replacement only; preserve personal; selected AMOS/Service requests; equipment card with embedded PDF/DOCX opens on recipient; Handover DOCX/PDF opens on Android/Windows/iOS (Cyrillic).
+- [ ] User signs off, then independent full audit and signed 1.0.0 candidate (versionCode >219 if any rollback installed); stable metadata publish only after explicit approval.
