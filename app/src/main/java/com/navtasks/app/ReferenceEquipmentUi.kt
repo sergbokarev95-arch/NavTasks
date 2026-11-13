@@ -3,6 +3,7 @@ package com.navtasks.app
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +20,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import android.provider.OpenableColumns
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
@@ -33,6 +40,8 @@ internal fun ReferenceEquipmentScreen(
     initialQuery: String = "",
 ) {
     val context = LocalContext.current
+    val manualStore = remember(context) { ReferenceManualStore(context) }
+    val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     var folderId by rememberSaveable { mutableStateOf<String?>(null) }
     var equipmentId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -64,6 +73,10 @@ internal fun ReferenceEquipmentScreen(
     var exportingId by remember { mutableStateOf<String?>(null) }
     var feedback by remember { mutableStateOf<String?>(null) }
     var failure by remember { mutableStateOf(false) }
+    var attaching by remember { mutableStateOf(false) }
+    var attachmentOwnerId by remember { mutableStateOf<String?>(null) }
+    var attachmentProcedureId by remember { mutableStateOf<String?>(null) }
+    var attachmentPreview by remember { mutableStateOf<ReferenceManualDocument?>(null) }
 
     fun navigateBack() {
         when {
@@ -92,6 +105,74 @@ internal fun ReferenceEquipmentScreen(
                 feedback = null
             }
             saved
+        }
+    }
+
+    val attachDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        val ownerId = attachmentOwnerId
+        val procId = attachmentProcedureId
+        if (uri != null && ownerId != null && procId != null && !attaching) {
+            scope.launch {
+                attaching = true
+                val importedFile = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val filename = context.contentResolver.query(
+                            uri, null, null, null, null,
+                        )?.use { cursor ->
+                            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                            if (cursor.moveToFirst() && index >= 0)
+                                cursor.getString(index) else null
+                        } ?: throw IOException("Cannot read document name")
+                        val safeFilename = filename.substringAfterLast('/')
+                            .substringAfterLast('\\').trim()
+                        require(safeFilename.isNotBlank() && safeFilename.length <= 240)
+                        val mime = when {
+                            safeFilename.endsWith(".pdf", ignoreCase = true) ->
+                                ReferenceManualMime.PDF
+                            safeFilename.endsWith(".docx", ignoreCase = true) ->
+                                ReferenceManualMime.DOCX
+                            else -> throw IllegalArgumentException("Only PDF/DOCX can be attached")
+                        }
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            manualStore.importOriginal(
+                                input, safeFilename.substringBeforeLast('.'),
+                                safeFilename, mime, NavReferenceSections.PERSONAL,
+                            )
+                        } ?: throw IOException("Cannot open selected document")
+                    }
+                }
+                importedFile.onSuccess { doc ->
+                    val currentOwner = catalog.equipment.firstOrNull { it.id == ownerId }
+                    val currentProcedure = currentOwner?.procedures?.firstOrNull {
+                        it.id == procId
+                    }
+                    if (currentOwner != null && currentProcedure != null &&
+                        submit(referenceSaveEquipment(catalog,
+                            referenceSaveProcedure(currentOwner, currentProcedure.copy(
+                                attachmentSha256 = doc.sha256,
+                                attachmentMimeType = doc.mimeType,
+                                attachmentFilename = doc.originalFilename,
+                            ))))) {
+                        failure = false
+                        feedback = localized(
+                            "Документ прикреплён. Оригинал сохранён в «Моих материалах».",
+                            "Document attached. Original saved in My Materials.", lang)
+                    } else if (currentProcedure == null) {
+                        failure = true
+                        feedback = localized("Процедура больше не существует.",
+                            "Procedure no longer exists.", lang)
+                    }
+                }.onFailure {
+                    failure = true
+                    feedback = it.localizedMessage ?: localized("Не удалось прикрепить файл.",
+                        "Could not attach file.", lang)
+                }
+                attaching = false
+                attachmentOwnerId = null
+                attachmentProcedureId = null
+            }
         }
     }
 
@@ -219,8 +300,39 @@ internal fun ReferenceEquipmentScreen(
             procedure != null -> {
                 ReferenceProcedureReader(
                     procedure, p, lang,
+                    attaching = attaching,
                     onEdit = { procedureEditor = procedure },
                     onDelete = { deleteTarget = "procedure" to procedure.id },
+                    onAttach = {
+                        if (!attaching) {
+                            attachmentOwnerId = equipment.id
+                            attachmentProcedureId = procedure.id
+                            attachDocumentLauncher.launch(arrayOf(
+                                ReferenceManualMime.PDF, ReferenceManualMime.DOCX))
+                        }
+                    },
+                    onOpenAttachment = {
+                        val result = runCatching {
+                            manualStore.read().documents.firstOrNull { manual ->
+                                manual.sha256 == procedure.attachmentSha256 &&
+                                    manual.mimeType == procedure.attachmentMimeType
+                            } ?: throw IOException("Manual original is missing. Restore .navlib backup.")
+                        }
+                        result.onSuccess { attachmentPreview = it; failure = false; feedback = null }
+                            .onFailure { failure = true; feedback = it.localizedMessage }
+                    },
+                    onDetach = {
+                        val owner = equipment
+                        if (submit(referenceSaveEquipment(catalog,
+                                referenceSaveProcedure(owner, procedure.copy(
+                                    attachmentSha256 = null,
+                                    attachmentMimeType = null,
+                                    attachmentFilename = "",
+                                ))))) {
+                            feedback = localized("Связь с документом убрана. Сам файл сохранён.",
+                                "Attachment link removed; original file retained.", lang)
+                        }
+                    },
                 )
             }
             equipment != null -> {
@@ -346,6 +458,26 @@ internal fun ReferenceEquipmentScreen(
                 }
             })
     }
+    attachmentPreview?.let { manual ->
+        Dialog(
+            onDismissRequest = { attachmentPreview = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false,
+                dismissOnClickOutside = false, decorFitsSystemWindows = false),
+        ) {
+            Column(Modifier.fillMaxSize().background(p.background).safeDrawingPadding()) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    NavGlassCircleButton(p, "back") { attachmentPreview = null }
+                    Spacer(Modifier.width(12.dp))
+                    Text(manual.originalFilename, color = p.text,
+                        fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f))
+                }
+                ReferenceManualReader(manual, manualStore, p, lang)
+            }
+        }
+    }
+
     if (newProcedure || procedureEditor != null) {
         ReferenceProcedureEditor(procedureEditor, p, lang,
             onDismiss = { newProcedure = false; procedureEditor = null },
@@ -543,7 +675,9 @@ private fun ReferenceEquipmentDetails(
 @Composable
 private fun ReferenceProcedureReader(
     procedure: ReferenceProcedure, p: NavPalette, lang: UiLanguage,
+    attaching: Boolean,
     onEdit: () -> Unit, onDelete: () -> Unit,
+    onAttach: () -> Unit, onOpenAttachment: () -> Unit, onDetach: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
         .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 125.dp),
@@ -573,6 +707,37 @@ private fun ReferenceProcedureReader(
             Text(localized("Порядок выполнения / примечания", "Steps / notes", lang),
                 color = p.blueText, fontSize = 13.sp)
             Text(procedure.instructions, color = p.text, fontSize = 14.sp, lineHeight = 22.sp)
+        }
+        NavPanel(p) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NavGlassGlyph("paperclip", p.blueText, Modifier.size(22.dp))
+                Text(localized("Прикреплённый документ", "Attached document", lang),
+                    color = p.blueText, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            }
+            if (procedure.attachmentSha256 == null) {
+                Text(localized(
+                    "PDF или Word будет храниться офлайн вместе с библиотекой мануалов.",
+                    "PDF or Word will be saved offline in the shared manual library.", lang),
+                    color = p.muted, fontSize = 12.sp)
+                TextButton(enabled = !attaching, onClick = onAttach) {
+                    Text(localized("Прикрепить файл", "Attach file", lang),
+                        color = p.blueText)
+                }
+            } else {
+                Text(procedure.attachmentFilename, color = p.text, fontSize = 14.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(onClick = onOpenAttachment) {
+                        Text(localized("Открыть", "Open", lang), color = p.blueText)
+                    }
+                    TextButton(enabled = !attaching, onClick = onAttach) {
+                        Text(localized("Заменить", "Replace", lang), color = p.blueText)
+                    }
+                    TextButton(enabled = !attaching, onClick = onDetach) {
+                        Text(localized("Убрать", "Unlink", lang), color = p.systemRed)
+                    }
+                }
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             TextButton(onClick = onEdit) {
