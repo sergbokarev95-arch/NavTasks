@@ -25,8 +25,20 @@ import java.io.IOException
  * Devices without S SDK extension13 keep the existing Compose PdfRenderer
  * fallback in ReferenceManualLibraryUi.
  */
+/**
+ * CRASH CONTAINMENT (HONOR MagicOS 11 / Android 17 device QA3, 2026-11-13).
+ *
+ * Native AndroidX beta PDF Activity force-closed the app for both library and
+ * equipment attachments. Preserve the known-working in-app Compose PdfRenderer
+ * while gathering a real stacktrace and validating a safe continuous reader.
+ * Do not re-enable this gate based only on JVM CI; require a physical device test.
+ * Other Reference, task and profile data is not touched.
+ */
+internal const val NAV_NATIVE_PDF_QA_APPROVED = false
+
 internal fun navNativePdfSupported(): Boolean =
-    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+    NAV_NATIVE_PDF_QA_APPROVED &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
         SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 13
 
 internal class NavReferencePdfFragment : PdfViewerFragment() {
