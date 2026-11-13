@@ -390,3 +390,11 @@
 - [x] stable feed verified still `available:false`, main untouched.
 - [ ] HONOR: export full profile + .navlib, download both APKs, install ONLY QA8/code204 IN PLACE. Confirm existing 2×2 and 4×2 auto-swap background AND text from Day->Night->Day without readding, near-black night, 16sp wide % beside progress bar, all task/missed figures, clickable widget opens app, blue Open with PDF, profiles intact.
 - [ ] If broken, install exact-QA7 source recovery205 IN PLACE, never clear data. User must approve QA8 visually before text-selection and icon stage; then Samsung and signed 1.0.0 after QA.
+
+## NEXT — finish widget alpha and move to remaining release gates
+- [x] Change QA9 dark widget fill from almost opaque black `#F8000000` to subtle translucent `#E0000000` in isolated branch; preserve QA8 visual geometry, click targets, day/night design, all app logic.
+- [x] Confirm limits: Android requires dynamic CONFIGURATION_CHANGED registration (already implemented) and updatePeriodMillis minimum 30 minutes (already configured). No always-on poll; acceptable limitation if killed process prevents instantaneous change.
+- [x] Stage exact QA8-source private signed recovery code207 before QA9 install.
+- [ ] Verify signed QA9 code206 CI #43413317881 and recovery code207 CI #43413325570 pass, package/cert/version, private APK digest.
+- [ ] Device: export full profile and .navlib, download BOTH verified assets, install only QA9/code206 without uninstall, inspect black transparency and contrast; check actual theme switch and repaint after opening app, PDF/blue chooser still works. User can accept OEM delay without more widget iterations.
+- [ ] Then rich-text selection and new app icon in separate QA branch; second-device test; 1.0.0 full regression and explicit approval.
