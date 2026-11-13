@@ -93,6 +93,9 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
     var page by remember(file.path) { mutableIntStateOf(0) }
     var knownPageCount by remember(file.path) { mutableIntStateOf(0) }
     var zoom by remember(file.path) { mutableFloatStateOf(1f) }
+    // Pinch updates the displayed geometry immediately; raster pixels are
+    // regenerated only after the gesture ends, not dozens of times per second.
+    var rasterZoom by remember(file.path) { mutableFloatStateOf(1f) }
     var query by remember(file.path) { mutableStateOf("") }
     var matches by remember(file.path) { mutableStateOf<List<NavPdfMatch>>(emptyList()) }
     var selected by remember(file.path) { mutableIntStateOf(0) }
@@ -197,7 +200,7 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val fitWidth = maxWidth
             val fitPixels = with(density) { fitWidth.roundToPx() }
-            val zoomBucket = ceil(zoom * 2).toInt() / 2f
+            val zoomBucket = ceil(rasterZoom * 2).toInt() / 2f
             val loaded by produceState<Result<NavPdfRaster>?>(null,
                 file.path, page, zoomBucket, fitPixels) {
                 value = null
@@ -238,7 +241,7 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
                         vertical.scrollTo(0)
                         horizontal.scrollTo(0)
                     }
-                    LaunchedEffect(page, selected, matches, zoom, render.bitmap) {
+                    LaunchedEffect(page, selected, matches, render.pageIndex) {
                         val rectangle = matches.getOrNull(selected)
                             ?.takeIf { it.pageIndex == page }?.bounds?.firstOrNull()
                         if (rectangle != null) {
@@ -263,6 +266,9 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
                                         event.changes.forEach { it.consume() }
                                     }
                                 } while (event.changes.any { it.pressed })
+                                // One bounded off-UI-thread raster upgrade after
+                                // fingers lift. No bitmap churn during the pinch.
+                                rasterZoom = zoom
                             }
                         }
                         .verticalScroll(vertical)
