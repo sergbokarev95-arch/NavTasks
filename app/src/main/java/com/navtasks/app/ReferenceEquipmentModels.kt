@@ -123,9 +123,9 @@ internal data class ReferenceProcedure(
                 excerpt = value.getString("excerpt"),
                 source = ReferenceSource.fromJson(value.getJSONObject("source")),
                 instructions = value.optString("instructions"),
-                attachmentSha256 = if (value.isNull("attachmentSha256")) null
+                attachmentSha256 = if (!value.has("attachmentSha256") || value.isNull("attachmentSha256")) null
                     else value.getString("attachmentSha256"),
-                attachmentMimeType = if (value.isNull("attachmentMimeType")) null
+                attachmentMimeType = if (!value.has("attachmentMimeType") || value.isNull("attachmentMimeType")) null
                     else value.getString("attachmentMimeType"),
                 attachmentFilename = value.optString("attachmentFilename"),
             ).also { it.validate() }
