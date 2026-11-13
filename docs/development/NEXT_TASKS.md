@@ -318,3 +318,12 @@
 - [ ] Check recovery195 CI #43370110246 and QA3 CI #43370322277 FULL SUCCESS, confirm private draft binaries, package/cert, APK sizes and SHA256. If failures, investigate and patch.
 - [ ] Give user verified private APK194 AND higher-code recovery195 ONLY after both pass; instruct QA2 full profile backup and in-place install, never uninstall or clear data. Stable feed remains OFF.
 - [ ] Physical HONOR test: system day/night auto recolor existing widgets, 2x2/4x2 text, native continuous PDF scrolling/zoom/search and PDF equipment attachments, .navlib and .navref backup. Samsung test before 1.0.0.
+
+## 2026-11-13 — HIGH PRIORITY: QA3 PDF opening crashes on HONOR
+- [x] Isolate common fault entry point: both library and equipment open new `ReferencePdfActivity` (AndroidX beta), prior QA2 Compose reader worked. **No device stacktrace yet; don't claim exact cause**.
+- [x] Stage source fail-closed `NAV_NATIVE_PDF_QA_APPROVED=false` and JUnit routing regression. Preserve manual binaries, metadata, attachment links, tasks and settings.
+- [x] Fork private QA4 code196 from hotfix source and higher-code original RC20 recovery197; both remain private draft, stable feed off.
+- [ ] Confirm source CI #43373096595, QA4 #43373276093, recovery197 #43373284523 success; verify original cert/package/non-debuggable plus exact APK assets/digests. NEVER give unverified installer.
+- [ ] QA4 on HONOR: open existing PDF from My Materials / nested SMS folder / Radar check attachment; navigation, page/zoom/search, Back, light/dark and no crash. Preserve data. Previous viewer only one-page-at-a-time; continuous reader still unresolved.
+- [ ] Obtain actual AndroidRuntime logcat of QA3 native viewer crash (if available) before re-enabling beta. Use safe isolated continuous reader development, don't ship as a blind switch.
+- [ ] Address remaining widget details after PDF is stable: verify existing widgets day/night toggle on MagicOS without re-adding and typography/layout 2x2/4x2 across launcher dimensions. Test on Samsung. No user-facing stable 1.0.0 until approved.
