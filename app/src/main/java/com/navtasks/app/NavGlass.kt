@@ -529,6 +529,20 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
         fun pt(x: Float, y: Float) = Offset(x * s, y * s)
         val width = 2.15f * s
         when (kind) {
+            "paperclip" -> {
+                // Lightweight attachment symbol matching the existing 30-unit icons.
+                val clip = Path().apply {
+                    moveTo(11f*s, 13f*s)
+                    lineTo(11f*s, 21f*s)
+                    cubicTo(11f*s, 27f*s, 21f*s, 27f*s, 21f*s, 21f*s)
+                    lineTo(21f*s, 9f*s)
+                    cubicTo(21f*s, 2f*s, 8f*s, 2f*s, 8f*s, 10f*s)
+                    lineTo(8f*s, 21f*s)
+                    cubicTo(8f*s, 31f*s, 24f*s, 31f*s, 24f*s, 21f*s)
+                }
+                drawPath(clip, color, style = Stroke(width = width,
+                    cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
             "today" -> {
                 drawCircle(color, radius = 11f * s, center = pt(15f,15f), style = Stroke(width))
                 val check = Path().apply {
