@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF" android:fillAlpha="0.20"
-        android:pathData="M49.8,21.6 H75.7 Q85.5,21.6 85.5,31.4 V69.4 Q85.5,79.2 75.7,79.2 H50 Q40.8,79.2 40.8,69.4 V31.4 Q40.8,21.6 49.8,21.6 Z" />
-    <path android:fillColor="#FFFFFF" android:fillAlpha="0.35"
-        android:pathData="M42.4,29.5 H68.5 Q78.1,29.5 78.1,39.1 V76.6 Q78.1,86.2 68.5,86.2 H42.2 Q32.6,86.2 32.6,76.6 V39.1 Q32.6,29.5 42.4,29.5 Z" />
-    <path android:fillColor="#FFFFFF" android:fillAlpha="0.48"
-        android:strokeColor="#FFFFFF" android:strokeWidth="1.8"
-        android:pathData="M33.4,36.8 H65.4 Q75.3,36.8 75.3,46.7 V76.4 Q75.3,86.3 65.4,86.3 H33.3 Q23.4,86.3 23.4,76.4 V46.7 Q23.4,36.8 33.4,36.8 Z" />
-    <path android:fillColor="#FFFFFF" android:fillAlpha="0.20"
-        android:strokeColor="#FFFFFF" android:strokeWidth="2.4"
-        android:pathData="M63.3,61.8 C63.3,69.4 57.2,75.5 49.6,75.5 C42,75.5 35.9,69.4 35.9,61.8 C35.9,54.2 42,48.1 49.6,48.1 C57.2,48.1 63.3,54.2 63.3,61.8 Z" />
-    <path android:fillColor="@android:color/transparent"
-        android:strokeColor="#FFFFFF" android:strokeWidth="5.8"
-        android:strokeLineCap="round" android:strokeLineJoin="round"
-        android:pathData="M41.2,61.3 L47,67.2 L58.4,55" />
+<!-- Native Android thematic monochrome; HONOR Liquid Glass uses independent full-color transparent PNG. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+<path android:pathData="M49,25 C37,26 27,36 25,49 M59,25 C71,26 81,36 83,49 M25,59 C27,72 37,81 49,83 M59,83 C71,81 81,72 83,59" android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="1.8" android:strokeLineCap="round"/>
+<path android:pathData="M19,54 L30,50.9 L27.1,54 L30,57.1 Z" android:fillColor="#FFFFFF"/>
+<path android:pathData="M89,54 L78,50.9 L80.9,54 L78,57.1 Z" android:fillColor="#FFFFFF"/>
+<path android:pathData="M54,89 L50.6,78 L54,80.9 L57.4,78 Z" android:fillColor="#FFFFFF"/>
+<path android:pathData="M54,18 L50.4,31.8 L54,27.5 L57.6,31.8 Z" android:fillColor="#FFFFFF"/>
+<group android:scaleX="0.86" android:scaleY="0.86" android:pivotX="54" android:pivotY="54" android:translateY="3">
+<group android:rotation="6" android:pivotX="56" android:pivotY="56">
+<path android:pathData="M43,32.4 H70 Q74.5,32.4 74.5,37 V70 Q74.5,75 70,75 H43 Q38.5,75 38.5,70 V37 Q38.5,32.4 43,32.4 Z" android:fillColor="#FFFFFF" android:fillAlpha="0.45"/>
+</group>
+<group android:rotation="-7" android:pivotX="52" android:pivotY="55">
+<path android:pathData="M37,31.8 H66 Q71,31.8 71,36.8 V68.8 Q71,73.8 66,73.8 H37 Q32,73.8 32,68.8 V36.8 Q32,31.8 37,31.8 Z" android:fillColor="#FFFFFF" android:fillAlpha="0.82"/>
+<path android:pathData="M45,54.4 L51,60.4 L64,47.4" android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="2" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+</group>
+</group>
 </vector>
