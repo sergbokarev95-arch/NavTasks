@@ -74,6 +74,11 @@ internal data class ReferenceProcedure(
     val excerpt: String,
     val source: ReferenceSource,
     val instructions: String = "",
+    // A shared ORIGINAL manual stored by SHA-256; equipment remains vessel-scoped.
+    // Storing a content hash (rather than document ID) survives .navlib ID remapping.
+    val attachmentSha256: String? = null,
+    val attachmentMimeType: String? = null,
+    val attachmentFilename: String = "",
 ) {
     fun validate() {
         referenceSafeId(id)
@@ -81,6 +86,15 @@ internal data class ReferenceProcedure(
         require(intervalDescription.length <= 120)
         require(excerpt.isNotBlank() && excerpt.length <= 20000)
         require(instructions.length <= 20000)
+        require((attachmentSha256 == null) == (attachmentMimeType == null)) {
+            "Incomplete manual attachment reference"
+        }
+        if (attachmentSha256 != null) {
+            require(attachmentSha256.matches(Regex("[0-9a-f]{64}")))
+            require(attachmentMimeType in ReferenceManualMime.allowed)
+            require(attachmentFilename.isNotBlank() && attachmentFilename.length <= 240)
+            require('/' !in attachmentFilename && '\\' !in attachmentFilename)
+        } else require(attachmentFilename.isEmpty())
         source.validate()
     }
 
@@ -91,12 +105,16 @@ internal data class ReferenceProcedure(
             .put("intervalDescription", intervalDescription)
             .put("excerpt", excerpt).put("source", source.toJson())
             .put("instructions", instructions)
+            .put("attachmentSha256", attachmentSha256 ?: JSONObject.NULL)
+            .put("attachmentMimeType", attachmentMimeType ?: JSONObject.NULL)
+            .put("attachmentFilename", attachmentFilename)
     }
 
     companion object {
         fun fromJson(value: JSONObject): ReferenceProcedure {
             value.requireReferenceFields(setOf(
                 "id", "title", "intervalDescription", "excerpt", "source", "instructions",
+                "attachmentSha256", "attachmentMimeType", "attachmentFilename",
             ))
             return ReferenceProcedure(
                 id = value.getString("id"),
@@ -105,6 +123,11 @@ internal data class ReferenceProcedure(
                 excerpt = value.getString("excerpt"),
                 source = ReferenceSource.fromJson(value.getJSONObject("source")),
                 instructions = value.optString("instructions"),
+                attachmentSha256 = if (value.isNull("attachmentSha256")) null
+                    else value.getString("attachmentSha256"),
+                attachmentMimeType = if (value.isNull("attachmentMimeType")) null
+                    else value.getString("attachmentMimeType"),
+                attachmentFilename = value.optString("attachmentFilename"),
             ).also { it.validate() }
         }
     }
