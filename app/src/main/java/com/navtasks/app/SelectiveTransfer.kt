@@ -47,7 +47,7 @@ internal object SelectiveTransfer {
     )
 
     private fun stripService(item: ServiceEntry) = item.copy(
-        completedAt = null, closedAt = null, requestNumber = "",
+        completedAt = null, closedAt = null,
         serviceHistory = emptyList(),
     )
 
@@ -212,7 +212,7 @@ internal fun mergeSelective(
         serviceNames.add(uniqueLabel(it.equipment))
     }.map { item ->
         item.copy(id = UUID.randomUUID().toString(), closedAt = null,
-            completedAt = null, requestNumber = "", serviceHistory = emptyList())
+            completedAt = null, serviceHistory = emptyList())
     }
     require(existing.services.size + newServices.size <= 1000) { "Too many services" }
     require(existing.templates.size + newTasks.size <= 2500) { "Too many tasks" }
