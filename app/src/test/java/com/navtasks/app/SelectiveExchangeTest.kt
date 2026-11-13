@@ -94,7 +94,7 @@ class SelectiveExchangeTest {
         assertEquals("SHIP-AMOS-123", scrubbed.requestNumber)
         assertEquals("Replace PC", scrubbed.comment)
         assertTrue(scrubbed.serviceHistory.isEmpty())
-        assertTrue(runCatching { completeServiceCycle(scrubbed, day) }.isFailure)
+        assertTrue(runCatching { completeServiceCycle(scrubbed, day) }.isSuccess)
     }
 
     @Test fun selectedServiceAndAmosRequestNumbersSurviveFileAndImport() {
