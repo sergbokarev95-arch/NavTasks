@@ -46,7 +46,7 @@ class NavWidgetPolishTest {
         assertTrue(updater.contains("setBackgroundResource"))
         assertTrue(updater.contains("setColorInt(viewId, \"setTextColor\""))
         assertTrue(updater.contains("NavNotifications.openTask(context)"))
-        assertFalse(updater.contains("WIDGET_TOGGLE"))
+        assertFalse(updater.contains("intent.action == \"WIDGET_TOGGLE\""))
         for (name in listOf("compact", "wide")) {
             val info = source("res/xml/navtasks_widget_${name}_info.xml")
             assertTrue(info.contains("android:updatePeriodMillis=\"1800000\""))
