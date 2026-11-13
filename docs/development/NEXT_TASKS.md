@@ -422,3 +422,13 @@
 - [x] Public stable feed `available:false`; main untouched.
 - [ ] HONOR: backup full profile + .navlib, download both, install ONLY code208 in place, double-tap an existing Handover ECDIS word, drag ONE handle across several words AND multiple lines in ONE continuous gesture, check select all/copy/cut/paste and formatting B/I/U/color, Save/reopen original formatted notes and tasks. If regression, install recovery209 in place; no data clearing.
 - [ ] After user explicitly accepts selection behavior: standalone new NavTasks app icon (requires visual approval), second Android device (Samsung), complete regression and authorized 1.0.0 release. No other feature scope.
+
+## NEXT — QA11 launcher icon device verification, then release gates
+- [x] QA10 rich text selection verified on HONOR by user.
+- [x] Isolated approved icon into two-part Android adaptive icon (default system-blue background + floating compass/cards foreground). North arrow orange, three checklist dots, center blue check, four compass markers. Android monochrome layer provided.
+- [x] Add source-based `export_magic_glass.py` to create package-mapped **fully transparent** PNG and a non-installable overlay ZIP for existing HONOR MagicOS `.hnt`; no ability to automatically swap OEM theme via manifest.
+- [x] Stage signed QA11/code210 and exact QA10-source code211 recovery workflows.
+- [ ] CI #43422885390 and #43422895671 PASS JVM tests, package/cert/nondebug, release and exported transparent PNG checks; verify SHA-256 and links. No APK sharing until validated.
+- [ ] HONOR: full profile + .navlib backups, download both APKs, install ONLY QA11/code210 IN PLACE; verify blue default adaptive icon and no regressions. Check static/adaptive clipping and launcher updates without deleting app. Transparent MagicOS theme overlay needs active HNT theme merging and on-device confirmation (current theme has NOT been uploaded).
+- [ ] Another Android phone (Samsung ideally): normal colored icon, monochrome-themed icon, UI/notifications/widgets/backup/PDF, compatibility and no data loss.
+- [ ] Complete release candidate QA (all existing modules, older-version update/migrations, signing key, stable update metadata), get explicit owner approval and publish 1.0.0. No new feature scope.
