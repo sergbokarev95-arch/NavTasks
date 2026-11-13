@@ -375,3 +375,11 @@
 - [x] Corrected higher-code203 exact accepted QA6-source recovery CI #43390517112 SUCCESS; SHA256 df0da5a77abf1182126e493b3616b9739c4e0fc94d3f494c076cf2fa87053bd9; draft untagged-b13bd3745245aa843011. Ignore older erroneous private draft tags.
 - [ ] HONOR export FULL profile + separate .navlib, download both, install ONLY QA7/code202 in place, verify existing 2×2 / 4×2 widgets, System light/dark without widget reinstall, legibility, missed/remaining/tomorrow, tapped widget does not complete tasks, blue Open with PDF/DOCX, saved data.
 - [ ] If failure, use code203 fallback without uninstall, after data export; next Android versionCode must exceed 203. No stable publication until owner screenshot QA. Then only rich-text selection + new icon, second device, final 1.0.0 signed QA and approval.
+
+## NEXT — QA8 HONOR widget acceptance gate, then locked 1.0.0 scope
+- [x] Create isolated QA8/code204 with explicit light/dark layouts per 2x2 and 4x2 to prevent stale night background on Day text, move 84% beside 5dp progress bar at 16sp, near-black night surface.
+- [x] Preserve QA7/source as code205 emergency rollback and isolated CI.
+- [ ] CI #43410980825 and recovery #43410986526 PASS all JVM tests/signature/non-debuggable/version/package and create unique PRIVATE draft tags + APK digests.
+- [ ] BEFORE install: export full profiles plus .navlib, download both verified APKs, install ONLY QA8/code204 over installed QA7/code202, no uninstall/clear data.
+- [ ] HONOR: both existing widget placements, app in System and explicit Day/Night, switch Day->Night->Day multiple times without deleting widget; check background AND type change together, near-black night, readable light, progress percent 16sp beside bar, missed badge and counts, app launch via widget, data retention. Check process foreground/background; if fully killed OEM defers redraw it can take until next host update; do not claim instant until verified.
+- [ ] Once accepted: rich-text selection, new app icon, second-device Android/Samsung test, final signed 1.0.0 regression/release user approval. No new features.
