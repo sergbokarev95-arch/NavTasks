@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -130,8 +131,22 @@ private fun ReferenceContinuousPdfReader(file: File, p: NavPalette, lang: UiLang
                             do {
                                 val event = awaitPointerEvent(PointerEventPass.Initial)
                                 if (event.changes.count { it.pressed } >= 2) {
-                                    zoom = (zoom * event.calculateZoom()).coerceIn(1f, 4f)
-                                    event.changes.forEach { it.consume() }
+                                    val previous = zoom
+                                    val next = (previous * event.calculateZoom()).coerceIn(1f, 4f)
+                                    if (kotlin.math.abs(next - previous) > .001f) {
+                                        val finger = event.calculateCentroid(useCurrent = true)
+                                        val oldX = horizontal.value
+                                        val row = listState.firstVisibleItemIndex
+                                        val oldY = listState.firstVisibleItemScrollOffset
+                                        zoom = next
+                                        // Let the layout grow before clamping the new scroll.
+                                        withFrameNanos { }
+                                        horizontal.scrollTo(referencePdfFocalScroll(
+                                            oldX, finger.x, previous, next, horizontal.maxValue))
+                                        listState.scrollToItem(row, referencePdfFocalScroll(
+                                            oldY, finger.y, previous, next, 10_000_000))
+                                        event.changes.forEach { it.consume() }
+                                    }
                                 }
                             } while (event.changes.any { it.pressed })
                             // Only rerender once fingers are lifted, not per pinch frame.
