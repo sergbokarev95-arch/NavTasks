@@ -62,7 +62,7 @@ class ReferencePdfGeometryTest {
             oldScroll = 260, focalPx = 160f, previousZoom = 2f,
             nextZoom = 1f, maxScroll = 1000))
         assertEquals(0, referencePdfFocalScroll(0, 20f, 2f, 1f, 0))
-        assertEquals(150, referencePdfFocalScroll(200, 100f, 2f, 1f, 150))
+        assertEquals(150, referencePdfFocalScroll(200, 100f, 1f, 2f, 150))
     }
 
     @Test fun continuousPdfZoomUsesPageUnderFingersNotTopVisiblePage() {
