@@ -21,6 +21,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/navtasks_update_paths" />
         </provider>
+        <!-- Experimental native PDF viewer is internal-only, not exported. -->
+        <activity
+            android:name=".ReferencePdfActivity"
+            android:exported="false"
+            android:theme="@style/NavReferencePdfTheme" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
