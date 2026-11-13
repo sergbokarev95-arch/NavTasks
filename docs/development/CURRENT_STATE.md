@@ -280,3 +280,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 
 ### 2026-11-13 — Native full-screen PDF reader staged, main CI pending
 - Isolated native AndroidX PDF dependency and actual fullscreen reader passed #43367575751. Components now selectively present in main feature branch: original PDF SHA lookup, native AppCompat fullscreen fragment with continuous scroll/search/selection, fallback to existing Compose reader on Android S extension<13, library and equipment procedure links. Main CI #43368601723 pending. Previous widget/attachment source CI #43367074167 SUCCESS. No installable new QA created.
+
+## 2026-11-13 — QA5 HONOR acceptance and QA6 continuous PDF staged
+- HONOR owner confirms QA5/code198 external chooser + internal preview work. Source SHA 229f7f1; no further approved changes to the QA5 source.
+- QA6 code200 branch `feature/navtasks-qa6-continuous-pdf-code200` adds a Compose LazyColumn continuous vertical PDF reader using existing framework PdfRenderer and max 2.4 MP bitmap per composed page. Prior single-page PDF reader with search, zoom and match highlights stays accessible with a mode switch; experimental crashing AndroidX PDF Activity stays off. No change to Reference archives/originals or other business modules.
+- Code200 signed private QA CI #43386652027 and exact-QA5 recovery code201 CI #43386746405 are running as of documentation update. Compilation and on-device acceptance are NOT yet claimed. Stable metadata unchanged OFF.
