@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Truly transparent adaptive background. Keep artwork in foreground unchanged;
-     MagicOS may supply its own optical glass from the icon theme. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="#00000000" />
+<!-- Normal Android launchers get a blue NavTasks adaptive background.
+     MagicOS Liquid Glass uses the separately prepared transparent theme PNG. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="315" android:startColor="#23C5FF" android:centerColor="#087BFA" android:endColor="#0639C7"/>
 </shape>
