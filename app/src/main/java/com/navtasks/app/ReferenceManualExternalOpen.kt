@@ -21,7 +21,7 @@ import androidx.core.content.FileProvider
 class ReferenceManualFileProvider : FileProvider(R.xml.navtasks_reference_share_paths) {
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor {
         if (mode != "r") throw SecurityException("NavTasks manuals are read-only")
-        return super.openFile(uri, mode)
+        return super.openFile(uri, mode) ?: throw java.io.FileNotFoundException("Manual is unavailable")
     }
 }
 
