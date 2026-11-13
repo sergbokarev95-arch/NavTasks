@@ -491,6 +491,8 @@ internal fun ReferenceEquipmentScreen(
                     Text(manual.originalFilename, color = p.text,
                         fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f))
+                    ReferenceManualOpenWithButton(
+                        document = manual, store = manualStore, p = p, lang = lang)
                 }
                 ReferenceManualReader(manual, manualStore, p, lang)
             }
