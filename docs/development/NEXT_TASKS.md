@@ -383,3 +383,10 @@
 - [ ] BEFORE install: export full profiles plus .navlib, download both verified APKs, install ONLY QA8/code204 over installed QA7/code202, no uninstall/clear data.
 - [ ] HONOR: both existing widget placements, app in System and explicit Day/Night, switch Day->Night->Day multiple times without deleting widget; check background AND type change together, near-black night, readable light, progress percent 16sp beside bar, missed badge and counts, app launch via widget, data retention. Check process foreground/background; if fully killed OEM defers redraw it can take until next host update; do not claim instant until verified.
 - [ ] Once accepted: rich-text selection, new app icon, second-device Android/Samsung test, final signed 1.0.0 regression/release user approval. No new features.
+
+### Signed QA8 handoff / HONOR acceptance NEXT
+- [x] QA8/code204 CI #43410980825 SUCCESS (original signer, tests, release). APK SHA256 `5ec4befdc91855c3cadc1c3e477e1c3d60ec9f833762450a3ba65206c408c5ea`, private draft `untagged-83651a9e71bcdfeb423c`.
+- [x] Exact QA7-source recovery/code205 CI #43410986526 SUCCESS, no application code drift. SHA256 `3887d64ed7750b4a3b6ff40338b3f84d1dccee1aa4c523ca491a6adaabcf1cc8`, private draft `untagged-b15372b28147997a4a7a`.
+- [x] stable feed verified still `available:false`, main untouched.
+- [ ] HONOR: export full profile + .navlib, download both APKs, install ONLY QA8/code204 IN PLACE. Confirm existing 2×2 and 4×2 auto-swap background AND text from Day->Night->Day without readding, near-black night, 16sp wide % beside progress bar, all task/missed figures, clickable widget opens app, blue Open with PDF, profiles intact.
+- [ ] If broken, install exact-QA7 source recovery205 IN PLACE, never clear data. User must approve QA8 visually before text-selection and icon stage; then Samsung and signed 1.0.0 after QA.
