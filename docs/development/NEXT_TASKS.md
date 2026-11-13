@@ -369,3 +369,9 @@
 - [ ] Verify full signed CI #43389549409 / recovery #43389554466 success, original certificate, package name, no debug, private draft APK byte digest; report actual status.
 - [ ] HONOR in-place QA7 only after profile + .navlib export and BOTH APKs downloaded, auto Day/Night reflow of existing widgets (app open/background), screen geometry both sizes, task counts/zero/missed/tomorrow, click-through safety, PDF/DOCX chooser, no data loss. If theme change while process fully killed stays stale, document OEM behavior and do not claim instant success.
 - [ ] After HONOR acceptance move to rich text selection and new app icon, then second-device test and final regression/release approval. Public stable OFF.
+
+### QA7 signed CI done; next HONOR device check
+- [x] Corrected private QA7/code202 signed release CI #43390512011 SUCCESS, original signer verified, APK SHA256 32f94f68ca3a8c36ded7c7401682a47bfe0f8b2a0180fc3ea12651c383fdc2fb, draft untagged-b308b6cb4354ac863e8a.
+- [x] Corrected higher-code203 exact accepted QA6-source recovery CI #43390517112 SUCCESS; SHA256 df0da5a77abf1182126e493b3616b9739c4e0fc94d3f494c076cf2fa87053bd9; draft untagged-b13bd3745245aa843011. Ignore older erroneous private draft tags.
+- [ ] HONOR export FULL profile + separate .navlib, download both, install ONLY QA7/code202 in place, verify existing 2×2 / 4×2 widgets, System light/dark without widget reinstall, legibility, missed/remaining/tomorrow, tapped widget does not complete tasks, blue Open with PDF/DOCX, saved data.
+- [ ] If failure, use code203 fallback without uninstall, after data export; next Android versionCode must exceed 203. No stable publication until owner screenshot QA. Then only rich-text selection + new icon, second device, final 1.0.0 signed QA and approval.
