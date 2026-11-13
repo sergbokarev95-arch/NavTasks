@@ -116,8 +116,9 @@ internal object ReferenceEquipmentPortableV2 {
                     StandardCharsets.UTF_8))
                 zip.closeEntry()
                 val version = manifest.getInt("schemaVersion")
+                val expectedFieldCount = if (version == 1) 4 else 5
                 require(manifest.getString("format") == ReferenceEquipmentExchange.format &&
-                    version in 1..2 && manifest.length() == if (version == 1) 4 else 5)
+                    version in 1..2 && manifest.length() == expectedFieldCount)
                 val raw = manifest.getString("equipmentJson")
                 require(sha(raw.toByteArray(StandardCharsets.UTF_8)) ==
                     manifest.getString("sha256")) { "Equipment metadata checksum mismatch" }
