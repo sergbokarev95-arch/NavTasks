@@ -271,3 +271,9 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - On installed QA190 HONOR, imported PDF originals and page navigation work; document is squeezed under app title/dock, cropped horizontally in some cases and search matches not highlighted. User explicitly expects full-screen reader.
 - Staged Reference-only full-screen Dialog reader, fit-width page geometry, bounded memory, pinch/zoom/scroll, per-match native API35 PDF coordinate highlighting/auto-scroll. DOCX also opens full screen, but simplified text mode unchanged; minSdk31 PDF search fallback still pending.
 - Source CI #43277871872 pending. New private QA device APK must have code>=192 (device already on 190; recovery code191 existing). No code190 binary modification. Stable feed off.
+
+## 2026-11-13 — HONOR QA2 user feedback / ongoing fixes
+- QA2/code192 installed. Day screenshots show widgets 2x2 stretched by MagicOS launcher, poor typographic density and stale color after OS theme switch; PDF still single-page fullscreen dialog with pinch lag; user requests file attachment inside equipment procedure.
+- Main branch source adds widget dual day/night colors and qualifier backgrounds, bigger/adaptive small+wide text, deferred PDF raster generation after pinch, standalone attached PDF/DOCX per equipment procedure linked to shared originals by SHA and backed up in .navlib (not .navref). JVM regression `ReferenceProcedureAttachmentTest.kt` added. Full main signed CI #43367074167 pending.
+- Experimental, isolated `experiment/navtasks-native-pdf-fullscreen-nov13`: AndroidX PDF Viewer beta01 true continuous scroll/search/zoom in separate full-window Activity; extension>=13 check and existing Compose fallback. CI #43367575751 pending, not merged to working branch.
+- User's stable app data unchanged; no new APK issued after QA2, recovery code193 remains available, stable feed available:false. Next build code>=194 with fresh downgrade-safe fallback first.
