@@ -74,7 +74,7 @@ class SelectiveExchangeTest {
         assertNotEquals("check1", work.checklist.single().id)
         val service = merged.snapshot.services.last()
         assertTrue(service.serviceHistory.isEmpty())
-        assertEquals("", service.requestNumber)
+        assertEquals("R-123", service.requestNumber)
         assertNull(service.completedAt)
         assertNull(service.closedAt)
         val entry = merged.snapshot.sections.single().entries.single()
@@ -83,7 +83,7 @@ class SelectiveExchangeTest {
         assertEquals("In locker", entry.notes)
     }
 
-    @Test fun unplannedRequestTemplateKeepsTypeButDoesNotLeakShipsRequestNumber() {
+    @Test fun unplannedRequestKeepsItsNumberAndTypeWithoutCompletionHistory() {
         val source = ServiceEntry(id = "unplanned-1", equipment = "Ice Radar PC",
             lastDate = day, nextDate = null, unplanned = true,
             requestNumber = "SHIP-AMOS-123", comment = "Replace PC")
@@ -91,7 +91,7 @@ class SelectiveExchangeTest {
             .services.single()
         assertTrue(scrubbed.unplanned)
         assertNull(scrubbed.nextDate)
-        assertEquals("", scrubbed.requestNumber)
+        assertEquals("SHIP-AMOS-123", scrubbed.requestNumber)
         assertEquals("Replace PC", scrubbed.comment)
         assertTrue(scrubbed.serviceHistory.isEmpty())
         assertTrue(runCatching { completeServiceCycle(scrubbed, day) }.isFailure)
