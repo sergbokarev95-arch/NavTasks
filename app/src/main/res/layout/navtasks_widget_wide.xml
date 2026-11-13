@@ -29,14 +29,6 @@
             android:layout_marginStart="7dp"
             android:textSize="12sp"
             android:maxLines="1" />
-        <TextView
-            android:id="@+id/nav_widget_percent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0%"
-            android:fontFamily="sans-serif-medium"
-            android:textSize="12sp"
-            android:maxLines="1" />
     </LinearLayout>
 
     <LinearLayout
@@ -103,13 +95,31 @@
         </LinearLayout>
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/nav_widget_bar"
-        style="?android:attr/progressBarStyleHorizontal"
+    <!-- Percentage belongs to progress, not the date/title header. -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="5dp"
-        android:progressTint="#007AFF"
-        android:progressBackgroundTint="#406F7883" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <ProgressBar
+            android:id="@+id/nav_widget_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="5dp"
+            android:layout_marginEnd="12dp"
+            android:progressTint="#007AFF"
+            android:progressBackgroundTint="#406F7883" />
+        <TextView
+            android:id="@+id/nav_widget_percent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0%"
+            android:fontFamily="sans-serif-medium"
+            android:textSize="16sp"
+            android:includeFontPadding="false"
+            android:maxLines="1" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/nav_widget_secondary"
