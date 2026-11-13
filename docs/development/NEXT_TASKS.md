@@ -301,3 +301,12 @@
 - [ ] Confirm separate AndroidX native-PDF experiment CI #43367575751 PASS for extension19 and actual page reader integration; only merge if verified. For older Samsung with extension<13, native Compose fallback remains supported but lacks continuous search.
 - [ ] Test HONOR with screenshots: automatic OS/app day/night recolor of EXISTING 2x2/4x2 widgets, readability/wrapping and launcher dimensions; test PDF 2-page checklist continuous scrolling, search, selection, zoom gestures, direct file preview from Radar X Band procedure. Reopen/reboot/import/export .navlib/.navref to prove persistence.
 - [ ] Target next private QA code>=194 with original signer/package and a recovery code higher than QA; user retains QA2/code192 and recovery193 until approved. No stable update feed change.
+
+### NEXT — 2026-11-13, native PDF merged into feature source
+- [x] Native AndroidX PDF viewer experiment tested in isolation: #43367575751 SUCCESS.
+- [x] Integrate only native PDF viewer + SDK extension and CI installation (not full experiment branch merge), leave old Compose fallback on unsupported devices and preserve unrelated main source commits.
+- [ ] Verify full signed main CI #43368601723 (original package/cert/JVM tests and SDK ext19). Fix if failure.
+- [ ] Confirm automatic Day/Night on already-placed MagicOS 2x2/4x2 widgets, their typography, launcher-tall proportions; older Samsung compatibility.
+- [ ] Verify true continuous native PDF with 2-page SMS checklist and 500-page manuals: pinch, search and highlighted hits, text selection and scroll position, status/nav bars, file reopening, plus DOCX still using isolated original reader.
+- [ ] Test equipment procedure original PDF/DOCX attach/replace/unlink, old JSON compatibility, export .navref metadata + separate .navlib original-byte restore; ensure broken/missing attachment produces error but retains citation/procedure.
+- [ ] Prepare separately signed private QA versionCode>=194 and ORIGINAL-RC20-based safe recovery code greater than QA before requesting HONOR test. Do not publish stable update feed or user installation without confirmed test gate.
