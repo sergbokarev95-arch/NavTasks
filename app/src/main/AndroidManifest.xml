@@ -21,6 +21,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/navtasks_update_paths" />
         </provider>
+        <!-- Isolated read-only PDF viewer; never accepts external Intents. -->
+        <activity
+            android:name=".ReferencePdfActivity"
+            android:exported="false"
+            android:theme="@style/NavReferencePdfTheme" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
