@@ -325,8 +325,20 @@ internal fun ReferenceEquipmentScreen(
                                     manual.mimeType == procedure.attachmentMimeType
                             } ?: throw IOException("Manual original is missing. Restore .navlib backup.")
                         }
-                        result.onSuccess { attachmentPreview = it; failure = false; feedback = null }
-                            .onFailure { failure = true; feedback = it.localizedMessage }
+                        result.onSuccess { manual ->
+                            failure = false
+                            feedback = null
+                            if (manual.mimeType == ReferenceManualMime.PDF &&
+                                navNativePdfSupported()) {
+                                runCatching {
+                                    context.startActivity(ReferencePdfActivity.intent(context, manual))
+                                }.onFailure {
+                                    attachmentPreview = manual
+                                    failure = true
+                                    feedback = it.localizedMessage
+                                }
+                            } else attachmentPreview = manual
+                        }.onFailure { failure = true; feedback = it.localizedMessage }
                     },
                     onDetach = {
                         val owner = equipment
