@@ -6,9 +6,15 @@ import android.content.Intent
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.widget.Toast
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -73,7 +79,8 @@ internal fun ReferenceManualOpenWithButton(
     lang: UiLanguage,
 ) {
     val context = LocalContext.current
-    TextButton(onClick = {
+    Button(
+        onClick = {
         runCatching {
             val chooser = referenceExternalOpenChooser(
                 context, document, store,
@@ -87,8 +94,15 @@ internal fun ReferenceManualOpenWithButton(
                 lang,
             ), Toast.LENGTH_LONG).show()
         }
-    }) {
+        },
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = p.selectionFill,
+            contentColor = p.selectionContent,
+        ),
+        contentPadding = PaddingValues(horizontal = 15.dp, vertical = 7.dp),
+    ) {
         Text(localized("Открыть через", "Open with", lang),
-            color = p.blueText, fontSize = 13.sp, maxLines = 1)
+            fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
     }
 }
