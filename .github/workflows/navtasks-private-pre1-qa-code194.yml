@@ -1,0 +1,76 @@
+name: NavTasks PDF + Widgets + Attachments QA3 code194 (PRIVATE, NO PUBLISH)
+on:
+  push:
+    branches:
+      - qa/navtasks-pre1-quality-code194-v2
+    paths:
+      - 'app/**'
+      - '.github/workflows/navtasks-private-pre1-qa-code194.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: navtasks-private-pre1-qa3-code194-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  signed-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'platforms;android-36-ext19' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore ORIGINAL NavTasks signing key (never generate another)
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          chmod 600 "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Build pre1.0 QA only (PRIVATE, NO PUBLISH)
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NAVTASKS_BETA_SIGN_PASSWORD"
+          gradle :app:testDebugUnitTest :app:assembleRelease --no-daemon
+      - name: Verify QA identity, version and historic signature
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/release/app-release.apk
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='194' versionName='0.4.172-qa3'"
+          ! "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -Fq 'application-debuggable'
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --min-sdk-version 31 "$APK"
+          ACTUAL="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}')"
+          test "$ACTUAL" = 0cb8a3c691e3fb2198682dff8c226aec710e77c7b8fded7d260a92f359a49c54
+      - name: Save verified QA APK as PRIVATE DRAFT release (not latest, not stable)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/NavTasks-0.4.172-qa3-code194.apk"
+          gh release create "navtasks-private-pre1-qa3-code194" \
+            "$RUNNER_TEMP/NavTasks-0.4.172-qa3-code194.apk" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft --latest=false \
+            --target "$GITHUB_SHA" \
+            --title "PRIVATE NavTasks 0.4.172-qa3 code194 PDF WIDGETS ATTACHMENTS (DO NOT PUBLISH)" \
+            --notes "Private device-only QA3: native PDF continuous reader, widget day/night/geometry, equipment procedure manual attachments. Original NavTasks signing identity and data-preserving in-place update over QA2 code192. FIRST download signed recovery195 and export profile; never uninstall or clear app data. Do not publish or advertise through stable feed."
+      - name: Erase temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
