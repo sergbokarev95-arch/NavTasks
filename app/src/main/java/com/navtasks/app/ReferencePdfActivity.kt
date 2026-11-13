@@ -75,6 +75,14 @@ class ReferencePdfActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (!NAV_NATIVE_PDF_QA_APPROVED) {
+            // A stale QA3 Android task can restore this Activity after an in-place update.
+            // Drop its saved beta Fragment state before AppCompat can instantiate it,
+            // and return to the safe in-app Compose reader without loading AndroidX.
+            super.onCreate(null)
+            finish()
+            return
+        }
         delegate.localNightMode = when (NavSettings(this).theme) {
             UiTheme.DARK -> AppCompatDelegate.MODE_NIGHT_YES
             UiTheme.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
