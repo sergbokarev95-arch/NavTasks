@@ -305,10 +305,13 @@ internal fun ReferenceEquipmentScreen(
                     onDelete = { deleteTarget = "procedure" to procedure.id },
                     onAttach = {
                         if (!attaching) {
-                            attachmentOwnerId = equipment.id
-                            attachmentProcedureId = procedure.id
-                            attachDocumentLauncher.launch(arrayOf(
-                                ReferenceManualMime.PDF, ReferenceManualMime.DOCX))
+                            val owner = equipment
+                            if (owner != null) {
+                                attachmentOwnerId = owner.id
+                                attachmentProcedureId = procedure.id
+                                attachDocumentLauncher.launch(arrayOf(
+                                    ReferenceManualMime.PDF, ReferenceManualMime.DOCX))
+                            }
                         }
                     },
                     onOpenAttachment = {
@@ -323,7 +326,7 @@ internal fun ReferenceEquipmentScreen(
                     },
                     onDetach = {
                         val owner = equipment
-                        if (submit(referenceSaveEquipment(catalog,
+                        if (owner != null && submit(referenceSaveEquipment(catalog,
                                 referenceSaveProcedure(owner, procedure.copy(
                                     attachmentSha256 = null,
                                     attachmentMimeType = null,
