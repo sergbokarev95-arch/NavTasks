@@ -94,3 +94,10 @@
 - [ ] Pinch zoom and 1x-4x controls, zoomed PDF two-axis scroll/pan, no flashing on page changes, known 1/2/8 page counters and bounded last-page button.
 - [ ] Search native API35+ PDF text: exact found count, highlight all matches on page (blue), selected match (orange), scroll to current hit; next/previous across same page and pages; query changes cancel stale scans. Scanned image PDF may return 0 without OCR.
 - [ ] Test large PDFs for memory and search responsiveness, dark background plus white document, keyboard/back, app data after relaunch. No other task/business system touched.
+
+## 2026-11-13 — HONOR QA2 screenshot-driven regression
+- [ ] Existing 2×2/4×2 widgets: switch MagicOS system light→dark→light WITHOUT removing widgets; verify both background + text adapt, or report which part remains stale. Switch manually selected NavTasks LIGHT/DARK and confirm intended override. Verify TaskStore read-only; all counts/progress same. Check typography, ellipsis, missed red badge and host-imposed 2x2 tall cells.
+- [ ] PDF: original SMS checklist 2 pages continuous scroll and smooth pinch; search Include match highlight and auto-reveal; top reader toolbar minimal, no NavTasks main dock; page 2 visible when scrolling; large 500-page stress/memory low. Android SDK extension>=13 native viewer vs older fallback.
+- [ ] Equipment > Radar X Band > Radar check: attach PDF via SAF, open fullscreen offline, edit procedure text without losing attachment, replace/unlink without deleting original, reference source/page unchanged.
+- [ ] .navref one-equipment archive only contains SHA/name metadata, not PDF bytes; after separate .navlib export/import (including originals), linked PDF resolves by SHA even if manual document ID changes. Missing .navlib shows explicit recoverable file-missing error, never deletes text.
+- [ ] No regression in Today/Handover/Works/AMOS/Services, dock optics, settings, notifications, profiles; compare RC20 and QA2.
