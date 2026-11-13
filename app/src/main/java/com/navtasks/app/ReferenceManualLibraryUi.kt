@@ -344,7 +344,18 @@ internal fun ReferenceManualLibraryScreen(
                             doc.title,
                             if (doc.mimeType == ReferenceManualMime.PDF) "PDF"
                                 else "Word DOCX",
-                            p, query = q, onClick = { documentId = doc.id },
+                            p, query = q, onClick = {
+                                if (doc.mimeType == ReferenceManualMime.PDF &&
+                                    navNativePdfSupported()) {
+                                    runCatching {
+                                        context.startActivity(ReferencePdfActivity.intent(context, doc))
+                                    }.onFailure {
+                                        error = true
+                                        feedback = it.localizedMessage
+                                        documentId = doc.id // Reliable existing PdfRenderer fallback.
+                                    }
+                                } else documentId = doc.id
+                            },
                             onRemove = { deleteDocument = doc },
                         )
                     }
