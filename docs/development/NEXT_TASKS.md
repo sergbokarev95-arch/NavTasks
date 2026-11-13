@@ -347,3 +347,11 @@
 - [ ] Verify latest full source CI #43381674656 (or successor if commits race); inspect and fix any build/test failures before QA packaging.
 - [ ] HONOR + Samsung device QA: PDF in SMS folder, attached Radar check PDF, DOCX, chooser availability, external app reading, back to NavTasks, missing handler feedback, no crash/data mutation. If a cloud app is selected, it may copy the file outside NavTasks: inform the user.
 - [ ] Keep QA4 (code196) crash-free reader and recovery197 intact; next private QA must versionCode >=198, higher-code recovery first, original package/certificate and explicit user test. DO NOT publish 1.0.0/stable feed.
+
+## NEXT — 2026-11-13 user-locked final pre-1.0.0 scope, QA6 gate
+- [x] QA5/code198 real HONOR user acceptance: Open with PDF/DOCX and internal preview work.
+- [x] Stage isolated lazy vertical PDF QA6/code200; preserve original single-page search reader, native AndroidX beta crash gate OFF, external chooser, all data and business rules.
+- [x] Stage higher code201 exact QA5-source emergency rollback with separate private CI.
+- [ ] Verify QA6 signed CI #43386652027 and recovery CI #43386746405 SUCCESS, complete unit tests, non-debuggable package com.navtasks.app.glass, historical certificate, correct code200/code201 and private draft APK digests. Do not distribute on CI failure.
+- [ ] HONOR test with full profile + separate .navlib export first; download both verified APKs; install ONLY QA6 in place. Check continuous vertical pages, memory on large documents, pinch/zoom, search and fallback, PDF attachments, DOCX, external chooser, day/night, Back/restart and no data loss. Emergency code201 ONLY after failure.
+- [ ] After PDF device acceptance: polish widgets 2x2/4x2 geometry and automatic theme; fix rich editor text selection; approve new icon; test on another Android device (Samsung when available); final functional/visual/data/migration smoke and signed 1.0.0 acceptance. No new features. Keep public stable available:false until approval.
