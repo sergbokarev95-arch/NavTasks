@@ -187,7 +187,11 @@ internal fun ReferenceEquipmentScreen(
                     ?: throw IOException("Cannot create file")
             }.onSuccess {
                 failure = false
-                feedback = localized("Карточка оборудования экспортирована.",
+                feedback = if (target.procedures.any { it.attachmentSha256 != null })
+                    localized(
+                        "Карточка сохранена. Прикреплённые PDF/Word переносятся отдельно — через архив библиотеки .navlib.",
+                        "Card exported. Attached PDF/Word originals require a separate .navlib library backup.", lang)
+                else localized("Карточка оборудования экспортирована.",
                     "Equipment reference exported.", lang)
             }.onFailure {
                 failure = true; feedback = it.localizedMessage
