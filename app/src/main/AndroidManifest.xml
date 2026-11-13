@@ -21,6 +21,17 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/navtasks_update_paths" />
         </provider>
+        <!-- Expose ONLY the explicitly selected manual, with temporary read grant.
+             Separate authority from APK-update and from all user profile data. -->
+        <provider
+            android:name=".ReferenceManualFileProvider"
+            android:authorities="${applicationId}.reference.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/navtasks_reference_share_paths" />
+        </provider>
         <!-- Isolated read-only PDF viewer; never accepts external Intents. -->
         <activity
             android:name=".ReferencePdfActivity"
