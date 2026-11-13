@@ -347,3 +347,12 @@
 - [ ] Verify latest full source CI #43381674656 (or successor if commits race); inspect and fix any build/test failures before QA packaging.
 - [ ] HONOR + Samsung device QA: PDF in SMS folder, attached Radar check PDF, DOCX, chooser availability, external app reading, back to NavTasks, missing handler feedback, no crash/data mutation. If a cloud app is selected, it may copy the file outside NavTasks: inform the user.
 - [ ] Keep QA4 (code196) crash-free reader and recovery197 intact; next private QA must versionCode >=198, higher-code recovery first, original package/certificate and explicit user test. DO NOT publish 1.0.0/stable feed.
+
+### QA5 optional Android external reader delivery — 2026-11-13
+- [x] Source "Открыть через" in both library PDF/DOCX preview and equipment procedure attachment previews, without changing internal quick reader.
+- [x] Restricted Android content provider, original displayName and exact MIME, temporary read permission, NO edit/write/file://, security regression tests.
+- [x] Source compile issue fixed for nullable AndroidX FileProvider descriptor; new CI #43382304568 running.
+- [x] QA5 private code198 branch from fixed source commit cc99a0e with only version metadata/tests/workflow.
+- [x] Recovery199 PRIVATE signed CI #43382181157 SUCCESS with original RC20 logic, asset SHA256 202b58396d462679915abca840dcc67579bd1f1efb77b3f8d94609dcec944a37.
+- [ ] Confirm source CI #43382304568 and QA5 private signed CI #43382498551 FULL SUCCESS, exact package/certificate and uploaded APK bytes, before user download.
+- [ ] On HONOR QA5 code198 after backup, test Android viewer chooser and read-only external PDF+DOCX, opening from both library and attached equipment procedure, no crashes. Retain original-RC20 recovery199 but do not install unless needed. Samsung device QA later.
