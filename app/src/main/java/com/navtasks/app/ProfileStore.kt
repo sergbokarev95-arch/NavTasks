@@ -152,6 +152,16 @@ internal fun profileAfterDeletion(
  * Profile index is separate from individual profile files.
  * v0.3.0 data is copied, not removed, into the default ship profile exactly once.
  */
+/** Incoming profile IDs are NOT globally unique across devices: every first vessel
+ * starts with ship-default. A matching title (within the same kind) is the only
+ * condition that permits a destructive full-profile replacement. */
+internal fun matchingProfileByName(
+    existing: List<NavProfile>, incoming: NavProfile,
+): NavProfile? = existing.firstOrNull {
+    it.kind == incoming.kind &&
+        it.title.trim().equals(incoming.title.trim(), ignoreCase = true)
+}
+
 class ProfileStore(context: Context) {
     private val app = context.applicationContext
     private val index = app.getSharedPreferences("navtasks-profiles-v1", Context.MODE_PRIVATE)
@@ -282,10 +292,7 @@ class ProfileStore(context: Context) {
     }
 
     fun findMatch(incoming: NavProfile): NavProfile? =
-        profiles.firstOrNull { it.id == incoming.id && it.kind == incoming.kind }
-            ?: profiles.firstOrNull {
-                it.kind == incoming.kind && it.title.equals(incoming.title, ignoreCase = true)
-            }
+        matchingProfileByName(profiles, incoming)
 
     fun snapshot(id: String): ProfileSnapshot {
         val profile = profiles.first { it.id == id }
