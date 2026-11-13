@@ -11,6 +11,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -269,8 +270,20 @@ internal fun ReferencePdfPagedReader(file: File, p: NavPalette, lang: UiLanguage
                                 do {
                                     val event = awaitPointerEvent(PointerEventPass.Initial)
                                     if (event.changes.count { it.pressed } >= 2) {
-                                        zoom = (zoom * event.calculateZoom()).coerceIn(1f, 4f)
-                                        event.changes.forEach { it.consume() }
+                                        val previous = zoom
+                                        val next = (previous * event.calculateZoom()).coerceIn(1f, 4f)
+                                        if (kotlin.math.abs(next - previous) > .001f) {
+                                            val finger = event.calculateCentroid(useCurrent = true)
+                                            val oldX = horizontal.value
+                                            val oldY = vertical.value
+                                            zoom = next
+                                            withFrameNanos { }
+                                            horizontal.scrollTo(referencePdfFocalScroll(
+                                                oldX, finger.x, previous, next, horizontal.maxValue))
+                                            vertical.scrollTo(referencePdfFocalScroll(
+                                                oldY, finger.y, previous, next, vertical.maxValue))
+                                            event.changes.forEach { it.consume() }
+                                        }
                                     }
                                 } while (event.changes.any { it.pressed })
                                 // One bounded off-UI-thread raster upgrade after
