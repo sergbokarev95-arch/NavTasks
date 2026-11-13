@@ -291,3 +291,13 @@
 - [ ] Produce PRIVATE QA signed original-key code>=192 update atop QA190, plus retain rollback recovery191; request user profile backup before next install. No public/stable release.
 - [ ] On HONOR check multiple PDF formats (1/2/8+ pages), 100% entire width, 2–4x zoom, two-axis pan, location-aware search highlight and next/prev results even on same page, Back/keyboard, light/dark and full-screen visibility (dock must not cover PDF).
 - [ ] Samsung older Android <35 PDF text search unsupported in current native path. Scanned PDF requires OCR and has no text matches. Keep these explicit.
+
+## 2026-11-13 — priority: user-supplied HONOR QA2 screenshots
+- [x] Stage widget SYSTEM day/night color resilience using RemoteViews.setColorInt(light,night) and drawable-night resources. Removed ineffective CONFIGURATION_CHANGED manifest action (Android requires runtime registration); small/wide typography enlarged and small widget uses weighted vertical spacing. Physical MagicOS day/night launcher recolor still NOT verified; launcher controls cell aspect ratio.
+- [x] Stage deferred PDF raster regeneration until the end of pinch, avoid replay of scroll-to-result on every zoom frame. Existing reader remains single-page fallback.
+- [x] Add PDF/DOCX attachment inside equipment procedure, preview/replace/unlink, original stored in shared .navlib library, ref keyed by SHA+MIME rather than remapped document ID. Preserve attachment on edit. .navref remains metadata-only; UI warns .navlib binary backup also needed.
+- [x] Add attachment model/backward-compat/archive tests.
+- [ ] Confirm signed main source CI #43367074167 PASS; repair if it fails. Do not give user installer yet.
+- [ ] Confirm separate AndroidX native-PDF experiment CI #43367575751 PASS for extension19 and actual page reader integration; only merge if verified. For older Samsung with extension<13, native Compose fallback remains supported but lacks continuous search.
+- [ ] Test HONOR with screenshots: automatic OS/app day/night recolor of EXISTING 2x2/4x2 widgets, readability/wrapping and launcher dimensions; test PDF 2-page checklist continuous scrolling, search, selection, zoom gestures, direct file preview from Radar X Band procedure. Reopen/reboot/import/export .navlib/.navref to prove persistence.
+- [ ] Target next private QA code>=194 with original signer/package and a recovery code higher than QA; user retains QA2/code192 and recovery193 until approved. No stable update feed change.
