@@ -121,10 +121,12 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
                     modifier = Modifier.weight(1f))
                 TextButton(onClick = {
                     zoom = (zoom / 1.4f).coerceAtLeast(1f)
+                    rasterZoom = zoom
                 }) { Text("−", color = p.blueText, fontSize = 23.sp) }
                 Text("${(zoom * 100).toInt()}%", color = p.muted, fontSize = 12.sp)
                 TextButton(onClick = {
                     zoom = (zoom * 1.4f).coerceAtMost(4f)
+                    rasterZoom = zoom
                 }) { Text("+", color = p.blueText, fontSize = 23.sp) }
                 TextButton(
                     enabled = knownPageCount > 0 && page < knownPageCount - 1,
