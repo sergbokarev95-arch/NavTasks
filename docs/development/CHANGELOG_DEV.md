@@ -111,3 +111,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-13 — Confirmed final signed no-publish CI #43260910863 SUCCESS at source 8ac9b86, original package/signing compatibility and all JVM tests. Source includes independent Reference PDF/DOCX/excerpts and stat-only widgets; no user installation or release. Remaining priority: large PDF full-text search and HONOR/Samsung QA.
 
 - 2026-11-13 — Targeted Reference data-safety polish: prevent deleting staging while restoring, prune only 7-day abandoned import stages, cancel stale large-PDF searches and stop excerpt root folder moving on edit. Regression tests added. No task/domain/notification logic changed. Latest private signed full CI #43265305900 pending; user RC20 untouched.
+
+- 2026-11-13 — HONOR QA2 findings: larger 2x2/4x2 widgets with platform day/night resource+RemoteViews colors; PDF pinch rerender deferred; SHA-linked PDF/DOCX document attachments for equipment procedures; separate PDF beta fullscreen continuous-page experiment CI #43367575751 PASSED and selectively integrated to feature source. Combined main CI #43368601723 pending, stable update channel unchanged.
