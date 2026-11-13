@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/navtasks_widget_bg"
     android:orientation="vertical"
-    android:padding="13dp">
+    android:padding="15dp">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Сегодня"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:maxLines="1" />
         <TextView
@@ -26,7 +26,7 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:maxLines="1" />
         <TextView
             android:id="@+id/nav_widget_percent"
@@ -45,7 +45,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
         <LinearLayout
-            android:layout_width="125dp"
+            android:layout_width="135dp"
             android:layout_height="wrap_content"
             android:orientation="vertical">
             <TextView
@@ -53,7 +53,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="0/0"
-                android:textSize="27sp"
+                android:textSize="40sp"
                 android:textStyle="bold"
                 android:includeFontPadding="false"
                 android:maxLines="1" />
@@ -76,7 +76,7 @@
                 android:id="@+id/nav_widget_detail_one"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:maxLines="1"
                 android:ellipsize="end" />
             <TextView
@@ -94,7 +94,7 @@
         android:id="@+id/nav_widget_bar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="5dp"
+        android:layout_height="7dp"
         android:progressTint="#007AFF"
         android:progressBackgroundTint="#406F7883" />
     <TextView
@@ -102,7 +102,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="3dp"
-        android:textSize="10sp"
+        android:textSize="12sp"
         android:maxLines="1"
         android:visibility="gone" />
 </LinearLayout>
