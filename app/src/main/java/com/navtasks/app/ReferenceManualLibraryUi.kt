@@ -405,6 +405,8 @@ internal fun ReferenceManualLibraryScreen(
                         Text(document.title, color = p.text, fontSize = 17.sp,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
+                    ReferenceManualOpenWithButton(
+                        document = document, store = store, p = p, lang = lang)
                 }
                 ReferenceManualReader(
                     document = document,
