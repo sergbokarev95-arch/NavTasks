@@ -57,3 +57,29 @@ internal fun referencePdfFocalScroll(
         (nextZoom / previousZoom) - focalPx).toDouble())
         .toInt().coerceIn(0, maxScroll)
 }
+
+/**
+ * LazyColumn owns independent page items. Anchor zoom to the item actually
+ * underneath the pinch centroid instead of firstVisibleItemIndex: otherwise
+ * pinching a lower page teleports the reader towards the top-left.
+ *
+ * itemTopPx is the current item's position relative to the lazy viewport;
+ * the resulting offset is allowed to be negative (LazyListState supports it).
+ */
+internal fun referencePdfFocalItemOffset(
+    itemTopPx: Int, focalYPx: Float, previousZoom: Float, nextZoom: Float,
+): Int {
+    require(previousZoom > 0f && nextZoom > 0f)
+    val relativePoint = focalYPx - itemTopPx
+    return kotlin.math.round(
+        (relativePoint * (nextZoom / previousZoom) - focalYPx).toDouble()
+    ).toInt()
+}
+
+/** Choose the visible page covering the gesture, not the first visible page. */
+internal fun referencePdfFocalItemIndex(
+    focalYPx: Float,
+    visible: List<Triple<Int, Int, Int>>, // page index, viewport top, pixel height
+): Int? = visible.firstOrNull { (_, top, height) ->
+    height > 0 && focalYPx >= top && focalYPx < top + height
+}?.first ?: visible.firstOrNull()?.first
