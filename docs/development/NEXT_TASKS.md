@@ -442,3 +442,14 @@
 - [ ] HONOR owner: export full profiles + separate .navlib, download signed QA11 and emergency code211, install ONLY QA11/code210 in place, verify normal blue launcher icon and functional app; no removal/data clearing. For true Liquid Glass without blue tile, safely merge named PNG into existing HNT; current theme file NOT provided and therefore not modified. Owner screenshot acceptance required.
 - [ ] Verify on another device (Samsung): colored adaptive icon, monochrome-themed icon, launcher, widgets, task/AMOS/Service/Handover/notices, notes, PDF, backups and network update. Record findings.
 - [ ] Final 1.0.0 full regression including direct long-version updates/restore, original signing, versionCode above any installed recovery, stable channel rollout only after explicit approval.
+
+## NEXT — QA15 code218 PDF focal-point release-candidate gate
+- [x] QA12 signed CI PASS: name-based safe profile import and selected Service request number. Distinct vessel profiles with same `ship-default` ID must add, not replace. AMOS request/reference roundtrip covered.
+- [x] QA13 signed CI PASS: `.navref` v2 includes full PDF/DOCX originals; SHA-256/size verified before import, legacy v1 warns.
+- [x] QA14 signed CI PASS: read-only Handover DOCX and PDF exports for successors using Word/iOS/PC.
+- [x] QA15 code218 isolated: pinch focal scroll geometry for single-page and continuous PDF, selects touched LazyList page rather than firstVisibleItemIndex; unit tests added. Higher-code219 exact QA14 source recovery isolated.
+- [ ] Verify QA15 signed CI #43472051215 and recovery #43472078535 success, correct app ID/com.navtasks.app.glass, same historical signing certificate, versionCode218/219 and private draft APK SHA-256. No rollout on failure.
+- [ ] HONOR owner: export FULL profile + separate .navlib, download both APKs, install ONLY QA15 in place, pan one finger (must NEVER zoom), pinch at upper-right/lower-right/left of page (focus preserved), long continuous PDF multiple pages, paged search and external chooser, no crash or data loss.
+- [ ] HONOR ↔ Samsung: 2 differently named vessel profiles with shared default ID (must ADD, not replace), same-name confirmed replace, personal unaffected; service and AMOS request roundtrip; equipment .navref with real PDF/DOCX original; Handover DOCX/PDF opens on Android, iPhone/PC with Cyrillic. Test offline, preserve source backups.
+- [ ] Final independent code/security/regression audit and user sign-off before 1.0.0. main and public stable channel stay unchanged until approval.
+- [ ] AFTER 1.0.0 only: opt-in curated shared seafarer reference catalog with downloadable content, Handover photo attachments.
