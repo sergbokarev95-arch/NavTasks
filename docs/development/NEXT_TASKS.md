@@ -405,3 +405,12 @@
 - [x] Public stable `available:false`, main unchanged. Background-killed immediate OS Night->Day updates documented best-effort limitation.
 - [ ] HONOR: back up full profile and .navlib, download BOTH verified APKs, install ONLY code206 in place; check slightly translucent black in both already-placed widget sizes, readability, no data loss, blue Open with and PDF remain unaffected. Recovery code207 only if regression.
 - [ ] Next rich text selection and new icon; another Android phone; final complete regression + authorized signed 1.0.0 release, no new features.
+
+## NEXT — QA10 selection handles before icon
+- [x] Diagnose user's exact 1-word-per-handle-drag bug to Compose Rich Editor 1.0.0-rc14; upstream v1.0.0 fixes Android handle selection PR #746/#748.
+- [x] Isolate stable Rich Editor v1.0.0 version bump in QA10/code208 without touching NavRichNoteEditor body, HTML formats or business data; guard test.
+- [x] Stage QA9 exact app-source code209 emergency recovery.
+- [ ] Verify compatibility and JVM tests/signing from QA10 CI #43416622629 and recovery CI #43416631675. Any new Kotlin/Compose requirement is a risk to explicitly evaluate before doing a broad migration.
+- [ ] Download private signed APK and higher-code209 recovery only after verification; full profiles + .navlib export; install QA10 IN PLACE, never uninstall/clear data.
+- [ ] HONOR user selection tests: drag over several words/lines continuously; select all, copy, cut, paste; apply B/I/U/color to multiword region; Save and reopen an EXISTING formatted ECDIS note; test new Russian note and keyboard; confirm profiles and tasks unchanged.
+- [ ] After user accepts selection, next only new NavTasks icon, second Android device, final signed 1.0.0 QA and authorized publication.
