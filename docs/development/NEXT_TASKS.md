@@ -339,3 +339,11 @@
 - [x] Signed private RC20 recovery197 #43373284523 SUCCESS; larger version code197 and original RC20 logic. Stable feed still OFF.
 - [ ] User installs code196 over existing QA3 code194 after exports and keeps recovery197 offline; **DO NOT uninstall or delete data**. Verify My Materials PDF, SMS nested PDF, PDF in Radar check attachment, Back, search, repeated opens, and data persistence on restart. Report any remaining force-close.
 - [ ] Only AFTER crash-free HONOR acceptance, develop a fault-contained continuous PDF reader and revisit widget automatic day/night + 2x2/4x2 geometry, grammar 'Осталось 1 задача' -> 'Осталась 1 задача'. QA4 fallback is one-page-at-a-time; no claim native beta continuous reader works.
+
+## 2026-11-13 — Hybrid manual preview + "Open with"
+- [x] Add "Открыть через / Open with" action to both internal PDF/DOCX preview headers: shared library documents and equipment procedure attachment.
+- [x] Use scoped nonexported Android FileProvider and ACTION_VIEW system chooser with temporary read-only URI permissions; correct original display name and MIME; no wildcard roots or user profile access. Preserve internal preview and all existing data.
+- [x] Add regression tests for safe MIME mapping, narrow path whitelist, no EDIT/WRITE grant/file scheme, both UI entry points.
+- [ ] Verify latest full source CI #43381674656 (or successor if commits race); inspect and fix any build/test failures before QA packaging.
+- [ ] HONOR + Samsung device QA: PDF in SMS folder, attached Radar check PDF, DOCX, chooser availability, external app reading, back to NavTasks, missing handler feedback, no crash/data mutation. If a cloud app is selected, it may copy the file outside NavTasks: inform the user.
+- [ ] Keep QA4 (code196) crash-free reader and recovery197 intact; next private QA must versionCode >=198, higher-code recovery first, original package/certificate and explicit user test. DO NOT publish 1.0.0/stable feed.
