@@ -51,4 +51,44 @@ class ReferencePdfGeometryTest {
             assertEquals(normal[i] * 2f, doubled[i], 0.001f)
         }
     }
+
+    @Test fun pinchZoomAnchorsHorizontalAndVerticalScrollToFingers() {
+        // Point x=160 at 100% stays at x=160 when document zooms to 200%.
+        assertEquals(260, referencePdfFocalScroll(
+            oldScroll = 50, focalPx = 160f, previousZoom = 1f,
+            nextZoom = 2f, maxScroll = 1000))
+        // The same point stays anchored while zooming out.
+        assertEquals(50, referencePdfFocalScroll(
+            oldScroll = 260, focalPx = 160f, previousZoom = 2f,
+            nextZoom = 1f, maxScroll = 1000))
+        assertEquals(0, referencePdfFocalScroll(0, 20f, 2f, 1f, 0))
+        assertEquals(150, referencePdfFocalScroll(200, 100f, 2f, 1f, 150))
+    }
+
+    @Test fun continuousPdfZoomUsesPageUnderFingersNotTopVisiblePage() {
+        val visible = listOf(
+            Triple(9, -330, 650), Triple(10, 328, 850), Triple(11, 1186, 700))
+        assertEquals(9, referencePdfFocalItemIndex(180f, visible))
+        assertEquals(10, referencePdfFocalItemIndex(350f, visible))
+        assertEquals(10, referencePdfFocalItemIndex(1010f, visible))
+        assertEquals(9, referencePdfFocalItemIndex(-20f, visible))
+        assertEquals(null, referencePdfFocalItemIndex(200f, emptyList()))
+        // Page 10 begins at y=328, finger y=400; twofold zoom must
+        // retain the same page at the touched point, not navigate to page 9.
+        assertEquals(-256, referencePdfFocalItemOffset(
+            itemTopPx = 328, focalYPx = 400f, previousZoom = 1f, nextZoom = 2f))
+        // A partly scrolled page should stay at the same point after zoom.
+        assertEquals(520, referencePdfFocalItemOffset(
+            itemTopPx = -180, focalYPx = 160f, previousZoom = 1f, nextZoom = 2f))
+    }
+
+    @Test fun invalidZoomFactorsAreRejected() {
+        assertTrue(runCatching {
+            referencePdfFocalScroll(0, 100f, 0f, 1f, 1000)
+        }.isFailure)
+        assertTrue(runCatching {
+            referencePdfFocalItemOffset(0, 100f, 1f, 0f)
+        }.isFailure)
+    }
+
 }
