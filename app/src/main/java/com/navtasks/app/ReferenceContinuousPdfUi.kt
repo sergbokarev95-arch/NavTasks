@@ -136,15 +136,28 @@ private fun ReferenceContinuousPdfReader(file: File, p: NavPalette, lang: UiLang
                                     if (kotlin.math.abs(next - previous) > .001f) {
                                         val finger = event.calculateCentroid(useCurrent = true)
                                         val oldX = horizontal.value
-                                        val row = listState.firstVisibleItemIndex
-                                        val oldY = listState.firstVisibleItemScrollOffset
+                                        val visiblePages = listState.layoutInfo.visibleItemsInfo
+                                        val focalPageIndex = referencePdfFocalItemIndex(
+                                            finger.y, visiblePages.map {
+                                                Triple(it.index, it.offset, it.size)
+                                            })
+                                        val focalPage = visiblePages.firstOrNull {
+                                            it.index == focalPageIndex
+                                        }
+                                        val nextPageOffset = focalPage?.let {
+                                            referencePdfFocalItemOffset(
+                                                it.offset, finger.y, previous, next)
+                                        }
                                         zoom = next
-                                        // Let the layout grow before clamping the new scroll.
+                                        // Wait for Compose to measure new width/height
+                                        // before restoring the document point under fingers.
                                         withFrameNanos { }
                                         horizontal.scrollTo(referencePdfFocalScroll(
                                             oldX, finger.x, previous, next, horizontal.maxValue))
-                                        listState.scrollToItem(row, referencePdfFocalScroll(
-                                            oldY, finger.y, previous, next, 10_000_000))
+                                        if (focalPageIndex != null && nextPageOffset != null) {
+                                            listState.scrollToItem(
+                                                focalPageIndex, nextPageOffset)
+                                        }
                                         event.changes.forEach { it.consume() }
                                     }
                                 }
