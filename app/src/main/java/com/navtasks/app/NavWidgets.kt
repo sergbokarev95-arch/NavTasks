@@ -132,11 +132,18 @@ object NavWidgetUpdater {
         val settings = NavSettings(context)
         val dark = darkWidget(context, settings)
         val language = settings.language
-        val foreground = if (dark) 0xFFF4F6FA.toInt() else 0xFF20252E.toInt()
-        val muted = if (dark) 0xFFB1BDCE.toInt() else 0xFF697383.toInt()
-        val accent = widgetAccentColor(dark)
-        val warning = if (dark) 0xFFFF9C96.toInt() else 0xFFBD4238.toInt()
         val detail = widgetWideDetail(stats, pendingTitles, language)
+        // API 31+ can carry BOTH night/day colors in RemoteViews so the host
+        // chooses them when reapplying the widget after a system UI mode switch.
+        // Explicit NavTasks theme overrides intentionally use one fixed color.
+        fun RemoteViews.color(viewId: Int, light: Int, darkColor: Int) {
+            if (settings.theme == UiTheme.SYSTEM) {
+                setColorInt(viewId, "setTextColor", light, darkColor)
+            } else {
+                // Apply just the selected palette when the app theme is pinned.
+                setTextColor(viewId, if (dark) darkColor else light)
+            }
+        }
 
         for (wide in listOf(false, true)) {
             val component = ComponentName(context,
@@ -145,22 +152,28 @@ object NavWidgetUpdater {
             for (id in manager.getAppWidgetIds(component)) {
                 val view = RemoteViews(context.packageName, layoutId)
                 view.setInt(R.id.nav_widget_root, "setBackgroundResource",
-                    if (dark) R.drawable.navtasks_widget_bg else R.drawable.navtasks_widget_bg_light)
+                    when (settings.theme) {
+                        UiTheme.SYSTEM -> R.drawable.navtasks_widget_bg
+                        UiTheme.LIGHT -> R.drawable.navtasks_widget_bg_light
+                        UiTheme.DARK -> R.drawable.navtasks_widget_bg_dark
+                    })
                 view.setTextViewText(R.id.nav_widget_title,
                     localized("Сегодня", "Today", language))
                 view.setTextViewText(R.id.nav_widget_date, widgetHeaderDate(today, language))
                 view.setTextViewText(R.id.nav_widget_progress, "${stats.completed}/${stats.total}")
                 view.setTextViewText(R.id.nav_widget_status, widgetSummaryLabel(stats, language))
                 // All layout text is refreshed rather than relying on launcher reinflation.
-                view.setTextColor(R.id.nav_widget_title, foreground)
-                view.setTextColor(R.id.nav_widget_date, muted)
-                view.setTextColor(R.id.nav_widget_progress, foreground)
-                view.setTextColor(R.id.nav_widget_status, if (stats.remaining == 0) accent else muted)
+                view.color(R.id.nav_widget_title, 0xFF20252E.toInt(), 0xFFF4F6FA.toInt())
+                view.color(R.id.nav_widget_date, 0xFF697383.toInt(), 0xFFB1BDCE.toInt())
+                view.color(R.id.nav_widget_progress, 0xFF20252E.toInt(), 0xFFF4F6FA.toInt())
+                view.color(R.id.nav_widget_status,
+                    if (stats.remaining == 0) widgetAccentColor(false) else 0xFF697383.toInt(),
+                    if (stats.remaining == 0) widgetAccentColor(true) else 0xFFB1BDCE.toInt())
                 view.setProgressBar(R.id.nav_widget_bar, stats.total.coerceAtLeast(1),
                     stats.completed, false)
                 view.setTextViewText(R.id.nav_widget_secondary, localized(
                     "Пропущено: ${stats.missed}", "Missed: ${stats.missed}", language))
-                view.setTextColor(R.id.nav_widget_secondary, warning)
+                view.color(R.id.nav_widget_secondary, 0xFFBD4238.toInt(), 0xFFFF9C96.toInt())
                 view.setViewVisibility(R.id.nav_widget_secondary,
                     if (widgetMissedVisible(stats.missed)) View.VISIBLE else View.GONE)
                 view.setOnClickPendingIntent(R.id.nav_widget_root,
@@ -169,10 +182,11 @@ object NavWidgetUpdater {
                 if (wide) {
                     view.setTextViewText(R.id.nav_widget_detail_one, detail.getOrNull(0) ?: "")
                     view.setTextViewText(R.id.nav_widget_detail_two, detail.getOrNull(1) ?: "")
-                    view.setTextColor(R.id.nav_widget_detail_one, foreground)
-                    view.setTextColor(R.id.nav_widget_detail_two, muted)
+                    view.color(R.id.nav_widget_detail_one, 0xFF20252E.toInt(), 0xFFF4F6FA.toInt())
+                    view.color(R.id.nav_widget_detail_two, 0xFF697383.toInt(), 0xFFB1BDCE.toInt())
                     view.setTextViewText(R.id.nav_widget_percent, "${stats.percentage}%")
-                    view.setTextColor(R.id.nav_widget_percent, accent)
+                    view.color(R.id.nav_widget_percent, widgetAccentColor(false),
+                        widgetAccentColor(true))
                 }
                 manager.updateAppWidget(id, view)
             }
