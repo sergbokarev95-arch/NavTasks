@@ -356,3 +356,9 @@
 - [x] Recovery199 PRIVATE signed CI #43382181157 SUCCESS with original RC20 logic, asset SHA256 202b58396d462679915abca840dcc67579bd1f1efb77b3f8d94609dcec944a37.
 - [ ] Confirm source CI #43382304568 and QA5 private signed CI #43382498551 FULL SUCCESS, exact package/certificate and uploaded APK bytes, before user download.
 - [ ] On HONOR QA5 code198 after backup, test Android viewer chooser and read-only external PDF+DOCX, opening from both library and attached equipment procedure, no crashes. Retain original-RC20 recovery199 but do not install unless needed. Samsung device QA later.
+
+### External reader CI checkpoint (2026-11-13)
+- [x] Full source signed nonpublishing test #43382304568 SUCCESS, scoped read-only chooser API and both launch sites compile, security tests pass.
+- [x] RC20 recovery199 signed CI #43382181157 SUCCESS, original signer/package, private asset verified.
+- [ ] QA5 signed private release #43382498551 still IN PROGRESS at this checkpoint. Verify final SUCCESS and exact private uploaded code198 APK; only then provide download.
+- [ ] HONOR QA of chooser on real device with PDF and DOCX, open from My Materials and attached Radar procedure; save/export/reopen without loss, no cloud exposure unless user selects external cloud viewer.
