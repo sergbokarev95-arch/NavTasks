@@ -43,3 +43,17 @@ internal fun referencePdfRectPixels(
         rectLeft * sx, rectTop * sy, rectRight * sx, rectBottom * sy
     )
 }
+
+/**
+ * Keep the touched point under the finger while the PDF page width changes.
+ * Old behavior left scroll at zero, visually snapping to the upper-left corner.
+ */
+internal fun referencePdfFocalScroll(
+    oldScroll: Int, focalPx: Float, previousZoom: Float,
+    nextZoom: Float, maxScroll: Int,
+): Int {
+    require(previousZoom > 0f && nextZoom > 0f && maxScroll >= 0)
+    return kotlin.math.round(((oldScroll + focalPx) *
+        (nextZoom / previousZoom) - focalPx).toDouble())
+        .toInt().coerceIn(0, maxScroll)
+}
