@@ -16,8 +16,8 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 206
-        versionName = "0.4.181"
+        versionCode = 208
+        versionName = "0.4.183"
     }
 
     signingConfigs {
@@ -46,7 +46,7 @@ android {
             // does not migrate private app data across different package IDs.
             applicationIdSuffix = ".glass"
             // Release candidate stays clearly distinguishable from stable 1.0.0.
-            versionNameSuffix = "-qa9"
+            versionNameSuffix = "-qa10"
             // Gradle release is non-debuggable; keep the assertion explicit.
             isDebuggable = false
             // Use the EXISTING signing config. CI fails closed if the secret is
@@ -85,7 +85,9 @@ dependencies {
     // Direct-scene Backdrop 1.0.6 accepted in Glass Lab 0.1.5.
     implementation("io.github.kyant0:backdrop:1.0.6")
     implementation("io.github.kyant0:shapes:1.2.0")
-    implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc14")
+    // Upstream stable fixes Android selection-handle dragging (#746/#748).
+    // Keep the exact same rich-text state/API and HTML persistence.
+    implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
     // Real JSON parser for local JVM profile serialization regression tests.
