@@ -64,12 +64,12 @@ jobs:
         run: |
           set -euo pipefail
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/NavTasks-0.4.173-qa4-code196.apk"
-          gh release create "navtasks-private-pdf-crash-safe-code196" \
+          gh release create "navtasks-private-pdf-crash-safe-code196-restoreguard" \
             "$RUNNER_TEMP/NavTasks-0.4.173-qa4-code196.apk" \
             --repo "$GITHUB_REPOSITORY" \
             --draft --latest=false \
             --target "$GITHUB_SHA" \
-            --title "PRIVATE NavTasks 0.4.173-qa4 code196 PDF CRASH SAFETY (DO NOT PUBLISH)" \
+            --title "PRIVATE NavTasks 0.4.173-qa4 code196 PDF CRASH + RESTORE GUARD (DO NOT PUBLISH)" \
             --notes "Emergency device-only QA4: disable crashing AndroidX beta PDF launch and reuse verified in-app Compose PdfRenderer fallback for both shared PDFs and equipment attachments. Retains QA3 widget and attachment changes, no TaskStore business changes. Original signing identity and in-place update over QA3 code194. FIRST download verified recovery197 and export profile; never uninstall or clear app data. Do not publish or advertise through stable feed."
       - name: Erase temporary signing key
         if: always()
