@@ -81,6 +81,13 @@ class MainActivity : ComponentActivity() {
                     flags,
                 )
             }
+            // Refresh already-placed launcher widgets whenever NavTasks theme
+            // or system Day/Night actually changes while the app is active.
+            // The RemoteViews palette still uses host-resolved colors for
+            // configuration changes happening while the app is not open.
+            LaunchedEffect(appSettings.theme, dark) {
+                NavWidgetUpdater.updateAll(this@MainActivity, taskStore)
+            }
             // Startup check only: toggling settings does not produce intrusive popups.
             LaunchedEffect(Unit) {
                 if (appSettings.automaticUpdateOffers) {
