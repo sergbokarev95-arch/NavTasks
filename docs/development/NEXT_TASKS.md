@@ -327,3 +327,9 @@
 - [ ] QA4 on HONOR: open existing PDF from My Materials / nested SMS folder / Radar check attachment; navigation, page/zoom/search, Back, light/dark and no crash. Preserve data. Previous viewer only one-page-at-a-time; continuous reader still unresolved.
 - [ ] Obtain actual AndroidRuntime logcat of QA3 native viewer crash (if available) before re-enabling beta. Use safe isolated continuous reader development, don't ship as a blind switch.
 - [ ] Address remaining widget details after PDF is stable: verify existing widgets day/night toggle on MagicOS without re-adding and typography/layout 2x2/4x2 across launcher dimensions. Test on Samsung. No user-facing stable 1.0.0 until approved.
+
+### QA4 restored-Activity safety gate
+- [x] Add early `ReferencePdfActivity.onCreate` guard against restoring native beta fragment from QA3 task stack after in-place update.
+- [x] Verify recovery197 CI #43373284523 SUCCESS and uploaded PRIVATE DRAFT APK with original package/certificate, 28.5 MB SHA256 eebcbda91fa29e2b4cf4422b32d155f39dc9edfc866330bd062a83e2964c48c2.
+- [ ] Check FINAL QA4 restoreguard workflow #43374148590 SUCCESS and verify its NEW private tag/asset. **DO NOT distribute first QA4 draft** (the earlier #43373276093 passed before restore guard).
+- [ ] Install QA4 code196 in-place over user QA3 code194 after profile backup, check PDF from both library and equipment procedure and preserve originals; recovery197 retained but not installed unless necessary. PDF still single-page in QA4.
