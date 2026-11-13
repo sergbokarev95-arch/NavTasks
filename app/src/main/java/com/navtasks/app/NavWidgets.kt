@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
@@ -79,6 +80,17 @@ internal fun widgetWideDetail(
 }
 
 open class NavBaseWidgetProvider : AppWidgetProvider() {
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        // RemoteViews caches explicit text/background colors. The launcher does
+        // not automatically re-evaluate them when Android switches day/night.
+        // Refresh both widget families in place; never mutate tasks.
+        if (intent.action == Intent.ACTION_CONFIGURATION_CHANGED ||
+            intent.action == Intent.ACTION_LOCALE_CHANGED) {
+            NavWidgetUpdater.updateAll(context.applicationContext)
+        }
+    }
+
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         NavWidgetUpdater.updateAll(context, TaskStore(context))
     }
@@ -139,6 +151,7 @@ object NavWidgetUpdater {
                 view.setTextViewText(R.id.nav_widget_date, widgetHeaderDate(today, language))
                 view.setTextViewText(R.id.nav_widget_progress, "${stats.completed}/${stats.total}")
                 view.setTextViewText(R.id.nav_widget_status, widgetSummaryLabel(stats, language))
+                // All layout text is refreshed rather than relying on launcher reinflation.
                 view.setTextColor(R.id.nav_widget_title, foreground)
                 view.setTextColor(R.id.nav_widget_date, muted)
                 view.setTextColor(R.id.nav_widget_progress, foreground)
