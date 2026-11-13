@@ -10,6 +10,7 @@ plugins {
 android {
     namespace = "com.navtasks.app"
     compileSdk = 36
+    compileSdkExtension = 19
 
     defaultConfig {
         applicationId = "com.navtasks.app"
@@ -72,6 +73,8 @@ kotlin {
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2026.04.01"))
     implementation("androidx.activity:activity-compose:1.11.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("androidx.pdf:pdf-viewer-fragment:1.0.0-beta01")
     implementation("androidx.core:core:1.16.0")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
