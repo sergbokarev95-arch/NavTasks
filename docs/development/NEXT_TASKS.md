@@ -361,3 +361,11 @@
 - [x] CI #43386746405 exact accepted QA5-source recovery/code201 SUCCESS and PRIVATE draft APK confirmed SHA256 2da72f4e471ad10d0d2f7e39232b7be1d2b5b998fe12bd92c1d99ea2fd0c38fc.
 - [ ] HONOR owner test: export profile and manual library, download both files, install ONLY QA6/code200 in place; compare continuous scroll/pinch to paged fallback/search, long manual stress, "Open with" PDF/DOCX, data retention. No release acceptance until owner reports.
 - [ ] Once QA6 accepted, proceed with widgets, text selection, app icon, second-device qualification and final 1.0.0 (separate approval). Keep stable.json available:false.
+
+## NEXT — QA7 widget polish + blue Open with, 2026-11-13
+- [x] QA6/code200 HONOR physically accepted, PDF now vertical by default with optional page search.
+- [x] QA7/code202 isolated edits: layouts, compact/wide color & geometry, red missed pill, Russian singular remaining grammar, dynamic app-process widget config registration, 30min host refresh, filled Apple-blue external chooser action.
+- [x] Separate exact user-accepted QA6-source versionCode203 recovery branch created with signing workflow.
+- [ ] Verify full signed CI #43389549409 / recovery #43389554466 success, original certificate, package name, no debug, private draft APK byte digest; report actual status.
+- [ ] HONOR in-place QA7 only after profile + .navlib export and BOTH APKs downloaded, auto Day/Night reflow of existing widgets (app open/background), screen geometry both sizes, task counts/zero/missed/tomorrow, click-through safety, PDF/DOCX chooser, no data loss. If theme change while process fully killed stays stale, document OEM behavior and do not claim instant success.
+- [ ] After HONOR acceptance move to rich text selection and new app icon, then second-device test and final regression/release approval. Public stable OFF.
