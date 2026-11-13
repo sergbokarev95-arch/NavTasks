@@ -95,6 +95,7 @@ private suspend fun navSearchPdf(file: File, query: String): List<NavPdfMatch> {
 @Composable
 internal fun ReferencePdfPagedReader(file: File, p: NavPalette, lang: UiLanguage) {
     val scope = rememberCoroutineScope()
+    var focalScrollJob by remember(file.path) { mutableStateOf<Job?>(null) }
     val density = LocalDensity.current
     var page by remember(file.path) { mutableIntStateOf(0) }
     var knownPageCount by remember(file.path) { mutableIntStateOf(0) }
@@ -277,11 +278,19 @@ internal fun ReferencePdfPagedReader(file: File, p: NavPalette, lang: UiLanguage
                                             val oldX = horizontal.value
                                             val oldY = vertical.value
                                             zoom = next
-                                            withFrameNanos { }
-                                            horizontal.scrollTo(referencePdfFocalScroll(
-                                                oldX, finger.x, previous, next, horizontal.maxValue))
-                                            vertical.scrollTo(referencePdfFocalScroll(
-                                                oldY, finger.y, previous, next, vertical.maxValue))
+                                            // AwaitPointerEventScope only permits its
+                                            // own restricted suspend functions. Keep
+                                            // scrolling in the composition coroutine.
+                                            focalScrollJob?.cancel()
+                                            focalScrollJob = scope.launch {
+                                                withFrameNanos { }
+                                                horizontal.scrollTo(referencePdfFocalScroll(
+                                                    oldX, finger.x, previous, next,
+                                                    horizontal.maxValue))
+                                                vertical.scrollTo(referencePdfFocalScroll(
+                                                    oldY, finger.y, previous, next,
+                                                    vertical.maxValue))
+                                            }
                                             event.changes.forEach { it.consume() }
                                         }
                                     }
