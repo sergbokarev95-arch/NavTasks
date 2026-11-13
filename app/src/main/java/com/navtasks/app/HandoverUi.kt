@@ -3,6 +3,14 @@ package com.navtasks.app
 import dev.chrisbanes.haze.hazeSource
 import com.kyant.backdrop.backdrops.layerBackdrop
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.io.IOException
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -78,6 +86,48 @@ fun HandoverScreen(
     externalAddRequest: Int = 0,
     onExternalAddHandled: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val exportScope = rememberCoroutineScope()
+    var exportOpen by remember { mutableStateOf(false) }
+    var exportSnapshot by remember { mutableStateOf<List<HandoverSection>?>(null) }
+    var exportFeedback by remember { mutableStateOf<String?>(null) }
+    var exportFailed by remember { mutableStateOf(false) }
+    var exportRunning by remember { mutableStateOf(false) }
+
+    fun exportTo(uri: android.net.Uri?, isWord: Boolean) {
+        val snapshot = exportSnapshot
+        exportSnapshot = null
+        if (uri == null || snapshot == null) return
+        exportScope.launch {
+            exportRunning = true
+            val outcome = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openOutputStream(uri)?.use { stream ->
+                        if (isWord) HandoverDocxExport.export(snapshot, stream)
+                        else HandoverPdfExport.export(snapshot, stream)
+                    } ?: throw IOException("Unable to save Handover")
+                }
+            }
+            outcome.onSuccess {
+                exportFailed = false
+                exportFeedback = localized(
+                    "Handover сохранён. Файл можно передать на компьютер или iPhone.",
+                    "Handover saved. The file can be sent to a PC or iPhone.", lang)
+            }.onFailure {
+                exportFailed = true
+                exportFeedback = it.localizedMessage ?: "Handover export failed"
+            }
+            exportRunning = false
+        }
+    }
+    val wordExport = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) { uri ->
+        exportTo(uri, isWord = true)
+    }
+    val pdfExport = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        exportTo(uri, isWord = false)
+    }
     val listState = rememberLazyListState()
     val matchMarginPx = with(LocalDensity.current) { 42.dp.toPx() }
     var listViewportCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -186,6 +236,12 @@ fun HandoverScreen(
                     Text(if (personalMode) localized("Заметки", "Notes", lang)
                         else localized("Передача дел", "Handover notes", lang),
                         color = p.text, fontSize = 22.sp)
+                }
+            }
+            if (!personalMode) {
+                TextButton(enabled = !exportRunning, onClick = { exportOpen = true }) {
+                    Text(localized("Экспорт", "Export", lang),
+                        color = p.blueText, fontSize = 13.sp)
                 }
             }
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
@@ -506,6 +562,45 @@ fun HandoverScreen(
         }
     }
     } // Content and floating Add button share the same glass source.
+
+    if (exportOpen && !personalMode) {
+        NavGlassAlertDialog(p = p,
+            onDismissRequest = { exportOpen = false },
+            title = { Text(localized("Экспорт Handover", "Export Handover", lang)) },
+            text = { Text(localized(
+                "Создать обычный документ для передачи сменщику. Все разделы и записи будут доступны без NavTasks.",
+                "Create a document readable without NavTasks, including all sections and notes.",
+                lang)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    exportSnapshot = handover.sections.toList()
+                    exportOpen = false
+                    pdfExport.launch("NavTasks_Handover_" + LocalDate.now() + ".pdf")
+                }) { Text("PDF", color = p.blueText) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    exportSnapshot = handover.sections.toList()
+                    exportOpen = false
+                    wordExport.launch("NavTasks_Handover_" + LocalDate.now() + ".docx")
+                }) { Text("Word (.docx)", color = p.blueText) }
+                TextButton(onClick = { exportOpen = false }) {
+                    Text(localized("Отмена", "Cancel", lang), color = p.muted)
+                }
+            })
+    }
+    if (exportFeedback != null) {
+        NavGlassAlertDialog(p = p,
+            onDismissRequest = { exportFeedback = null },
+            title = { Text(localized("Экспорт Handover", "Handover export", lang)) },
+            text = { Text(exportFeedback.orEmpty(),
+                color = if (exportFailed) p.systemRed else p.text) },
+            confirmButton = {
+                TextButton(onClick = { exportFeedback = null }) {
+                    Text("OK", color = p.blueText)
+                }
+            })
+    }
 
     if (addSection) {
         HandoverGlassDialog(
