@@ -64,7 +64,7 @@ jobs:
         run: |
           set -euo pipefail
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/NavTasks-0.4.178-qa6-recovery-code203.apk"
-          gh release create "navtasks-private-continuous-pdf-qa6-code200" \
+          gh release create "navtasks-private-qa6-recovery-code203" \
             "$RUNNER_TEMP/NavTasks-0.4.178-qa6-recovery-code203.apk" \
             --repo "$GITHUB_REPOSITORY" \
             --draft --latest=false \
