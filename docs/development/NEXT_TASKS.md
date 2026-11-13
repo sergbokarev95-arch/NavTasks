@@ -398,3 +398,10 @@
 - [ ] Verify signed QA9 code206 CI #43413317881 and recovery code207 CI #43413325570 pass, package/cert/version, private APK digest.
 - [ ] Device: export full profile and .navlib, download BOTH verified assets, install only QA9/code206 without uninstall, inspect black transparency and contrast; check actual theme switch and repaint after opening app, PDF/blue chooser still works. User can accept OEM delay without more widget iterations.
 - [ ] Then rich-text selection and new app icon in separate QA branch; second-device test; 1.0.0 full regression and explicit approval.
+
+### Signed QA9 builds verified; user device acceptance NEXT
+- [x] QA9/code206 CI #43413317881 PASS, APK SHA256 `2bdd3ab64f41dbbb8d8a40ed8734c3f6036837cd631b8f287562d529261b30f3`, private draft `untagged-0b3cac527bf65bd1e333`.
+- [x] Exact QA8 source recovery/code207 CI #43413325570 PASS, APK SHA256 `6a35caacd46bbd9d301f4d26cddd6ee64d7af6014ef656e2797c46a078768121`, private draft `untagged-0652f546156cce7cf29a`.
+- [x] Public stable `available:false`, main unchanged. Background-killed immediate OS Night->Day updates documented best-effort limitation.
+- [ ] HONOR: back up full profile and .navlib, download BOTH verified APKs, install ONLY code206 in place; check slightly translucent black in both already-placed widget sizes, readability, no data loss, blue Open with and PDF remain unaffected. Recovery code207 only if regression.
+- [ ] Next rich text selection and new icon; another Android phone; final complete regression + authorized signed 1.0.0 release, no new features.
