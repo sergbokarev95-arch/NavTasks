@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only manually imported original PDF/DOCX bytes. Never expose whole filesDir,
+     user profiles, backup archives, signing files, or updater caches. -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path
+        name="navtasks-reference-originals"
+        path="navtasks-reference/v1/manuals/originals/" />
+</paths>
