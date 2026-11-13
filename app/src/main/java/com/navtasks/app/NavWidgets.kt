@@ -58,7 +58,8 @@ private fun widgetRuTaskCount(value: Int): String {
 
 internal fun widgetSummaryLabel(stats: NavWidgetStats, language: UiLanguage): String = when {
     stats.remaining > 0 -> if (language == UiLanguage.RU)
-        "Осталось ${widgetRuTaskCount(stats.remaining)}" else
+        (if (stats.remaining % 10 == 1 && stats.remaining % 100 != 11)
+            "Осталась " else "Осталось ") + widgetRuTaskCount(stats.remaining) else
         "${stats.remaining} remaining"
     stats.tomorrowTotal > 0 -> if (language == UiLanguage.RU)
         "Завтра ${widgetRuTaskCount(stats.tomorrowTotal)}" else
@@ -66,6 +67,11 @@ internal fun widgetSummaryLabel(stats: NavWidgetStats, language: UiLanguage): St
     stats.allCompleted -> localized("Всё выполнено", "All done", language)
     else -> localized("Сегодня нет задач", "No tasks today", language)
 }
+
+internal fun widgetWideCaption(stats: NavWidgetStats, language: UiLanguage): String =
+    if (stats.remaining > 0) localized("БЛИЖАЙШИЕ", "UP NEXT", language)
+    else if (stats.tomorrowTotal > 0) localized("НА ЗАВТРА", "TOMORROW", language)
+    else localized("ИТОГ ДНЯ", "TODAY", language)
 
 internal fun widgetWideDetail(
     stats: NavWidgetStats, pendingTitles: List<String>, language: UiLanguage,
@@ -151,12 +157,12 @@ object NavWidgetUpdater {
             val layoutId = if (wide) R.layout.navtasks_widget_wide else R.layout.navtasks_widget_compact
             for (id in manager.getAppWidgetIds(component)) {
                 val view = RemoteViews(context.packageName, layoutId)
+                // Pick an explicit background for each refresh. On some OEM
+                // launchers the generic drawable-night resource remains cached
+                // when system theme changes and widget inflation is reused.
                 view.setInt(R.id.nav_widget_root, "setBackgroundResource",
-                    when (settings.theme) {
-                        UiTheme.SYSTEM -> R.drawable.navtasks_widget_bg
-                        UiTheme.LIGHT -> R.drawable.navtasks_widget_bg_light
-                        UiTheme.DARK -> R.drawable.navtasks_widget_bg_dark
-                    })
+                    if (dark) R.drawable.navtasks_widget_bg_dark
+                    else R.drawable.navtasks_widget_bg_light)
                 view.setTextViewText(R.id.nav_widget_title,
                     localized("Сегодня", "Today", language))
                 view.setTextViewText(R.id.nav_widget_date, widgetHeaderDate(today, language))
@@ -174,12 +180,19 @@ object NavWidgetUpdater {
                 view.setTextViewText(R.id.nav_widget_secondary, localized(
                     "Пропущено: ${stats.missed}", "Missed: ${stats.missed}", language))
                 view.color(R.id.nav_widget_secondary, 0xFFBD4238.toInt(), 0xFFFF9C96.toInt())
+                view.setInt(R.id.nav_widget_secondary, "setBackgroundResource",
+                    if (dark) R.drawable.navtasks_widget_missed_dark
+                    else R.drawable.navtasks_widget_missed_light)
                 view.setViewVisibility(R.id.nav_widget_secondary,
                     if (widgetMissedVisible(stats.missed)) View.VISIBLE else View.GONE)
                 view.setOnClickPendingIntent(R.id.nav_widget_root,
                     NavNotifications.openTask(context))
                 // NO row clicks, checkboxes or completion PendingIntents in either size.
                 if (wide) {
+                    view.setTextViewText(R.id.nav_widget_detail_caption,
+                        widgetWideCaption(stats, language))
+                    view.color(R.id.nav_widget_detail_caption,
+                        widgetAccentColor(false), widgetAccentColor(true))
                     view.setTextViewText(R.id.nav_widget_detail_one, detail.getOrNull(0) ?: "")
                     view.setTextViewText(R.id.nav_widget_detail_two, detail.getOrNull(1) ?: "")
                     view.color(R.id.nav_widget_detail_one, 0xFF20252E.toInt(), 0xFFF4F6FA.toInt())
