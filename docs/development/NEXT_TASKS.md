@@ -310,3 +310,11 @@
 - [ ] Verify true continuous native PDF with 2-page SMS checklist and 500-page manuals: pinch, search and highlighted hits, text selection and scroll position, status/nav bars, file reopening, plus DOCX still using isolated original reader.
 - [ ] Test equipment procedure original PDF/DOCX attach/replace/unlink, old JSON compatibility, export .navref metadata + separate .navlib original-byte restore; ensure broken/missing attachment produces error but retains citation/procedure.
 - [ ] Prepare separately signed private QA versionCode>=194 and ORIGINAL-RC20-based safe recovery code greater than QA before requesting HONOR test. Do not publish stable update feed or user installation without confirmed test gate.
+
+## 2026-11-13 — QA3 delivery gate
+- [x] Signed main source #43369146008 SUCCESS on SHA 72bda3 after widget manifest correction.
+- [x] Fork clean QA3 branch `qa/navtasks-pre1-quality-code194-v2` directly from verified SHA; only version metadata/test/workflow diff (no stale fork, no task logic changes).
+- [x] Repair recovery195 versionCode-only test assertion (previous #43368918818 failed 1 test expecting code188; correction commit 9fa25b2).
+- [ ] Check recovery195 CI #43370110246 and QA3 CI #43370322277 FULL SUCCESS, confirm private draft binaries, package/cert, APK sizes and SHA256. If failures, investigate and patch.
+- [ ] Give user verified private APK194 AND higher-code recovery195 ONLY after both pass; instruct QA2 full profile backup and in-place install, never uninstall or clear data. Stable feed remains OFF.
+- [ ] Physical HONOR test: system day/night auto recolor existing widgets, 2x2/4x2 text, native continuous PDF scrolling/zoom/search and PDF equipment attachments, .navlib and .navref backup. Samsung test before 1.0.0.
