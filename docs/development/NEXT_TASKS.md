@@ -333,3 +333,9 @@
 - [x] Verify recovery197 CI #43373284523 SUCCESS and uploaded PRIVATE DRAFT APK with original package/certificate, 28.5 MB SHA256 eebcbda91fa29e2b4cf4422b32d155f39dc9edfc866330bd062a83e2964c48c2.
 - [ ] Check FINAL QA4 restoreguard workflow #43374148590 SUCCESS and verify its NEW private tag/asset. **DO NOT distribute first QA4 draft** (the earlier #43373276093 passed before restore guard).
 - [ ] Install QA4 code196 in-place over user QA3 code194 after profile backup, check PDF from both library and equipment procedure and preserve originals; recovery197 retained but not installed unless necessary. PDF still single-page in QA4.
+
+### QA4 gate completed / physical device check next
+- [x] Final signed private QA4 #43374148590 SUCCESS and verified new restoreguard private DRAFT code196 original cert/package. URL and SHA in HANDOFF.md. Old unguarded draft MUST NOT be used.
+- [x] Signed private RC20 recovery197 #43373284523 SUCCESS; larger version code197 and original RC20 logic. Stable feed still OFF.
+- [ ] User installs code196 over existing QA3 code194 after exports and keeps recovery197 offline; **DO NOT uninstall or delete data**. Verify My Materials PDF, SMS nested PDF, PDF in Radar check attachment, Back, search, repeated opens, and data persistence on restart. Report any remaining force-close.
+- [ ] Only AFTER crash-free HONOR acceptance, develop a fault-contained continuous PDF reader and revisit widget automatic day/night + 2x2/4x2 geometry, grammar 'Осталось 1 задача' -> 'Осталась 1 задача'. QA4 fallback is one-page-at-a-time; no claim native beta continuous reader works.
