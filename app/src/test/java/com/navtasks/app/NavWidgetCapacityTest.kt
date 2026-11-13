@@ -46,18 +46,24 @@ class NavWidgetCapacityTest {
         val stats = widgetStats(DayCounts(5, 3), DayCounts(17, 0), 1)
         assertEquals("Осталось 2 задачи", widgetSummaryLabel(stats, UiLanguage.RU))
         assertEquals("2 remaining", widgetSummaryLabel(stats, UiLanguage.EN))
+        assertEquals("БЛИЖАЙШИЕ", widgetWideCaption(stats, UiLanguage.RU))
+        assertEquals("UP NEXT", widgetWideCaption(stats, UiLanguage.EN))
         assertEquals(listOf("Navarea/Navtex", "Сводная корректура"),
             widgetWideDetail(stats, listOf("Navarea/Navtex", "Сводная корректура", "ECDIS"), UiLanguage.RU))
     }
 
     @Test fun russianCountGrammarAndNoTasksAreHandled() {
         for ((count, expected) in listOf(
-            1 to "Осталось 1 задача", 2 to "Осталось 2 задачи",
-            5 to "Осталось 5 задач", 11 to "Осталось 11 задач", 21 to "Осталось 21 задача",
+            1 to "Осталась 1 задача", 2 to "Осталось 2 задачи",
+            5 to "Осталось 5 задач", 11 to "Осталось 11 задач", 21 to "Осталась 21 задача",
         )) {
             val stats = widgetStats(DayCounts(count, 0), DayCounts(0, 0), 0)
             assertEquals(expected, widgetSummaryLabel(stats, UiLanguage.RU))
         }
+        assertEquals("Осталось 11 задач", widgetSummaryLabel(
+            widgetStats(DayCounts(11, 0), DayCounts(0, 0), 0), UiLanguage.RU))
+        assertEquals("Осталась 101 задача", widgetSummaryLabel(
+            widgetStats(DayCounts(101, 0), DayCounts(0, 0), 0), UiLanguage.RU))
         assertEquals("Сегодня нет задач", widgetSummaryLabel(
             widgetStats(DayCounts(0, 0), DayCounts(0, 0), 0), UiLanguage.RU))
     }
