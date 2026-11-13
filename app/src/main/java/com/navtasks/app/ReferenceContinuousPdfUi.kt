@@ -27,6 +27,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.math.ceil
@@ -68,6 +70,8 @@ internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
 @Composable
 private fun ReferenceContinuousPdfReader(file: File, p: NavPalette, lang: UiLanguage) {
     val density = LocalDensity.current
+    val scrollScope = rememberCoroutineScope()
+    var focalScrollJob by remember(file.path) { mutableStateOf<Job?>(null) }
     val pageCountResult by produceState<Result<Int>?>(null, file.path) {
         value = withContext(Dispatchers.IO) {
             runCatching {
@@ -149,14 +153,19 @@ private fun ReferenceContinuousPdfReader(file: File, p: NavPalette, lang: UiLang
                                                 it.offset, finger.y, previous, next)
                                         }
                                         zoom = next
-                                        // Wait for Compose to measure new width/height
-                                        // before restoring the document point under fingers.
-                                        withFrameNanos { }
-                                        horizontal.scrollTo(referencePdfFocalScroll(
-                                            oldX, finger.x, previous, next, horizontal.maxValue))
-                                        if (focalPageIndex != null && nextPageOffset != null) {
-                                            listState.scrollToItem(
-                                                focalPageIndex, nextPageOffset)
+                                        // AwaitPointerEventScope is restricted: scroll
+                                        // operations belong in the normal composition
+                                        // coroutine, never inside awaitEachGesture.
+                                        focalScrollJob?.cancel()
+                                        focalScrollJob = scrollScope.launch {
+                                            withFrameNanos { }
+                                            horizontal.scrollTo(referencePdfFocalScroll(
+                                                oldX, finger.x, previous, next,
+                                                horizontal.maxValue))
+                                            if (focalPageIndex != null && nextPageOffset != null) {
+                                                listState.scrollToItem(
+                                                    focalPageIndex, nextPageOffset)
+                                            }
                                         }
                                         event.changes.forEach { it.consume() }
                                     }
