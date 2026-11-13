@@ -355,3 +355,9 @@
 - [ ] Verify QA6 signed CI #43386652027 and recovery CI #43386746405 SUCCESS, complete unit tests, non-debuggable package com.navtasks.app.glass, historical certificate, correct code200/code201 and private draft APK digests. Do not distribute on CI failure.
 - [ ] HONOR test with full profile + separate .navlib export first; download both verified APKs; install ONLY QA6 in place. Check continuous vertical pages, memory on large documents, pinch/zoom, search and fallback, PDF attachments, DOCX, external chooser, day/night, Back/restart and no data loss. Emergency code201 ONLY after failure.
 - [ ] After PDF device acceptance: polish widgets 2x2/4x2 geometry and automatic theme; fix rich editor text selection; approve new icon; test on another Android device (Samsung when available); final functional/visual/data/migration smoke and signed 1.0.0 acceptance. No new features. Keep public stable available:false until approval.
+
+### QA6 signed private build/recovery verified; HONOR acceptance NEXT
+- [x] CI #43386652027 QA6/code200 SUCCESS and PRIVATE draft APK confirmed SHA256 85d3aa508a10214b96607cbd46377d39a9e600425a027544e735e77575890904.
+- [x] CI #43386746405 exact accepted QA5-source recovery/code201 SUCCESS and PRIVATE draft APK confirmed SHA256 2da72f4e471ad10d0d2f7e39232b7be1d2b5b998fe12bd92c1d99ea2fd0c38fc.
+- [ ] HONOR owner test: export profile and manual library, download both files, install ONLY QA6/code200 in place; compare continuous scroll/pinch to paged fallback/search, long manual stress, "Open with" PDF/DOCX, data retention. No release acceptance until owner reports.
+- [ ] Once QA6 accepted, proceed with widgets, text selection, app icon, second-device qualification and final 1.0.0 (separate approval). Keep stable.json available:false.
