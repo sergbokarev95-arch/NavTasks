@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <application
+        android:name=".NavTasksApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -59,7 +60,6 @@
         <receiver android:name=".NavCompactWidgetProvider" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/navtasks_widget_compact_info" />
@@ -67,7 +67,6 @@
         <receiver android:name=".NavWideWidgetProvider" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/navtasks_widget_wide_info" />
