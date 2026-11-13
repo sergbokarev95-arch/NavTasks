@@ -39,7 +39,7 @@ import java.io.File
 import kotlin.math.ceil
 
 /** One page at a time: no document-wide bitmaps are retained in application state. */
-private data class NavPdfRaster(
+internal data class NavPdfRaster(
     val bitmap: Bitmap,
     val pageCount: Int,
     val pageIndex: Int,
@@ -49,12 +49,17 @@ private data class NavPdfRaster(
 
 private data class NavPdfMatch(val pageIndex: Int, val bounds: List<RectF>)
 
-private fun navRenderPdfPage(file: File, index: Int, requestedWidth: Int): NavPdfRaster {
+internal fun navRenderPdfPage(
+    file: File,
+    index: Int,
+    requestedWidth: Int,
+    maxPixels: Long = 7_000_000L,
+): NavPdfRaster {
     PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)).use { pdf ->
         require(pdf.pageCount in 1..20000) { "Invalid PDF page count" }
         val actualIndex = index.coerceIn(0, pdf.pageCount - 1)
         pdf.openPage(actualIndex).use { page ->
-            val pixel = referencePdfPixelSize(page.width, page.height, requestedWidth)
+            val pixel = referencePdfPixelSize(page.width, page.height, requestedWidth, maxPixels = maxPixels)
             val bitmap = Bitmap.createBitmap(pixel.width, pixel.height, Bitmap.Config.ARGB_8888)
             try {
                 bitmap.eraseColor(AndroidColor.WHITE)
@@ -87,7 +92,7 @@ private suspend fun navSearchPdf(file: File, query: String): List<NavPdfMatch> {
 }
 
 @Composable
-internal fun ReferencePdfReader(file: File, p: NavPalette, lang: UiLanguage) {
+internal fun ReferencePdfPagedReader(file: File, p: NavPalette, lang: UiLanguage) {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     var page by remember(file.path) { mutableIntStateOf(0) }
