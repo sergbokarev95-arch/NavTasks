@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/navtasks_widget_bg"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="15dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,7 +19,7 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="Сегодня"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="end" />
@@ -27,26 +27,40 @@
             android:id="@+id/nav_widget_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="11sp"
+            android:textSize="14sp"
             android:maxLines="1" />
     </LinearLayout>
+
+    <!-- The HONOR launcher can allocate a taller-than-square 2x2 cell. -->
+    <!-- Flexible whitespace keeps the headline centered without shrinking text. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical" />
 
     <TextView
         android:id="@+id/nav_widget_progress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="9dp"
+        android:layout_marginTop="0dp"
         android:text="0/0"
-        android:textSize="29sp"
+        android:textSize="43sp"
         android:textStyle="bold"
         android:includeFontPadding="false"
         android:maxLines="1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical" />
 
     <ProgressBar
         android:id="@+id/nav_widget_bar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="5dp"
+        android:layout_height="7dp"
         android:layout_marginTop="8dp"
         android:progressTint="#007AFF"
         android:progressBackgroundTint="#406F7883" />
@@ -65,7 +79,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="3dp"
-        android:textSize="10sp"
+        android:textSize="12sp"
         android:maxLines="1"
         android:visibility="gone" />
 </LinearLayout>
