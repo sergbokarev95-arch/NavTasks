@@ -343,8 +343,8 @@ fun ProfileExchangePanel(
             }
         }
         Text(localized(
-            "При импорте одинаковый профиль ПОЛНОСТЬЮ заменяется, без объединения данных. Перед заменой потребуется подтверждение.",
-            "Import completely REPLACES a matching profile, never merges its contents. Confirmation is required.",
+            "Если название профиля совпадает, он заменяется только после подтверждения. Профили с другим названием добавляются отдельно — существующие данные не затрагиваются.",
+            "Only a matching profile name can be replaced after confirmation. Different names are added separately without changing existing data.",
             lang), color = p.muted, fontSize = 11.sp)
         val selectedProfile = profiles.profiles.first { it.id == selectedId }
         if (selectedProfile.kind == NavProfileKind.VESSEL) {
@@ -414,7 +414,7 @@ fun ProfileExchangePanel(
         NavGlassAlertDialog(p = p, 
             onDismissRequest = { pending = null },
             title = { Text(if (matched == null)
-                localized("Импортировать профиль?", "Import profile?", lang)
+                localized("Добавить новый профиль?", "Add a new profile?", lang)
                 else localized("Заменить существующий профиль?", "Replace existing profile?", lang)) },
             text = {
                 Column {
@@ -458,7 +458,7 @@ fun ProfileExchangePanel(
                 }) {
                     Text(if (matched != null)
                         localized("Заменить", "Replace", lang)
-                        else localized("Импортировать", "Import", lang))
+                        else localized("Добавить профиль", "Add profile", lang))
                 }
             },
             dismissButton = {
