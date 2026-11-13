@@ -9,4 +9,4 @@
     android:initialLayout="@layout/navtasks_widget_wide"
     android:resizeMode="none"
     android:widgetCategory="home_screen"
-    android:updatePeriodMillis="0" />
+    android:updatePeriodMillis="1800000" />
