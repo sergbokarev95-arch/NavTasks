@@ -97,6 +97,29 @@ class SelectiveExchangeTest {
         assertTrue(runCatching { completeServiceCycle(scrubbed, day) }.isFailure)
     }
 
+    @Test fun selectedServiceAndAmosRequestNumbersSurviveFileAndImport() {
+        val source = SelectiveBundle(
+            services = listOf(ServiceEntry(
+                equipment = "GYRO COMPASSES SERVICE",
+                lastDate = day.minusMonths(2), nextDate = day.plusMonths(12),
+                requestNumber = "252-03524")),
+            workOrders = listOf(WorkOrderEntry(
+                title = "AIS spare parts", reference = "REQ-2026-44",
+                dueDate = day.plusDays(30))),
+        )
+        val file = SelectiveTransfer.export(source)
+        val decoded = SelectiveTransfer.parse(file)
+        assertEquals("252-03524", decoded.services.single().requestNumber)
+        assertEquals("REQ-2026-44", decoded.workOrders.single().reference)
+        val local = ProfileSnapshot(vessel, emptyList(), emptyList(),
+            emptyList(), day.toString())
+        val merged = mergeSelective(local, decoded)
+        assertEquals("252-03524", merged.snapshot.services.single().requestNumber)
+        assertEquals("REQ-2026-44", merged.snapshot.workOrders.single().reference)
+        assertTrue(merged.snapshot.services.single().serviceHistory.isEmpty())
+        assertTrue(merged.snapshot.workOrders.single().executionHistory.isEmpty())
+    }
+
     @Test fun sameNameAndAmosReferenceAreAppendOnlyEvenWithDifferentCase() {
         val snapshot = ProfileSnapshot(vessel,
             templates = listOf(TaskTemplate(id = "a", title = "SEA LOG",
