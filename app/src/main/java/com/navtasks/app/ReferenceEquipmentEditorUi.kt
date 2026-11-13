@@ -166,6 +166,10 @@ internal fun ReferenceProcedureEditor(
                         edition = edition.trim(),
                     ),
                     instructions = steps,
+                    // Editing textual instructions must not silently detach a manual.
+                    attachmentSha256 = original?.attachmentSha256,
+                    attachmentMimeType = original?.attachmentMimeType,
+                    attachmentFilename = original?.attachmentFilename.orEmpty(),
                 )
                 onSave(draft)
             }) { Text(localized("Сохранить", "Save", lang), color = p.blueText) }
