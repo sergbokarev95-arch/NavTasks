@@ -432,3 +432,13 @@
 - [ ] HONOR: full profile + .navlib backups, download both APKs, install ONLY QA11/code210 IN PLACE; verify blue default adaptive icon and no regressions. Check static/adaptive clipping and launcher updates without deleting app. Transparent MagicOS theme overlay needs active HNT theme merging and on-device confirmation (current theme has NOT been uploaded).
 - [ ] Another Android phone (Samsung ideally): normal colored icon, monochrome-themed icon, UI/notifications/widgets/backup/PDF, compatibility and no data loss.
 - [ ] Complete release candidate QA (all existing modules, older-version update/migrations, signing key, stable update metadata), get explicit owner approval and publish 1.0.0. No new feature scope.
+
+### QA11 signed builds verified; next HONOR / Samsung and release acceptance
+- [x] Approved icon design implemented in existing Android adaptive icon layers and test suite.
+- [x] Signed QA11/code210 CI #43423620341 PASS, APK SHA256 `44358f77552a3029d7c8bf9d743fdb317a65fa426ae6e982f9b5f085284c7538`, private draft `untagged-76ac11a0e661458f4c20`.
+- [x] Full-color MagicOS transparent package PNG 512×512 SHA256 `f05d2a62ea129438dcee45f2071f7ad2ba6381eb020f0c9a73e559c06d25102d` and icon-only overlay ZIP exported and attached; NOT automatically selected from APK. Needs merge into user's current Magic Glass HNT, not installed as a new theme.
+- [x] Exact QA10 source signed recovery/code211 CI #43422895671 PASS, SHA256 `7059ba88d448407381ae4b1e532018316b2542e4f412ed6b72592f5b07c3bb2c`, private draft `untagged-f3ab03b41aa9b6f9f7c4`.
+- [x] Original cert/package/nondebuggable verified; stable.json `available:false`; main untouched.
+- [ ] HONOR owner: export full profiles + separate .navlib, download signed QA11 and emergency code211, install ONLY QA11/code210 in place, verify normal blue launcher icon and functional app; no removal/data clearing. For true Liquid Glass without blue tile, safely merge named PNG into existing HNT; current theme file NOT provided and therefore not modified. Owner screenshot acceptance required.
+- [ ] Verify on another device (Samsung): colored adaptive icon, monochrome-themed icon, launcher, widgets, task/AMOS/Service/Handover/notices, notes, PDF, backups and network update. Record findings.
+- [ ] Final 1.0.0 full regression including direct long-version updates/restore, original signing, versionCode above any installed recovery, stable channel rollout only after explicit approval.
