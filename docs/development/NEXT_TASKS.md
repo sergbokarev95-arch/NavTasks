@@ -414,3 +414,11 @@
 - [ ] Download private signed APK and higher-code209 recovery only after verification; full profiles + .navlib export; install QA10 IN PLACE, never uninstall/clear data.
 - [ ] HONOR user selection tests: drag over several words/lines continuously; select all, copy, cut, paste; apply B/I/U/color to multiword region; Save and reopen an EXISTING formatted ECDIS note; test new Russian note and keyboard; confirm profiles and tasks unchanged.
 - [ ] After user accepts selection, next only new NavTasks icon, second Android device, final signed 1.0.0 QA and authorized publication.
+
+### QA10 signed build ready — HONOR actual handle-drag validation NEXT
+- [x] Upstream stable Rich Editor 1.0.0 includes fix for Android handle-drag selection; no Kotlin/Compose project upgrades needed to compile.
+- [x] QA10/code208 original-signer private signed CI #43416622629 SUCCESS; APK SHA256 `3b6535acd2330687fe2aab764175735c8b3f9667fb869e5d3aa3bcef15c64cd0`, private draft untagged-267c5792eb36c2f2cda1.
+- [x] Exact QA9-source higher-code209 recovery original-signer CI #43416631675 SUCCESS; APK SHA256 `a9eabf4118c0b6144e3eae6dfca30a3bbef70f06137ad8c0466e29a97a2ac35c`, private draft untagged-c53c550e91a0dd2bd59f.
+- [x] Public stable feed `available:false`; main untouched.
+- [ ] HONOR: backup full profile + .navlib, download both, install ONLY code208 in place, double-tap an existing Handover ECDIS word, drag ONE handle across several words AND multiple lines in ONE continuous gesture, check select all/copy/cut/paste and formatting B/I/U/color, Save/reopen original formatted notes and tasks. If regression, install recovery209 in place; no data clearing.
+- [ ] After user explicitly accepts selection behavior: standalone new NavTasks app icon (requires visual approval), second Android device (Samsung), complete regression and authorized 1.0.0 release. No other feature scope.
