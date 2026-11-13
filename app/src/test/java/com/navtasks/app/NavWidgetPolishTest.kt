@@ -80,7 +80,7 @@ class NavWidgetPolishTest {
 
     @Test fun widePercentIsReadableBesideTheProgressBarInBothThemes() {
         val dark = source("res/drawable/navtasks_widget_bg_dark.xml")
-        assertTrue(dark.contains("#F8000000"))
+        assertTrue(dark.contains("#E0000000"))
         assertFalse(dark.contains("#E7282D36"))
         for (mode in listOf("light", "dark")) {
             val wide = source("res/layout/navtasks_widget_wide_${mode}.xml")
