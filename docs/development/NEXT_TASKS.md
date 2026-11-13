@@ -362,3 +362,10 @@
 - [x] RC20 recovery199 signed CI #43382181157 SUCCESS, original signer/package, private asset verified.
 - [ ] QA5 signed private release #43382498551 still IN PROGRESS at this checkpoint. Verify final SUCCESS and exact private uploaded code198 APK; only then provide download.
 - [ ] HONOR QA of chooser on real device with PDF and DOCX, open from My Materials and attached Radar procedure; save/export/reopen without loss, no cloud exposure unless user selects external cloud viewer.
+
+### QA5 handoff — all CI passed, HONOR on-device test needed
+- [x] Reference external-read source full CI #43382304568 SUCCESS.
+- [x] Private QA5 code198 full signed CI #43382498551 SUCCESS, original signer/package verified, APK uploaded to private DRAFT, 36,474,516 bytes sha256 a4df9a20d8160b2afe533010c6f465db7840aebae373bf8087aa8d808a3f0fae.
+- [x] Private RC20 Recovery199 full signed CI #43382181157 SUCCESS, APK uploaded to private DRAFT, 28,534,537 bytes sha256 202b58396d462679915abca840dcc67579bd1f1efb77b3f8d94609dcec944a37.
+- [ ] Physical HONOR QA: profile backup, install QA5 over QA4, test internal quick preview and "Open with" chooser for PDF in shared library / attached Radar PDF / DOCX, verify matching installed PDF/Word handlers and no write to original, safe Back, offline, repeat. Samsung QA separately.
+- [ ] Keep native continuous reader beta disabled after QA3 crash and recovery199 only as safety net; revisit widgets and 1.0.0 after user acceptance.
