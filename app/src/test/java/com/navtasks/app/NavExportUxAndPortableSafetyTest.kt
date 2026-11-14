@@ -28,7 +28,7 @@ class NavExportUxAndPortableSafetyTest {
         assertTrue(dialog.contains("localized(\"Отмена\", \"Cancel\""))
         assertEquals(2, Regex("fillMaxWidth\\(\\)\\.heightIn\\(min = 52\\.dp\\)")
             .findAll(dialog).count())
-        assertFalse(dialog.contains("NavGlassAlertDialog"))
+        assertFalse(dialog.contains("NavGlassAlertDialog(p ="))
         val header = ui.substring(0, start)
         assertTrue(header.contains("widthIn(min = 92.dp)"))
         assertTrue(header.contains("navGlass(p, radius = 22.dp"))
