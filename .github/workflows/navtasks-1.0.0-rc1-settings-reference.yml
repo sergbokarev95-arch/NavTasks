@@ -70,7 +70,7 @@ jobs:
             --draft --latest=false \
             --target "$GITHUB_SHA" \
             --title "PRIVATE NavTasks 1.0.0 RC1 SETTINGS AND REFERENCE (DO NOT PUBLISH)" \
-            --notes "Private 1.0.0-rc1 (code224) from owner-accepted QA17: global Settings keeps full profile transfer and selective exchange only; Reference contains Inspections (SIRE 2.0, VIQ7), Equipment and My Materials; separate Reference import/export screen retains verified PDF/DOCX v2 and catalog backup. No task/AMOS/Service/Handover/storage logic changes. Install only after backing up full profile and separate .navlib; code223 emergency recovery remains signed. Verify both HONOR and Samsung and owner sign-off before public stable 1.0.0."
+            --notes "Private 1.0.0-rc1 (code224) from owner-accepted QA17: global Settings keeps full profile transfer and selective exchange only; Reference contains Inspections (SIRE 2.0, VIQ7), Equipment and My Materials; separate Reference import/export screen retains verified PDF/DOCX v2 and catalog backup. No task/AMOS/Service/Handover/storage logic changes. Install only after backing up full profile and separate .navlib; Signed code223 is LOWER than this RC1 and cannot roll back an installed code224. Use separately signed exact QA17-source code225 emergency recovery only after verification. Verify both HONOR and Samsung and owner sign-off before public stable 1.0.0."
       - name: Erase temporary signing key
         if: always()
         run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
