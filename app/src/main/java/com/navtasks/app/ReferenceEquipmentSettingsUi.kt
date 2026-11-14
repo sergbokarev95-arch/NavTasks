@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Import/export lives in Settings as well as the equipment-card context menu. */
+/** Independent Reference import/export panel, opened from the Reference hub. */
 @Composable
 internal fun ReferenceEquipmentSettingsPanel(
     profileId: String,
@@ -49,7 +49,7 @@ internal fun ReferenceEquipmentSettingsPanel(
         return result.isSuccess
     }
 
-    // Settings uses the SAME v2 packaging and SHA-verified import as the
+    // This hub panel uses the SAME v2 packaging and SHA-verified import as the
     // Equipment screen. Never fall back to manifest-only schema v1 here.
     val saveDocument = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream"),
@@ -138,13 +138,13 @@ internal fun ReferenceEquipmentSettingsPanel(
     }
 
     NavPanel(p) {
-        Text(localized("Справочник · Импорт и экспорт", "Reference · Import and export", lang),
+        Text(localized("Обмен оборудованием", "Equipment exchange", lang),
             color = p.text, fontSize = 16.sp)
         Text(localized(
-            "Обмен отдельными карточками оборудования, процедурами и выдержками. " +
-                "Работы AMOS и Services не передаются.",
-            "Share individual equipment cards, manual procedures and excerpts. " +
-                "No AMOS, Services or tasks are included.", lang),
+            "Карточки оборудования передаются вместе с прикреплёнными PDF и Word. " +
+                "Профили, задачи, AMOS и Services не передаются.",
+            "Equipment cards include attached PDF and Word originals. " +
+                "Profiles, tasks, AMOS and Services are not included.", lang),
             color = p.muted, fontSize = 12.sp)
         if (catalog == null) {
             Text(localized("Каталог требует проверки. Импорт и экспорт заблокированы без удаления данных.",
