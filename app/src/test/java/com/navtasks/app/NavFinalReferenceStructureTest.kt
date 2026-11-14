@@ -31,6 +31,10 @@ class NavFinalReferenceStructureTest {
         assertFalse(hub.contains("item(key = \"reference-viq\")"))
         assertTrue(hub.contains("item(key = \"inspection-sire\")"))
         assertTrue(hub.contains("item(key = \"inspection-viq\")"))
+        val exchange = hub.indexOf("item(key = \"reference-exchange\")")
+        assertTrue("Reference import/export is below the last category", exchange > personal)
+        assertTrue("Reference import/export uses the Export Handover centered dimensions",
+            hub.contains("Modifier.widthIn(min = 174.dp).heightIn(min = 46.dp)"))
         assertTrue(hub.contains("manualSection = NavReferenceSections.SIRE"))
         assertTrue(hub.contains("manualSection = NavReferenceSections.VIQ7"))
     }
