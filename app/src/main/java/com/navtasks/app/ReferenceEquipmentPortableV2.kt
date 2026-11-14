@@ -265,3 +265,30 @@ internal class StagedReferenceEquipment(
 ) : Closeable {
     override fun close() { directory.deleteRecursively() }
 }
+
+/**
+ * Common restore path for both Equipment and Settings screens.
+ * Invoke only after stage() has verified every file, and only on Dispatchers.IO.
+ * Existing matching blobs are reused; missing originals are imported before the
+ * equipment metadata is written. The caller retains the staged files until done.
+ */
+internal fun restoreStagedEquipmentOriginals(
+    staged: StagedReferenceEquipment,
+    manualStore: ReferenceManualStore,
+) {
+    for (attachment in staged.originals) {
+        val existing = manualStore.read().documents.firstOrNull {
+            it.sha256 == attachment.sha256 && it.mimeType == attachment.mimeType
+        }
+        if (existing != null &&
+            runCatching { manualStore.findOriginal(existing) }.isSuccess) continue
+        attachment.file.inputStream().use { input ->
+            val title = attachment.filename.substringBeforeLast('.')
+            val record = manualStore.importOriginal(
+                input, title, attachment.filename, attachment.mimeType)
+            require(record.sha256 == attachment.sha256) {
+                "Restored PDF/Word does not match the verified archive"
+            }
+        }
+    }
+}
