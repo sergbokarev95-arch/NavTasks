@@ -239,9 +239,17 @@ fun HandoverScreen(
                 }
             }
             if (!personalMode) {
-                TextButton(enabled = !exportRunning, onClick = { exportOpen = true }) {
+                Box(
+                    Modifier.height(44.dp).widthIn(min = 92.dp)
+                        .navGlass(p, radius = 22.dp, role = GlassRole.CONTROL)
+                        .glassClickable(onClick = { if (!exportRunning) exportOpen = true })
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Text(localized("Экспорт", "Export", lang),
-                        color = p.blueText, fontSize = 13.sp)
+                        color = if (exportRunning) p.muted else p.blueText,
+                        fontSize = 14.sp, fontWeight = FontWeight.Medium,
+                        maxLines = 1)
                 }
             }
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
@@ -564,30 +572,63 @@ fun HandoverScreen(
     } // Content and floating Add button share the same glass source.
 
     if (exportOpen && !personalMode) {
-        NavGlassAlertDialog(p = p,
-            onDismissRequest = { exportOpen = false },
-            title = { Text(localized("Экспорт Handover", "Export Handover", lang)) },
-            text = { Text(localized(
-                "Создать обычный документ для передачи сменщику. Все разделы и записи будут доступны без NavTasks.",
-                "Create a document readable without NavTasks, including all sections and notes.",
-                lang)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    exportSnapshot = handover.sections.toList()
-                    exportOpen = false
-                    pdfExport.launch("NavTasks_Handover_" + LocalDate.now() + ".pdf")
-                }) { Text("PDF", color = p.blueText) }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    exportSnapshot = handover.sections.toList()
-                    exportOpen = false
-                    wordExport.launch("NavTasks_Handover_" + LocalDate.now() + ".docx")
-                }) { Text("Word (.docx)", color = p.blueText) }
-                TextButton(onClick = { exportOpen = false }) {
-                    Text(localized("Отмена", "Cancel", lang), color = p.muted)
+        val frost = navPopupFrostAvailable()
+        Dialog(onDismissRequest = { exportOpen = false }) {
+            NavApplyDialogFrost(frost)
+            Column(
+                Modifier.fillMaxWidth().widthIn(max = 420.dp)
+                    .navPopupGlassSurface(p, frosted = frost)
+                    .padding(horizontal = 20.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(localized("Экспорт Handover", "Export Handover", lang),
+                    fontSize = 20.sp, lineHeight = 25.sp, color = p.text,
+                    fontWeight = FontWeight.SemiBold)
+                Text(localized(
+                    "Создать документ для передачи сменщику. Он откроется без NavTasks на компьютере или iPhone.",
+                    "Create a document your successor can open on a PC or iPhone without NavTasks.",
+                    lang), color = p.muted, fontSize = 14.sp, lineHeight = 20.sp)
+                // Each action owns its own full-width glass surface and touch
+                // target. NavGlassAlertDialog's two-slot Row is deliberately not
+                // used: three TextButtons in its Box overlap on narrow phones.
+                Box(
+                    Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                        .navGlass(p, radius = 16.dp, role = GlassRole.CONTROL)
+                        .glassClickable {
+                            exportSnapshot = handover.sections.toList()
+                            exportOpen = false
+                            wordExport.launch("NavTasks_Handover_" +
+                                LocalDate.now() + ".docx")
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("Word (.docx)", color = p.blueText, fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium)
                 }
-            })
+                Box(
+                    Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                        .navGlass(p, radius = 16.dp, role = GlassRole.CONTROL)
+                        .glassClickable {
+                            exportSnapshot = handover.sections.toList()
+                            exportOpen = false
+                            pdfExport.launch("NavTasks_Handover_" +
+                                LocalDate.now() + ".pdf")
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("PDF", color = p.blueText, fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium)
+                }
+                TextButton(
+                    onClick = { exportOpen = false },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                        .heightIn(min = 44.dp),
+                ) {
+                    Text(localized("Отмена", "Cancel", lang),
+                        color = p.muted, fontSize = 14.sp)
+                }
+            }
+        }
     }
     if (exportFeedback != null) {
         NavGlassAlertDialog(p = p,
