@@ -50,6 +50,12 @@ class NavLauncherIconThemeTest {
         assertTrue(mono.contains("M45,54.4 L51,60.4 L64,47.4"))
     }
 
+    @Test fun settingsFooterUsesPlainNavTasksNameWithoutLegacyGlassWord() {
+        val settingsUi = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+        assertTrue(settingsUi.contains("Text(\"NavTasks \" + actualVersion"))
+        assertFalse(settingsUi.contains("Text(\"NavTasks Glass \" + actualVersion"))
+    }
+
     @Test fun noPackageOrDataMigrationForVisualOnlyChange() {
         val gradle = File("build.gradle.kts").readText()
         assertTrue(gradle.contains("versionCode = 227"))
