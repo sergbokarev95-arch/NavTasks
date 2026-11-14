@@ -568,7 +568,10 @@ internal fun ReferenceEquipmentScreen(
                 if (submit(referenceImportEquipment(catalog, staged.equipment,
                         folderId, replaceSameId = replaceSameId))) {
                     imported = null
-                    feedback = localized(
+                    feedback = if (staged.legacyMissingAttachments) localized(
+                        "Оборудование добавлено без оригиналов PDF/Word (старый формат v1).",
+                        "Equipment added without PDF/Word originals (legacy v1).", lang)
+                    else localized(
                         "Оборудование и вложенные документы добавлены.",
                         "Equipment and attached documents imported.", lang)
                 }
@@ -612,13 +615,18 @@ internal fun ReferenceEquipmentScreen(
             confirmButton = {
                 TextButton(enabled = !importing, onClick = {
                     acceptEquipment(staged, replaceSameId = false)
-                }) { Text(localized("Добавить копию", "Add copy", lang), color = p.blueText) }
+                }) { Text(
+                    if (staged.legacyMissingAttachments)
+                        localized("Без PDF", "Without PDF", lang)
+                    else localized("Добавить копию", "Add copy", lang),
+                    color = p.blueText) }
             },
             dismissButton = {
                 TextButton(enabled = !importing, onClick = { imported = null }) {
                     Text(localized("Отмена", "Cancel", lang), color = p.muted)
                 }
-                if (conflict == ReferenceImportConflict.SAME_ID) {
+                if (conflict == ReferenceImportConflict.SAME_ID &&
+                    !staged.legacyMissingAttachments) {
                     TextButton(enabled = !importing, onClick = {
                         acceptEquipment(staged, replaceSameId = true)
                     }) { Text(localized("Заменить", "Replace", lang), color = p.systemRed) }
