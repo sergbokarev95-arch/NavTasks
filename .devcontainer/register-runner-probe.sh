@@ -52,7 +52,7 @@ for asset in data.get("assets", []):
 PY
 )
   rm -f "$META"
-  [[ -n "$ASSET_URL" && -n "$ASSET_SHA" ]] || fail "No SHA-256-verified official runner asset"
+  [[ -n "${ASSET_URL:-}" && -n "${ASSET_SHA:-}" ]] || fail "No SHA-256-verified official runner asset"
   TMP_ARCHIVE="$(mktemp)"
   curl --fail --silent --show-error --location --retry 3 --connect-timeout 30 \
     --max-time 900 "$ASSET_URL" -o "$TMP_ARCHIVE" \
