@@ -471,3 +471,10 @@
 - [ ] Independent final production regression and source/history security review after repository visibility made public; only then update main and publish signed stable 1.0.0 + `NavTasks-Updates/channels/stable.json` with owner release sign-off.
 
 - [ ] Confirm separately signed exact QA17-source emergency fallback code225 CI PASS before RC1 owner install; do NOT use lower code223 as rollback from RC1/code224. Stable 1.0.0 requires code >=226 after any recovery.
+
+### 1.0.0 RC1 CI completion — physical acceptance NEXT
+- [x] RC1 code224 original cert/JVM/release/private-draft CI `43606021649` PASS, SHA256 `20c5dc654694f097201d6f931278efca45e081f54d724e2aa1c0a25981104ddd`.
+- [x] Exact QA17 app-source higher-code225 recovery original cert/JVM/release/private-draft CI `43606025556` PASS, SHA256 `1d25699c1d2b7b98460b50ce0ad0deff4d86d9ba5769d87a8d71b2ac08e75897`.
+- [ ] HONOR: export FULL profiles and `.navlib`, save recovery APK, install ONLY RC1 code224 in place (do not uninstall / reset data), verify only two transfer blocks in Settings and three Reference root cards with SIRE/VIQ7 INSIDE Inspections, Equipment import/export, My Materials, profile/task/AMOS/Services/Handover preservation, theme, docking and search.
+- [ ] HONOR↔Samsung: PDF/DOCX equipment originals still open after transfer in both export routes; inspect full/restricted imports, Work order request values, Handover DOCX/PDF Cyrillic, widgets and notifications; no data loss.
+- [ ] Audit public repository history/metadata and all 1.0.0 release safety checks; prepare PRODUCTION 1.0.0 code >=226, publish signed APK to `NavTasks-Updates` expected pinned URL and enable stable.json ONLY after user's RC1 approval and final verified signature/hash. Continue optional monthly releases, no forced updates.
