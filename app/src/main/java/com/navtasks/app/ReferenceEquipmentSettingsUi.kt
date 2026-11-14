@@ -9,7 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.io.ByteArrayOutputStream
+import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /** Import/export lives in Settings as well as the equipment-card context menu. */
@@ -21,13 +24,21 @@ internal fun ReferenceEquipmentSettingsPanel(
 ) {
     val context = LocalContext.current
     val store = remember(context, profileId) { ReferenceEquipmentStore(context, profileId) }
+    val manualStore = remember(context) { ReferenceManualStore(context) }
+    val scope = rememberCoroutineScope()
     val loaded = remember(store) { runCatching { store.read() } }
     var catalog by remember(store) { mutableStateOf(loaded.getOrNull()) }
     var exportChooser by remember { mutableStateOf(false) }
-    var selectedExport by remember { mutableStateOf<ReferenceEquipment?>(null) }
-    var incoming by remember { mutableStateOf<ReferenceEquipment?>(null) }
+    var preparedExport by remember { mutableStateOf<File?>(null) }
+    var exporting by remember { mutableStateOf(false) }
+    var incoming by remember { mutableStateOf<StagedReferenceEquipment?>(null) }
+    var importing by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<String?>(null) }
     var failure by remember { mutableStateOf(false) }
+    val exportForCleanup = preparedExport
+    DisposableEffect(exportForCleanup) { onDispose { exportForCleanup?.delete() } }
+    val importForCleanup = incoming
+    DisposableEffect(importForCleanup) { onDispose { importForCleanup?.close() } }
 
     fun save(updated: ReferenceEquipmentCatalog): Boolean {
         val result = runCatching { store.write(updated) }
@@ -40,47 +51,180 @@ internal fun ReferenceEquipmentSettingsPanel(
         return result.isSuccess
     }
 
+    // Settings MUST use the same self-contained v2 exchange as the equipment
+    // card. The old ReferenceEquipmentExchange.encode() saved metadata-only
+    // schemaVersion=1, silently dropping PDF/DOCX originals.
     val saveDocument = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream"),
     ) { uri ->
-        val item = selectedExport
-        if (uri != null && item != null) {
-            runCatching {
-                val bytes = ReferenceEquipmentExchange.encode(item)
-                context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
-                    ?: throw IOException("Cannot open output file")
-            }.onSuccess {
+        val completeArchive = preparedExport
+        if (uri == null || completeArchive == null) {
+            preparedExport = null
+        } else scope.launch {
+            exporting = true
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openOutputStream(uri)?.use { output ->
+                        completeArchive.inputStream().use {
+                            it.copyTo(output, 64 * 1024)
+                        }
+                    } ?: throw IOException("Could not save equipment archive")
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        ReferenceEquipmentPortableV2.stage(input, context.cacheDir).use { staged ->
+                            require(!staged.legacyMissingAttachments)
+                            val required = staged.equipment.procedures.mapNotNull { procedure ->
+                                procedure.attachmentSha256?.let { sha ->
+                                    sha to procedure.attachmentMimeType
+                                }
+                            }.toSet()
+                            val actual = staged.originals.map {
+                                it.sha256 to it.mimeType
+                            }.toSet()
+                            require(actual == required) {
+                                "Saved archive is missing PDF/Word originals"
+                            }
+                        }
+                    } ?: throw IOException("Could not verify saved archive")
+                }
+            }
+            result.onSuccess {
                 failure = false
-                status = localized("Карточка оборудования экспортирована.",
-                    "Equipment exported.", lang)
+                status = localized(
+                    "Оборудование и оригиналы PDF/Word сохранены в .navref v2. Передай именно новый файл.",
+                    "Equipment and PDF/Word originals saved as .navref v2. Share this new file.",
+                    lang)
+            }.onFailure { error ->
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        android.provider.DocumentsContract.deleteDocument(
+                            context.contentResolver, uri)
+                    }
+                }
+                failure = true
+                status = localized(
+                    "Не удалось сохранить полный архив с вложениями. ",
+                    "Unable to save complete archive with attachments. ",
+                    lang) + (error.localizedMessage ?: "")
+            }
+            preparedExport = null
+            exporting = false
+        }
+    }
+
+    fun prepareExport(item: ReferenceEquipment) {
+        if (exporting) return
+        exporting = true
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val temp = File.createTempFile("navtasks-equipment-", ".navref", context.cacheDir)
+                    try {
+                        temp.outputStream().use { output ->
+                            ReferenceEquipmentPortableV2.export(
+                                item, manualStore.read().documents,
+                                manualStore::findOriginal, output)
+                        }
+                        ReferenceEquipmentPortableV2.stage(
+                            temp.inputStream(), context.cacheDir).use { staged ->
+                            require(!staged.legacyMissingAttachments)
+                            val required = item.procedures.mapNotNull { procedure ->
+                                procedure.attachmentSha256?.let { sha ->
+                                    sha to procedure.attachmentMimeType
+                                }
+                            }.toSet()
+                            val actual = staged.originals.map {
+                                it.sha256 to it.mimeType
+                            }.toSet()
+                            require(actual == required) {
+                                "An attached PDF/Word original was not included"
+                            }
+                        }
+                        temp
+                    } catch (error: Throwable) {
+                        temp.delete()
+                        throw error
+                    }
+                }
+            }
+            exporting = false
+            result.onSuccess { ready ->
+                preparedExport = ready
+                val safe = item.title.replace(Regex("[^\\p{L}\\p{N}_-]"), "_")
+                    .take(55).ifBlank { "Equipment" }
+                saveDocument.launch("${safe}_with_documents_v2.navref")
+            }.onFailure { error ->
+                failure = true
+                status = localized(
+                    "Экспорт невозможен: оригинал PDF/Word отсутствует или повреждён. ",
+                    "Export blocked: attached PDF/Word original missing or damaged. ",
+                    lang) + (error.localizedMessage ?: "")
+            }
+        }
+    }
+
+    val openDocument = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        ReferenceEquipmentPortableV2.stage(input, context.cacheDir)
+                    } ?: throw IOException("Could not open equipment archive")
+                }
+            }
+            result.onSuccess {
+                incoming = it
+                status = null
+                failure = false
             }.onFailure {
                 failure = true
                 status = it.localizedMessage
             }
         }
-        selectedExport = null
     }
-    val openDocument = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        if (uri != null) {
-            runCatching {
-                val raw = context.contentResolver.openInputStream(uri)?.use { input ->
-                    val output = ByteArrayOutputStream()
-                    val buffer = ByteArray(8192)
-                    while (true) {
-                        val count = input.read(buffer)
-                        if (count < 0) break
-                        require(output.size() + count <= 12_000_000) {
-                            "Reference archive exceeds 12 MB"
+
+    fun acceptEquipment(staged: StagedReferenceEquipment, replaceSameId: Boolean) {
+        if (importing) return
+        importing = true
+        scope.launch {
+            val originals = withContext(Dispatchers.IO) {
+                runCatching {
+                    for (attachment in staged.originals) {
+                        val existing = manualStore.read().documents.firstOrNull {
+                            it.sha256 == attachment.sha256 &&
+                                it.mimeType == attachment.mimeType
                         }
-                        output.write(buffer, 0, count)
+                        if (existing != null &&
+                            runCatching { manualStore.findOriginal(existing) }.isSuccess) continue
+                        attachment.file.inputStream().use { input ->
+                            val record = manualStore.importOriginal(
+                                input, attachment.filename.substringBeforeLast('.'),
+                                attachment.filename, attachment.mimeType)
+                            require(record.sha256 == attachment.sha256) {
+                                "Imported attachment differs from verified original"
+                            }
+                        }
                     }
-                    output.toByteArray()
-                } ?: throw IOException("Cannot open reference archive")
-                ReferenceEquipmentExchange.decode(raw)
-            }.onSuccess { incoming = it; status = null; failure = false }
-                .onFailure { failure = true; status = it.localizedMessage }
+                }
+            }
+            originals.onSuccess {
+                val current = catalog
+                if (current != null && save(referenceImportEquipment(
+                        current, staged.equipment, targetFolderId = null,
+                        replaceSameId = replaceSameId))) {
+                    incoming = null
+                    failure = false
+                    status = localized(
+                        "Оборудование и вложенные PDF/Word импортированы.",
+                        "Equipment and included PDF/Word files imported.", lang)
+                }
+            }.onFailure { error ->
+                failure = true
+                status = error.localizedMessage ?: localized(
+                    "Ошибка импорта PDF/Word.", "Could not import PDF/Word originals.", lang)
+            }
+            importing = false
         }
     }
 
@@ -134,11 +278,8 @@ internal fun ReferenceEquipmentSettingsPanel(
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     catalog!!.equipment.sortedBy { it.title.lowercase() }.forEach { item ->
                         TextButton(onClick = {
-                            selectedExport = item
                             exportChooser = false
-                            val name = item.title.replace(
-                                Regex("[^\\p{L}\\p{N}_-]"), "_").take(60)
-                            saveDocument.launch("$name.navref")
+                            prepareExport(item)
                         }, modifier = Modifier.fillMaxWidth()) {
                             Text(item.title, color = p.text, modifier = Modifier.fillMaxWidth())
                         }
@@ -152,54 +293,54 @@ internal fun ReferenceEquipmentSettingsPanel(
             },
         )
     }
-    incoming?.let { candidate ->
+    incoming?.let { staged ->
+        val candidate = staged.equipment
         val conflict = referenceImportConflict(candidate, catalog?.equipment.orEmpty())
-        NavGlassAlertDialog(p, onDismissRequest = { incoming = null },
+        NavGlassAlertDialog(p, onDismissRequest = { if (!importing) incoming = null },
             title = { Text(localized("Проверка импорта", "Review import", lang)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     Text(candidate.title, color = p.text)
                     Text(localized("Процедур: ", "Procedures: ", lang) +
                         candidate.procedures.size, color = p.muted)
+                    Text(localized("Вложенных файлов: ", "Attached originals: ", lang) +
+                        staged.originals.size, color = p.muted)
+                    if (staged.legacyMissingAttachments) {
+                        Text(localized(
+                            "Старый .navref v1: оригиналы PDF/Word отсутствуют. Запроси новый экспорт v2.",
+                            "Legacy .navref v1: PDF/Word originals are missing. Request a fresh v2 export.",
+                            lang), color = p.systemRed, fontSize = 12.sp)
+                    }
                     Text(when (conflict) {
                         ReferenceImportConflict.SAME_ID -> localized(
-                            "Эта запись уже есть. Можно добавить копию или заменить после подтверждения.",
-                            "This item exists. Add a copy or explicitly replace.", lang)
+                            "Запись с таким ID уже существует. Добавить копию или подтвердить замену?",
+                            "An item with this ID exists. Add a copy or explicitly replace?",
+                            lang)
                         ReferenceImportConflict.POSSIBLE_DUPLICATE -> localized(
-                            "Похожее оборудование уже существует. Проверь перед импортом.",
-                            "Similar equipment already exists; review before import.", lang)
-                        else -> localized("Будет добавлено в текущий профиль. Задачи не создаются.",
-                            "Will be added to this profile without creating tasks.", lang)
+                            "Похожее оборудование уже есть. Проверь перед импортом.",
+                            "Similar equipment exists. Review before importing.", lang)
+                        else -> localized(
+                            "Будет добавлено в текущий профиль без изменения задач.",
+                            "Will add to this profile without changing tasks.", lang)
                     }, color = p.muted, fontSize = 13.sp)
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    val current = catalog
-                    if (current != null &&
-                        save(referenceImportEquipment(current, candidate, targetFolderId = null))) {
-                        incoming = null
-                        failure = false
-                        status = localized("Оборудование импортировано.",
-                            "Equipment imported.", lang)
-                    }
-                }) { Text(localized("Добавить копию", "Add copy", lang), color = p.blueText) }
+                TextButton(enabled = !importing, onClick = {
+                    acceptEquipment(staged, replaceSameId = false)
+                }) {
+                    Text(localized("Добавить", "Add copy", lang), color = p.blueText)
+                }
             },
             dismissButton = {
-                TextButton(onClick = { incoming = null }) {
+                TextButton(enabled = !importing, onClick = { incoming = null }) {
                     Text(localized("Отмена", "Cancel", lang), color = p.muted)
                 }
-                if (conflict == ReferenceImportConflict.SAME_ID) {
-                    TextButton(onClick = {
-                        val current = catalog
-                        if (current != null &&
-                            save(referenceImportEquipment(current, candidate,
-                                targetFolderId = null, replaceSameId = true))) {
-                            incoming = null
-                        }
-                    }) { Text(localized("Заменить", "Replace", lang), color = p.systemRed) }
-                }
+                // Keep destructive replacement out of this two-slot dialog;
+                // multiple TextButtons inside dismiss Box overlap. Users can
+                // add an independent copy safely and delete duplicates later.
             },
         )
     }
+
 }
