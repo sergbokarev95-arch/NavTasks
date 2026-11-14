@@ -65,7 +65,7 @@ jobs:
           set -euo pipefail
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/NavTasks-1.0.0-rc1-code224.apk"
           gh release create "navtasks-1.0.0-rc1-settings-reference-code224" \
-            "$RUNNER_TEMP/NavTasks-0.4.197-qa17-code222.apk" \
+            "$RUNNER_TEMP/NavTasks-1.0.0-rc1-code224.apk" \
             --repo "$GITHUB_REPOSITORY" \
             --draft --latest=false \
             --target "$GITHUB_SHA" \
