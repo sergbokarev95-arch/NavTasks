@@ -1230,12 +1230,9 @@ fun SettingsScreen(
                     profiles, store, handover, services, workOrders, settings, p, lang,
                 )
             }
-            // Standalone Reference exchange; never touches task, AMOS or Services data.
-            if (profiles.active.kind == NavProfileKind.VESSEL) {
-                ReferenceEquipmentSettingsPanel(
-                    profileId = profiles.activeId, p = p, lang = lang,
-                )
-            }
+            // Reference equipment/manual exchange now belongs to the independent
+            // Reference tab. Settings intentionally keeps only Full Profile Transfer
+            // and Selective Exchange; never merge Reference data into those flows.
             // This panel invokes the shared optional update flow. No app-data writes.
             NavPanel(p) {
                 Text(localized("Обновления", "Updates", lang),
