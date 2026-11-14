@@ -7,7 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -273,19 +272,6 @@ internal fun ReferenceHubScreen(
                 searchNavigationSerial++
             },
         )
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            OutlinedButton(
-                onClick = { exchangeOpen = true },
-                border = BorderStroke(1.dp, p.border),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = p.blueText),
-            ) {
-                Text(localized("Импорт и экспорт", "Import and export", lang),
-                    fontSize = 14.sp)
-            }
-        }
         LazyColumn(
             modifier = Modifier.weight(1f)
                 .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }
@@ -372,6 +358,27 @@ internal fun ReferenceHubScreen(
                                 manualSearch = query
                             },
                         )
+                    }
+                }
+            }
+            // Same centered, compact blue-outlined action as Export Handover.
+            // Anchored after all Reference sections, clear of search and dock.
+            if (query.isBlank()) {
+                item(key = "reference-exchange") {
+                    Box(
+                        Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        OutlinedButton(
+                            onClick = { exchangeOpen = true },
+                            modifier = Modifier.widthIn(min = 174.dp).heightIn(min = 46.dp),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+                            border = BorderStroke(1.dp, p.blueText.copy(alpha = 0.55f)),
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                        ) {
+                            Text(localized("Импорт и экспорт", "Import and export", lang),
+                                color = p.blueText, fontSize = 14.sp)
+                        }
                     }
                 }
             }
