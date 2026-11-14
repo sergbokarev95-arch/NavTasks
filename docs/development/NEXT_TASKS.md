@@ -461,3 +461,11 @@
 - [ ] HONOR FULL profile backup and separate .navlib; download both verified APKs; install ONLY code218 without uninstall/clear. Pinch/scroll PDF multiple pages, paged mode with search, swipe one finger and landscape, compare original old behavior.
 - [ ] Samsung ↔ HONOR roundtrip: 2 different-named vessel profiles same `ship-default` ID; same-name confirmed replacement only; preserve personal; selected AMOS/Service requests; equipment card with embedded PDF/DOCX opens on recipient; Handover DOCX/PDF opens on Android/Windows/iOS (Cyrillic).
 - [ ] User signs off, then independent full audit and signed 1.0.0 candidate (versionCode >219 if any rollback installed); stable metadata publish only after explicit approval.
+
+## NEXT — 2026-11-15 pre-stable RC1 device and release gate
+- [x] QA17/code222 original signed build CI success; owner installed and reports original PDF now transfers; QA16/code223 signed recovery saved.
+- [x] Isolate final settings/reference UI from QA17: global Settings retains Full Profile Transfer and Selective Exchange only. Standalone Reference: exactly 3 root categories (Inspections -> SIRE 2.0 / VIQ7, Equipment, My Materials), with an independently accessible Import/Export route. Preserve Reference v2 PDFs, old v1 warning, profile/AMOS/Service data models and docks.
+- [x] Add source-level navigation/regression tests; prepare version 1.0.0-rc1 code224 with original signer workflow and private DRAFT only.
+- [ ] Verify RC1 signed CI full JVM suite, exact application ID, historical signer and versionCode224; if error fix only isolated fault before device QA.
+- [ ] Owner: export complete profile + separate `.navlib`, install signed RC1 in place; verify Settings only two transfers, Reference three categories, SIRE2 and VIQ7 navigation/search, Equipment import/export with original PDF/DOCX in HONOR and Samsung, My Materials intact, day/night and bottom insets, Handover DOCX/PDF, tasks/AMOS/Services/profile data.
+- [ ] Independent final production regression and source/history security review after repository visibility made public; only then update main and publish signed stable 1.0.0 + `NavTasks-Updates/channels/stable.json` with owner release sign-off.
