@@ -64,6 +64,43 @@ class ReferenceEquipmentPortableV2Test {
         }
     }
 
+    @Test fun exportFromEquipmentScreenIsVerifiedBeforeCopyingToUserFile() {
+        val temp = Files.createTempDirectory("navref-verified").toFile()
+        try {
+            val file = File(temp, "source.pdf").apply { writeBytes(pdf) }
+            val (verified, count) = ReferenceEquipmentPortableV2.prepareVerifiedExport(
+                sample(), listOf(manual()), { file }, temp)
+            try {
+                assertEquals(1, count)
+                ZipInputStream(verified.inputStream()).use { zip ->
+                    assertEquals("manifest.json", zip.nextEntry?.name)
+                    zip.closeEntry()
+                    assertEquals("originals/" + hash(pdf) + ".pdf", zip.nextEntry?.name)
+                    assertArrayEquals(pdf, zip.readBytes())
+                }
+            } finally { verified.delete() }
+            assertEquals(0, temp.listFiles()?.count { it.name.endsWith(".navref") })
+        } finally { temp.deleteRecursively() }
+    }
+
+    @Test fun corruptedOrMissingSourceCanNeverYieldAStagedExport() {
+        val temp = Files.createTempDirectory("navref-preflight").toFile()
+        try {
+            val original = File(temp, "wrong.pdf").apply {
+                writeBytes("%PDF-1.4 WRONG".toByteArray())
+            }
+            assertTrue(runCatching {
+                ReferenceEquipmentPortableV2.prepareVerifiedExport(
+                    sample(), listOf(manual()), { original }, temp)
+            }.isFailure)
+            assertTrue(runCatching {
+                ReferenceEquipmentPortableV2.prepareVerifiedExport(
+                    sample(), emptyList(), { original }, temp)
+            }.isFailure)
+            assertEquals(0, temp.listFiles()?.count { it.name.endsWith(".navref") })
+        } finally { temp.deleteRecursively() }
+    }
+
     @Test fun oldV1WithAttachmentMetadataCanImportWithExplicitMissingWarning() {
         val temp = Files.createTempDirectory("navref-v1").toFile()
         try {
