@@ -469,3 +469,5 @@
 - [ ] Verify RC1 signed CI full JVM suite, exact application ID, historical signer and versionCode224; if error fix only isolated fault before device QA.
 - [ ] Owner: export complete profile + separate `.navlib`, install signed RC1 in place; verify Settings only two transfers, Reference three categories, SIRE2 and VIQ7 navigation/search, Equipment import/export with original PDF/DOCX in HONOR and Samsung, My Materials intact, day/night and bottom insets, Handover DOCX/PDF, tasks/AMOS/Services/profile data.
 - [ ] Independent final production regression and source/history security review after repository visibility made public; only then update main and publish signed stable 1.0.0 + `NavTasks-Updates/channels/stable.json` with owner release sign-off.
+
+- [ ] Confirm separately signed exact QA17-source emergency fallback code225 CI PASS before RC1 owner install; do NOT use lower code223 as rollback from RC1/code224. Stable 1.0.0 requires code >=226 after any recovery.
