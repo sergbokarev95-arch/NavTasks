@@ -478,3 +478,10 @@
 - [ ] HONOR: export FULL profiles and `.navlib`, save recovery APK, install ONLY RC1 code224 in place (do not uninstall / reset data), verify only two transfer blocks in Settings and three Reference root cards with SIRE/VIQ7 INSIDE Inspections, Equipment import/export, My Materials, profile/task/AMOS/Services/Handover preservation, theme, docking and search.
 - [ ] HONOR↔Samsung: PDF/DOCX equipment originals still open after transfer in both export routes; inspect full/restricted imports, Work order request values, Handover DOCX/PDF Cyrillic, widgets and notifications; no data loss.
 - [ ] Audit public repository history/metadata and all 1.0.0 release safety checks; prepare PRODUCTION 1.0.0 code >=226, publish signed APK to `NavTasks-Updates` expected pinned URL and enable stable.json ONLY after user's RC1 approval and final verified signature/hash. Continue optional monthly releases, no forced updates.
+
+## After 1.0.0 stable rollout — user-requested beta/stable iteration
+- [x] Public 1.0.0 signed original-key release, code226, original app ID and regression tests.
+- [x] Mirror identical APK into public NavTasks-Updates release `v1.0.0`, SHA256 + original-signer verification, then enable `channels/stable.json` available true, GitHub CI `43610645665` SUCCESS.
+- [ ] On HONOR (RC1 code224) and Samsung with older signed build (>=182), use Settings -> Check updates; verify stable 1.0.0 appears, download, Android system installer, all profiles/task/Handover/manual files preserved. Startup offer depends on toggle and throttling; verify on-device separately.
+- [ ] Test first future pre-release workflow using new isolated beta semantics `1.0.1-beta.3`, `1.0.1-beta.4` (or user-chosen numbering) and separate tester-only feed. Current legacy QA parser and `isQaVersionName` gate are NOT universal betas. Never send beta update to stable cohort automatically.
+- [ ] On user-reported bugs or improvements, stage betas and test on HONOR/Samsung; then publish next stable `1.0.1` with a strictly larger versionCode than EVERY distributed beta, verifying original signer and preserving 1.0.0 update pipeline.
