@@ -107,8 +107,12 @@ fun NavGlassAlertDialog(
     text: @Composable () -> Unit,
     confirmButton: @Composable () -> Unit,
     dismissButton: @Composable () -> Unit = {},
+    solidSurface: Boolean = false,
 ) {
-    val frost = navPopupFrostAvailable()
+    // Some dialogs contain long text and controls: the Android window blur
+    // is not sufficient to guarantee readable contrast over busy list cards.
+    // Default behavior for all other callers remains unchanged.
+    val frost = !solidSurface && navPopupFrostAvailable()
     Dialog(onDismissRequest = onDismissRequest) {
         NavApplyDialogFrost(frost)
         Column(
