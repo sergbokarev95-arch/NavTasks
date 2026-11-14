@@ -75,7 +75,12 @@ internal fun ReferenceEquipmentScreen(
         onDispose { stagedForDisposal?.close() }
     }
     var importing by remember { mutableStateOf(false) }
-    var exportingId by remember { mutableStateOf<String?>(null) }
+    var preparedExport by remember { mutableStateOf<java.io.File?>(null) }
+    var exporting by remember { mutableStateOf(false) }
+    val exportForDisposal = preparedExport
+    DisposableEffect(exportForDisposal) {
+        onDispose { exportForDisposal?.delete() }
+    }
     var feedback by remember { mutableStateOf<String?>(null) }
     var failure by remember { mutableStateOf(false) }
     var attaching by remember { mutableStateOf(false) }
@@ -181,30 +186,106 @@ internal fun ReferenceEquipmentScreen(
         }
     }
 
+    // CreateDocument can create a new (initially empty) SAF file as soon as the
+    // chooser finishes. Prepare and verify the COMPLETE v2 archive first:
+    // otherwise a missing PDF can leave only a manifest at the destination.
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream"),
     ) { uri ->
-        val target = catalog.equipment.firstOrNull { it.id == exportingId }
-        exportingId = null
-        if (uri != null && target != null) scope.launch {
+        val verified = preparedExport
+        if (uri == null || verified == null) {
+            preparedExport = null
+        } else scope.launch {
+            exporting = true
             val result = withContext(Dispatchers.IO) {
                 runCatching {
-                    context.contentResolver.openOutputStream(uri)?.use { output ->
-                        ReferenceEquipmentPortableV2.export(
-                            target, manualStore.read().documents,
-                            manualStore::findOriginal, output)
-                    } ?: throw IOException("Cannot create equipment package")
+                    context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
+                        verified.inputStream().use { it.copyTo(output, 64 * 1024) }
+                    } ?: throw IOException("Cannot save equipment package")
+                    // Validate the SAF provider's FINAL bytes too. This prevents
+                    // reporting success if a cloud/file provider truncated them.
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        ReferenceEquipmentPortableV2.stage(input, context.cacheDir).use {
+                            require(!it.legacyMissingAttachments) {
+                                "Saved an incomplete legacy equipment package"
+                            }
+                            require(it.equipment.procedures.count { p ->
+                                p.attachmentSha256 != null
+                            } >= it.originals.size)
+                        }
+                    } ?: throw IOException("Cannot verify the saved equipment package")
                 }
             }
             result.onSuccess {
                 failure = false
                 feedback = localized(
-                    "Карточка сохранена со всеми прикреплёнными PDF/Word.",
-                    "Equipment exported with all attached PDF/Word originals.", lang)
-            }.onFailure {
+                    "Оборудование сохранено в .navref v2 вместе с оригиналами PDF/Word. Отправляй именно новый файл.",
+                    "Saved .navref v2 including the original PDF/Word files. Share this new file.",
+                    lang)
+            }.onFailure { error ->
+                // Only the document just created by our SAF picker is a cleanup
+                // candidate. Never delete an unrelated file from the library.
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        android.provider.DocumentsContract.deleteDocument(
+                            context.contentResolver, uri)
+                    }
+                }
                 failure = true
-                feedback = it.localizedMessage ?: localized(
-                    "Не удалось экспортировать документ.", "Export failed.", lang)
+                feedback = localized(
+                    "Не удалось сохранить ПОЛНЫЙ архив. Проверь оригиналы PDF/Word в «Моих материалах». ",
+                    "Unable to save the COMPLETE package. Check the PDF/Word originals in My Materials. ",
+                    lang) + (error.localizedMessage ?: "")
+            }
+            preparedExport = null
+            exporting = false
+        }
+    }
+
+    fun prepareEquipmentExport(item: ReferenceEquipment) {
+        if (exporting) return
+        exporting = true
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val stagedFile = java.io.File.createTempFile(
+                        "navtasks-equipment-", ".navref", context.cacheDir)
+                    try {
+                        stagedFile.outputStream().use { output ->
+                            ReferenceEquipmentPortableV2.export(
+                                item, manualStore.read().documents,
+                                manualStore::findOriginal, output)
+                        }
+                        ReferenceEquipmentPortableV2.stage(
+                            stagedFile.inputStream(), context.cacheDir).use { staged ->
+                            require(!staged.legacyMissingAttachments)
+                            require(staged.originals.size ==
+                                item.procedures.mapNotNull { it.attachmentSha256 }.distinct().size) {
+                                "Not every attached PDF/Word is included"
+                            }
+                            require(staged.equipment.id == item.id)
+                        }
+                        stagedFile
+                    } catch (error: Throwable) {
+                        stagedFile.delete()
+                        throw error
+                    }
+                }
+            }
+            exporting = false
+            result.onSuccess { ready ->
+                preparedExport = ready
+                val safe = item.title.replace(Regex("[^\\p{L}\\p{N}_-]"), "_")
+                    .take(55).ifBlank { "Equipment" }
+                // Distinct name prevents confusion with a legacy v1 file
+                // still sitting in the Downloads folder.
+                exportLauncher.launch("${safe}_with_documents_v2.navref")
+            }.onFailure { error ->
+                failure = true
+                feedback = localized(
+                    "Экспорт отменён: один из прикреплённых PDF/Word недоступен или повреждён. ",
+                    "Export cancelled: an attached PDF/Word original is missing or damaged. ",
+                    lang) + (error.localizedMessage ?: "")
             }
         }
     }
@@ -287,10 +368,7 @@ internal fun ReferenceEquipmentScreen(
                             }
                             NavPopoverAction(localized("Экспортировать", "Export equipment", lang), p) {
                                 addMenu = false
-                                exportingId = equipment.id
-                                val safe = equipment.title.replace(
-                                    Regex("[^\\p{L}\\p{N}_-]"), "_").take(60)
-                                exportLauncher.launch("$safe.navref")
+                                prepareEquipmentExport(equipment)
                             }
                         }
                     }
@@ -365,10 +443,7 @@ internal fun ReferenceEquipmentScreen(
                     onEdit = { equipmentEditor = equipment },
                     onDelete = { deleteTarget = "equipment" to equipment.id },
                     onExport = {
-                        exportingId = equipment.id
-                        exportLauncher.launch(
-                            equipment.title.replace(Regex("[^\\p{L}\\p{N}_-]"), "_")
-                                .take(60) + ".navref")
+                        prepareEquipmentExport(equipment)
                     },
                     onAddProcedure = { newProcedure = true },
                 )
