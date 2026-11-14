@@ -587,6 +587,8 @@ fun HandoverScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = p.blue, contentColor = Color.White),
                     ) { Text("Word (.docx)") }
                     OutlinedButton(
                         onClick = {
@@ -596,6 +598,8 @@ fun HandoverScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp, p.blueText.copy(alpha = 0.45f)),
                     ) { Text("PDF", color = p.blueText) }
                 }
             },
