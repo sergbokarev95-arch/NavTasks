@@ -1,0 +1,19 @@
+{
+  "name": "NavTasks QA17 - isolated unsigned verification",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "jdkDistro": "ms",
+      "installGradle": true,
+      "gradleVersion": "8.13",
+      "installMaven": false
+    }
+  },
+  "containerEnv": {
+    "ANDROID_HOME": "/workspaces/.navtasks-android-sdk",
+    "ANDROID_SDK_ROOT": "/workspaces/.navtasks-android-sdk",
+    "GRADLE_USER_HOME": "/workspaces/.navtasks-gradle"
+  },
+  "postCreateCommand": "bash .devcontainer/setup-and-check.sh"
+}
