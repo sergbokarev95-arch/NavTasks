@@ -7,3 +7,5 @@
 *.jks
 *.keystore
 .DS_Store
+# Local Codespaces QA logs and reports (never commit)
+.codespaces-build/
