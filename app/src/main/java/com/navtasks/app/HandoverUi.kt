@@ -238,18 +238,6 @@ fun HandoverScreen(
                         color = p.text, fontSize = 22.sp)
                 }
             }
-            if (!personalMode) {
-                OutlinedButton(
-                    enabled = !exportRunning,
-                    onClick = { exportOpen = true },
-                    shape = RoundedCornerShape(18.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, p.blueText.copy(alpha = 0.45f)),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                ) {
-                    Text(localized("Экспорт", "Export", lang),
-                        color = p.blueText, fontSize = 13.sp)
-                }
-            }
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
             else NavGlassCircleButton(p, "search") {
                 searchOpen = !searchOpen
@@ -535,6 +523,27 @@ fun HandoverScreen(
                     }
                 }
             }
+            if (!personalMode) {
+                item(key = "handover-export") {
+                    Box(
+                        Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        OutlinedButton(
+                            enabled = !exportRunning,
+                            onClick = { exportOpen = true },
+                            modifier = Modifier.widthIn(min = 174.dp).heightIn(min = 46.dp),
+                            shape = RoundedCornerShape(18.dp),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp, p.blueText.copy(alpha = 0.55f)),
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                        ) {
+                            Text(localized("Экспорт Handover", "Export Handover", lang),
+                                color = p.blueText, fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
         }
     }
     if (actionBackdrop != null) {
@@ -572,6 +581,7 @@ fun HandoverScreen(
     if (exportOpen && !personalMode) {
         NavGlassAlertDialog(p = p,
             onDismissRequest = { exportOpen = false },
+            solidSurface = true,
             title = { Text(localized("Экспорт Handover", "Export Handover", lang)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -589,7 +599,7 @@ fun HandoverScreen(
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = p.blue, contentColor = Color.White),
-                    ) { Text("Word (.docx)") }
+                    ) { Text("Word (.docx)", color = Color.White) }
                     OutlinedButton(
                         onClick = {
                             exportSnapshot = handover.sections.toList()
@@ -612,6 +622,7 @@ fun HandoverScreen(
     if (exportFeedback != null) {
         NavGlassAlertDialog(p = p,
             onDismissRequest = { exportFeedback = null },
+            solidSurface = true,
             title = { Text(localized("Экспорт Handover", "Handover export", lang)) },
             text = { Text(exportFeedback.orEmpty(),
                 color = if (exportFailed) p.systemRed else p.text) },
