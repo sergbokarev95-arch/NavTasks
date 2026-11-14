@@ -323,6 +323,16 @@ internal fun ReferenceEquipmentSettingsPanel(
                             "Будет добавлено в текущий профиль без изменения задач.",
                             "Will add to this profile without changing tasks.", lang)
                     }, color = p.muted, fontSize = 13.sp)
+                    if (conflict == ReferenceImportConflict.SAME_ID) {
+                        TextButton(
+                            enabled = !importing,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp),
+                            onClick = { acceptEquipment(staged, replaceSameId = true) },
+                        ) {
+                            Text(localized("Заменить существующую запись", "Replace existing item", lang),
+                                color = p.systemRed, fontSize = 14.sp)
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -336,9 +346,8 @@ internal fun ReferenceEquipmentSettingsPanel(
                 TextButton(enabled = !importing, onClick = { incoming = null }) {
                     Text(localized("Отмена", "Cancel", lang), color = p.muted)
                 }
-                // Keep destructive replacement out of this two-slot dialog;
-                // multiple TextButtons inside dismiss Box overlap. Users can
-                // add an independent copy safely and delete duplicates later.
+                // Destructive replacement stays separately selectable in the
+                // dialog body, not stacked on top of the Cancel button.
             },
         )
     }
