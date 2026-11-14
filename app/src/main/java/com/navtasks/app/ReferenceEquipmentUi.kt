@@ -561,22 +561,7 @@ internal fun ReferenceEquipmentScreen(
         scope.launch {
             val originals = withContext(Dispatchers.IO) {
                 runCatching {
-                    for (attachment in staged.originals) {
-                        val existing = manualStore.read().documents.firstOrNull {
-                            it.sha256 == attachment.sha256 &&
-                                it.mimeType == attachment.mimeType
-                        }
-                        if (existing != null &&
-                            runCatching { manualStore.findOriginal(existing) }.isSuccess) continue
-                        attachment.file.inputStream().use { input ->
-                            val title = attachment.filename.substringBeforeLast('.')
-                            val record = manualStore.importOriginal(input, title,
-                                attachment.filename, attachment.mimeType)
-                            require(record.sha256 == attachment.sha256) {
-                                "Imported attachment differs from verified archive"
-                            }
-                        }
-                    }
+                    restoreStagedEquipmentOriginals(staged, manualStore)
                 }
             }
             originals.onSuccess {
