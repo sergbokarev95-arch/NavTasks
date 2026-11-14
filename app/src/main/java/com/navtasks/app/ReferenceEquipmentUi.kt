@@ -199,7 +199,7 @@ internal fun ReferenceEquipmentScreen(
             exporting = true
             val result = withContext(Dispatchers.IO) {
                 runCatching {
-                    context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
+                    context.contentResolver.openOutputStream(uri)?.use { output ->
                         verified.inputStream().use { it.copyTo(output, 64 * 1024) }
                     } ?: throw IOException("Cannot save equipment package")
                     // Validate the SAF provider's FINAL bytes too. This prevents
@@ -209,9 +209,15 @@ internal fun ReferenceEquipmentScreen(
                             require(!it.legacyMissingAttachments) {
                                 "Saved an incomplete legacy equipment package"
                             }
-                            require(it.equipment.procedures.count { p ->
-                                p.attachmentSha256 != null
-                            } >= it.originals.size)
+                            val referenced = it.equipment.procedures.mapNotNull { p ->
+                                p.attachmentSha256?.let { sha -> sha to p.attachmentMimeType }
+                            }.toSet()
+                            val included = it.originals.map { file ->
+                                file.sha256 to file.mimeType
+                            }.toSet()
+                            require(included == referenced) {
+                                "Saved .navref does not include every original"
+                            }
                         }
                     } ?: throw IOException("Cannot verify the saved equipment package")
                 }
@@ -259,8 +265,13 @@ internal fun ReferenceEquipmentScreen(
                         ReferenceEquipmentPortableV2.stage(
                             stagedFile.inputStream(), context.cacheDir).use { staged ->
                             require(!staged.legacyMissingAttachments)
-                            require(staged.originals.size ==
-                                item.procedures.mapNotNull { it.attachmentSha256 }.distinct().size) {
+                            val required = item.procedures.mapNotNull { p ->
+                                p.attachmentSha256?.let { sha -> sha to p.attachmentMimeType }
+                            }.toSet()
+                            val actual = staged.originals.map {
+                                it.sha256 to it.mimeType
+                            }.toSet()
+                            require(actual == required) {
                                 "Not every attached PDF/Word is included"
                             }
                             require(staged.equipment.id == item.id)
