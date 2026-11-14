@@ -48,6 +48,22 @@ class NavExportUxAndPortableSafetyTest {
         assertTrue(ui.contains("preparedExport = null"))
     }
 
+    @Test fun settingsExportAndImportCannotUseLegacyMetadataOnlyCodec() {
+        val settings = source("ReferenceEquipmentSettingsUi.kt")
+        assertFalse(settings.contains("ReferenceEquipmentExchange.encode("))
+        assertFalse(settings.contains("ReferenceEquipmentExchange.decode("))
+        assertTrue(settings.contains("ReferenceEquipmentPortableV2.export("))
+        assertTrue(settings.contains("ReferenceEquipmentPortableV2.stage("))
+        assertTrue(settings.contains("manualStore.importOriginal("))
+        assertTrue(settings.contains("_with_documents_v2.navref"))
+        assertTrue(settings.contains("fun prepareExport(item: ReferenceEquipment)"))
+        assertTrue(settings.contains("val actual = staged.originals.map"))
+        assertTrue(settings.contains("actual == required"))
+        assertTrue(settings.contains("referenceImportEquipment("))
+        assertTrue(settings.contains("replaceSameId = true"))
+        assertTrue(settings.contains("DocumentsContract.deleteDocument("))
+    }
+
     @Test fun missingOriginalDoesNotClaimSuccessfulExport() {
         val portable = source("ReferenceEquipmentPortableV2.kt")
         assertTrue(portable.contains("schemaVersion\", 2"))
