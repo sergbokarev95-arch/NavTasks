@@ -100,6 +100,42 @@ internal object ReferenceEquipmentPortableV2 {
         }
     }
 
+    /**
+     * Build the complete v2 package in private cache and independently read it
+     * back before copying to a user-selected document. Never report success
+     * merely because a metadata-only ZIP was written.
+     *
+     * Caller owns the returned temporary file and must delete it in finally.
+     */
+    fun prepareVerifiedExport(
+        equipment: ReferenceEquipment,
+        catalog: List<ReferenceManualDocument>,
+        findOriginal: (ReferenceManualDocument) -> File,
+        cacheDir: File,
+    ): Pair<File, Int> {
+        require(cacheDir.isDirectory || cacheDir.mkdirs())
+        val temp = File.createTempFile("navref-verified-", ".navref", cacheDir)
+        try {
+            temp.outputStream().use { export(equipment, catalog, findOriginal, it) }
+            val count = temp.inputStream().use { source ->
+                stage(source, cacheDir).use { staged ->
+                    require(!staged.legacyMissingAttachments) { "Only v2 is exportable" }
+                    require(staged.originals.size == keys(equipment).size) {
+                        "Some original PDF/Word files were not included"
+                    }
+                    require(staged.equipment.procedures.size == equipment.procedures.size) {
+                        "Equipment archive changed during verification"
+                    }
+                    staged.originals.size
+                }
+            }
+            return temp to count
+        } catch (e: Throwable) {
+            temp.delete()
+            throw e
+        }
+    }
+
     /** Stage and verify everything before allowing an import confirmation. */
     fun stage(input: InputStream, cache: File): StagedReferenceEquipment {
         require(cache.mkdirs() || cache.isDirectory)
