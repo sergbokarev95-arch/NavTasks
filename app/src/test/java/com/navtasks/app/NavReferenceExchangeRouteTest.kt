@@ -36,17 +36,17 @@ class NavReferenceExchangeRouteTest {
     }
 
     @Test fun handoverExportIsBelowSectionsNotBesideSearchAndDialogIsOpaque() {
-        val source = source("HandoverUi")
-        val listStart = source.indexOf("LazyColumn(")
-        val sections = source.indexOf("items(shownSections", listStart)
-        val export = source.indexOf("item(key = \"handover-export\")", sections)
+        val handover = source("HandoverUi")
+        val listStart = handover.indexOf("LazyColumn(")
+        val sections = handover.indexOf("items(shownSections", listStart)
+        val export = handover.indexOf("item(key = \"handover-export\")", sections)
         assertTrue("Export must appear after all sections inside LazyColumn",
             listStart >= 0 && sections > listStart && export > sections)
         assertEquals(1, Regex("onClick = \\{ exportOpen = true \\}")
-            .findAll(source).count())
-        assertTrue(source.contains("solidSurface = true"))
-        assertTrue(source.contains("Text(\"Word (.docx)\", color = Color.White)"))
-        assertTrue(source.contains("Modifier.fillMaxWidth()"))
+            .findAll(handover).count())
+        assertTrue(handover.contains("solidSurface = true"))
+        assertTrue(handover.contains("Text(\"Word (.docx)\", color = Color.White)"))
+        assertTrue(handover.contains("Modifier.fillMaxWidth()"))
         val dialogs = source("NavOverlayUi")
         assertTrue(dialogs.contains("solidSurface: Boolean = false"))
         assertTrue(dialogs.contains("!solidSurface && navPopupFrostAvailable()"))
