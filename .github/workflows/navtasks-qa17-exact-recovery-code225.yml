@@ -65,11 +65,11 @@ jobs:
           set -euo pipefail
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/NavTasks-0.4.199-qa17-recovery-code225.apk"
           gh release create "navtasks-qa17-exact-recovery-code225" \
-            "$RUNNER_TEMP/NavTasks-0.4.197-qa17-code222.apk" \
+            "$RUNNER_TEMP/NavTasks-0.4.199-qa17-recovery-code225.apk" \
             --repo "$GITHUB_REPOSITORY" \
             --draft --latest=false \
             --target "$GITHUB_SHA" \
-            --title "PRIVATE NavTasks 0.4.197 QA17 COMPLETE REFERENCE EXPORT (DO NOT PUBLISH)" \
+            --title "PRIVATE NavTasks 0.4.199 EXACT QA17 RECOVERY code225 (DO NOT PUBLISH)" \
             --notes "Emergency RECOVERY ONLY for 1.0.0-rc1 code224 regression. Exact accepted QA17 production app source, changed ONLY versionCode225, versionName, test expectations and private workflow. Old cert/applicationId, no data migration; do not install normally. Next stable code must be at least 226. Do not uninstall app or clear data."
       - name: Erase temporary signing key
         if: always()
