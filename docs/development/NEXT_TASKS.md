@@ -481,3 +481,10 @@
 - [ ] Verify latest QA16/code220 full signed CI #43553441510 PASS and file SHA/asset. Do not link canceled workflows.
 - [ ] HONOR and Samsung: test Settings and card-menu export paths separately, new `_with_documents_v2.navref`, actual originals/ entry in ZIP, offline open after import; error when original missing. Handover Day/Night modal and Word/PDF exports.
 - [ ] Then independent final 1.0.0 audit and owner approval. No new features/stable update before acceptance.
+
+### Signed QA16 ready — REAL DEVICE verification pending
+- [x] QA16/code220 #43553798162 CI PASS original signer, all JVM tests, private draft asset SHA256 `3ab303f74883c1f4e4115c597dc9dec7af7d11803c7e0e1f5e65ea80c4be9d47`, `untagged-5ffa6ef08b56de70819a`.
+- [x] Exact QA15-source higher-code221 recovery CI #43552738083 PASS, asset SHA256 `1d39df8b22d3b67ee9ed6f6e19b9095b11ec90533304f75362fc2f502c55c7c3`, `untagged-e94cf497679f91cb3d40`.
+- [x] Two active equipment export/import paths moved from v1 metadata-only to v2 originals; Handover themed action/modal fixed; public stable OFF and main unchanged.
+- [ ] HONOR & Samsung physical confirmation: full profiles and .navlib export first, download both APKs, install only code220; Handover dialog day/night; export Word/PDF; Settings→Equipment AND equipment-card export with manual PDF, check `_with_documents_v2.navref` ZIP original entry and actual PDF opens on Samsung offline. Try missing-original export and confirm block.
+- [ ] Only after user acceptance: full audit, signed 1.0.0 release with versionCode >221 if recovery ever installed, and explicit approval before changing stable feed.
