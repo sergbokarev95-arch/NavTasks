@@ -461,3 +461,14 @@
 - [ ] HONOR FULL profile backup and separate .navlib; download both verified APKs; install ONLY code218 without uninstall/clear. Pinch/scroll PDF multiple pages, paged mode with search, swipe one finger and landscape, compare original old behavior.
 - [ ] Samsung ↔ HONOR roundtrip: 2 different-named vessel profiles same `ship-default` ID; same-name confirmed replacement only; preserve personal; selected AMOS/Service requests; equipment card with embedded PDF/DOCX opens on recipient; Handover DOCX/PDF opens on Android/Windows/iOS (Cyrillic).
 - [ ] User signs off, then independent full audit and signed 1.0.0 candidate (versionCode >219 if any rollback installed); stable metadata publish only after explicit approval.
+
+## QA17 next actions — no APK until GitHub jobs actually start and PASS
+- [x] Diagnose BOTH supplied .navref files as 728-byte v1 metadata-only with reference to, but no bytes of, A.916(22).pdf.
+- [x] Find Settings UI's separate `ReferenceEquipmentExchange.encode/decode` legacy route; replace BOTH import/export paths with full self-contained v2 package and stage-validated originals; refactor shared restoration with the Equipment screen.
+- [x] Move Handover Export button below final card (LazyColumn item, centered). Opt-in opaque Day/Night modal, readable white Word text.
+- [x] Guard legacy v1 incomplete imports against misleading attachment success/replacement. Add route and dialog structural tests, preserve v2 archive tests.
+- [x] Isolate QA17 code222 and exact QA16-source code223 fallback in private branches; no main or stable feed change.
+- [ ] GitHub Actions issue: run #43560314226 (QA17) & #43560319214 (recovery), retry attempt2, both failed with **zero steps, no hosted runner assigned**; not a Kotlin/test result. Diagnose Actions billing/runner/platform at repository level, retry only after service restored. NO verified signed APKs for QA17/code222 or fallback223 yet.
+- [ ] Once both signed CI pass, verify appId com.navtasks.app.glass, historical SHA256 signer, versionCode 222/223, APK hashes/private draft, then owner backup full profile + .navlib and install ONLY code222 IN PLACE. If recovery 223 installed, next build code must exceed223.
+- [ ] HONOR→Samsung exchange: v2 exported in Settings AND from Equipment context; both include real PDF/DOCX bytes and sha256; recipient QA17 imports from both screens and can open originals. Legacy v1 must explicitly warn "Without PDF". Handover export centered after last section and opaque readable popup in Day/Night; Word/PDF open on recipient PC/iPhone; no task/data regressions.
+- [ ] Only after real device acceptance and independent audit: signed 1.0.0 and publish with owner explicit approval.
