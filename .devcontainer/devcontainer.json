@@ -8,7 +8,8 @@
       "installGradle": true,
       "gradleVersion": "8.13",
       "installMaven": false
-    }
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "postCreateCommand": "bash .devcontainer/register-runner-probe.sh"
 }
