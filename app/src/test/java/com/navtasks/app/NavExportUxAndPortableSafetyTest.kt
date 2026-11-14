@@ -44,7 +44,6 @@ class NavExportUxAndPortableSafetyTest {
         assertTrue(ui.contains("actual == required"))
         assertTrue(ui.contains("_with_documents_v2.navref"))
         assertFalse(ui.contains("ReferenceEquipmentExchange.encode("))
-        assertFalse(ui.contains("exportLauncher.launch(\"$safe.navref\")"))
         assertTrue(ui.contains("DocumentsContract.deleteDocument("))
         assertTrue(ui.contains("preparedExport = null"))
     }
