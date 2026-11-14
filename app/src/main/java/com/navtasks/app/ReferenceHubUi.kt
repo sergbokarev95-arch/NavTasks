@@ -1,11 +1,13 @@
 package com.navtasks.app
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -275,9 +277,13 @@ internal fun ReferenceHubScreen(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.End,
         ) {
-            OutlinedButton(onClick = { exchangeOpen = true }) {
+            OutlinedButton(
+                onClick = { exchangeOpen = true },
+                border = BorderStroke(1.dp, p.border),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = p.blueText),
+            ) {
                 Text(localized("Импорт и экспорт", "Import and export", lang),
-                    color = p.blueText)
+                    fontSize = 14.sp)
             }
         }
         LazyColumn(
@@ -310,6 +316,7 @@ internal fun ReferenceHubScreen(
                         activeHit = focusedSearchHit?.takeIf {
                             it.sectionId == "inspections"
                         },
+                        glyph = "check",
                         onClick = { inspectionsOpen = true },
                     )
                 }
@@ -332,6 +339,7 @@ internal fun ReferenceHubScreen(
                                 "Your folders, equipment and procedures", lang),
                             query,
                             activeHit = focusedSearchHit?.takeIf { it.sectionId == "equipment" },
+                            glyph = "work-order",
                             onClick = {
                                 equipmentSearch = query
                                 equipmentOpen = true
@@ -380,6 +388,7 @@ private fun ReferencePlaceholderTile(
     footer: String,
     query: String = "",
     activeHit: NavReferenceSearchHit? = null,
+    glyph: String = "reference",
     onClick: (() -> Unit)? = null,
 ) {
     Row(
@@ -394,7 +403,7 @@ private fun ReferencePlaceholderTile(
             Modifier.size(39.dp).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL),
             contentAlignment = Alignment.Center,
         ) {
-            NavGlassGlyph("reference", p.muted, Modifier.size(22.dp))
+            NavGlassGlyph(glyph, p.muted, Modifier.size(22.dp))
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
             NavSearchMarkedText(title, query, p, fontSize = 16.sp,
