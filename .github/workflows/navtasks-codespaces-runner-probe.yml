@@ -1,0 +1,23 @@
+name: PRIVATE NavTasks Codespaces self-hosted scheduling probe (NO SIGNING)
+on:
+  push:
+    branches:
+      - infra/codespaces-selfhosted-probe-20261114
+    paths:
+      - '.github/workflows/navtasks-codespaces-runner-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  connectivity-only:
+    runs-on: [self-hosted, linux, x64, navtasks-qa17-codespaces-probe]
+    timeout-minutes: 5
+    steps:
+      - name: Confirm self-hosted job scheduling without signing secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'NavTasks Codespaces runner scheduling: PASS'
+          echo 'No signing secrets used, no APK built or published.'
