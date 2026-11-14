@@ -52,8 +52,8 @@ class NavLauncherIconThemeTest {
 
     @Test fun noPackageOrDataMigrationForVisualOnlyChange() {
         val gradle = File("build.gradle.kts").readText()
-        assertTrue(gradle.contains("versionCode = 220"))
-        assertTrue(gradle.contains("versionNameSuffix = \"-qa16\""))
+        assertTrue(gradle.contains("versionCode = 223"))
+        assertTrue(gradle.contains("versionNameSuffix = \"-qa16-recovery\""))
         assertTrue(gradle.contains("applicationId = \"com.navtasks.app\""))
         assertTrue(gradle.contains("applicationIdSuffix = \".glass\""))
         val manifest = File("src/main/AndroidManifest.xml").readText()
