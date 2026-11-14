@@ -239,7 +239,13 @@ fun HandoverScreen(
                 }
             }
             if (!personalMode) {
-                TextButton(enabled = !exportRunning, onClick = { exportOpen = true }) {
+                OutlinedButton(
+                    enabled = !exportRunning,
+                    onClick = { exportOpen = true },
+                    shape = RoundedCornerShape(18.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, p.blueText.copy(alpha = 0.45f)),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                ) {
                     Text(localized("Экспорт", "Export", lang),
                         color = p.blueText, fontSize = 13.sp)
                 }
@@ -567,23 +573,33 @@ fun HandoverScreen(
         NavGlassAlertDialog(p = p,
             onDismissRequest = { exportOpen = false },
             title = { Text(localized("Экспорт Handover", "Export Handover", lang)) },
-            text = { Text(localized(
-                "Создать обычный документ для передачи сменщику. Все разделы и записи будут доступны без NavTasks.",
-                "Create a document readable without NavTasks, including all sections and notes.",
-                lang)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    exportSnapshot = handover.sections.toList()
-                    exportOpen = false
-                    pdfExport.launch("NavTasks_Handover_" + LocalDate.now() + ".pdf")
-                }) { Text("PDF", color = p.blueText) }
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(localized(
+                        "Создать документ для передачи сменщику. Все разделы и записи будут доступны без NavTasks.",
+                        "Create a document readable without NavTasks, including all sections and notes.",
+                        lang))
+                    Button(
+                        onClick = {
+                            exportSnapshot = handover.sections.toList()
+                            exportOpen = false
+                            wordExport.launch("NavTasks_Handover_" + LocalDate.now() + ".docx")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                    ) { Text("Word (.docx)") }
+                    OutlinedButton(
+                        onClick = {
+                            exportSnapshot = handover.sections.toList()
+                            exportOpen = false
+                            pdfExport.launch("NavTasks_Handover_" + LocalDate.now() + ".pdf")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                    ) { Text("PDF", color = p.blueText) }
+                }
             },
-            dismissButton = {
-                TextButton(onClick = {
-                    exportSnapshot = handover.sections.toList()
-                    exportOpen = false
-                    wordExport.launch("NavTasks_Handover_" + LocalDate.now() + ".docx")
-                }) { Text("Word (.docx)", color = p.blueText) }
+            confirmButton = {
                 TextButton(onClick = { exportOpen = false }) {
                     Text(localized("Отмена", "Cancel", lang), color = p.muted)
                 }
