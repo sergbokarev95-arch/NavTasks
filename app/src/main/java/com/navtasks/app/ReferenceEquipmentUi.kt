@@ -189,18 +189,24 @@ internal fun ReferenceEquipmentScreen(
         if (uri != null && target != null) scope.launch {
             val result = withContext(Dispatchers.IO) {
                 runCatching {
-                    context.contentResolver.openOutputStream(uri)?.use { output ->
-                        ReferenceEquipmentPortableV2.export(
-                            target, manualStore.read().documents,
-                            manualStore::findOriginal, output)
-                    } ?: throw IOException("Cannot create equipment package")
+                    val (verified, count) = ReferenceEquipmentPortableV2.prepareVerifiedExport(
+                        target, manualStore.read().documents,
+                        manualStore::findOriginal, context.cacheDir)
+                    try {
+                        context.contentResolver.openOutputStream(uri)?.use { output ->
+                            verified.inputStream().use { source -> source.copyTo(output) }
+                        } ?: throw IOException("Cannot create equipment package")
+                        count
+                    } finally {
+                        verified.delete()
+                    }
                 }
             }
-            result.onSuccess {
+            result.onSuccess { attachmentCount ->
                 failure = false
                 feedback = localized(
-                    "Карточка сохранена со всеми прикреплёнными PDF/Word.",
-                    "Equipment exported with all attached PDF/Word originals.", lang)
+                    "Формат v2. Оборудование сохранено, оригинальных PDF/Word: $attachmentCount.",
+                    "Format v2. Equipment saved, original PDF/Word files: $attachmentCount.", lang)
             }.onFailure {
                 failure = true
                 feedback = it.localizedMessage ?: localized(
