@@ -461,3 +461,13 @@
 - [ ] HONOR FULL profile backup and separate .navlib; download both verified APKs; install ONLY code218 without uninstall/clear. Pinch/scroll PDF multiple pages, paged mode with search, swipe one finger and landscape, compare original old behavior.
 - [ ] Samsung ↔ HONOR roundtrip: 2 different-named vessel profiles same `ship-default` ID; same-name confirmed replacement only; preserve personal; selected AMOS/Service requests; equipment card with embedded PDF/DOCX opens on recipient; Handover DOCX/PDF opens on Android/Windows/iOS (Cyrillic).
 - [ ] User signs off, then independent full audit and signed 1.0.0 candidate (versionCode >219 if any rollback installed); stable metadata publish only after explicit approval.
+
+## NEXT — QA16 export UI and complete .navref actual-device gate
+- [x] Analyse exact submitted Radar_X_Band.navref: schemaVersion1, only manifest.json (728-byte ZIP), attachment SHA referenced but no original PDF. This old file CANNOT be repaired from metadata.
+- [x] Replace stacked Word+Cancel Handover dialog Box with three distinct full-width glass actions and 44dp glass Export toolbar control, preserve day/night.
+- [x] Add verified v2 equipment export preflight to temp ZIP with SHA, size, PDF/DOCX, plus post-save SAF verification; distinctive `_with_documents_v2.navref` default filename. Never claim success on incomplete file; attempt delete only the newly-created output URI on failed write.
+- [x] Regression guards and exact QA15 source signed fallback branch code221 staged.
+- [ ] CI QA16 code220 #43552733231 and recovery code221 #43552738083 confirm full JVM test suite, original cert, package, version, nondebug and PRIVATE APK hashes/links.
+- [ ] HONOR: backup FULL profiles and .navlib; download two verified APKs; install ONLY QA16 code220 IN PLACE; screenshot Export toolbar+dialog on day/night; export Handover DOCX/PDF and open on Android/iPhone/PC.
+- [ ] Export new radar equipment with attached PDF: specifically choose **NEW** file ending `_with_documents_v2.navref`, not old Radar_X_Band.navref. Confirm ZIP manifest version2 and original PDF entry; send file to Samsung, import and open PDF offline. Test missing PDF case blocks before file picker. Test both profile/add behavior and request numbers remain as previously fixed.
+- [ ] Confirm physical acceptance THEN independent full audit / signed 1.0.0, user must explicitly authorize public channel; stable OFF until then.
