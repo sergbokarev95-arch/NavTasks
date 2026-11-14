@@ -478,3 +478,11 @@
 - [ ] HONOR: export FULL profiles and `.navlib`, save recovery APK, install ONLY RC1 code224 in place (do not uninstall / reset data), verify only two transfer blocks in Settings and three Reference root cards with SIRE/VIQ7 INSIDE Inspections, Equipment import/export, My Materials, profile/task/AMOS/Services/Handover preservation, theme, docking and search.
 - [ ] HONOR↔Samsung: PDF/DOCX equipment originals still open after transfer in both export routes; inspect full/restricted imports, Work order request values, Handover DOCX/PDF Cyrillic, widgets and notifications; no data loss.
 - [ ] Audit public repository history/metadata and all 1.0.0 release safety checks; prepare PRODUCTION 1.0.0 code >=226, publish signed APK to `NavTasks-Updates` expected pinned URL and enable stable.json ONLY after user's RC1 approval and final verified signature/hash. Continue optional monthly releases, no forced updates.
+
+## 2026-11-15 — first OTA acceptance check (1.0.0 -> 1.0.1)
+- [x] Create exact v1.0.0-derived minimal 1.0.1 release (code227), remove visible Glass in Settings footer, preserve package/signing key/data.
+- [x] Run all 396 JVM tests and verify APK package/certificate/release ID: `43613297380` SUCCESS.
+- [x] Mirror exact original-signed 1.0.1 APK to NavTasks-Updates release, checksum match; activate stable update metadata only after verification: `43613796958` SUCCESS.
+- [ ] On user HONOR and friend device initially with 1.0.0: Settings -> Check for updates while online, verify 1.0.1 offered, choose Download/Install via system APK installer, verify saved profile/tasks/Handover/Reference PDF still exist, Settings shows NavTasks 1.0.1 without "Glass".
+- [ ] Confirm start-up auto-update offer with toggle ON (check throttled by previous successful network check); manual check available independently. Do not assume instant startup offer if last check was recent.
+- [ ] If accepted: start isolated next beta branch and implement opt-in beta channel for user-selected future naming (legacy parser currently handles older test1-3, not new beta.N). Stable users must remain on stable feed.
