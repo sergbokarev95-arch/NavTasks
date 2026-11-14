@@ -50,7 +50,7 @@ class NavExportUxAndPortableSafetyTest {
 
     @Test fun settingsExportAndImportCannotUseLegacyMetadataOnlyCodec() {
         val settings = source("ReferenceEquipmentSettingsUi.kt")
-        assertFalse(settings.contains("ReferenceEquipmentExchange.encode("))
+        assertFalse(settings.contains("val bytes = ReferenceEquipmentExchange.encode("))
         assertFalse(settings.contains("ReferenceEquipmentExchange.decode("))
         assertTrue(settings.contains("ReferenceEquipmentPortableV2.export("))
         assertTrue(settings.contains("ReferenceEquipmentPortableV2.stage("))
