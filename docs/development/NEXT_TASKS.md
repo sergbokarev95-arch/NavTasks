@@ -471,3 +471,13 @@
 - [ ] HONOR: backup FULL profiles and .navlib; download two verified APKs; install ONLY QA16 code220 IN PLACE; screenshot Export toolbar+dialog on day/night; export Handover DOCX/PDF and open on Android/iPhone/PC.
 - [ ] Export new radar equipment with attached PDF: specifically choose **NEW** file ending `_with_documents_v2.navref`, not old Radar_X_Band.navref. Confirm ZIP manifest version2 and original PDF entry; send file to Samsung, import and open PDF offline. Test missing PDF case blocks before file picker. Test both profile/add behavior and request numbers remain as previously fixed.
 - [ ] Confirm physical acceptance THEN independent full audit / signed 1.0.0, user must explicitly authorize public channel; stable OFF until then.
+
+### QA16 SETTINGS export root cause fixed — signed/device check next
+- [x] Found actual root cause: Settings `ReferenceEquipmentSettingsUi` still exported V1 manifest-only, although equipment screen used V2. User's `Radar_X_Band.navref` matches exactly.
+- [x] BOTH entry points now generate, stage and verify .navref V2 with original PDF/DOCX BEFORE showing Save chooser; recheck saved bytes, clean failed SAF, distinct filename `_with_documents_v2.navref`.
+- [x] Settings IMPORT now stages v2 and restores SHA-verified original PDF/DOCX; old v1 displays explicit missing original warning, Add Copy and Replace retained.
+- [x] Handover glass Export button plus non-overlapping Word/PDF/Cancel dialog; no note logic change.
+- [x] Exact QA15 app source higher-code221 recovery CI #43552738083 PASS; original signer verification to finalize.
+- [ ] Verify latest QA16/code220 full signed CI #43553441510 PASS and file SHA/asset. Do not link canceled workflows.
+- [ ] HONOR and Samsung: test Settings and card-menu export paths separately, new `_with_documents_v2.navref`, actual originals/ entry in ZIP, offline open after import; error when original missing. Handover Day/Night modal and Word/PDF exports.
+- [ ] Then independent final 1.0.0 audit and owner approval. No new features/stable update before acceptance.
