@@ -18,16 +18,28 @@ data class HandoverEntry(
     val notesHtml: String = "",
     val mark: HandoverMark = HandoverMark.OPEN,
     val completedDate: LocalDate? = null,
+    val photos: List<HandoverPhoto> = emptyList(),
 ) {
     fun toJson() = JSONObject()
         .put("id", id).put("title", title).put("notes", notes)
         .put("notesHtml", notesHtml)
         .put("mark", mark.name).put("completedDate", completedDate?.toString() ?: "")
+        .put("photos", JSONArray().apply { photos.forEach { put(it.toJson()) } })
 
     companion object {
         fun fromJson(json: JSONObject): HandoverEntry {
             val mark = HandoverMark.entries.firstOrNull { it.name == json.optString("mark") }
                 ?: HandoverMark.OPEN
+            val imageArray = json.optJSONArray("photos") ?: JSONArray()
+            require(imageArray.length() <= HandoverPhoto.MAX_PER_ENTRY) {
+                "Too many Handover photos"
+            }
+            val photos = (0 until imageArray.length()).map {
+                HandoverPhoto.fromJson(imageArray.getJSONObject(it))
+            }
+            require(photos.map { it.id }.distinct().size == photos.size) {
+                "Duplicate Handover photo IDs"
+            }
             return HandoverEntry(
                 id = json.optString("id").takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString(),
                 title = json.optString("title").trim().take(200),
@@ -35,6 +47,7 @@ data class HandoverEntry(
                 notesHtml = json.optString("notesHtml", "").take(24000),
                 mark = mark,
                 completedDate = runCatching { LocalDate.parse(json.optString("completedDate")) }.getOrNull(),
+                photos = photos,
             )
         }
     }
@@ -102,6 +115,14 @@ class HandoverStore(context: Context, private val profiles: ProfileStore = Profi
 
     private fun commit(value: List<HandoverSection>) {
         ensureNavStorageWritable(storageIssue)
+        val photos = value.flatMap { section -> section.entries.flatMap { it.photos } }
+        require(photos.sumOf { it.jpegBytes().size.toLong() } <=
+            HandoverPhoto.MAX_PROFILE_IMAGE_BYTES.toLong()) {
+            "Handover photo storage limit reached (4 MB per profile)"
+        }
+        require(value.all { section -> section.entries.all {
+            it.photos.size <= HandoverPhoto.MAX_PER_ENTRY
+        } }) { "Too many photos in a Handover entry" }
         val json = JSONArray().apply { value.forEach { put(it.toJson()) } }.toString()
         check(prefs.edit().putString("sections", json).commit()) {
             "Не удалось сохранить Handover"
@@ -118,7 +139,8 @@ class HandoverStore(context: Context, private val profiles: ProfileStore = Profi
 
     fun deleteSection(id: String) = commit(sections.filterNot { it.id == id })
 
-    fun saveEntry(sectionId: String, title: String, notes: String, existingId: String? = null, notesHtml: String = "") {
+    fun saveEntry(sectionId: String, title: String, notes: String, existingId: String? = null,
+                  notesHtml: String = "", photos: List<HandoverPhoto>? = null) {
         val clean = title.trim().take(200)
         if (clean.isBlank()) return
         commit(sections.map { section ->
@@ -127,6 +149,8 @@ class HandoverStore(context: Context, private val profiles: ProfileStore = Profi
                 val updated = (entry ?: HandoverEntry(title = clean)).copy(
                     title = clean, notes = notes.trim().take(4000),
                     notesHtml = notesHtml.take(24000),
+                    // Existing callers that only edit text never discard attachments.
+                    photos = photos ?: entry?.photos.orEmpty(),
                 )
                 section.copy(entries = if (entry == null) section.entries + updated
                     else section.entries.map { if (it.id == existingId) updated else it })
@@ -198,7 +222,7 @@ object HandoverTransfer {
         .toString(2)
 
     fun parse(raw: String): HandoverPackage {
-        require(raw.length <= 2_000_000) { "File exceeds 2 MB" }
+        require(raw.length <= 10_000_000) { "File exceeds 10 MB" }
         val root = JSONObject(raw)
         require(root.optString("format") == FORMAT && root.optInt("version") == 1) {
             "Unsupported Handover file format"
