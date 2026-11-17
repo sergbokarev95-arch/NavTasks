@@ -33,6 +33,6 @@ class NavSelectionStabilityTest {
         assertFalse(ui.contains("SelectionContainer {"))
         val full = handover.readText()
         assertTrue(full.contains("NavRichNoteEditor("))
-        assertTrue(full.contains("onSave(title, plain, html)"))
+        assertTrue(full.contains("onSave(title, plain, html, photos)"))
     }
 }
