@@ -485,3 +485,10 @@
 - [ ] Confirm all JVM tests and release signing, checksum, correct package and prerelease status from GitHub Actions.
 - [ ] Device beta acceptance: 2 Handover entries with different images, PDF page breaks, DOCX valid editable photo placement, multiple and rotated photos, delete/cancel drafts, full/selected profile export to second device, offline availability and no unrelated regressions.
 - [ ] User decides UI polish / bugfix beta.2+; only then prepare 1.1.0 stable with monotonically higher versionCode and unchanged original signer, update APK-first then stable feed. No beta builds in public stable feed.
+
+## 2026-11-17 — beta1 ready to test on device
+- [x] Signed beta1 code228 CI `44024406256` SUCCESS, original signer and stable package ID, published as prerelease (NOT stable OTA). APK SHA256 `31be03d96a16275971433b3be78c93dd7ee9de9f0f1b69ad85930a9a2ebd558e`.
+- [x] Prepared optional code229 exact stable 1.0.1 source recovery, signed CI `44024623443` PASS, prerelease SHA256 `fcafae60f6675236e9bab50a87699873621f8413523f4d15b64bd081ede240a6`.
+- [ ] Owner: full profile and `.navlib` backups; install only beta1 code228 over 1.0.1 code227. Attach multiple photos to one ECDIS entry, separate photo to Radar; save, reopen, rotate screen/restart app, delete one, check text untouched, inspect DOCX and PDF exports each directly under correct entry. Verify second phone full/selective import and offline viewing.
+- [ ] If defect, fix in new test candidate code>229, preserve existing persisted photos; stable 1.1.0 only after physical QA/owner confirmation and higher-than-beta versionCode, original signer, APK-first then stable feed.
+- [ ] Beta photos are compact re-encoded JPEGs (4 per entry; 180 KB each; 4 MB/profile), not original uncompressed source. Confirm resulting photo clarity for marine equipment screenshots and manuals.
