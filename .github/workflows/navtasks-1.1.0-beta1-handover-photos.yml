@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: navtasks-1.1.0-beta1-handover-photos
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -65,6 +65,11 @@ jobs:
         run: |
           set -euo pipefail
           test ! -z "$GITHUB_SHA"
+          LATEST_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature%2Fnavtasks-1.1.0-beta1-handover-photos" --jq '.commit.sha')"
+          test "$LATEST_SHA" = "$GITHUB_SHA" || {
+            echo "Branch has changed since this runner started: refusing stale beta publication."
+            exit 1
+          }
           if gh release view v1.1.0-beta.1 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "v1.1.0-beta.1 already exists; will not overwrite immutable stable release."
             exit 1
