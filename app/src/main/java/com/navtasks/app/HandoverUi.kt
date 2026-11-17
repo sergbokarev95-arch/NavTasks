@@ -486,7 +486,7 @@ fun HandoverScreen(
                                                 .glassClickable { openEntryEditor(section.id, entry) }
                                                 .padding(top = 6.dp, bottom = 4.dp),
                                         ) {
-                                            if (entry.notes.isBlank()) {
+                                            if (entry.notes.isBlank() && entry.photos.isEmpty()) {
                                                 Text(
                                                     localized("Нажми, чтобы добавить описание",
                                                         "Tap to add a description", lang),
@@ -514,6 +514,10 @@ fun HandoverScreen(
                                                     fontSize = 12.sp,
                                                     modifier = Modifier.fillMaxWidth(),
                                                 )
+                                            }
+                                            if (entry.photos.isNotEmpty()) {
+                                                Spacer(Modifier.height(8.dp))
+                                                HandoverPhotoStrip(entry.photos, p, lang)
                                             }
                                         }
                                     }
@@ -688,18 +692,21 @@ fun HandoverScreen(
                 initialTitle = item?.title.orEmpty(),
                 initialPlain = item?.notes.orEmpty(),
                 initialHtml = item?.notesHtml.orEmpty(),
+                initialPhotos = item?.photos.orEmpty(),
                 onCancel = { editEntry = null },
                 onDelete = if (entryId != null) ({
                     editEntry = null
                     confirmDelete = sectionId to entryId
                 }) else null,
-                onSave = { title, plain, html ->
-                    // Personal notes can omit a title; the existing store still
-                    // receives a nonblank name and its schema remains unchanged.
-                    val savedTitle = if (personalMode && title.isBlank())
-                        nextPersonalNoteTitle(handover.sections, lang) else title
-                    handover.saveEntry(sectionId, savedTitle, plain, entryId, html)
-                    editEntry = null
+                onSave = { title, plain, html, photos ->
+                    // If storage is full, leave the editor and its draft photos
+                    // untouched. Never claim success after a failed commit.
+                    runCatching {
+                        val savedTitle = if (personalMode && title.isBlank())
+                            nextPersonalNoteTitle(handover.sections, lang) else title
+                        handover.saveEntry(sectionId, savedTitle, plain, entryId, html, photos)
+                        editEntry = null
+                    }.isSuccess
                 },
             )
         }
