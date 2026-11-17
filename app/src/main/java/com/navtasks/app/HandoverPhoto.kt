@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
-import android.util.Base64
+import java.util.Base64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -26,7 +26,7 @@ data class HandoverPhoto(
 ) {
     fun jpegBytes(): ByteArray {
         require(jpegBase64.length <= MAX_BASE64_LENGTH) { "Handover photo too large" }
-        val bytes = Base64.decode(jpegBase64, Base64.NO_WRAP)
+        val bytes = Base64.getDecoder().decode(jpegBase64)
         require(bytes.size in 16..MAX_JPEG_BYTES && bytes[0] == 0xff.toByte() &&
             bytes[1] == 0xd8.toByte() && bytes[2] == 0xff.toByte()) {
             "Invalid Handover JPEG"
@@ -85,7 +85,7 @@ internal object HandoverPhotoCodec {
             val data = buffer.toByteArray()
             if (data.size <= HandoverPhoto.MAX_JPEG_BYTES) {
                 return@withContext HandoverPhoto(
-                    jpegBase64 = Base64.encodeToString(data, Base64.NO_WRAP),
+                    jpegBase64 = Base64.getEncoder().encodeToString(data),
                     widthPx = bitmap.width,
                     heightPx = bitmap.height,
                 )
