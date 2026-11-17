@@ -485,3 +485,10 @@
 - [ ] Confirm all JVM tests and release signing, checksum, correct package and prerelease status from GitHub Actions.
 - [ ] Device beta acceptance: 2 Handover entries with different images, PDF page breaks, DOCX valid editable photo placement, multiple and rotated photos, delete/cancel drafts, full/selected profile export to second device, offline availability and no unrelated regressions.
 - [ ] User decides UI polish / bugfix beta.2+; only then prepare 1.1.0 stable with monotonically higher versionCode and unchanged original signer, update APK-first then stable feed. No beta builds in public stable feed.
+
+## 2026-11-17 — 1.1.0 production published
+- [x] Owner confirmed beta photos appear under correct Handover items in PDF and Word.
+- [x] Release verified original-signed 1.1.0/code230 from beta tag without any extra business logic changes, full JVM tests and release checks `44026027178`.
+- [x] Mirror exact signed APK to NavTasks-Updates/releases/v1.1.0 and enable stable feed only AFTER asset verification; CI `44027154160` PASS.
+- [ ] Confirm Settings manual OTA check/download/install from 1.0.1 and/or beta.1 to 1.1.0 on test phone; ensure Handover photos, original docs, profiles/tasks remain intact. Startup offer may be delayed by 24h automatic check throttle.
+- [ ] Collect first stable 1.1.0 bug reports; stage next beta on isolated branch, preserve public stable feed until signed final accepted. Any next stable code >230.
