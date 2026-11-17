@@ -1,5 +1,7 @@
 package com.navtasks.app
 
+import android.graphics.BitmapFactory
+import android.graphics.RectF
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
@@ -83,6 +85,29 @@ internal object HandoverPdfExport {
                     paint.color = Color.rgb(31, 40, 53)
                     paint.textSize = 11f
                     paragraph(line.text, 18f, 16f, 2f)
+                }
+                HandoverExportKind.PHOTO -> {
+                    // A photo belongs immediately below its entry's note paragraphs.
+                    val photo = requireNotNull(line.photo)
+                    val data = photo.jpegBytes()
+                    val bitmap = requireNotNull(BitmapFactory.decodeByteArray(data, 0, data.size)) {
+                        "Cannot decode Handover photo"
+                    }
+                    try {
+                        val maxWidth = pageWidth - left * 2 - 18f
+                        val maxHeight = 340f
+                        val scale = minOf(maxWidth / bitmap.width, maxHeight / bitmap.height)
+                        val width = bitmap.width * scale
+                        val height = bitmap.height * scale
+                        if (y + height + 12f > maxY) nextPage()
+                        val top = y
+                        page!!.canvas.drawBitmap(bitmap, null,
+                            RectF(left + 18f, top, left + 18f + width, top + height),
+                            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+                        y = top + height + 12f
+                    } finally {
+                        bitmap.recycle()
+                    }
                 }
             }
             page?.let { pdf.finishPage(it) }
