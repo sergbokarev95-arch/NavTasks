@@ -127,6 +127,13 @@ internal object SelectiveTransfer {
                 require(sections.sumOf { it.entries.size } <= 25000) {
                     "Too many Handover entries"
                 }
+                require(sections.sumOf { section ->
+                    section.entries.sumOf { entry ->
+                        entry.photos.sumOf { it.jpegBytes().size.toLong() }
+                    }
+                } <= HandoverPhoto.MAX_PROFILE_IMAGE_BYTES.toLong()) {
+                    "Handover photos exceed 4 MB limit"
+                }
                 clean(SelectiveBundle(tasks, orders, services, sections))
             }
             else -> error("Not a NavTasks selective import file")
