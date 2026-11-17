@@ -28,7 +28,9 @@ data class HandoverPhoto(
         require(jpegBase64.length <= MAX_BASE64_LENGTH) { "Handover photo too large" }
         val bytes = Base64.getDecoder().decode(jpegBase64)
         require(bytes.size in 16..MAX_JPEG_BYTES && bytes[0] == 0xff.toByte() &&
-            bytes[1] == 0xd8.toByte() && bytes[2] == 0xff.toByte()) {
+            bytes[1] == 0xd8.toByte() && bytes[2] == 0xff.toByte() &&
+            bytes[bytes.lastIndex - 1] == 0xff.toByte() &&
+            bytes[bytes.lastIndex] == 0xd9.toByte()) {
             "Invalid Handover JPEG"
         }
         return bytes
@@ -103,6 +105,12 @@ internal object HandoverPhotoCodec {
 
     fun decodeForPreview(photo: HandoverPhoto): Bitmap? = runCatching {
         val bytes = photo.jpegBytes()
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        val dimensions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, dimensions)
+        val size = max(dimensions.outWidth, dimensions.outHeight).coerceAtLeast(1)
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = (size / 320).coerceAtLeast(1)
+        }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
     }.getOrNull()
 }
