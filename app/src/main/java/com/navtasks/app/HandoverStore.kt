@@ -197,7 +197,9 @@ class HandoverStore(context: Context, private val profiles: ProfileStore = Profi
                 val additions = imported.entries.filter { remote ->
                     local.entries.none { item ->
                         item.id == remote.id || (item.title.equals(remote.title, ignoreCase = true) &&
-                            item.notes == remote.notes && item.notesHtml == remote.notesHtml)
+                            item.notes == remote.notes && item.notesHtml == remote.notesHtml &&
+                            item.photos.map { p -> p.jpegBase64 } ==
+                                remote.photos.map { p -> p.jpegBase64 })
                     }
                 }.map { it.copy(id = UUID.randomUUID().toString()) }
                 merged[index] = local.copy(entries = local.entries + additions)
