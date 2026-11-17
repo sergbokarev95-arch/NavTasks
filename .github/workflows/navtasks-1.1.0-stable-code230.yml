@@ -65,9 +65,9 @@ jobs:
         run: |
           set -euo pipefail
           test ! -z "$GITHUB_SHA"
-          LATEST_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature%2Fnavtasks-1.1.0-stable-code230" --jq '.commit.sha')"
+          LATEST_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/release%2Fnavtasks-1.1.0-code230" --jq '.commit.sha')"
           test "$LATEST_SHA" = "$GITHUB_SHA" || {
-            echo "Branch has changed since this runner started: refusing stale beta publication."
+            echo "Branch has changed since this runner started: refusing stale stable release publication."
             exit 1
           }
           if gh release view v1.1.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
