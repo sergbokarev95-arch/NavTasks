@@ -53,6 +53,11 @@ internal object NavStorageRead {
         require(result.map { it.id }.toSet().size == result.size) {
             "Duplicate Handover section IDs"
         }
+        require(result.sumOf { section ->
+            section.entries.sumOf { entry -> entry.photos.sumOf { it.jpegBytes().size.toLong() } }
+        } <= HandoverPhoto.MAX_PROFILE_IMAGE_BYTES.toLong()) {
+            "Handover photos exceed profile storage limit"
+        }
         return result
     }
 }
