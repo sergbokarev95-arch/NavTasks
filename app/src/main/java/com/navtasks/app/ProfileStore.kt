@@ -57,6 +57,7 @@ object ProfileTransfer {
         .put("workOrders", JSONArray().apply { snapshot.workOrders.forEach { put(it.toJson()) } })
         .put("lastVisit", snapshot.lastVisit)
         .toString(2)
+        .also { require(it.length <= MAX_BYTES) { "Profile backup exceeds importable 10 MB limit" } }
 
     fun parse(raw: String): ProfileSnapshot {
         require(raw.length in 1..MAX_BYTES) { "Profile file exceeds 10 MB" }
