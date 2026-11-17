@@ -3,8 +3,8 @@ package com.navtasks.app
 import java.time.LocalDate
 
 /** Read-only export model; never mutates Handover notes or completion marks. */
-internal enum class HandoverExportKind { TITLE, META, SECTION, ENTRY, NOTE }
-internal data class HandoverExportLine(val kind: HandoverExportKind, val text: String)
+internal enum class HandoverExportKind { TITLE, META, SECTION, ENTRY, NOTE, PHOTO }
+internal data class HandoverExportLine(val kind: HandoverExportKind, val text: String, val photo: HandoverPhoto? = null)
 
 internal fun handoverExportLines(
     sections: List<HandoverSection>, onDate: LocalDate = LocalDate.now(),
@@ -27,6 +27,10 @@ internal fun handoverExportLines(
             entry.notes.split('\n').forEach {
                 totalCharacters += it.length
                 lines += HandoverExportLine(HandoverExportKind.NOTE, it)
+            }
+            // Photos are emitted directly after THIS entry's notes, never globally.
+            entry.photos.forEach { photo ->
+                lines += HandoverExportLine(HandoverExportKind.PHOTO, "", photo)
             }
         }
     }
