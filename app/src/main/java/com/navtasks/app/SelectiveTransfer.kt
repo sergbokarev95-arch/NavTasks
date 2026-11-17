@@ -167,10 +167,13 @@ private fun mergeNotebook(
         } else {
             val local = result[index]
             val known = local.entries.map {
-                uniqueLabel(it.title) to it.notes
+                Triple(uniqueLabel(it.title), it.notes,
+                    it.photos.map { p -> p.jpegBase64 })
             }.toMutableSet()
             val additions = source.entries.filter {
-                known.add(uniqueLabel(it.title) to it.notes)
+                // Do not silently discard an attachment-only update.
+                known.add(Triple(uniqueLabel(it.title), it.notes,
+                    it.photos.map { p -> p.jpegBase64 }))
             }.map {
                 it.copy(id = UUID.randomUUID().toString(),
                     mark = HandoverMark.OPEN, completedDate = null)
