@@ -16,7 +16,7 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 228
+        versionCode = 230
         versionName = "1.1.0"
     }
 
@@ -42,8 +42,7 @@ android {
         }
         release {
             isMinifyEnabled = false
-            // Opt-in test APK only; never publish to the stable update feed.
-            versionNameSuffix = "-beta.1"
+            // Stable 1.1.0, no beta suffix. Original package and signing key are unchanged.
             // Same package as the installed, long-lived signed Beta. Android
             // does not migrate private app data across different package IDs.
             applicationIdSuffix = ".glass"
