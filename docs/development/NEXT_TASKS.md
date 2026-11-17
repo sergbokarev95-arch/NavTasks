@@ -478,3 +478,10 @@
 - [ ] HONOR: export FULL profiles and `.navlib`, save recovery APK, install ONLY RC1 code224 in place (do not uninstall / reset data), verify only two transfer blocks in Settings and three Reference root cards with SIRE/VIQ7 INSIDE Inspections, Equipment import/export, My Materials, profile/task/AMOS/Services/Handover preservation, theme, docking and search.
 - [ ] HONOR↔Samsung: PDF/DOCX equipment originals still open after transfer in both export routes; inspect full/restricted imports, Work order request values, Handover DOCX/PDF Cyrillic, widgets and notifications; no data loss.
 - [ ] Audit public repository history/metadata and all 1.0.0 release safety checks; prepare PRODUCTION 1.0.0 code >=226, publish signed APK to `NavTasks-Updates` expected pinned URL and enable stable.json ONLY after user's RC1 approval and final verified signature/hash. Continue optional monthly releases, no forced updates.
+
+## 2026-11-17 — Handover photos 1.1.0-beta.1 release gate
+- [x] Branch from exact stable v1.0.1; keep 1.0.1 stable feed untouched; bump beta versionName 1.1.0-beta.1/versionCode228 with original signer.
+- [x] Add per-entry photo picker, compressed JPEG internal persistence, thumbnails/remove and explicit editor Save, export to entry-aligned PDF and DOCX embedded images, bounded transfer size; retro-compatible empty-photo reads.
+- [ ] Confirm all JVM tests and release signing, checksum, correct package and prerelease status from GitHub Actions.
+- [ ] Device beta acceptance: 2 Handover entries with different images, PDF page breaks, DOCX valid editable photo placement, multiple and rotated photos, delete/cancel drafts, full/selected profile export to second device, offline availability and no unrelated regressions.
+- [ ] User decides UI polish / bugfix beta.2+; only then prepare 1.1.0 stable with monotonically higher versionCode and unchanged original signer, update APK-first then stable feed. No beta builds in public stable feed.
