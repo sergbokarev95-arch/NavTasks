@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -485,14 +486,9 @@ fun NavTasksApp(
                 .blur(if (quickProfileOpen) 12.dp else 0.dp)
         ) {
             NavGlassBackdrop(palette)
-            if (editorOpen) {
-                TaskEditorScreen(
-                    initial = editorTask, defaultFrequency = templateFilter, lang = lang, palette = palette,
-                    store = store,
-                    onBack = { editorOpen = false },
-                    onSave = { store.upsert(it); editorOpen = false },
-                )
-            } else if (showProfiles) {
+            // The underlying page stays mounted while the editor sheet slides
+            // from the Add control; this also preserves list/calendar scroll.
+            if (showProfiles) {
                 ProfilesScreen(profiles, store, handoverStore, serviceStore, workOrderStore, palette, lang,
                     onBack = {
                         showProfiles = false
@@ -826,6 +822,64 @@ fun NavTasksApp(
 
             }
         }
+
+        // Mirror the reference's bottom-up editor entrance without replacing
+        // any business state or touching the four-tab Liquid Glass dock.
+        AnimatedVisibility(
+            visible = editorOpen,
+            modifier = Modifier.fillMaxSize(),
+            enter = fadeIn(tween(150)),
+            exit = fadeOut(tween(175)),
+            label = "taskEditorScrim",
+        ) {
+            Box(
+                Modifier.fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.55f))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                    ) { /* Preserve unsaved editor draft; dismiss via Back. */ },
+            )
+        }
+        AnimatedVisibility(
+            visible = editorOpen,
+            modifier = Modifier.align(Alignment.BottomCenter),
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = spring(dampingRatio = .92f, stiffness = 620f),
+            ) + fadeIn(tween(115)),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(220),
+            ) + fadeOut(tween(140)),
+            label = "taskEditorBottomSheet",
+        ) {
+            val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+            Box(
+                Modifier.fillMaxWidth().fillMaxHeight(.94f)
+                    .shadow(16.dp, sheetShape)
+                    .clip(sheetShape)
+                    .background(palette.background, sheetShape)
+                    .border(1.dp, palette.border.copy(alpha = .65f), sheetShape),
+            ) {
+                TaskEditorScreen(
+                    initial = editorTask, defaultFrequency = templateFilter,
+                    lang = lang, palette = palette, store = store,
+                    onBack = { editorOpen = false },
+                    onSave = { store.upsert(it); editorOpen = false },
+                    sheetMode = true,
+                )
+                Box(
+                    Modifier.align(Alignment.TopCenter).padding(top = 8.dp)
+                        .size(width = 42.dp, height = 4.dp)
+                        .background(palette.muted.copy(alpha = .48f), CircleShape),
+                )
+            }
+        }
+        // Rendered after underlying destinations: Back closes the editor first,
+        // rather than letting an underlying Calendar/Works BackHandler fire.
+        BackHandler(enabled = editorOpen) { editorOpen = false }
+
         if (quickProfileOpen) {
             NavQuickProfilePicker(
                 profiles = profiles.profiles,
