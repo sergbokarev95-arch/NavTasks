@@ -395,3 +395,5 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Signed source prerelease `v1.2.0-beta.4` code236, original app ID/signature, CI `45202899262` SUCCESS, APK `https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.4/NavTasks_1.2.0-beta.4.apk` SHA256 `1b0ec4514a31fef253858d1389b1421ce152bc6e40e46a8dbda202a911939871`.
 - Top Year/Month/Day switch background exactly equals Year calendar panel `p.panel` in both themes; moving lens and rim neutralized. All dimensions/spring/tap feedback and original dock preserved. Physical phone appearance/QA pending.
 - Optional exact functional stable 1.1.0 recovery code237 is under CI verification, not yet part of public stable.
+
+- Recovery code237 from exact functional stable 1.1.0 source verified and published as prerelease only: CI `45203211625` PASS, APK SHA256 `37e948672f66643817d4a1df2da0157c754f702380b41519778dca8326a0e36e`. Not in stable OTA. Future versionCode >237.
