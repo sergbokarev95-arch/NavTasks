@@ -202,3 +202,8 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - Original-signed beta7 code242 source prerelease `v1.2.0-beta.7` GitHub Actions `45217377636` SUCCESS, checksum SHA256 `7f2e5f1a57820a7a3aec8d930d3d997f1447c40f6d650c86c738c2db5a1669a1`; original-signed exact 1.1.0 recovery code243 `v1.1.0-recovery-code243` Actions `45217002472` SUCCESS.
 - User HONOR visual/touch verification still pending. No stable 1.2.0 publication.
 
+## 2026-11-24 — 1.2.0-beta.8 Task editor panel and popup motion
+- Based on owner's two beta7 HONOR screenshots and 14.7-second reference screen recording: Frequency moved to standalone 4-part Calendar-style control, separate from Task title panel; editor transitions as bottom sheet over faded prior page; opaque repeat/reminder choice list springs open from touched field. Existing Save/Back/scope/notification logic stays unchanged.
+- Exact beta7 backed up; only PlanAndTasksUi.kt, NavTasksUi.kt, NavTaskChoiceDialog.kt, build/version, targeted tests and beta8 workflow changed. No broad card redesign; inline advanced accordion intentionally postponed. Initial Kotlin padding syntax fixed after failing compile.
+- Final original-signed beta8 code244 CI `45222037769` SUCCESS, GitHub prerelease `v1.2.0-beta.8` SHA256 `56934f68bb872c04e002bc500b8f60d0e9bbfb3a7de441b03e6421ac4558d51b`. Recovery exact stable functional code245 CI `45221672385` PASS (only for severe beta8 regression). Public stable 1.1.0 unchanged; HONOR UI acceptance pending.
+
