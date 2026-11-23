@@ -16,7 +16,7 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 230
+        versionCode = 241
         versionName = "1.1.0"
     }
 
@@ -42,7 +42,8 @@ android {
         }
         release {
             isMinifyEnabled = false
-            // Stable 1.1.0, no beta suffix. Original package and signing key are unchanged.
+            // Optional original-source rollback over beta.6 code240.
+            versionNameSuffix = "-recovery"
             // Same package as the installed, long-lived signed Beta. Android
             // does not migrate private app data across different package IDs.
             applicationIdSuffix = ".glass"
