@@ -50,7 +50,7 @@ class NavTaskChoiceDialogTest {
         assertFalse(ui.contains("NavApplyDialogFrost("))
         assertFalse(ui.contains("navPopupGlassSurface("))
         assertTrue(ui.contains("Color(0xFF23272C)"))
-        assertTrue(ui.contains("Color(0xFFF8F9FA)"))
+        assertTrue(ui.contains("else Color.White"))
         assertTrue(editor.contains("NavTaskFrequencyControl(frequency, p, lang)"))
         assertTrue(editor.contains("frequency = it"))
         assertTrue(editor.contains("mode = ScheduleMode.valueOf(key)"))
@@ -124,6 +124,17 @@ class NavTaskChoiceDialogTest {
         assertTrue(choice.contains("onExpandedChange(false)"))
         assertFalse(choice.contains("NavApplyDialogFrost("))
         assertTrue(choice.contains("Popup("))
+    }
+
+    @Test fun taskEditorUsesBlueFilledSaveWithoutChangingPersistence() {
+        val editor = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+        assertTrue(editor.contains("Button(\\n                enabled = valid"))
+        assertTrue(editor.contains("containerColor = p.selectionFill"))
+        assertTrue(editor.contains("contentColor = Color.White"))
+        assertTrue(editor.contains("disabledContainerColor = if (p.dark)"))
+        assertTrue(editor.contains("Text(localized(\"Сохранить\", \"Save\", lang)"))
+        assertTrue(editor.contains("preserveHistoricalCalendarBase(it, edited, LocalDate.now())"))
+        assertTrue(editor.contains("pendingFrequencyEdit = edited to preview"))
     }
 
     @Test fun existingTaskCalendarAndNotificationModulesStayUnmodified() {
