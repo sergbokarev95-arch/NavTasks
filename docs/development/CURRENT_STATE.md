@@ -396,3 +396,10 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Official public stable remains NavTasks 1.1.0/code230, original signer and appID unchanged. Recovery code241 building on exact stable source for optional fallback. Next visually refresh form shells only AFTER user inspects beta6; no data/business changes.
 
 - Exact stable 1.1.0 functional recovery code241 original signer CI `45211910613` PASS, SHA256 `558d2feddab2c8a7218c87f910347707dc8a31b4000910739c70ec489b661434`. Not public OTA; install only for serious regression. Future beta/final versionCode >241.
+
+## 2026-11-24 — 1.2.0-beta.7 signed UI correction, HONOR device QA pending
+- Beta6 feedback: four frequency buttons requested (like calendar), remove translucent popups and right-edge laggy dialog motion. `feature/navtasks-1.2.0-beta7-anchored-choice-ui` implements an inline four-tab frequency control plus anchored opaque recurrence/reminder Popup with short visual-only fade/scale. No task data/business/scheduling logic changed. Exact beta6 backup retained.
+- Signed GitHub Actions `45217377636` SUCCESS; released `v1.2.0-beta.7`, code242, original app ID/key, source `9aee68a1db009b39528635811b75f991bc80fd7c`, APK SHA256 `7f2e5f1a57820a7a3aec8d930d3d997f1447c40f6d650c86c738c2db5a1669a1`. Prior CI version assertion failure was corrected before release. No on-device acceptance yet.
+- Exact functional 1.1.0 signed emergency recovery code243 CI `45217002472` SUCCESS, prerelease `v1.1.0-recovery-code243`; SHA256 `22bd173ded9929bc8f63c7b07b1126b6a323511d84411f6411d15a6cb9a3d0cb`. Install only on severe beta7 regression after backup; subsequent code>243.
+- Stable OTA unchanged at 1.1.0/code230 (`available:true`); no stable 1.2.0 release or user install confirmed. Next physical check: period segments, anchor/pivot/no blur, both themes, state cancellation, editing/saving and notifications/history.
+
