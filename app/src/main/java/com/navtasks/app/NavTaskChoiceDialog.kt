@@ -75,6 +75,7 @@ internal fun NavTaskChoiceField(
     options: List<Pair<String, String>>,
     p: NavPalette,
     lang: UiLanguage,
+    onExpandedChange: (Boolean) -> Unit = {},
     onSelect: (String) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -85,7 +86,12 @@ internal fun NavTaskChoiceField(
         Row(
             Modifier.fillMaxWidth()
                 .navGlass(p, radius = 15.dp, role = GlassRole.CONTROL, elevation = 0.dp)
-                .glassClickable { expanded = true }
+                .glassClickable {
+                    if (!expanded) {
+                        expanded = true
+                        onExpandedChange(true)
+                    }
+                }
                 .heightIn(min = 48.dp)
                 .padding(start = 15.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -98,10 +104,14 @@ internal fun NavTaskChoiceField(
             NavTaskChoiceDialog(
                 title = title, selected = selected, options = options,
                 p = p, lang = lang, popupWidth = fieldWidth,
-                onDismiss = { expanded = false },
+                onDismiss = {
+                    expanded = false
+                    onExpandedChange(false)
+                },
                 onSelect = { key ->
                     onSelect(key)
                     expanded = false
+                    onExpandedChange(false)
                 },
             )
         }
