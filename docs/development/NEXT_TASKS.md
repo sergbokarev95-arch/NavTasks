@@ -494,3 +494,5 @@
 - [ ] Owner: test on HONOR Year view 12 months, no clipping, dates legible, dark/day; month/year tap and horizontal swipe; mode lens switch, selected state and active tint. Verify profile data, dock and task status preservation.
 - [ ] Fix any visual or gesture regressions in beta.3 with monotonically higher code (>233 if code233 recovery is installed). Owner confirms acceptable before next design stage (repeats/reminders/sheets).
 - [ ] Stable 1.2.0 only after device QA; signed APK-first, original certificate, stable OTA only afterward.
+
+- [x] Provide original-key signed in-place 1.1.0 functional code233 recovery in case beta.2 visuals/gestures fail; CI `45196566816` PASS. Do not install by default. Future beta code >=234.
