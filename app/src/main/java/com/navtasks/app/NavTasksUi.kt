@@ -100,9 +100,11 @@ fun navPalette(dark: Boolean) = if (dark) NavPalette(
     Color(0xFF282D33), Color(0xFF282D33), Color(0xFF40464D),
     Color(0xFFF6F7F8), Color(0xFFAAAFB5), Color(0xFF0091FF), Color(0xFF68CE77),
 ) else NavPalette(
-    // Day #02 Slate Mist: only the canvas gets slightly darker; light cards stay as approved.
-    false, Color(0xFFE6E8EC), Color(0xFFE6E8EC), Color(0xF9FFFFFF),
-    Color(0xFFF8FCFF), Color(0xFFE1F0FA), Color(0xFFC9DFED),
+    // Day #03 Neutral White: match HONOR Calendar's neutral gray canvas
+    // (#F2F3F7), opaque white cards, and quiet neutral outlines.
+    // Selection and semantic accent colors are unchanged.
+    false, Color(0xFFF2F3F7), Color(0xFFF2F3F7), Color.White,
+    Color.White, Color.White, Color(0xFFE0E2E8),
     Color(0xFF1C1C1E), Color(0xFF707076), Color(0xFF0088FF), Color(0xFF60C569),
 )
 
