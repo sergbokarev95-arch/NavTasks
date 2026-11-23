@@ -5,11 +5,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ApplePaletteTest {
-    @Test fun dayColorsUseAppleAccentAndChosenSlateMistBackground() {
+    @Test fun dayColorsUseHONORNeutralWhiteWithUnchangedAppleAccents() {
         val p = navPalette(false)
         assertEquals(Color(0xFF0088FF), p.blue)
-        assertEquals(Color(0xFFE6E8EC), p.background)
+        assertEquals(Color(0xFFF2F3F7), p.background)
         assertEquals(p.background, p.backgroundEnd)
+        assertEquals(Color.White, p.panel)
+        assertEquals(Color.White, p.task)
+        assertEquals(Color.White, p.nestedTask)
+        assertEquals(Color(0xFFE0E2E8), p.border)
         assertEquals(Color(0xFFFF8D28), p.systemOrange)
         assertEquals(Color(0xFFBE5300), p.warningText)
         assertEquals(Color(0xFF0071E3), p.blueText)
