@@ -119,6 +119,18 @@ fun PlanScreenV2(
             }
             Text(periodTitle, color = p.text, fontSize = 23.sp,
                 fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+            if (level == 0) {
+                // No duplicate year header below the switch: navigation sits
+                // beside the current year, freeing space for all 12 months.
+                NavGlassIconAction(
+                    "chevron-left", p.blue,
+                    localized("Предыдущий год", "Previous year", lang),
+                ) { year-- }
+                NavGlassIconAction(
+                    "chevron-right", p.blue,
+                    localized("Следующий год", "Next year", lang),
+                ) { year++ }
+            }
             TextButton(onClick = {
                 year = today.year
                 month = today.monthValue
@@ -151,81 +163,103 @@ fun PlanScreenV2(
             label = "calendarZoom",
         ) { zoom ->
             when (zoom) {
-                0 -> Column {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        NavGlassIconAction(
-                            "chevron-left", p.blue, localized("Предыдущий год", "Previous year", lang),
-                        ) { year-- }
-                        Text("$year", color = p.text, fontSize = 24.sp, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                        NavGlassIconAction(
-                            "chevron-right", p.blue, localized("Следующий год", "Next year", lang),
-                        ) { year++ }
-                    }
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(3),
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)
-                            .clip(RoundedCornerShape(25.dp))
-                            .background(p.panel),
-                        contentPadding = PaddingValues(start = 9.dp, end = 9.dp, top = 10.dp, bottom = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(3.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                0 -> BoxWithConstraints(
+                    Modifier.fillMaxSize()
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .clip(RoundedCornerShape(25.dp))
+                        .background(p.panel),
+                ) {
+                    // Four equal-height rows ALWAYS fit the remaining viewport.
+                    // This deliberately replaces LazyVerticalGrid: a scrollable
+                    // grid hid October–December on the user's HONOR.
+                    val compact = maxHeight < 470.dp
+                    Column(
+                        Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(if (compact) 1.dp else 3.dp),
                     ) {
-                        items((1..12).toList()) { m ->
-                            Column(
-                                Modifier.fillMaxWidth().glassClickable {
-                                    month = m
-                                    level = 1
-                                }.padding(horizontal = 4.dp, vertical = 5.dp),
+                        (0..3).forEach { rowIndex ->
+                            Row(
+                                Modifier.fillMaxWidth().weight(1f),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                Text(
-                                    YearMonth.of(year, m).month
-                                        .getDisplayName(TextStyle.FULL_STANDALONE, locale)
-                                        .replaceFirstChar { it.uppercase() },
-                                    color = if (year == today.year && m == today.monthValue)
-                                        p.systemRed else p.text,
-                                    fontSize = 15.sp, fontWeight = FontWeight.Medium,
-                                    maxLines = 1,
-                                )
-                                Spacer(Modifier.height(5.dp))
-                                Row(Modifier.fillMaxWidth()) {
-                                    (1..7).forEach { dow ->
-                                        Text(
-                                            DayOfWeek.of(dow).getDisplayName(TextStyle.NARROW, locale),
-                                            color = p.muted.copy(alpha = 0.85f), fontSize = 8.sp,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.weight(1f),
-                                        )
-                                    }
-                                }
-                                Spacer(Modifier.height(3.dp))
-                                monthGridDates(year, m).chunked(7).forEach { week ->
-                                    Row(Modifier.fillMaxWidth()) {
-                                        week.forEach { date ->
-                                            val isInMonth = date.monthValue == m && date.year == year
-                                            val mark = store.dayCounts(date).state(date, today)
-                                            val markColor = when (mark) {
-                                                CalendarDayState.COMPLETE -> p.mint
-                                                CalendarDayState.PARTIAL -> p.systemOrange
-                                                CalendarDayState.INCOMPLETE -> p.systemRed
-                                                else -> p.text
+                                (0..2).forEach { columnIndex ->
+                                    val m = rowIndex * 3 + columnIndex + 1
+                                    Column(
+                                        Modifier.weight(1f).fillMaxHeight()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .glassClickable(pressScale = 1.01f) {
+                                                month = m
+                                                level = 1
                                             }
-                                            Box(
-                                                Modifier.weight(1f).height(16.dp),
-                                                contentAlignment = Alignment.Center,
-                                            ) {
-                                                if (isInMonth) {
+                                            .padding(horizontal = 2.dp, vertical = 1.dp),
+                                    ) {
+                                        Text(
+                                            YearMonth.of(year, m).month
+                                                .getDisplayName(TextStyle.FULL_STANDALONE, locale)
+                                                .replaceFirstChar { it.uppercase() },
+                                            color = if (year == today.year && m == today.monthValue)
+                                                p.systemRed else p.text,
+                                            fontSize = if (compact) 11.sp else 13.sp,
+                                            lineHeight = if (compact) 13.sp else 16.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                        )
+                                        Spacer(Modifier.height(if (compact) 1.dp else 3.dp))
+                                        Row(Modifier.fillMaxWidth().height(11.dp)) {
+                                            (1..7).forEach { dow ->
+                                                Text(
+                                                    DayOfWeek.of(dow).getDisplayName(
+                                                        TextStyle.NARROW, locale),
+                                                    color = p.muted.copy(alpha = .82f),
+                                                    fontSize = 7.sp, lineHeight = 9.sp,
+                                                    textAlign = TextAlign.Center,
+                                                    maxLines = 1,
+                                                    modifier = Modifier.weight(1f),
+                                                )
+                                            }
+                                        }
+                                        // Use six weighted week slots even in a five-week
+                                        // month: identical alignment across all 12 tiles.
+                                        monthGridDates(year, m).chunked(7).forEach { week ->
+                                            Row(Modifier.fillMaxWidth().weight(1f)) {
+                                                week.forEach { date ->
+                                                    val inMonth = date.monthValue == m && date.year == year
+                                                    val state = store.dayCounts(date).state(date, today)
+                                                    val ink = when (state) {
+                                                        CalendarDayState.COMPLETE -> p.mint
+                                                        CalendarDayState.PARTIAL -> p.systemOrange
+                                                        CalendarDayState.INCOMPLETE -> p.systemRed
+                                                        else -> p.text
+                                                    }
                                                     Box(
-                                                        Modifier.size(16.dp).background(
-                                                            if (date == today) p.systemRed else Color.Transparent,
-                                                            CircleShape,
-                                                        ), contentAlignment = Alignment.Center,
+                                                        Modifier.weight(1f).fillMaxHeight(),
+                                                        contentAlignment = Alignment.Center,
                                                     ) {
-                                                        Text(
-                                                            "${date.dayOfMonth}",
-                                                            color = if (date == today) Color.White else markColor,
-                                                            fontSize = 9.sp, lineHeight = 11.sp,
-                                                            textAlign = TextAlign.Center,
-                                                        )
+                                                        if (inMonth) {
+                                                            if (date == today) {
+                                                                Box(
+                                                                    Modifier.size(if (compact) 12.dp else 14.dp)
+                                                                        .background(p.systemRed, CircleShape),
+                                                                    contentAlignment = Alignment.Center,
+                                                                ) {
+                                                                    Text(
+                                                                        "${date.dayOfMonth}",
+                                                                        fontSize = if (compact) 7.sp else 8.sp,
+                                                                        lineHeight = 10.sp,
+                                                                        color = Color.White,
+                                                                        maxLines = 1,
+                                                                    )
+                                                                }
+                                                            } else {
+                                                                Text(
+                                                                    "${date.dayOfMonth}",
+                                                                    color = ink, fontSize = if (compact) 7.sp else 8.sp,
+                                                                    lineHeight = 10.sp,
+                                                                    maxLines = 1,
+                                                                )
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
