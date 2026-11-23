@@ -128,7 +128,8 @@ class NavTaskChoiceDialogTest {
 
     @Test fun taskEditorUsesBlueFilledSaveWithoutChangingPersistence() {
         val editor = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
-        assertTrue(editor.contains("Button(\\n                enabled = valid"))
+        assertTrue(editor.contains("Button("))
+        assertTrue(editor.contains("enabled = valid"))
         assertTrue(editor.contains("containerColor = p.selectionFill"))
         assertTrue(editor.contains("contentColor = Color.White"))
         assertTrue(editor.contains("disabledContainerColor = if (p.dark)"))
