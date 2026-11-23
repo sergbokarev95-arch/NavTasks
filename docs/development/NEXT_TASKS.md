@@ -494,3 +494,5 @@
 - [ ] Finish optional exact stable v1.1.0 functional code241 recovery CI, mark only for emergency. Any next beta or stable release must use code>241 if recovery installed.
 - [ ] After user visual acceptance, beta7: targeted form/editor style grouping for Tasks, AMOS, Services; beta8: Settings/filters/confirmation dialogs with same design tokens. Never broad-rewrite all dialogs or modify business logic.
 - [ ] Stable 1.2.0 only after staged user approval, comprehensive CI + manual QA, original signed APK-first then public stable feed.
+
+- [x] Signed exact functional 1.1.0 source recovery code241 CI `45211910613` SUCCESS; prerelease-only APK SHA256 `558d2feddab2c8a7218c87f910347707dc8a31b4000910739c70ec489b661434`. Public stable feed unchanged.
