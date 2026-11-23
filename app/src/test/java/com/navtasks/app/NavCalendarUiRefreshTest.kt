@@ -12,6 +12,32 @@ class NavCalendarUiRefreshTest {
         assertEquals(listOf(0, 1, 2), navCalendarAvailableLevels)
     }
 
+    @Test fun yearOverviewIsExactlyFourRowsAndTwelveDistinctMonths() {
+        assertEquals(4, navCalendarYearRows.size)
+        assertTrue(navCalendarYearRows.all { it.size == 3 })
+        assertEquals((1..12).toList(), navCalendarYearRows.flatten())
+        val calendar = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+        val year = calendar.substringAfter("0 -> BoxWithConstraints(")
+            .substringBefore("1 -> Column {")
+        assertTrue(year.contains("navCalendarYearRows.forEach"))
+        assertTrue(year.contains("Modifier.fillMaxWidth().weight(1f)"))
+        assertTrue(year.contains("Modifier.weight(1f).fillMaxHeight()"))
+        assertTrue(year.contains("val compact = maxHeight < 470.dp"))
+        assertTrue(year.contains("monthGridDates(year, m).chunked(7)"))
+        assertTrue(!year.contains("LazyVerticalGrid("))
+    }
+
+    @Test fun modeSwitchPreservesDockSpringAndTapOnlyLensPulse() {
+        val control = File("src/main/java/com/navtasks/app/NavCalendarModeControl.kt").readText()
+        assertTrue(control.contains("navLiquidGlassRim(dark)"))
+        assertTrue(control.contains("stiffness = 550f"))
+        assertTrue(control.contains("NavLiquidDockTabs.repeatTapScale"))
+        assertTrue(control.contains("calendarGlassLensSlide"))
+        assertTrue(control.contains("onSelect(navCalendarAvailableLevels[index])"))
+        assertTrue(!control.contains("localized(\"Неделя\""))
+        assertTrue(!control.contains("localized(\"События\""))
+    }
+
     @Test fun sevenDayStripStartsOnMondayAndCrossesMonthSafely() {
         val selected = LocalDate.of(2026, 11, 1) // Sunday
         val week = navCalendarWeekDates(selected)
