@@ -492,3 +492,5 @@
 - [x] Signed `1.2.0-beta.4` code236 CI `45202899262` PASS; release source-only prerelease, public stable OTA still 1.1.0.
 - [ ] Owner: back up profile; install beta4 over beta3 without uninstall; inspect upper capsule on Night and Day themes, animated lens movement and selected label; Year/Month/Day and all 12 months, tasks/data intact.
 - [ ] Finish verifying recovery code237 for safe in-place fallback. Future beta/stable code >237. Do not promote 1.2.0 stable until physical approval.
+
+- [x] Recovery code237 verified and published; CI `45203211625` PASS, identical stable functionality, original signer, source-only prerelease. Do not install unless beta4 causes a regression.
