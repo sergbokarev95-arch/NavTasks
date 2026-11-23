@@ -99,6 +99,7 @@ class NavCalendarUiRefreshTest {
         val month = calendar.substringAfter("1 -> Column {")
             .substringBefore("else -> Column {")
         val day = calendar.substringAfter("else -> Column {")
+            .substringBefore("/** ISO-8601 calendar week")
         assertTrue(month.contains("Spacer(Modifier.width(calendarMonthWeekNumberGutter))"))
         assertTrue(month.contains("calendarIsoWeekNumber(week.first()).toString()"))
         assertTrue(month.contains("Modifier.width(calendarMonthWeekNumberGutter).height(56.dp)"))
