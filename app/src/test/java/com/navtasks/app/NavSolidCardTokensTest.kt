@@ -7,7 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * Source-of-truth pixel checks for user-selected 02 (Day) and 09 (Night).
+ * Source-of-truth pixel checks for user-selected 03 (Day) and 09 (Night).
  * Do not silently reintroduce navy gradients on dark static cards.
  * Keep the existing translucent navigation lens and solid blue selection separate.
  */
@@ -16,21 +16,18 @@ class NavSolidCardTokensTest {
         GlassRole.PANEL, GlassRole.TASK, GlassRole.NESTED_TASK, GlassRole.CONTROL,
     )
 
-    @Test fun day02KeepsOriginalCardGradientsAndNoOpticalChanges() {
+    @Test fun day03KeepsEveryStaticCardOpaquePureWhiteWithoutBlueRims() {
         val p = navPalette(false)
-        assertEquals(Color(0xFFE6E8EC), p.background)
-        val panel = requireNotNull(navSolidCardTokens(p, GlassRole.PANEL))
-        val task = requireNotNull(navSolidCardTokens(p, GlassRole.TASK))
-        assertEquals(Color(0xFFE8F5FC), panel.left)
-        assertEquals(Color.White, panel.right)
-        assertEquals(Color(0xFFE5F3FC), task.left)
-        assertEquals(Color.White, task.right)
+        assertEquals(Color(0xFFF2F3F7), p.background)
         for (role in staticRoles) {
-            val t = requireNotNull(navSolidCardTokens(p, role))
-            assertEquals(1f, t.left.alpha, 0f)
-            assertEquals(1f, t.right.alpha, 0f)
-            assertNotEquals(t.left, t.right)
-            assertNotEquals(t.borderTop, t.borderBottom)
+            val surface = requireNotNull(navSolidCardTokens(p, role))
+            assertEquals("white left/$role", Color.White, surface.left)
+            assertEquals("white right/$role", Color.White, surface.right)
+            assertEquals("neutral rim top/$role", Color(0xFFF8F9FB), surface.borderTop)
+            assertEquals("neutral rim mid/$role", Color(0xFFE0E2E8), surface.borderMid)
+            assertEquals("neutral rim bottom/$role", Color(0xFFE0E2E8), surface.borderBottom)
+            assertEquals(1f, surface.left.alpha, 0f)
+            assertEquals(1f, surface.right.alpha, 0f)
         }
     }
 
