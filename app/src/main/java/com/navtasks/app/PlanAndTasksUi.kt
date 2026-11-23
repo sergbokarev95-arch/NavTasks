@@ -106,18 +106,29 @@ fun PlanScreenV2(
         selectedDay = next.day
     }
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp),
-            verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { level = 0 }) { Text("$year", color = p.blueText) }
-            Text("/", color = p.muted)
-            TextButton(onClick = { level = 1 }) {
-                Text(YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase() }, color = p.blueText)
+        Row(
+            Modifier.fillMaxWidth().padding(start = 19.dp, end = 16.dp, top = 6.dp, bottom = 5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val periodTitle = when (level) {
+                0 -> "$year"
+                1 -> YearMonth.of(year, month).month
+                    .getDisplayName(TextStyle.FULL_STANDALONE, locale)
+                    .replaceFirstChar { it.uppercase() } + " $year"
+                else -> navDate(selectedDay, lang, true)
             }
-            Spacer(Modifier.weight(1f))
-            TextButton(onClick = { year = today.year; month = today.monthValue; selectedDay = today; level = 2 }) {
-                Text(localized("Сегодня", "Today", lang), color = p.successText)
+            Text(periodTitle, color = p.text, fontSize = 23.sp,
+                fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+            TextButton(onClick = {
+                year = today.year
+                month = today.monthValue
+                selectedDay = today
+                level = 2
+            }) {
+                Text(localized("Сегодня", "Today", lang), color = p.blueText)
             }
         }
+        NavCalendarModeControl(level, p, lang, onSelect = { level = it })
         Crossfade(
             targetState = level,
             modifier = Modifier.fillMaxSize().pointerInput(level, year, month, selectedDay) {
@@ -152,21 +163,41 @@ fun PlanScreenV2(
                     }
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 11.dp, end = 11.dp, top = 11.dp, bottom = 28.dp),
-                        horizontalArrangement = Arrangement.spacedBy(7.dp),
-                        verticalArrangement = Arrangement.spacedBy(7.dp),
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)
+                            .clip(RoundedCornerShape(25.dp))
+                            .background(p.panel),
+                        contentPadding = PaddingValues(start = 9.dp, end = 9.dp, top = 10.dp, bottom = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         items((1..12).toList()) { m ->
                             Column(
-                                Modifier.fillMaxWidth().navGlass(p, radius = 13.dp,
-                                    role = if (year == today.year && m == today.monthValue) GlassRole.NESTED_TASK else GlassRole.PANEL)
-                                    .glassClickable { month = m; level = 1 }.padding(7.dp),
+                                Modifier.fillMaxWidth().glassClickable {
+                                    month = m
+                                    level = 1
+                                }.padding(horizontal = 4.dp, vertical = 5.dp),
                             ) {
-                                Text(YearMonth.of(year, m).month.getDisplayName(TextStyle.SHORT_STANDALONE, locale),
-                                    color = p.text, fontSize = 12.sp, fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                                Text(
+                                    YearMonth.of(year, m).month
+                                        .getDisplayName(TextStyle.FULL_STANDALONE, locale)
+                                        .replaceFirstChar { it.uppercase() },
+                                    color = if (year == today.year && m == today.monthValue)
+                                        p.systemRed else p.text,
+                                    fontSize = 15.sp, fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                )
                                 Spacer(Modifier.height(5.dp))
+                                Row(Modifier.fillMaxWidth()) {
+                                    (1..7).forEach { dow ->
+                                        Text(
+                                            DayOfWeek.of(dow).getDisplayName(TextStyle.NARROW, locale),
+                                            color = p.muted.copy(alpha = 0.85f), fontSize = 8.sp,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(3.dp))
                                 monthGridDates(year, m).chunked(7).forEach { week ->
                                     Row(Modifier.fillMaxWidth()) {
                                         week.forEach { date ->
@@ -176,16 +207,28 @@ fun PlanScreenV2(
                                                 CalendarDayState.COMPLETE -> p.mint
                                                 CalendarDayState.PARTIAL -> p.systemOrange
                                                 CalendarDayState.INCOMPLETE -> p.systemRed
-                                                CalendarDayState.SCHEDULED -> p.muted
-                                                else -> p.muted
+                                                else -> p.text
                                             }
-                                            Text("${date.dayOfMonth}",
-                                                color = when {
-                                                    date == today -> p.blue
-                                                    !isInMonth -> p.muted.copy(alpha = 0.40f)
-                                                    else -> markColor
-                                                }, fontSize = 8.sp, lineHeight = 12.sp, textAlign = TextAlign.Center,
-                                                modifier = Modifier.weight(1f))
+                                            Box(
+                                                Modifier.weight(1f).height(16.dp),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                if (isInMonth) {
+                                                    Box(
+                                                        Modifier.size(16.dp).background(
+                                                            if (date == today) p.systemRed else Color.Transparent,
+                                                            CircleShape,
+                                                        ), contentAlignment = Alignment.Center,
+                                                    ) {
+                                                        Text(
+                                                            "${date.dayOfMonth}",
+                                                            color = if (date == today) Color.White else markColor,
+                                                            fontSize = 9.sp, lineHeight = 11.sp,
+                                                            textAlign = TextAlign.Center,
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
