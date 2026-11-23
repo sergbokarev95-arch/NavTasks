@@ -36,23 +36,41 @@ class NavTaskChoiceDialogTest {
             navTaskReminderChoices(UiLanguage.EN).map { it.second })
     }
 
-    @Test fun editorOnlyCommitsAfterSelectAndCancelNeverWrites() {
+    @Test fun editorPreservesExistingKeysAndPopupOnlyCommitsConfirmedDraft() {
         val ui = File("src/main/java/com/navtasks/app/NavTaskChoiceDialog.kt").readText()
         val editor = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
         assertTrue(ui.contains("var draft by remember(selected, options)"))
         assertTrue(ui.contains("if (confirm) onSelect(draft) else onDismiss()"))
-        assertTrue(ui.contains("onClick = { close(false) }"))
-        assertTrue(ui.contains("onClick = { close(true) }"))
-        assertTrue(ui.contains("AnimatedVisibility("))
-        assertTrue(ui.contains("NavApplyDialogFrost(frosted)"))
-        assertTrue(editor.contains("NavTaskChoiceDialog("))
-        assertTrue(editor.contains("frequency = Frequency.valueOf(key)"))
+        assertTrue(ui.contains(".clickable(enabled = !closing) { close(false) }"))
+        assertTrue(ui.contains(".clickable(enabled = !closing) { close(true) }"))
+        assertTrue(ui.contains("Popup("))
+        assertTrue(ui.contains("PopupPositionProvider"))
+        assertTrue(ui.contains("anchorBounds.bottom + gapPx"))
+        assertTrue(ui.contains("TransformOrigin(.5f, if (above) 1f else 0f)"))
+        assertFalse(ui.contains("NavApplyDialogFrost("))
+        assertFalse(ui.contains("navPopupGlassSurface("))
+        assertTrue(ui.contains("Color(0xFF23272C)"))
+        assertTrue(ui.contains("Color(0xFFF8F9FA)"))
+        assertTrue(editor.contains("NavTaskFrequencyControl(frequency, p, lang)"))
+        assertTrue(editor.contains("frequency = it"))
         assertTrue(editor.contains("mode = ScheduleMode.valueOf(key)"))
         assertTrue(editor.contains("reminder = key.toInt()"))
         assertTrue(editor.contains("remindMinutesBefore = reminder"))
         assertTrue(editor.contains("notificationsEnabled = notified"))
+        assertFalse(editor.contains("openTaskChoice"))
         assertFalse(ui.contains("TaskStore("))
         assertFalse(ui.contains("NavNotifications."))
+    }
+
+    @Test fun fourFrequencySegmentsReuseAcceptedCalendarVisualTokensWithoutChangingModel() {
+        val segmented = File("src/main/java/com/navtasks/app/NavTaskFrequencyControl.kt").readText()
+        assertTrue(segmented.contains("val frequencies = Frequency.entries"))
+        assertTrue(segmented.contains("navCalendarModeHeight"))
+        assertTrue(segmented.contains("navCalendarModeSurface(p)"))
+        assertTrue(segmented.contains("navCalendarLensResting(p.dark)"))
+        assertTrue(segmented.contains("navCalendarRim(p.dark)"))
+        assertTrue(segmented.contains("onSelect(frequencies[i])"))
+        assertFalse(segmented.contains("TaskStore("))
     }
 
     @Test fun existingTaskCalendarAndNotificationModulesStayUnmodified() {
