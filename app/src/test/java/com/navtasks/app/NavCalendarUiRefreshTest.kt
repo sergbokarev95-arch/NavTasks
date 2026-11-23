@@ -73,6 +73,40 @@ class NavCalendarUiRefreshTest {
         assertTrue(!year.contains("LazyVerticalGrid("))
     }
 
+    @Test fun november2026ShowsWeek44Through49BesideMonthRows() {
+        val rows = monthGridDates(2026, 11).chunked(7)
+        assertEquals(6, rows.size)
+        assertTrue(rows.all { it.size == 7 && it.first().dayOfWeek.value == 1 })
+        assertEquals(listOf(44, 45, 46, 47, 48, 49),
+            rows.map { calendarIsoWeekNumber(it.first()) })
+    }
+
+    @Test fun isoWeekNumbersHandleYearTransitionAndLeapYears() {
+        // Friday Jan 1 2021 belongs to 2020's ISO week 53.
+        assertEquals(53, calendarIsoWeekNumber(LocalDate.of(2020, 12, 28)))
+        assertEquals(53, calendarIsoWeekNumber(LocalDate.of(2021, 1, 1)))
+        assertEquals(1, calendarIsoWeekNumber(LocalDate.of(2021, 1, 4)))
+        // Dec 30 2024 is ISO week 1 of the following ISO week-based year.
+        assertEquals(1, calendarIsoWeekNumber(LocalDate.of(2024, 12, 30)))
+        assertEquals(9, calendarIsoWeekNumber(LocalDate.of(2024, 2, 29)))
+    }
+
+    @Test fun monthWeekGutterDoesNotAffectYearOrDayModes() {
+        assertEquals(26.dp, calendarMonthWeekNumberGutter)
+        val calendar = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+        val year = calendar.substringAfter("0 -> BoxWithConstraints(")
+            .substringBefore("1 -> Column {")
+        val month = calendar.substringAfter("1 -> Column {")
+            .substringBefore("else -> Column {")
+        val day = calendar.substringAfter("else -> Column {")
+        assertTrue(month.contains("Spacer(Modifier.width(calendarMonthWeekNumberGutter))"))
+        assertTrue(month.contains("calendarIsoWeekNumber(week.first()).toString()"))
+        assertTrue(month.contains("Modifier.width(calendarMonthWeekNumberGutter).height(56.dp)"))
+        assertTrue(!year.contains("calendarIsoWeekNumber("))
+        assertTrue(!day.contains("calendarIsoWeekNumber("))
+        assertTrue(month.contains("week.forEach { date ->"))
+    }
+
     @Test fun sevenDayStripStartsOnMondayAndCrossesMonthSafely() {
         val selected = LocalDate.of(2026, 11, 1) // Sunday
         val week = navCalendarWeekDates(selected)
