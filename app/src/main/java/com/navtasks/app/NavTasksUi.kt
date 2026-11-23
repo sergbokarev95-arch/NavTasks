@@ -30,6 +30,9 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -57,6 +60,10 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.abs
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
+import kotlinx.coroutines.Job
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -443,6 +450,47 @@ fun NavTasksApp(
         // Deleted/unknown profile: consume stale intent without changing profile.
         onOpenRequestHandled(request.serial)
     }
+    // The editor remains a normal TaskEditorScreen, but its outer presentation
+    // is a drag-to-dismiss sheet. Only the handle/header owns vertical dismissal;
+    // nested lists and text fields keep their original scroll/edit gestures.
+    var editorSheetDragPx by remember { mutableFloatStateOf(0f) }
+    val editorSheetScope = rememberCoroutineScope()
+    val editorSheetReturn = remember { mutableStateOf<Job?>(null) }
+    val editorSheetDragState = rememberDraggableState { delta ->
+        editorSheetReturn.value?.cancel()
+        editorSheetReturn.value = null
+        editorSheetDragPx = (editorSheetDragPx + delta).coerceIn(0f, 1600f)
+    }
+    val dismissSheetDistance = with(LocalDensity.current) { 110.dp.toPx() }
+    val onEditorSheetDragStopped: (Float) -> Unit = { velocity ->
+        if (editorSheetDragPx >= dismissSheetDistance || velocity > 1150f) {
+            editorOpen = false
+        } else {
+            val offset = editorSheetDragPx
+            editorSheetReturn.value = editorSheetScope.launch {
+                Animatable(offset).animateTo(
+                    0f, spring(dampingRatio = .96f, stiffness = 680f),
+                ) {
+                    editorSheetDragPx = value
+                }
+                editorSheetReturn.value = null
+            }
+        }
+    }
+    LaunchedEffect(editorOpen) {
+        if (!editorOpen) {
+            // Keep the finger's last offset during the sheet's exit animation.
+            delay(250)
+            editorSheetReturn.value?.cancel()
+            editorSheetReturn.value = null
+            editorSheetDragPx = 0f
+        } else {
+            editorSheetReturn.value?.cancel()
+            editorSheetReturn.value = null
+            editorSheetDragPx = 0f
+        }
+    }
+
     val pinchEligible = !editorOpen && !showSettings && !showProfiles &&
         !showServices && !showWorks && !showRoutineTasks &&
         !showWorkOrders && !showCalendar
@@ -483,7 +531,11 @@ fun NavTasksApp(
                     enabled = pinchEligible && !quickProfileOpen,
                     onDetected = { quickProfileOpen = true },
                 )
-                .blur(if (quickProfileOpen) 12.dp else 0.dp)
+                .blur(when {
+                    quickProfileOpen -> 12.dp
+                    editorOpen -> 4.dp // Blur underlying page ONCE, never the popup.
+                    else -> 0.dp
+                })
         ) {
             NavGlassBackdrop(palette)
             // The underlying page stays mounted while the editor sheet slides
@@ -834,7 +886,7 @@ fun NavTasksApp(
         ) {
             Box(
                 Modifier.fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.55f))
+                    .background(Color.Black.copy(alpha = 0.36f))
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
@@ -857,6 +909,7 @@ fun NavTasksApp(
             val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
             Box(
                 Modifier.fillMaxWidth().fillMaxHeight(.94f)
+                    .offset { IntOffset(0, editorSheetDragPx.roundToInt()) }
                     .shadow(16.dp, sheetShape)
                     .clip(sheetShape)
                     .background(palette.background, sheetShape)
@@ -868,12 +921,27 @@ fun NavTasksApp(
                     onBack = { editorOpen = false },
                     onSave = { store.upsert(it); editorOpen = false },
                     sheetMode = true,
+                    sheetDragState = editorSheetDragState,
+                    onSheetDragStopped = onEditorSheetDragStopped,
                 )
+                // Broad 112x30dp hit area for the drag handle, independent of
+                // the title's taps, Save button and the editor's inner scrolling.
                 Box(
-                    Modifier.align(Alignment.TopCenter).padding(top = 8.dp)
-                        .size(width = 42.dp, height = 4.dp)
-                        .background(palette.muted.copy(alpha = .48f), CircleShape),
-                )
+                    Modifier.align(Alignment.TopCenter)
+                        .size(width = 112.dp, height = 30.dp)
+                        .draggable(
+                            state = editorSheetDragState,
+                            orientation = Orientation.Vertical,
+                            onDragStopped = { velocity -> onEditorSheetDragStopped(velocity) },
+                        ),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    Box(
+                        Modifier.padding(top = 8.dp)
+                            .size(width = 42.dp, height = 4.dp)
+                            .background(palette.muted.copy(alpha = .58f), CircleShape),
+                    )
+                }
             }
         }
         // Rendered after underlying destinations: Back closes the editor first,
