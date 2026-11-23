@@ -485,3 +485,11 @@
 - [ ] Confirm all JVM tests and release signing, checksum, correct package and prerelease status from GitHub Actions.
 - [ ] Device beta acceptance: 2 Handover entries with different images, PDF page breaks, DOCX valid editable photo placement, multiple and rotated photos, delete/cancel drafts, full/selected profile export to second device, offline availability and no unrelated regressions.
 - [ ] User decides UI polish / bugfix beta.2+; only then prepare 1.1.0 stable with monotonically higher versionCode and unchanged original signer, update APK-first then stable feed. No beta builds in public stable feed.
+
+## 2026-11-23 — UI Refresh device acceptance for 1.2.0-beta.1
+- [x] Branch from verified stable v1.1.0; create visually refreshed Year/Month/Day calendar; keep dock and business data intact.
+- [x] Run all JVM regressions and verify original signer, app ID, code231, not-debuggable; CI `45192450160` PASS.
+- [x] Publish as source-only opt-in prerelease and verify stable OTA remains 1.1.0/code230.
+- [ ] User: back up complete profiles; install 1.2.0-beta.1 APK in-place; inspect both themes and compare to screenshots. Test Year 12 months, Month scrolling/selected Today/status dots, Day seven-date strip across month and year boundaries, swipes and back gestures, tap-open tasks; confirm dock and data unchanged.
+- [ ] After user approval, add fully functional Week/Events modes (not decorative), followed by recurrence/reminder popup styling, add/edit sheets, settings in isolated beta releases with higher versionCodes.
+- [ ] Final 1.2.0 release only after owner beta QA; publish signed verified APK FIRST, then public stable feed. Preserve stable 1.1.0 until approved.
