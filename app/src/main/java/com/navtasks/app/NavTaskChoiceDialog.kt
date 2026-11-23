@@ -1,8 +1,8 @@
 package com.navtasks.app
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -169,10 +169,13 @@ internal fun NavTaskChoiceDialog(
     }
     LaunchedEffect(closing) {
         if (closing) {
-            motion.animateTo(0f, tween(85))
+            motion.animateTo(0f, tween(115))
             if (confirm) onSelect(draft) else onDismiss()
         } else {
-            motion.animateTo(1f, tween(135, easing = FastOutSlowInEasing))
+            // Same restrained, critically damped emergence shown in the
+            // reference: expand vertically from the touched field without
+            // sliding a separate Android window across the screen.
+            motion.animateTo(1f, spring(dampingRatio = .92f, stiffness = 780f))
         }
     }
     val surface = if (p.dark) Color(0xFF23272C) else Color(0xFFF8F9FA)
@@ -191,9 +194,10 @@ internal fun NavTaskChoiceDialog(
         Column(
             Modifier.width(popupWidth.coerceAtMost(410.dp))
                 .graphicsLayer {
-                    alpha = motion.value
-                    scaleX = .94f + .06f * motion.value
-                    scaleY = .94f + .06f * motion.value
+                    val progress = motion.value.coerceIn(0f, 1f)
+                    alpha = progress
+                    scaleX = .96f + .04f * progress
+                    scaleY = .62f + .38f * progress
                     transformOrigin = TransformOrigin(.5f, if (above) 1f else 0f)
                 }
                 .shadow(12.dp, shape)
