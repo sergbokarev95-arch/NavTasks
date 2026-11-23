@@ -36,14 +36,14 @@ fun NavPopoverMenu(
             .border(
                 1.dp,
                 if (p.dark) Color(0xFF4A5058)
-                else Color(0xFFBDC5CE),
+                else Color(0xFFE0E2E8),
                 shape,
             ),
         shape = shape,
         // A native DropdownMenu is rendered in a separate popup window;
         // use the same neutral palette, but do not mistake transparency for
         // actual refracting Liquid Glass from the page's separate backdrop.
-        containerColor = if (p.dark) Color(0xFF25292E) else Color(0xFFF9FAFC),
+        containerColor = if (p.dark) Color(0xFF25292E) else Color.White,
         tonalElevation = 0.dp,
         shadowElevation = 8.dp,
         content = content,
@@ -91,10 +91,10 @@ fun Modifier.navDialogSurface(p: NavPalette, radius: Dp = 24.dp): Modifier {
     return clip(shape)
         // Large modal editors follow the Night09 matte graphite materials.
         // Opaque backgrounds avoid the former muddy reddish/gray alpha blend.
-        .background(if (p.dark) Color(0xFF25292E) else Color(0xFFF9FAFC), shape)
+        .background(if (p.dark) Color(0xFF25292E) else Color.White, shape)
         .border(1.dp,
             if (p.dark) Color(0xFF454B53)
-            else Color(0xFFC4CBD3),
+            else Color(0xFFE0E2E8),
             shape)
 }
 
