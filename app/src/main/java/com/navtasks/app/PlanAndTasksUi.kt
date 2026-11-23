@@ -767,6 +767,8 @@ fun TaskEditorScreen(
     var showTimeWheel by remember(initial?.id) { mutableStateOf(false) }
     var notified by remember(initial?.id) { mutableStateOf(initial?.notificationsEnabled ?: true) }
     var reminder by remember(initial?.id) { mutableIntStateOf(initial?.remindMinutesBefore ?: 60) }
+    // Presentation only: choice dialogs edit drafts until explicit confirmation.
+    var openTaskChoice by remember(initial?.id) { mutableStateOf<String?>(null) }
     var checklist by remember(initial?.id) { mutableStateOf(initial?.checklist ?: emptyList()) }
     var editingChecklistNote by remember(initial?.id) { mutableStateOf<String?>(null) }
     var enabled by remember(initial?.id) { mutableStateOf(initial?.enabled ?: true) }
@@ -838,12 +840,9 @@ fun TaskEditorScreen(
                 // Frequency first, directly below the New Task header.
                 // Keep existing model, validators and editor persistence intact.
                 FormLabel("Периодичность", "Frequency", lang, p)
-                OptionLine(Frequency.entries.map { it.name to when (it) {
-                    Frequency.DAILY -> localized("День", "Daily", lang)
-                    Frequency.WEEKLY -> localized("Неделя", "Weekly", lang)
-                    Frequency.MONTHLY -> localized("Месяц", "Monthly", lang)
-                    Frequency.EXTRA -> localized("Разовая", "One-off", lang)
-                } }, frequency.name, p) { frequency = Frequency.valueOf(it) }
+                NavTaskChoiceField(
+                    frequency.name, navTaskFrequencyChoices(lang), p, lang,
+                ) { openTaskChoice = "frequency" }
                 Spacer(Modifier.height(12.dp))
                 FormLabel("Название задачи", "Task name", lang, p)
                 Spacer(Modifier.height(5.dp))
@@ -853,10 +852,9 @@ fun TaskEditorScreen(
             NavPanel(p) {
                 if (frequency != Frequency.EXTRA) {
                     FormLabel("Повторение", "Recurrence", lang, p)
-                    OptionLine(listOf(ScheduleMode.CALENDAR.name to localized("По расписанию", "By schedule", lang),
-                        ScheduleMode.AFTER_COMPLETION.name to localized("От выполнения", "From completion", lang)), mode.name, p) {
-                        mode = ScheduleMode.valueOf(it)
-                    }
+                    NavTaskChoiceField(
+                        mode.name, navTaskRepeatChoices(lang), p, lang,
+                    ) { openTaskChoice = "repeat" }
                     Spacer(Modifier.height(10.dp))
                 }
                 if (frequency == Frequency.WEEKLY && mode == ScheduleMode.CALENDAR) {
@@ -974,11 +972,9 @@ fun TaskEditorScreen(
                 }
                 if (notified) {
                     FormLabel("Напомнить", "Remind me", lang, p)
-                    OptionLine(listOf(0 to localized("В срок", "At deadline", lang),
-                        15 to localized("За 15 минут", "15 minutes before", lang),
-                        60 to localized("За час", "1 hour before", lang),
-                        1440 to localized("За день", "1 day before", lang)).map { "${it.first}" to it.second },
-                        "$reminder", p) { reminder = it.toInt() }
+                    NavTaskChoiceField(
+                        "$reminder", navTaskReminderChoices(lang), p, lang,
+                    ) { openTaskChoice = "reminder" }
                     Text(localized(
                         "Без указанного времени напоминания считаются от основного времени в настройках. " +
                             "Срок выполнения при этом остаётся до конца дня.",
@@ -1032,6 +1028,39 @@ fun TaskEditorScreen(
             NavLiquidGlassCircleButton(p, editorBackdrop, "back", onBack)
         }
     }
+    }
+
+    openTaskChoice?.let { choice ->
+        val options = when (choice) {
+            "frequency" -> navTaskFrequencyChoices(lang)
+            "repeat" -> navTaskRepeatChoices(lang)
+            else -> navTaskReminderChoices(lang)
+        }
+        val current = when (choice) {
+            "frequency" -> frequency.name
+            "repeat" -> mode.name
+            else -> "$reminder"
+        }
+        NavTaskChoiceDialog(
+            title = when (choice) {
+                "frequency" -> localized("Периодичность", "Frequency", lang)
+                "repeat" -> localized("Повторение", "Recurrence", lang)
+                else -> localized("Напомнить", "Remind me", lang)
+            },
+            selected = current,
+            options = options,
+            p = p,
+            lang = lang,
+            onDismiss = { openTaskChoice = null },
+            onSelect = { key ->
+                when (choice) {
+                    "frequency" -> frequency = Frequency.valueOf(key)
+                    "repeat" -> mode = ScheduleMode.valueOf(key)
+                    else -> reminder = key.toInt()
+                }
+                openTaskChoice = null
+            },
+        )
     }
 
     if (showTaskDeletionOptions && initial != null) {
