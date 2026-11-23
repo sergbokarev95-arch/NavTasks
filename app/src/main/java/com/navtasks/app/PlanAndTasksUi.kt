@@ -177,13 +177,12 @@ fun PlanScreenV2(
                         Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(if (compact) 1.dp else 3.dp),
                     ) {
-                        (0..3).forEach { rowIndex ->
+                        navCalendarYearRows.forEach { months ->
                             Row(
                                 Modifier.fillMaxWidth().weight(1f),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                (0..2).forEach { columnIndex ->
-                                    val m = rowIndex * 3 + columnIndex + 1
+                                months.forEach { m ->
                                     Column(
                                         Modifier.weight(1f).fillMaxHeight()
                                             .clip(RoundedCornerShape(10.dp))
