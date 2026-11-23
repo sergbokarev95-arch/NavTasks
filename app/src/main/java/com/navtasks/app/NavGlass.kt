@@ -172,7 +172,7 @@ fun Modifier.navFrostedOverlay(
                 // source tint was showing through the selected capsule.
                 backgroundColor = if (p.dark) Color(0x68172739)
                     else if (role == GlassRole.NAVIGATION) Color(0x88F3F3F3)
-                    else Color(0x74EDF5FA),
+                    else Color(0x74F2F3F7),
                 blurRadius = 34.dp,
                 tints = listOf(
                     HazeTint(if (p.dark) Color(0x24141E2B) else Color(0x16FFFFFF))
@@ -262,8 +262,8 @@ fun Modifier.navGlassSelection(p: NavPalette, radius: Dp = 23.dp): Modifier {
             Brush.verticalGradient(
                 listOf(
                     Color.White.copy(alpha = if (p.dark) 0.57f else 0.92f),
-                    Color(0xFFB7D2E1).copy(alpha = if (p.dark) 0.23f else 0.45f),
-                    Color(0xFF78A9C5).copy(alpha = if (p.dark) 0.48f else 0.38f),
+                    Color(0xFFB7D2E1).copy(alpha = if (p.dark) 0.23f else 0f),
+                    Color(0xFF78A9C5).copy(alpha = if (p.dark) 0.48f else 0f),
                 ),
             ), shape,
         )
