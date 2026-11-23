@@ -838,7 +838,7 @@ fun TaskEditorScreen(
             verticalArrangement = Arrangement.spacedBy(11.dp)) {
             // Frequency is page-level navigation (like the Calendar modes), not
             // a field in the same card as the task title. No persistence changes.
-            Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp, top = 5.dp, bottom = 2.dp)) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp).padding(top = 5.dp, bottom = 2.dp)) {
                 FormLabel("Периодичность", "Frequency", lang, p)
                 Spacer(Modifier.height(7.dp))
                 NavTaskFrequencyControl(frequency, p, lang) { frequency = it }
