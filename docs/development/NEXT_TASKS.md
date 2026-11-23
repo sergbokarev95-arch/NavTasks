@@ -485,3 +485,10 @@
 - [ ] Confirm all JVM tests and release signing, checksum, correct package and prerelease status from GitHub Actions.
 - [ ] Device beta acceptance: 2 Handover entries with different images, PDF page breaks, DOCX valid editable photo placement, multiple and rotated photos, delete/cancel drafts, full/selected profile export to second device, offline availability and no unrelated regressions.
 - [ ] User decides UI polish / bugfix beta.2+; only then prepare 1.1.0 stable with monotonically higher versionCode and unchanged original signer, update APK-first then stable feed. No beta builds in public stable feed.
+
+## 2026-11-24 — Beta5 visual acceptance ISO week labels
+- [x] Add subtle Week 44–49 left labels to Nov 2026 Month in a 26dp gutter; align weekday headers and rows; ISO transitions correct and automated tests passing.
+- [x] Signed 1.2.0-beta.5 code238 source-only prerelease, GitHub CI run `45207168565` PASS; original signer and stable app ID unchanged. Stable OTA still 1.1.0/code230.
+- [x] Verified original-key 1.1.0 functional emergency in-place recovery code239, CI `45206576352` PASS.
+- [ ] Owner: backup full profiles; install beta5 over beta4 without uninstall; check November 2026 44–49 alignment, month/year boundaries (especially Jan), month navigation, both themes, tap dates, task status dots and dock unchanged. Review screenshot, fix beta6 with code>239 if needed.
+- [ ] Promote 1.2.0 stable only after all UI Refresh stages (including calendar/sheets as agreed) accepted, full tests and APK-first verified public OTA update.
