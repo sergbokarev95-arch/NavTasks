@@ -73,6 +73,29 @@ class NavTaskChoiceDialogTest {
         assertFalse(segmented.contains("TaskStore("))
     }
 
+    @Test fun frequencySitsOutsideNamePanelAndEditorUsesBottomUpMotion() {
+        val editor = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+        val root = File("src/main/java/com/navtasks/app/NavTasksUi.kt").readText()
+        val choice = File("src/main/java/com/navtasks/app/NavTaskChoiceDialog.kt").readText()
+        val section = editor.substringAfter(
+            "Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)"
+        )
+        val period = section.indexOf("NavTaskFrequencyControl(frequency, p, lang)")
+        val firstPanel = section.indexOf("NavPanel(p) {")
+        val taskName = section.indexOf("FormLabel(\"Название задачи\"")
+        assertTrue(period >= 0 && firstPanel > period && taskName > firstPanel)
+        assertTrue(editor.contains("sheetMode: Boolean = false"))
+        assertTrue(root.contains("label = \"taskEditorBottomSheet\""))
+        assertTrue(root.contains("label = \"taskEditorScrim\""))
+        assertTrue(root.contains("sheetMode = true"))
+        assertTrue(root.contains("BackHandler(enabled = editorOpen)"))
+        assertTrue(root.contains("onSave = { store.upsert(it); editorOpen = false }"))
+        assertTrue(choice.contains("scaleY = .62f + .38f * progress"))
+        assertTrue(choice.contains("TransformOrigin(.5f, if (above) 1f else 0f)"))
+        assertFalse(choice.contains("NavApplyDialogFrost("))
+        assertFalse(root.contains("if (editorOpen) {\n                TaskEditorScreen("))
+    }
+
     @Test fun existingTaskCalendarAndNotificationModulesStayUnmodified() {
         val ui = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
         assertTrue(ui.contains("TaskSchedule.effectiveFrequency(it, LocalDate.now())"))
