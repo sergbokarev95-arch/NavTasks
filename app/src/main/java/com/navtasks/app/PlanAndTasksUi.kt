@@ -21,6 +21,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.DraggableState
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -732,6 +736,8 @@ fun TaskEditorScreen(
     store: TaskStore,
     onBack: () -> Unit, onSave: (TaskTemplate) -> Unit,
     sheetMode: Boolean = false,
+    sheetDragState: DraggableState? = null,
+    onSheetDragStopped: (Float) -> Unit = {},
 ) {
     val p = palette
     val context = LocalContext.current
@@ -768,6 +774,9 @@ fun TaskEditorScreen(
     var showTimeWheel by remember(initial?.id) { mutableStateOf(false) }
     var notified by remember(initial?.id) { mutableStateOf(initial?.notificationsEnabled ?: true) }
     var reminder by remember(initial?.id) { mutableIntStateOf(initial?.remindMinutesBefore ?: 60) }
+    // A single popup-active token controls blur/shade of this sheet's CONTENT,
+    // never the choice popup itself. Avoid duplicate overlapping window blurs.
+    var activeChoice by remember(initial?.id) { mutableStateOf<String?>(null) }
     var checklist by remember(initial?.id) { mutableStateOf(initial?.checklist ?: emptyList()) }
     var editingChecklistNote by remember(initial?.id) { mutableStateOf<String?>(null) }
     var enabled by remember(initial?.id) { mutableStateOf(initial?.enabled ?: true) }
@@ -783,17 +792,29 @@ fun TaskEditorScreen(
     var unsupportedFrequencyEdit by remember(initial?.id) { mutableStateOf(false) }
     val valid = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 && (interval.toIntOrNull() ?: 0) > 0
 
-    val editorBackdrop = if (android.os.Build.VERSION.SDK_INT >= 33)
+    val editorBackdrop = if (!sheetMode && android.os.Build.VERSION.SDK_INT >= 33)
         com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().then(
         if (editorBackdrop != null) Modifier.layerBackdrop(editorBackdrop) else Modifier
-    ).then(if (sheetMode) Modifier.padding(top = 13.dp) else Modifier.statusBarsPadding())
+    ).blur(if (activeChoice != null) 5.dp else 0.dp)
+        .then(if (sheetMode) Modifier.padding(top = 13.dp) else Modifier.statusBarsPadding())
         .navigationBarsPadding()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (editorBackdrop != null) Spacer(Modifier.size(44.dp))
-            else NavGlassCircleButton(p, "back", onClick = onBack)
-            Spacer(Modifier.width(12.dp))
+        Row(
+            Modifier.fillMaxWidth()
+                .then(if (sheetMode && sheetDragState != null) Modifier.draggable(
+                    state = sheetDragState,
+                    orientation = Orientation.Vertical,
+                    onDragStopped = { velocity -> onSheetDragStopped(velocity) },
+                ) else Modifier)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (!sheetMode) {
+                if (editorBackdrop != null) Spacer(Modifier.size(44.dp))
+                else NavGlassCircleButton(p, "back", onClick = onBack)
+                Spacer(Modifier.width(12.dp))
+            }
             Text(localized(if (initial == null) "Новая задача" else "Редактировать задачу",
                 if (initial == null) "New task" else "Edit task", lang),
                 modifier = Modifier.weight(1f), color = p.text, fontSize = 21.sp)
@@ -856,6 +877,10 @@ fun TaskEditorScreen(
                         title = localized("Повторение", "Recurrence", lang),
                         selected = mode.name, options = navTaskRepeatChoices(lang),
                         p = p, lang = lang,
+                        onExpandedChange = { open ->
+                            if (open) activeChoice = "repeat"
+                            else if (activeChoice == "repeat") activeChoice = null
+                        },
                     ) { key -> mode = ScheduleMode.valueOf(key) }
                     Spacer(Modifier.height(10.dp))
                 }
@@ -978,6 +1003,10 @@ fun TaskEditorScreen(
                         title = localized("Напомнить", "Remind me", lang),
                         selected = "$reminder", options = navTaskReminderChoices(lang),
                         p = p, lang = lang,
+                        onExpandedChange = { open ->
+                            if (open) activeChoice = "reminder"
+                            else if (activeChoice == "reminder") activeChoice = null
+                        },
                     ) { key -> reminder = key.toInt() }
                     Text(localized(
                         "Без указанного времени напоминания считаются от основного времени в настройках. " +
@@ -1026,7 +1055,13 @@ fun TaskEditorScreen(
             Spacer(Modifier.height(28.dp))
         }
     }
-    if (editorBackdrop != null) {
+    if (activeChoice != null) {
+        // One light scrim over the blurred editor, beneath the separate opaque
+        // anchored Popup. The base page has its own ONE independent sheet scrim.
+        Box(Modifier.matchParentSize()
+            .background(Color.Black.copy(alpha = if (p.dark) .15f else .09f)))
+    }
+    if (!sheetMode && editorBackdrop != null) {
         Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
             .padding(start = 14.dp, top = 10.dp)) {
             NavLiquidGlassCircleButton(p, editorBackdrop, "back", onBack)
