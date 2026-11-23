@@ -518,3 +518,11 @@
 - [ ] Only after user acceptance, consider an optional inline Other Settings accordion and broader reduction of redundant panel framing, separately scoped; preserve visible functionality and existing Apple HIG geometry.
 - [ ] Stable 1.2.0 publication remains UNAUTHORIZED, public stable feed 1.1.0/code230.
 
+## NEXT — 2026-11-24 beta9 gesture and blur on HONOR
+- [x] Inspect user video `486809.mp4` and screenshot references. Preserve the Android system Back but remove round in-app Back button when Task editor is a sheet; support swipe-down on handle/header.
+- [x] Backup exact beta8 tip `0634ab00a603e8ffca69ebb03e3f8620159e8bf7` to `backup/navtasks-1.2.0-beta8-before-gesture-blur`.
+- [x] Implement bounded vertical drag with 110dp/1150px/s dismissal, short-drag rebound, one 4dp blur+36% shade on original destination, separate single subtle blur/shade on editor content when Repeat/Reminder popup opens. Keep opaque field-anchored popup sharp; preserve Save/cancel and Task schedule logic.
+- [x] Original-key CI `45226311981` SUCCESS, `v1.2.0-beta.9` code246 APK SHA256 `2e545ca528d937d8a4248c45ad5d541a5935c97e84052e0358fc25facd77af06`; exact stable-functional original-signed emergency recovery code247 `45226537092` SUCCESS, prerelease only. Stable feed 1.1.0 untouched.
+- [ ] On HONOR export all full profiles and separate library copies, install ONLY beta9 code246 over beta8 244 without uninstalling. Test drag from handle/header from Today and Work, small drag rebound, dragged-to-close > threshold, keyboard open, title and Save taps, system Back, dark/light popup layering (no ghosting or double-opaque blur), popup Cancel/Back/outside, Task Save, scope selection, notifications and existing data.
+- [ ] If any drag/blur stutter or Back/IME conflict, isolate a UI-only fix. Do not change task store, AMOS, Services, alerts or recurrence calculations. Stable 1.2.0 requires owner signoff. Emergency recovery code247 ONLY on serious regression, then future versionCodes >247.
+
