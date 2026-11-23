@@ -30,13 +30,34 @@ class NavCalendarUiRefreshTest {
 
     @Test fun modeSwitchPreservesDockSpringAndTapOnlyLensPulse() {
         val control = File("src/main/java/com/navtasks/app/NavCalendarModeControl.kt").readText()
-        assertTrue(control.contains("navLiquidGlassRim(dark)"))
+        assertTrue(control.contains("navCalendarRim(dark)"))
         assertTrue(control.contains("stiffness = 550f"))
         assertTrue(control.contains("NavLiquidDockTabs.repeatTapScale"))
         assertTrue(control.contains("calendarGlassLensSlide"))
         assertTrue(control.contains("onSelect(navCalendarAvailableLevels[index])"))
         assertTrue(!control.contains("localized(\"Неделя\""))
         assertTrue(!control.contains("localized(\"События\""))
+    }
+
+    @Test fun calendarSwitchMatchesExactYearCardInBothThemes() {
+        assertEquals(navPalette(true).panel, navCalendarModeSurface(navPalette(true)))
+        assertEquals(navPalette(false).panel, navCalendarModeSurface(navPalette(false)))
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF393B40),
+            navCalendarLensResting(true))
+        assertEquals(androidx.compose.ui.graphics.Color(0xFFE7E7E9),
+            navCalendarLensResting(false))
+        val control = File("src/main/java/com/navtasks/app/NavCalendarModeControl.kt")
+            .readText()
+        val calendar = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt")
+            .readText()
+        assertTrue(control.contains(".background(navCalendarModeSurface(p), shape)"))
+        assertTrue(calendar.contains(".background(p.panel)"))
+        assertTrue(control.contains("val inactiveInk = p.muted"))
+        assertTrue(control.contains("val activeBlue = p.blueText"))
+        // Neither inactive surfaces nor the glass lens contain the old blue hues.
+        assertTrue(!control.contains("0x66528BAF"))
+        assertTrue(!control.contains("0xE926303C"))
+        assertTrue(!control.contains("0xF8EDF3F8"))
     }
 
     @Test fun compactGlassControlReturnsHeightToYearOverview() {
