@@ -262,8 +262,8 @@ fun Modifier.navGlassSelection(p: NavPalette, radius: Dp = 23.dp): Modifier {
             Brush.verticalGradient(
                 listOf(
                     Color.White.copy(alpha = if (p.dark) 0.57f else 0.92f),
-                    Color(0xFFB7D2E1).copy(alpha = if (p.dark) 0.23f else 0f),
-                    Color(0xFF78A9C5).copy(alpha = if (p.dark) 0.48f else 0f),
+                    Color(0xFFB7D2E1).copy(alpha = if (p.dark) 0.23f else 0.45f),
+                    Color(0xFF78A9C5).copy(alpha = if (p.dark) 0.48f else 0.38f),
                 ),
             ), shape,
         )
