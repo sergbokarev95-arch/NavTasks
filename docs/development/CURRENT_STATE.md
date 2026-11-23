@@ -395,3 +395,5 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Owner asked to fit all 12 months in Year overview and make Year/Month/Day switch use original NavTasks Liquid Glass dock's visual language; explicitly NO Week/Events.
 - 1.2.0-beta.2 code232 source branch `feature/navtasks-1.2.0-beta2-calendar-fit-glass`; signed GitHub CI `45196125628` PASS. APK source prerelease SHA256 `4b48e41c6f44847935d9aa2e0264e4a83aa78a78c48084c6155e62c00014cfc2`; untouched original app ID/key.
 - UI only: fixed four-row non-scrolling 12-month view, consolidated year navigation, dock-matched sliding glass lens and animations. Calendar task/AMOS/Service data, bottom dock, Handover, Reference unchanged. HONOR acceptance to follow.
+
+- Safe in-place emergency fallback after UI beta2: exact 1.1.0 functional source `v1.1.0-recovery-code233`, signed CI `45196566816` SUCCESS, APK SHA256 `32e8ec6f04b8916280b93da26cf674cc6112fa7f3d1d4c8736bd5b689985e81b`. Not in stable feed; do not install unless necessary. Future builds must have versionCode >=234 if recovery is used.
