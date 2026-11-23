@@ -5,6 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 import java.time.LocalDate
+import androidx.compose.ui.unit.dp
 
 /** Calendar UI Refresh: visual-only navigation, task recurrence untouched. */
 class NavCalendarUiRefreshTest {
@@ -36,6 +37,19 @@ class NavCalendarUiRefreshTest {
         assertTrue(control.contains("onSelect(navCalendarAvailableLevels[index])"))
         assertTrue(!control.contains("localized(\"Неделя\""))
         assertTrue(!control.contains("localized(\"События\""))
+    }
+
+    @Test fun compactGlassControlReturnsHeightToYearOverview() {
+        assertEquals(44.dp, navCalendarModeHeight)
+        assertEquals(40.dp, navCalendarModeLensHeight)
+        val calendar = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+        val year = calendar.substringAfter("0 -> BoxWithConstraints(")
+            .substringBefore("1 -> Column {")
+        // Calendar text increases without reintroducing year scrolling.
+        assertTrue(year.contains("fontSize = if (compact) 12.sp else 15.sp"))
+        assertTrue(year.contains("fontSize = if (compact) 9.sp else 10.sp"))
+        assertTrue(year.contains("val compact = maxHeight < 470.dp"))
+        assertTrue(!year.contains("LazyVerticalGrid("))
     }
 
     @Test fun sevenDayStripStartsOnMondayAndCrossesMonthSafely() {
