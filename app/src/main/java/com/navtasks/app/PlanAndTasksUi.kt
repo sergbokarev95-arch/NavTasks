@@ -53,6 +53,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.TextStyle
+import java.time.temporal.IsoFields
 import java.util.Locale
 import kotlinx.coroutines.delay
 import kotlin.math.abs
@@ -289,6 +290,8 @@ fun PlanScreenV2(
                         Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(3.dp),
                     ) {
+                        // Same reserved space as the ISO week numbers below.
+                        Spacer(Modifier.width(calendarMonthWeekNumberGutter))
                         (1..7).forEach { dow ->
                             Text(DayOfWeek.of(dow).getDisplayName(TextStyle.SHORT, locale),
                                 color = if (dow >= 6) weekendInk else p.muted,
@@ -297,7 +300,22 @@ fun PlanScreenV2(
                         }
                     }
                     monthGridDates(year, month).chunked(7).forEach { week ->
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            // ISO week of the Monday displayed at the start of this row.
+                            // No click handler: week numbers are an informational label.
+                            Text(
+                                calendarIsoWeekNumber(week.first()).toString(),
+                                modifier = Modifier.width(calendarMonthWeekNumberGutter).height(56.dp)
+                                    .wrapContentHeight(Alignment.CenterVertically),
+                                color = p.muted.copy(alpha = 0.72f),
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                textAlign = TextAlign.Center,
+                            )
                             week.forEach { date ->
                                 val isToday = date == today
                                 val inMonth = date.year == year && date.monthValue == month
@@ -558,6 +576,13 @@ private fun PlanReadOnlyTile(
         } },
     )
 }
+
+/** ISO-8601 calendar week: Monday start, with correct year-boundary week numbering. */
+internal fun calendarIsoWeekNumber(date: LocalDate): Int =
+    date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR)
+
+/** Fixed leading gutter in Month mode; header and rows stay perfectly aligned. */
+internal val calendarMonthWeekNumberGutter = 26.dp
 
 /** Six complete weeks, including dimmed trailing/leading dates of neighbouring months. */
 internal fun monthGridDates(year: Int, month: Int): List<LocalDate> {
