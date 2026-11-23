@@ -37,7 +37,7 @@ class AppleBlueSelectionTest {
         val night = navPalette(true)
         assertEquals(Color(0xFF0088FF), day.blue)
         assertEquals(Color(0xFF0091FF), night.blue)
-        assertEquals(Color(0xFFE6E8EC), day.background)
+        assertEquals(Color(0xFFF2F3F7), day.background)
         assertEquals(Color.Black, night.background)
         assertEquals(Color(0xFFFF8D28), day.systemOrange)
         assertEquals(Color(0xFFFF9230), night.systemOrange)
