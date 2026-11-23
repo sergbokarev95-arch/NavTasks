@@ -74,7 +74,7 @@ internal fun Modifier.navPopupGlassSurface(
 ): Modifier {
     if (!frosted) return navDialogSurface(p, radius)
     val shape = RoundedCornerShape(radius)
-    val fill = if (p.dark) Color(0xE025292E) else Color(0xD9F9FAFC)
+    val fill = if (p.dark) Color(0xE025292E) else Color.White
     val rim = Brush.verticalGradient(
         if (p.dark) listOf(
             Color.White.copy(alpha = .51f),
@@ -82,8 +82,8 @@ internal fun Modifier.navPopupGlassSurface(
             Color(0xFF485767).copy(alpha = .52f),
         ) else listOf(
             Color.White.copy(alpha = .88f),
-            Color(0xFFBAC8D4).copy(alpha = .68f),
-            Color(0xFF91A8B9).copy(alpha = .52f),
+            Color(0xFFE0E2E8).copy(alpha = .68f),
+            Color(0xFFE0E2E8).copy(alpha = .80f),
         )
     )
     return this.clip(shape).background(fill, shape).border(1.dp, rim, shape)
