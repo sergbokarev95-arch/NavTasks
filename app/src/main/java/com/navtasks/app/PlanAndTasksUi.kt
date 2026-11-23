@@ -165,7 +165,7 @@ fun PlanScreenV2(
             when (zoom) {
                 0 -> BoxWithConstraints(
                     Modifier.fillMaxSize()
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
                         .clip(RoundedCornerShape(25.dp))
                         .background(p.panel),
                 ) {
@@ -174,7 +174,7 @@ fun PlanScreenV2(
                     // grid hid October–December on the user's HONOR.
                     val compact = maxHeight < 470.dp
                     Column(
-                        Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 8.dp),
+                        Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalArrangement = Arrangement.spacedBy(if (compact) 1.dp else 3.dp),
                     ) {
                         navCalendarYearRows.forEach { months ->
@@ -198,20 +198,20 @@ fun PlanScreenV2(
                                                 .replaceFirstChar { it.uppercase() },
                                             color = if (year == today.year && m == today.monthValue)
                                                 p.systemRed else p.text,
-                                            fontSize = if (compact) 11.sp else 13.sp,
-                                            lineHeight = if (compact) 13.sp else 16.sp,
+                                            fontSize = if (compact) 12.sp else 15.sp,
+                                            lineHeight = if (compact) 14.sp else 18.sp,
                                             fontWeight = FontWeight.Medium,
                                             maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                         )
                                         Spacer(Modifier.height(if (compact) 1.dp else 3.dp))
-                                        Row(Modifier.fillMaxWidth().height(11.dp)) {
+                                        Row(Modifier.fillMaxWidth().height(12.dp)) {
                                             (1..7).forEach { dow ->
                                                 Text(
                                                     DayOfWeek.of(dow).getDisplayName(
                                                         TextStyle.NARROW, locale),
                                                     color = p.muted.copy(alpha = .82f),
-                                                    fontSize = 7.sp, lineHeight = 9.sp,
+                                                    fontSize = 8.sp, lineHeight = 10.sp,
                                                     textAlign = TextAlign.Center,
                                                     maxLines = 1,
                                                     modifier = Modifier.weight(1f),
@@ -238,14 +238,14 @@ fun PlanScreenV2(
                                                         if (inMonth) {
                                                             if (date == today) {
                                                                 Box(
-                                                                    Modifier.size(if (compact) 12.dp else 14.dp)
+                                                                    Modifier.size(if (compact) 13.dp else 18.dp)
                                                                         .background(p.systemRed, CircleShape),
                                                                     contentAlignment = Alignment.Center,
                                                                 ) {
                                                                     Text(
                                                                         "${date.dayOfMonth}",
-                                                                        fontSize = if (compact) 7.sp else 8.sp,
-                                                                        lineHeight = 10.sp,
+                                                                        fontSize = if (compact) 8.sp else 10.sp,
+                                                                        lineHeight = if (compact) 9.sp else 11.sp,
                                                                         color = Color.White,
                                                                         maxLines = 1,
                                                                     )
@@ -253,8 +253,8 @@ fun PlanScreenV2(
                                                             } else {
                                                                 Text(
                                                                     "${date.dayOfMonth}",
-                                                                    color = ink, fontSize = if (compact) 7.sp else 8.sp,
-                                                                    lineHeight = 10.sp,
+                                                                    color = ink, fontSize = if (compact) 9.sp else 10.sp,
+                                                                    lineHeight = if (compact) 10.sp else 12.sp,
                                                                     maxLines = 1,
                                                                 )
                                                             }
