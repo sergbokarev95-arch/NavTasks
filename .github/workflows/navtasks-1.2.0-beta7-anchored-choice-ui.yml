@@ -2,14 +2,14 @@ name: NavTasks 1.2.0 beta.7 Anchored Task choice UI original-key prerelease
 on:
   push:
     branches:
-      - feature/navtasks-1.2.0-beta7-task-choice-dialogs
+      - feature/navtasks-1.2.0-beta7-anchored-choice-ui
     paths:
       - 'app/**'
-      - '.github/workflows/navtasks-1.2.0-beta7-task-choice-dialogs.yml'
+      - '.github/workflows/navtasks-1.2.0-beta7-anchored-choice-ui.yml'
   workflow_dispatch:
 
 concurrency:
-  group: navtasks-1.2.0-beta7-task-choice-dialogs
+  group: navtasks-1.2.0-beta7-anchored-choice-ui
   cancel-in-progress: true
 
 permissions:
@@ -65,7 +65,7 @@ jobs:
         run: |
           set -euo pipefail
           test ! -z "$GITHUB_SHA"
-          LATEST_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature%2Fnavtasks-1.2.0-beta7-task-choice-dialogs" --jq '.commit.sha')"
+          LATEST_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/feature%2Fnavtasks-1.2.0-beta7-anchored-choice-ui" --jq '.commit.sha')"
           test "$LATEST_SHA" = "$GITHUB_SHA" || {
             echo "Branch has changed since this runner started: refusing stale stable release publication."
             exit 1
