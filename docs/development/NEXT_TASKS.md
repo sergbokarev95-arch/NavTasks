@@ -496,3 +496,14 @@
 - [ ] Stable 1.2.0 only after staged user approval, comprehensive CI + manual QA, original signed APK-first then public stable feed.
 
 - [x] Signed exact functional 1.1.0 source recovery code241 CI `45211910613` SUCCESS; prerelease-only APK SHA256 `558d2feddab2c8a7218c87f910347707dc8a31b4000910739c70ec489b661434`. Public stable feed unchanged.
+
+## NEXT — 2026-11-24 beta7 HONOR anchored-popup acceptance
+- [x] Back up beta6 exact source `d2e1183262c7cce27399c58326abcd164149bfaf` at `backup/navtasks-1.2.0-beta6-before-popup-fix`; work only in `feature/navtasks-1.2.0-beta7-anchored-choice-ui`.
+- [x] Replace Frequency dropdown in TaskEditorScreen with four equal calendar-material 44dp segments, retaining model keys DAILY/WEEKLY/MONTHLY/EXTRA, existing Save and frequency migration prompts.
+- [x] Remove transparency/cross-window blur from only Task repeat/reminder popups, use opaque neutral fills and Popup anchored to touched field; short stable scale/fade with no right-edge or sliding layout. Cancel/Back/outside preserve draft semantics.
+- [x] Full JVM/release/signature CI `45217377636` SUCCESS and immutable original-signed source prerelease `v1.2.0-beta.7`, code242, APK SHA256 `7f2e5f1a57820a7a3aec8d930d3d997f1447c40f6d650c86c738c2db5a1669a1`. Two previous static code240 test expectations were corrected; final full CI passes.
+- [x] Exact stable 1.1.0 emergency code243 CI `45217002472` SUCCESS; source-only prerelease `v1.1.0-recovery-code243` available only if beta7 severely regresses. Future builds must use code>243 after recovery install.
+- [ ] User: export FULL profile backups, install ONLY beta7/code242 over beta6/code240 (or current lower original-signed version) IN PLACE. Check four selections and lens, Recurrence/Reminder popup anchored to their own field, correct above/below repositioning near screen edge, fully opaque daytime/nighttime surfaces, no lag or side motion, keyboard/insets/gesture Back.
+- [ ] Confirm Select commits existing enum/minute keys while Cancel/Back/outside do not alter form; verify new/existing task Save, recurring scope (Only this / All future), end-of-day vs exact time notification, profiles/AMOS/Services/Calendar/Handover remain intact. CI is not physical HONOR acceptance.
+- [ ] After explicit owner visual acceptance, continue small, separately reviewed form grouping (Tasks/AMOS/Services); no wide rewrites or new scheduler logic. Stable 1.2.0 requires independent owner sign-off and signed APK-first OTA metadata.
+
