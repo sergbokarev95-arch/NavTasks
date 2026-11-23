@@ -731,6 +731,7 @@ fun TaskEditorScreen(
     lang: UiLanguage, palette: NavPalette,
     store: TaskStore,
     onBack: () -> Unit, onSave: (TaskTemplate) -> Unit,
+    sheetMode: Boolean = false,
 ) {
     val p = palette
     val context = LocalContext.current
@@ -787,7 +788,8 @@ fun TaskEditorScreen(
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().then(
         if (editorBackdrop != null) Modifier.layerBackdrop(editorBackdrop) else Modifier
-    ).statusBarsPadding().navigationBarsPadding()) {
+    ).then(if (sheetMode) Modifier.padding(top = 13.dp) else Modifier.statusBarsPadding())
+        .navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             if (editorBackdrop != null) Spacer(Modifier.size(44.dp))
             else NavGlassCircleButton(p, "back", onClick = onBack)
@@ -834,12 +836,14 @@ fun TaskEditorScreen(
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp)) {
-            NavPanel(p) {
-                // Frequency first, directly below the New Task header.
-                // Keep existing model, validators and editor persistence intact.
+            // Frequency is page-level navigation (like the Calendar modes), not
+            // a field in the same card as the task title. No persistence changes.
+            Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp, top = 5.dp, bottom = 2.dp)) {
                 FormLabel("Периодичность", "Frequency", lang, p)
+                Spacer(Modifier.height(7.dp))
                 NavTaskFrequencyControl(frequency, p, lang) { frequency = it }
-                Spacer(Modifier.height(12.dp))
+            }
+            NavPanel(p) {
                 FormLabel("Название задачи", "Task name", lang, p)
                 Spacer(Modifier.height(5.dp))
                 NavGlassInput(title, { title = it }, p,
