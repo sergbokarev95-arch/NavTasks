@@ -507,3 +507,14 @@
 - [ ] Confirm Select commits existing enum/minute keys while Cancel/Back/outside do not alter form; verify new/existing task Save, recurring scope (Only this / All future), end-of-day vs exact time notification, profiles/AMOS/Services/Calendar/Handover remain intact. CI is not physical HONOR acceptance.
 - [ ] After explicit owner visual acceptance, continue small, separately reviewed form grouping (Tasks/AMOS/Services); no wide rewrites or new scheduler logic. Stable 1.2.0 requires independent owner sign-off and signed APK-first OTA metadata.
 
+## NEXT — 2026-11-24 user acceptance of signed beta8 editor video motion
+- [x] View reference screen recording and beta7 screenshots. Key patterns: floating editor sheet from Add, repeat choice unfolding from row, optional accordion; initial UX feedback requires Frequency OUTSIDE title panel.
+- [x] Immutable beta7 backup `backup/navtasks-1.2.0-beta7-before-motion-sheet` and isolated feature branch. Keep task store/schedule/notifications/AMOS/Services/Handover/dock unchanged.
+- [x] Split Frequency 4-tab control into page-level standalone row; title now independently grouped. Stage editor rounded bottom sheet + backdrop fade keeping parent page mounted and Back priority, and more pronounced anchored repeat/reminder popup spring without cross-window blur.
+- [x] Full JVM/release/original signing CI `45222037769` SUCCESS (one initial invalid Compose padding syntax corrected), published source-only `v1.2.0-beta.8` code244 APK SHA256 `56934f68bb872c04e002bc500b8f60d0e9bbfb3a7de441b03e6421ac4558d51b`.
+- [x] Exact stable 1.1.0 app logic recovery code245 signed `45221672385` SUCCESS, prerelease only. Do NOT install routinely; after fallback installed future versions must be code>245.
+- [ ] User FULL profile export, install beta8 IN PLACE, confirm no data loss; test scrolling and keyboard, opening/closing from Today, Works task list and Calendar, system Back vs unsaved edits, bottom-sheet geometry on HONOR, all four frequency segments, title spacing and both themes. Confirm popup timing/position/opacity, Cancel/Back/outside and Select; verify reminders, schedule prompts ONLY THIS/ALL FUTURE and no changes to profiles/equipment/media.
+- [ ] Address physical stutter/sheet transition or IME overlay only with targeted rendering/layout tweaks; do not touch scheduler. If serious regression use signed code245 recovery in-place after backup.
+- [ ] Only after user acceptance, consider an optional inline Other Settings accordion and broader reduction of redundant panel framing, separately scoped; preserve visible functionality and existing Apple HIG geometry.
+- [ ] Stable 1.2.0 publication remains UNAUTHORIZED, public stable feed 1.1.0/code230.
+
