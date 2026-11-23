@@ -485,3 +485,10 @@
 - [ ] Confirm all JVM tests and release signing, checksum, correct package and prerelease status from GitHub Actions.
 - [ ] Device beta acceptance: 2 Handover entries with different images, PDF page breaks, DOCX valid editable photo placement, multiple and rotated photos, delete/cancel drafts, full/selected profile export to second device, offline availability and no unrelated regressions.
 - [ ] User decides UI polish / bugfix beta.2+; only then prepare 1.1.0 stable with monotonically higher versionCode and unchanged original signer, update APK-first then stable feed. No beta builds in public stable feed.
+
+## 2026-11-24 — beta4 visual acceptance
+- [x] Replace blue segmented capsule background with exact Calendar Year `p.panel` in both palettes; neutral resting and moving lens and rim, active blue text only.
+- [x] Retain 44dp control, 40dp lens, spring/haptic/tap pulse, twelve-month grid, task and dock behavior; verify code diff is limited to mode-control style, version, tests, workflow.
+- [x] Signed `1.2.0-beta.4` code236 CI `45202899262` PASS; release source-only prerelease, public stable OTA still 1.1.0.
+- [ ] Owner: back up profile; install beta4 over beta3 without uninstall; inspect upper capsule on Night and Day themes, animated lens movement and selected label; Year/Month/Day and all 12 months, tasks/data intact.
+- [ ] Finish verifying recovery code237 for safe in-place fallback. Future beta/stable code >237. Do not promote 1.2.0 stable until physical approval.
