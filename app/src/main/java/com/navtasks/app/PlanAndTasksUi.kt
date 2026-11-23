@@ -278,60 +278,55 @@ fun PlanScreenV2(
                                     CalendarDayState.SCHEDULED -> p.border
                                     CalendarDayState.EMPTY -> p.border
                                 }
-                                val shape = RoundedCornerShape(10.dp)
-                                // Quiet filled cells; no neon-blue outlines.
-                                val cellColor = when {
-                                    isToday -> p.selectionFill
-                                    !inMonth -> if (p.dark) Color.White.copy(alpha = 0.018f)
-                                        else p.blue.copy(alpha = 0.018f)
-                                    status == CalendarDayState.COMPLETE ->
-                                        p.mint.copy(alpha = if (p.dark) 0.13f else 0.09f)
-                                    status == CalendarDayState.PARTIAL ->
-                                        statusColor.copy(alpha = if (p.dark) 0.12f else 0.09f)
-                                    status == CalendarDayState.INCOMPLETE ->
-                                        statusColor.copy(alpha = if (p.dark) 0.10f else 0.07f)
-                                    else -> if (p.dark) Color.White.copy(alpha = 0.075f)
-                                        else p.blue.copy(alpha = 0.055f)
-                                }
+                                // Clean calendar typography: the date is the only
+                                // highlighted surface; task outcomes remain colored dots.
                                 Box(
-                                    Modifier.weight(1f).height(54.dp)
-                                        .clip(shape).background(cellColor, shape)
+                                    Modifier.weight(1f).height(56.dp)
                                         .glassClickable {
                                             selectedDay = date
                                             year = date.year
                                             month = date.monthValue
                                             level = 2
                                         },
+                                    contentAlignment = Alignment.Center,
                                 ) {
-                                    // Number stays at the exact center with or without a dot.
-                                    Text(
-                                        "${date.dayOfMonth}",
-                                        modifier = Modifier.align(Alignment.Center),
-                                        color = when {
-                                            !inMonth -> p.muted.copy(alpha = 0.46f)
-                                            isToday -> p.selectionContent
-                                            calendarIsWeekend(date) -> weekendInk
-                                            else -> p.text
-                                        },
-                                        fontWeight = if (isToday) FontWeight.Medium else FontWeight.Normal,
-                                        fontSize = 16.sp,
-                                    )
-                                    if (calendarHasOutcomeDot(status, hasWork)) {
-                                        Box(
-                                            Modifier.align(Alignment.BottomCenter)
-                                                .padding(bottom = 6.dp).size(5.dp)
-                                                .background(
-                                                    statusColor.copy(alpha = if (inMonth) 1f else 0.35f),
-                                                    CircleShape,
-                                                ),
+                                    Box(
+                                        Modifier.size(45.dp).background(
+                                            if (isToday) p.systemRed else Color.Transparent,
+                                            CircleShape,
+                                        ),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            "${date.dayOfMonth}",
+                                            color = when {
+                                                isToday -> Color.White
+                                                !inMonth -> p.muted.copy(alpha = 0.32f)
+                                                calendarIsWeekend(date) -> weekendInk
+                                                else -> p.text
+                                            },
+                                            fontWeight = if (isToday) FontWeight.SemiBold
+                                                else FontWeight.Medium,
+                                            fontSize = 20.sp,
                                         )
+                                        if (calendarHasOutcomeDot(status, hasWork)) {
+                                            Box(
+                                                Modifier.align(Alignment.BottomCenter)
+                                                    .padding(bottom = 4.dp).size(5.dp)
+                                                    .background(
+                                                        if (isToday) Color.White else
+                                                            statusColor.copy(alpha = if (inMonth) 1f else 0.35f),
+                                                        CircleShape,
+                                                    ),
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                         Spacer(Modifier.height(3.dp))
                     }
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 19.dp, vertical = 8.dp),
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 19.dp, vertical = 11.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         listOf(
                             p.mint to localized("Все выполнено", "All done", lang),
