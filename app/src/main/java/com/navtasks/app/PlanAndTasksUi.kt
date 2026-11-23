@@ -818,7 +818,18 @@ fun TaskEditorScreen(
             Text(localized(if (initial == null) "Новая задача" else "Редактировать задачу",
                 if (initial == null) "New task" else "Edit task", lang),
                 modifier = Modifier.weight(1f), color = p.text, fontSize = 21.sp)
-            TextButton(enabled = valid, onClick = {
+            Button(
+                enabled = valid,
+                modifier = Modifier.height(42.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = p.selectionFill,
+                    contentColor = Color.White,
+                    disabledContainerColor = if (p.dark) Color(0xFF343940) else Color(0xFFE1E3E8),
+                    disabledContentColor = p.muted,
+                ),
+                contentPadding = PaddingValues(horizontal = 15.dp),
+                onClick = {
                 val edited = (initial ?: TaskTemplate(title = title.trim(), frequency = frequency)).copy(
                     title = title.trim(), frequency = frequency,
                     scheduleMode = if (frequency == Frequency.EXTRA) ScheduleMode.CALENDAR else mode,
@@ -853,7 +864,10 @@ fun TaskEditorScreen(
                         } ?: edited)
                     }
                 }
-            }) { Text(localized("Сохранить", "Save", lang)) }
+                },
+            ) {
+                Text(localized("Сохранить", "Save", lang), fontSize = 14.sp)
+            }
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp)) {
