@@ -1,27 +1,36 @@
 package com.navtasks.app
 
-import androidx.compose.animation.animateColorAsState
+import android.view.HapticFeedbackConstants
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.time.LocalDate
+import kotlin.math.abs
 
-/** Only existing functional views are shown. Week/Agenda need dedicated data/UI QA. */
+/** Exactly the three working modes. No inert Week or Events tabs. */
 internal val navCalendarAvailableLevels = listOf(0, 1, 2)
 
 internal fun navCalendarWeekDates(selected: LocalDate): List<LocalDate> {
@@ -30,54 +39,151 @@ internal fun navCalendarWeekDates(selected: LocalDate): List<LocalDate> {
 }
 
 /**
- * Compact system-style segmented control scoped to Calendar.
- * Do not reuse the optical Liquid Glass dock lens or mutate task state.
+ * A lighter sibling of our accepted Liquid Glass dock: same shared rim,
+ * critically damped 550f selection spring, graphite resting lens, subtle
+ * travel expansion and tap-only haptic pulse (never hold-to-enlarge).
+ *
+ * It deliberately doesn't sample the dock's backdrop: the Calendar lives
+ * INSIDE the captured Plan surface, so doing so could recursively refract
+ * its own selected segment. The real bottom dock renderer stays untouched.
  */
 @Composable
 internal fun NavCalendarModeControl(
-    level: Int, p: NavPalette, lang: UiLanguage,
+    level: Int,
+    p: NavPalette,
+    lang: UiLanguage,
     onSelect: (Int) -> Unit,
 ) {
-    val options = listOf(
+    val labels = listOf(
         localized("Год", "Year", lang),
         localized("Месяц", "Month", lang),
         localized("День", "Day", lang),
     )
-    val outer = RoundedCornerShape(24.dp)
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp)
-            .clip(outer)
-            .background(if (p.dark) Color(0xFF242428) else Color(0xFFF8F9FB), outer)
-            .border(1.dp, p.border.copy(alpha = if (p.dark) 0.55f else 0.7f), outer)
-            .padding(4.dp)
-            .selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    val activeIndex = navCalendarAvailableLevels.indexOf(level).coerceAtLeast(0)
+    val view = LocalView.current
+    val dark = p.dark
+    val activeBlue = if (dark) Color(0xFF329CFF) else Color(0xFF087DFA)
+    val inactiveInk = if (dark) Color(0xFFAFC4D8) else Color(0xFF5F768D)
+    val shape = RoundedCornerShape(30.dp)
+    val shell = Brush.verticalGradient(
+        if (dark) listOf(Color(0xE926303C), Color(0xEB1D2935), Color(0xED17232F))
+        else listOf(Color(0xF8EDF3F8), Color(0xFAE5EDF3), Color(0xF5DAE5ED))
+    )
+
+    BoxWithConstraints(
+        Modifier.fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .height(56.dp),
     ) {
-        options.forEachIndexed { index, label ->
-            val selected = level == navCalendarAvailableLevels[index]
-            val fill by animateColorAsState(
-                targetValue = if (selected) {
-                    if (p.dark) Color(0xFF404044) else Color(0xFFE4E6E9)
-                } else Color.Transparent,
-                animationSpec = tween(170), label = "calendarSegmentFill",
-            )
-            val shape = RoundedCornerShape(19.dp)
-            Box(
-                modifier = Modifier.weight(1f).height(42.dp)
-                    .clip(shape).background(fill, shape)
-                    .selectable(
-                        selected = selected, role = Role.Tab,
-                        onClick = { onSelect(navCalendarAvailableLevels[index]) },
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    label, fontSize = 14.sp,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                    color = if (selected) p.text else p.muted,
-                    maxLines = 1,
+        // No clip on the parent: the moving lens rises a few pixels while flying.
+        Box(
+            Modifier.matchParentSize().clip(shape)
+                .background(shell, shape)
+                .border(.75.dp, navLiquidGlassRim(dark), shape),
+        )
+
+        val cellWidth = maxWidth / navCalendarAvailableLevels.size
+        val target = activeIndex.toFloat()
+        val slide by animateFloatAsState(
+            targetValue = target,
+            animationSpec = spring(
+                dampingRatio = 1f,
+                stiffness = 550f,
+                visibilityThreshold = .001f,
+            ),
+            label = "calendarGlassLensSlide",
+        )
+        val moving = abs(slide - target) > .015f
+        val matte by animateFloatAsState(
+            targetValue = if (moving) 0f else 1f,
+            animationSpec = spring(dampingRatio = 1f, stiffness = 700f),
+            label = "calendarGlassLensMatte",
+        )
+        val stretch by animateFloatAsState(
+            targetValue = if (moving) 1f else 0f,
+            animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
+            label = "calendarGlassLensStretch",
+        )
+        var repeatedTapSerial by remember(activeIndex) { mutableIntStateOf(0) }
+        val tapPulse = remember(activeIndex) { Animatable(1f) }
+        LaunchedEffect(activeIndex, repeatedTapSerial) {
+            if (repeatedTapSerial > 0) {
+                tapPulse.animateTo(NavLiquidDockTabs.repeatTapScale, tween(85))
+                tapPulse.animateTo(1f, tween(155))
+            }
+        }
+        // A little quieter than the floating dock's 1.30x lens while preserving
+        // the EXACT spring/pulse timing and neutral settled material.
+        val scale = (1f + .12f * stretch) * tapPulse.value
+        val lensWidth = (cellWidth - 4.dp) * scale
+        val lensHeight = 50.dp * scale
+        val lensX = (cellWidth * (slide + .5f) - lensWidth / 2f)
+            .coerceIn(2.dp, (maxWidth - 2.dp - lensWidth).coerceAtLeast(2.dp))
+        val lensY = (56.dp - lensHeight) / 2f
+        val travel = if (dark) Color(0x66528BAF) else Color(0x66FFFFFF)
+        val resting = if (dark) Color(0xE53F4B58) else Color(0xEED7D8DA)
+        val lensFace = lerp(travel, resting, matte.coerceIn(0f, 1f))
+        val lensShape = RoundedCornerShape(26.dp)
+        Box(
+            Modifier.offset(x = lensX, y = lensY)
+                .size(width = lensWidth, height = lensHeight)
+                .clip(lensShape)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(lensFace.copy(alpha = lensFace.alpha.coerceAtMost(.97f)),
+                            lensFace),
+                    ), lensShape,
                 )
+                .border(
+                    .75.dp,
+                    Brush.verticalGradient(
+                        listOf(Color.White.copy(alpha = if (dark) .36f else .62f),
+                            Color.White.copy(alpha = .07f)),
+                    ), lensShape,
+                ),
+        )
+
+        Row(
+            Modifier.fillMaxSize().padding(2.dp).selectableGroup(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            labels.forEachIndexed { index, label ->
+                val selected = index == activeIndex
+                val interaction = remember { MutableInteractionSource() }
+                val pressed by interaction.collectIsPressedAsState()
+                val textScale by animateFloatAsState(
+                    targetValue = if (pressed) .94f else 1f,
+                    animationSpec = spring(dampingRatio = 1f, stiffness = 1600f),
+                    label = "calendarGlassTabPress",
+                )
+                Box(
+                    Modifier.weight(1f).fillMaxHeight()
+                        .clip(RoundedCornerShape(23.dp))
+                        .selectable(
+                            selected = selected,
+                            role = Role.Tab,
+                            interactionSource = interaction,
+                            indication = null,
+                            onClick = {
+                                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                                if (selected) repeatedTapSerial++
+                                else onSelect(navCalendarAvailableLevels[index])
+                            },
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        label,
+                        color = if (selected) activeBlue else inactiveInk,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        modifier = Modifier.graphicsLayer {
+                            scaleX = textScale
+                            scaleY = textScale
+                        },
+                    )
+                }
             }
         }
     }
