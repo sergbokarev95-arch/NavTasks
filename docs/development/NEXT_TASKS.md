@@ -485,3 +485,11 @@
 - [ ] Confirm all JVM tests and release signing, checksum, correct package and prerelease status from GitHub Actions.
 - [ ] Device beta acceptance: 2 Handover entries with different images, PDF page breaks, DOCX valid editable photo placement, multiple and rotated photos, delete/cancel drafts, full/selected profile export to second device, offline availability and no unrelated regressions.
 - [ ] User decides UI polish / bugfix beta.2+; only then prepare 1.1.0 stable with monotonically higher versionCode and unchanged original signer, update APK-first then stable feed. No beta builds in public stable feed.
+
+## 2026-11-24 — owner verify 1.2.0-beta.3 compact year
+- [x] Based on owner screenshot, shorten top glass Year/Month/Day navigation from 56 to 44dp with proportionate smaller lens (50→40dp), preserve optical style, spring, haptic and tap pulse.
+- [x] Use freed vertical space for more legible months, weekdays, mini-date numbers and today circle; all 12 months still fixed 4×3 no scrolling.
+- [x] Original signed beta3 code234, full GitHub CI `45198899346` PASS and prerelease published, stable channel still 1.1.0.
+- [x] Original-key stable functional recovery code235 signed and held as optional emergency only, CI `45199083340` PASS.
+- [ ] Test beta3 on HONOR day/night; check 12 months fully visible, mini-number readability without clipping, moving pill lens size and smoothness; Year/Month/Day and all calendar swipes/tasks remain correct.
+- [ ] Only after owner review, decide whether further beta UI work on dialogs/sheets is needed. Next code must >235 if recovery installed; stable 1.2.0 only after owner approves all visuals and regression checks.
