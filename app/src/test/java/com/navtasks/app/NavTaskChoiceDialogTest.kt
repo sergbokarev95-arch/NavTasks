@@ -96,6 +96,36 @@ class NavTaskChoiceDialogTest {
         assertFalse(root.contains("if (editorOpen) {\n                TaskEditorScreen("))
     }
 
+    @Test fun sheetDragDismissesWithoutLargeBackButtonOrOverlappingPopupBlur() {
+        val editor = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+        val root = File("src/main/java/com/navtasks/app/NavTasksUi.kt").readText()
+        val choice = File("src/main/java/com/navtasks/app/NavTaskChoiceDialog.kt").readText()
+
+        // Keep the existing Android Back gesture and Save; the big round
+        // editor back control is reserved for the legacy full-screen mode.
+        assertTrue(editor.contains("if (!sheetMode) {"))
+        assertTrue(editor.contains("if (!sheetMode && editorBackdrop != null)"))
+        assertTrue(editor.contains("sheetDragState: DraggableState? = null"))
+        assertTrue(editor.contains("onSheetDragStopped: (Float) -> Unit"))
+        assertTrue(root.contains("val editorSheetDragState = rememberDraggableState"))
+        assertTrue(root.contains("editorSheetDragPx >= dismissSheetDistance"))
+        assertTrue(root.contains("sheetDragState = editorSheetDragState"))
+        assertTrue(root.contains("onSheetDragStopped = onEditorSheetDragStopped"))
+        assertTrue(root.contains("BackHandler(enabled = editorOpen)"))
+        assertTrue(root.contains("store.upsert(it); editorOpen = false"))
+
+        // Underlying destination and the editor are separate surfaces: each
+        // blurred once, opaque Popup drawn ABOVE the editor's light scrim.
+        assertTrue(root.contains("editorOpen -> 4.dp"))
+        assertTrue(root.contains("alpha = 0.36f"))
+        assertTrue(editor.contains(".blur(if (activeChoice != null) 5.dp else 0.dp)"))
+        assertTrue(editor.contains("if (activeChoice != null)"))
+        assertTrue(choice.contains("onExpandedChange(true)"))
+        assertTrue(choice.contains("onExpandedChange(false)"))
+        assertFalse(choice.contains("NavApplyDialogFrost("))
+        assertTrue(choice.contains("Popup("))
+    }
+
     @Test fun existingTaskCalendarAndNotificationModulesStayUnmodified() {
         val ui = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
         assertTrue(ui.contains("TaskSchedule.effectiveFrequency(it, LocalDate.now())"))
