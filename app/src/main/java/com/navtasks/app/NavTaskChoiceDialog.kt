@@ -188,8 +188,8 @@ internal fun NavTaskChoiceDialog(
             motion.animateTo(1f, spring(dampingRatio = .92f, stiffness = 780f))
         }
     }
-    val surface = if (p.dark) Color(0xFF23272C) else Color(0xFFF8F9FA)
-    val control = if (p.dark) Color(0xFF32373D) else Color(0xFFE8EAED)
+    val surface = if (p.dark) Color(0xFF23272C) else Color.White
+    val control = if (p.dark) Color(0xFF32373D) else Color(0xFFF2F3F7)
     val shape = RoundedCornerShape(24.dp)
 
     Popup(
