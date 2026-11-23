@@ -526,3 +526,12 @@
 - [ ] On HONOR export all full profiles and separate library copies, install ONLY beta9 code246 over beta8 244 without uninstalling. Test drag from handle/header from Today and Work, small drag rebound, dragged-to-close > threshold, keyboard open, title and Save taps, system Back, dark/light popup layering (no ghosting or double-opaque blur), popup Cancel/Back/outside, Task Save, scope selection, notifications and existing data.
 - [ ] If any drag/blur stutter or Back/IME conflict, isolate a UI-only fix. Do not change task store, AMOS, Services, alerts or recurrence calculations. Stable 1.2.0 requires owner signoff. Emergency recovery code247 ONLY on serious regression, then future versionCodes >247.
 
+## NEXT — 2026-11-24 HONOR verification of beta.10 white-card design
+- [x] Preserve exact beta9 tip `d0a477c3aaf3e13da714fbb6a8fb0e2270a7ee42` in backup branch before work.
+- [x] White all shared static Day panels/tasks/nested controls, neutral gray Day canvas #F2F3F7, neutral borders, matching white menus/dialogs, keep night/dock/blue semantic selection unchanged.
+- [x] Make TaskEditor Save opaque Apple blue/white label with unchanged validity and task persistence/scope callbacks.
+- [x] Full JVM/release/signature CI `45234524984` SUCCESS; signed `v1.2.0-beta.10` code248 SHA256 `4bcd7ccafd554d242d41160cdb0df30b01fde2cd8d3152bcc6d7fb7ab3a1d142`, user opt-in only. Source stable 1.1.0 emergency higher-code249 separately signed, CI `45233576099` PASS; do not install routinely.
+- [ ] User: FULL profile backup, then install beta10 IN PLACE over beta9 without uninstall. Confirm Today/Works/Handover/Reference and inner screens share pure white Day cards against #F2F3F7 canvas (not pale blue), alerts/dialogs white, night unchanged, selected semantic blue preserved, Save filled blue while form valid and gray disabled, keyboard/sheet swipe/blur/dock smooth.
+- [ ] Verify tasks new/existing Save and frequency/scope prompts, deadline notifications, AMOS/Services records, Handover attachments, equipment PDFs, selective transfer and profiles remain present. Screen-capture any remaining locally hard-coded cyan surface for targeted correction.
+- [ ] Stable 1.2.0 OTA remains UNAUTHORIZED; channel 1.1.0/code230 unchanged. Emergency recovery code249 ONLY if serious regression; future build versionCode >249 if recovery installed.
+
