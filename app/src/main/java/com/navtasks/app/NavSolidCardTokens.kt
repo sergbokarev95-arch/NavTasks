@@ -3,13 +3,12 @@ package com.navtasks.app
 import androidx.compose.ui.graphics.Color
 
 /**
- * Opaque, static UI surfaces. These are NOT optical Liquid Glass.
- * Real refraction remains solely in the floating controls/dock.
+ * Opaque static surfaces. Floating Liquid Glass optics are separate and
+ * must NOT inherit these tokens.
  *
- * Ordinary card materials are opaque so the Liquid Glass dock can capture
- * readable content below it. Day #02 keeps all original light card gradients;
- * Night #09 replaces navy cards with flat neutral charcoal tones and quiet
- * neutral-gray borders. NAVIGATION/SELECTED and action handlers are untouched.
+ * Day #03: a quiet HONOR Calendar-style #F2F3F7 page with truly white
+ * cards and fields. No cyan/blue horizontal gradients or blue-tinted rims.
+ * Night #09 retains the existing matte graphite surfaces, byte-for-byte.
  */
 internal data class NavSolidCardTokens(
     val left: Color,
@@ -20,35 +19,28 @@ internal data class NavSolidCardTokens(
 )
 
 internal fun navSolidCardTokens(p: NavPalette, role: GlassRole): NavSolidCardTokens? {
-    val colors = when (role) {
-        GlassRole.PANEL -> if (p.dark) {
-            Color(0xFF1D2126) to Color(0xFF1D2126)
-        } else {
-            Color(0xFFE8F5FC) to Color(0xFFFFFFFF)
-        }
-        GlassRole.TASK -> if (p.dark) {
-            Color(0xFF282D33) to Color(0xFF282D33)
-        } else {
-            Color(0xFFE5F3FC) to Color(0xFFFFFFFF)
-        }
-        GlassRole.NESTED_TASK -> if (p.dark) {
-            Color(0xFF282D33) to Color(0xFF282D33)
-        } else {
-            Color(0xFFE6EEFA) to Color(0xFFF9FCFF)
-        }
-        GlassRole.CONTROL -> if (p.dark) {
-            Color(0xFF282D33) to Color(0xFF282D33)
-        } else {
-            Color(0xFFEBF4FA) to Color(0xFFFDFEFF)
-        }
-        // These are deliberately translucent control states, or the old
-        // dock fallback. They are not static background cards.
-        GlassRole.NAVIGATION, GlassRole.SELECTED -> return null
+    // NAVIGATION belongs to the optical dock/fallback; SELECTED retains the
+    // semantic active-blue state, not the normal card background.
+    if (role == GlassRole.NAVIGATION || role == GlassRole.SELECTED) return null
+
+    if (!p.dark) {
+        return NavSolidCardTokens(
+            left = Color.White,
+            right = Color.White,
+            borderTop = Color(0xFFF8F9FB),
+            borderMid = Color(0xFFE0E2E8),
+            borderBottom = Color(0xFFE0E2E8),
+        )
     }
-    // Night #09 replaces the old bright blue/steel contour with one matte
-    // neutral stroke. Day border gradients stay byte-for-byte unchanged.
-    val top = if (p.dark) Color(0xFF40464D) else Color(0xFFFCFFFF)
-    val middle = if (p.dark) Color(0xFF40464D) else Color(0xFFB9CDDE)
-    val bottom = if (p.dark) Color(0xFF40464D) else Color(0xFFB0C7D9)
-    return NavSolidCardTokens(colors.first, colors.second, top, middle, bottom)
+
+    val surface = if (role == GlassRole.PANEL)
+        Color(0xFF1D2126) else Color(0xFF282D33)
+    val rim = Color(0xFF40464D)
+    return NavSolidCardTokens(
+        left = surface,
+        right = surface,
+        borderTop = rim,
+        borderMid = rim,
+        borderBottom = rim,
+    )
 }
