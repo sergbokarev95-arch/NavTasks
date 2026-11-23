@@ -78,7 +78,7 @@ jobs:
           gh release create v1.1.0-recovery-code247 "$RUNNER_TEMP/NavTasks_1.1.0-recovery-code247.apk" \
             --repo "$GITHUB_REPOSITORY" --prerelease --latest=false \
             --target "$GITHUB_SHA" --title "NavTasks 1.1.0 Recovery code247" \
-            --notes "EMERGENCY IN-PLACE RECOVERY ONLY: exact stable 1.1.0 application logic rebuilt at versionCode 247 with original Android application ID and signing key. Enables rollback over UI beta7 code246 without uninstalling or clearing data. Keep profile backups. This is NOT a public stable OTA update. Future beta/stable builds must use versionCode >247 if recovery installed."
+            --notes "EMERGENCY IN-PLACE RECOVERY ONLY: exact stable 1.1.0 application logic rebuilt at versionCode 247 with original Android application ID and signing key. Enables rollback over UI beta9 code246 without uninstalling or clearing data. Keep profile backups. This is NOT a public stable OTA update. Future beta/stable builds must use versionCode >247 if recovery installed."
       - name: Erase temporary signing key
         if: always()
         run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
