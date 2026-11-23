@@ -40,14 +40,40 @@ internal val navCalendarYearRows: List<List<Int>> = (1..12).chunked(3)
 internal val navCalendarModeHeight = 44.dp
 internal val navCalendarModeLensHeight = 40.dp
 
+/**
+ * The segmented control MUST use the same fill as the calendar's Year panel,
+ * not a separately tinted blue-black palette.
+ */
+internal fun navCalendarModeSurface(p: NavPalette): Color = p.panel
+
+/** Neutral graphite / neutral gray, rather than the old blue glass selection. */
+internal fun navCalendarLensResting(dark: Boolean): Color =
+    if (dark) Color(0xFF393B40) else Color(0xFFE7E7E9)
+
+internal fun navCalendarLensTraveling(dark: Boolean): Color =
+    if (dark) Color(0xFF303237) else Color(0xFFF0F0F1)
+
+internal fun navCalendarRim(dark: Boolean): Brush =
+    Brush.verticalGradient(
+        if (dark) listOf(
+            Color.White.copy(alpha = .28f),
+            Color.White.copy(alpha = .045f),
+            Color.White.copy(alpha = .17f),
+        ) else listOf(
+            Color(0xFF8A8A8E).copy(alpha = .34f),
+            Color(0xFF8A8A8E).copy(alpha = .09f),
+            Color(0xFF8A8A8E).copy(alpha = .24f),
+        ),
+    )
+
 internal fun navCalendarWeekDates(selected: LocalDate): List<LocalDate> {
     val monday = selected.minusDays((selected.dayOfWeek.value - 1).toLong())
     return (0..6).map { monday.plusDays(it.toLong()) }
 }
 
 /**
- * A lighter sibling of our accepted Liquid Glass dock: same shared rim,
- * critically damped 550f selection spring, graphite resting lens, subtle
+ * A lighter sibling of our accepted Liquid Glass dock: same spring/tap timing,
+ * but a neutral rim and exact calendar panel fill. Graphite resting lens, subtle
  * travel expansion and tap-only haptic pulse (never hold-to-enlarge).
  *
  * It deliberately doesn't sample the dock's backdrop: the Calendar lives
@@ -69,13 +95,9 @@ internal fun NavCalendarModeControl(
     val activeIndex = navCalendarAvailableLevels.indexOf(level).coerceAtLeast(0)
     val view = LocalView.current
     val dark = p.dark
-    val activeBlue = if (dark) Color(0xFF329CFF) else Color(0xFF087DFA)
-    val inactiveInk = if (dark) Color(0xFFAFC4D8) else Color(0xFF5F768D)
+    val activeBlue = p.blueText
+    val inactiveInk = p.muted
     val shape = RoundedCornerShape(30.dp)
-    val shell = Brush.verticalGradient(
-        if (dark) listOf(Color(0xE926303C), Color(0xEB1D2935), Color(0xED17232F))
-        else listOf(Color(0xF8EDF3F8), Color(0xFAE5EDF3), Color(0xF5DAE5ED))
-    )
 
     BoxWithConstraints(
         Modifier.fillMaxWidth()
@@ -85,8 +107,8 @@ internal fun NavCalendarModeControl(
         // No clip on the parent: the moving lens rises a few pixels while flying.
         Box(
             Modifier.matchParentSize().clip(shape)
-                .background(shell, shape)
-                .border(.75.dp, navLiquidGlassRim(dark), shape),
+                .background(navCalendarModeSurface(p), shape)
+                .border(.75.dp, navCalendarRim(dark), shape),
         )
 
         val cellWidth = maxWidth / navCalendarAvailableLevels.size
@@ -127,8 +149,8 @@ internal fun NavCalendarModeControl(
         val lensX = (cellWidth * (slide + .5f) - lensWidth / 2f)
             .coerceIn(2.dp, (maxWidth - 2.dp - lensWidth).coerceAtLeast(2.dp))
         val lensY = (navCalendarModeHeight - lensHeight) / 2f
-        val travel = if (dark) Color(0x66528BAF) else Color(0x66FFFFFF)
-        val resting = if (dark) Color(0xE53F4B58) else Color(0xEED7D8DA)
+        val travel = navCalendarLensTraveling(dark)
+        val resting = navCalendarLensResting(dark)
         val lensFace = lerp(travel, resting, matte.coerceIn(0f, 1f))
         val lensShape = RoundedCornerShape(22.dp)
         Box(
@@ -137,15 +159,22 @@ internal fun NavCalendarModeControl(
                 .clip(lensShape)
                 .background(
                     Brush.verticalGradient(
-                        listOf(lensFace.copy(alpha = lensFace.alpha.coerceAtMost(.97f)),
-                            lensFace),
+                        listOf(
+                            lerp(lensFace, Color.White, if (dark) .055f else .03f),
+                            lensFace,
+                        ),
                     ), lensShape,
                 )
                 .border(
                     .75.dp,
                     Brush.verticalGradient(
-                        listOf(Color.White.copy(alpha = if (dark) .36f else .62f),
-                            Color.White.copy(alpha = .07f)),
+                        if (dark) listOf(
+                            Color.White.copy(alpha = .27f),
+                            Color.White.copy(alpha = .06f),
+                        ) else listOf(
+                            Color(0xFF77777B).copy(alpha = .27f),
+                            Color(0xFF77777B).copy(alpha = .055f),
+                        ),
                     ), lensShape,
                 ),
         )
