@@ -36,6 +36,10 @@ internal val navCalendarAvailableLevels = listOf(0, 1, 2)
 /** Fixed four-row, three-column year: all months are visible without scrolling. */
 internal val navCalendarYearRows: List<List<Int>> = (1..12).chunked(3)
 
+/** Compact control footprint, shared by all three calendar views. */
+internal val navCalendarModeHeight = 44.dp
+internal val navCalendarModeLensHeight = 40.dp
+
 internal fun navCalendarWeekDates(selected: LocalDate): List<LocalDate> {
     val monday = selected.minusDays((selected.dayOfWeek.value - 1).toLong())
     return (0..6).map { monday.plusDays(it.toLong()) }
@@ -75,8 +79,8 @@ internal fun NavCalendarModeControl(
 
     BoxWithConstraints(
         Modifier.fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .height(56.dp),
+            .padding(horizontal = 16.dp, vertical = 3.dp)
+            .height(navCalendarModeHeight),
     ) {
         // No clip on the parent: the moving lens rises a few pixels while flying.
         Box(
@@ -119,14 +123,14 @@ internal fun NavCalendarModeControl(
         // the EXACT spring/pulse timing and neutral settled material.
         val scale = (1f + .12f * stretch) * tapPulse.value
         val lensWidth = (cellWidth - 4.dp) * scale
-        val lensHeight = 50.dp * scale
+        val lensHeight = navCalendarModeLensHeight * scale
         val lensX = (cellWidth * (slide + .5f) - lensWidth / 2f)
             .coerceIn(2.dp, (maxWidth - 2.dp - lensWidth).coerceAtLeast(2.dp))
-        val lensY = (56.dp - lensHeight) / 2f
+        val lensY = (navCalendarModeHeight - lensHeight) / 2f
         val travel = if (dark) Color(0x66528BAF) else Color(0x66FFFFFF)
         val resting = if (dark) Color(0xE53F4B58) else Color(0xEED7D8DA)
         val lensFace = lerp(travel, resting, matte.coerceIn(0f, 1f))
-        val lensShape = RoundedCornerShape(26.dp)
+        val lensShape = RoundedCornerShape(22.dp)
         Box(
             Modifier.offset(x = lensX, y = lensY)
                 .size(width = lensWidth, height = lensHeight)
@@ -161,7 +165,7 @@ internal fun NavCalendarModeControl(
                 )
                 Box(
                     Modifier.weight(1f).fillMaxHeight()
-                        .clip(RoundedCornerShape(23.dp))
+                        .clip(RoundedCornerShape(20.dp))
                         .selectable(
                             selected = selected,
                             role = Role.Tab,
@@ -179,7 +183,7 @@ internal fun NavCalendarModeControl(
                         label,
                         color = if (selected) activeBlue else inactiveInk,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         maxLines = 1,
                         modifier = Modifier.graphicsLayer {
                             scaleX = textScale
