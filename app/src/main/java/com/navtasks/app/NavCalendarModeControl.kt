@@ -33,6 +33,9 @@ import kotlin.math.abs
 /** Exactly the three working modes. No inert Week or Events tabs. */
 internal val navCalendarAvailableLevels = listOf(0, 1, 2)
 
+/** Fixed four-row, three-column year: all months are visible without scrolling. */
+internal val navCalendarYearRows: List<List<Int>> = (1..12).chunked(3)
+
 internal fun navCalendarWeekDates(selected: LocalDate): List<LocalDate> {
     val monday = selected.minusDays((selected.dayOfWeek.value - 1).toLong())
     return (0..6).map { monday.plusDays(it.toLong()) }
