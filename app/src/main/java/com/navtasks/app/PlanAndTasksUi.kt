@@ -354,6 +354,59 @@ fun PlanScreenV2(
                             "calendar", p.blue, localized("Выбрать год", "View year", lang),
                         ) { level = 0 }
                     }
+                    // Keep the week visible in Day mode, like the reference
+                    // calendar, without changing task recurrence or completion.
+                    val visibleWeek = navCalendarWeekDates(selectedDay)
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp)) {
+                        visibleWeek.forEach { date ->
+                            Column(
+                                Modifier.weight(1f).glassClickable {
+                                    selectedDay = date
+                                    year = date.year
+                                    month = date.monthValue
+                                },
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+                                    color = if (calendarIsWeekend(date)) p.muted
+                                        else p.text,
+                                    fontSize = 11.sp, maxLines = 1,
+                                )
+                                Spacer(Modifier.height(7.dp))
+                                Box(
+                                    Modifier.size(45.dp).background(
+                                        if (selectedDay == date) p.systemRed
+                                        else Color.Transparent, CircleShape,
+                                    ),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        "${date.dayOfMonth}", fontSize = 19.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = when {
+                                            selectedDay == date -> Color.White
+                                            calendarIsWeekend(date) -> p.muted
+                                            else -> p.text
+                                        },
+                                    )
+                                    val status = store.dayCounts(date).state(date, today)
+                                    val mark = when (status) {
+                                        CalendarDayState.COMPLETE -> p.mint
+                                        CalendarDayState.PARTIAL -> p.systemOrange
+                                        CalendarDayState.INCOMPLETE -> p.systemRed
+                                        else -> null
+                                    }
+                                    if (mark != null) {
+                                        Box(Modifier.align(Alignment.BottomCenter)
+                                            .padding(bottom = 3.dp).size(4.dp)
+                                            .background(if (selectedDay == date) Color.White else mark,
+                                                CircleShape))
+                                    }
+                                }
+                            }
+                        }
+                    }
                     val rows = store.forDate(selectedDay)
                     val plannedWorks = workAgendaExistsOnDay(
                         selectedDay, workOrders.entries, services.entries)
