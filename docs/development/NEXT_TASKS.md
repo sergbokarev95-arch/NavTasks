@@ -485,3 +485,12 @@
 - [ ] Confirm all JVM tests and release signing, checksum, correct package and prerelease status from GitHub Actions.
 - [ ] Device beta acceptance: 2 Handover entries with different images, PDF page breaks, DOCX valid editable photo placement, multiple and rotated photos, delete/cancel drafts, full/selected profile export to second device, offline availability and no unrelated regressions.
 - [ ] User decides UI polish / bugfix beta.2+; only then prepare 1.1.0 stable with monotonically higher versionCode and unchanged original signer, update APK-first then stable feed. No beta builds in public stable feed.
+
+## 2026-11-24 — UI Refresh beta6 acceptance and next forms
+- [x] Calendar Year/Month/Day styling and ISO week labels accepted by owner in beta5. Preserve as-is.
+- [x] Isolate TaskEditorScreen 3 existing frequency/recurrence/reminder selectors into one reusable neutral-glass animated choice Dialog with confirm/cancel draft semantics; retain exact 4+2+4 choices and scheduler/notification logic.
+- [x] Signed 1.2.0-beta.6 code240: GitHub Actions `45211506465` SUCCESS, original cert/appId and JVM tests passed; source-only prerelease, stable OTA still 1.1.0/code230.
+- [ ] HONOR user: backup profiles and install beta6 in-place. Verify Frequency types (Day/Week/Month/One-off), Repeat mode (Schedule/From completion), Reminder (deadline/15m/1h/1day), cancel/back/outside leaving selections untouched, selection confirmation, keyboard, dark/light aesthetics; existing recurring edits and historical changes must work unchanged.
+- [ ] Finish optional exact stable v1.1.0 functional code241 recovery CI, mark only for emergency. Any next beta or stable release must use code>241 if recovery installed.
+- [ ] After user visual acceptance, beta7: targeted form/editor style grouping for Tasks, AMOS, Services; beta8: Settings/filters/confirmation dialogs with same design tokens. Never broad-rewrite all dialogs or modify business logic.
+- [ ] Stable 1.2.0 only after staged user approval, comprehensive CI + manual QA, original signed APK-first then public stable feed.
