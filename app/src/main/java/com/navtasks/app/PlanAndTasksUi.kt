@@ -767,8 +767,6 @@ fun TaskEditorScreen(
     var showTimeWheel by remember(initial?.id) { mutableStateOf(false) }
     var notified by remember(initial?.id) { mutableStateOf(initial?.notificationsEnabled ?: true) }
     var reminder by remember(initial?.id) { mutableIntStateOf(initial?.remindMinutesBefore ?: 60) }
-    // Presentation only: choice dialogs edit drafts until explicit confirmation.
-    var openTaskChoice by remember(initial?.id) { mutableStateOf<String?>(null) }
     var checklist by remember(initial?.id) { mutableStateOf(initial?.checklist ?: emptyList()) }
     var editingChecklistNote by remember(initial?.id) { mutableStateOf<String?>(null) }
     var enabled by remember(initial?.id) { mutableStateOf(initial?.enabled ?: true) }
@@ -840,9 +838,7 @@ fun TaskEditorScreen(
                 // Frequency first, directly below the New Task header.
                 // Keep existing model, validators and editor persistence intact.
                 FormLabel("Периодичность", "Frequency", lang, p)
-                NavTaskChoiceField(
-                    frequency.name, navTaskFrequencyChoices(lang), p, lang,
-                ) { openTaskChoice = "frequency" }
+                NavTaskFrequencyControl(frequency, p, lang) { frequency = it }
                 Spacer(Modifier.height(12.dp))
                 FormLabel("Название задачи", "Task name", lang, p)
                 Spacer(Modifier.height(5.dp))
@@ -853,8 +849,10 @@ fun TaskEditorScreen(
                 if (frequency != Frequency.EXTRA) {
                     FormLabel("Повторение", "Recurrence", lang, p)
                     NavTaskChoiceField(
-                        mode.name, navTaskRepeatChoices(lang), p, lang,
-                    ) { openTaskChoice = "repeat" }
+                        title = localized("Повторение", "Recurrence", lang),
+                        selected = mode.name, options = navTaskRepeatChoices(lang),
+                        p = p, lang = lang,
+                    ) { key -> mode = ScheduleMode.valueOf(key) }
                     Spacer(Modifier.height(10.dp))
                 }
                 if (frequency == Frequency.WEEKLY && mode == ScheduleMode.CALENDAR) {
@@ -973,8 +971,10 @@ fun TaskEditorScreen(
                 if (notified) {
                     FormLabel("Напомнить", "Remind me", lang, p)
                     NavTaskChoiceField(
-                        "$reminder", navTaskReminderChoices(lang), p, lang,
-                    ) { openTaskChoice = "reminder" }
+                        title = localized("Напомнить", "Remind me", lang),
+                        selected = "$reminder", options = navTaskReminderChoices(lang),
+                        p = p, lang = lang,
+                    ) { key -> reminder = key.toInt() }
                     Text(localized(
                         "Без указанного времени напоминания считаются от основного времени в настройках. " +
                             "Срок выполнения при этом остаётся до конца дня.",
@@ -1028,39 +1028,6 @@ fun TaskEditorScreen(
             NavLiquidGlassCircleButton(p, editorBackdrop, "back", onBack)
         }
     }
-    }
-
-    openTaskChoice?.let { choice ->
-        val options = when (choice) {
-            "frequency" -> navTaskFrequencyChoices(lang)
-            "repeat" -> navTaskRepeatChoices(lang)
-            else -> navTaskReminderChoices(lang)
-        }
-        val current = when (choice) {
-            "frequency" -> frequency.name
-            "repeat" -> mode.name
-            else -> "$reminder"
-        }
-        NavTaskChoiceDialog(
-            title = when (choice) {
-                "frequency" -> localized("Периодичность", "Frequency", lang)
-                "repeat" -> localized("Повторение", "Recurrence", lang)
-                else -> localized("Напомнить", "Remind me", lang)
-            },
-            selected = current,
-            options = options,
-            p = p,
-            lang = lang,
-            onDismiss = { openTaskChoice = null },
-            onSelect = { key ->
-                when (choice) {
-                    "frequency" -> frequency = Frequency.valueOf(key)
-                    "repeat" -> mode = ScheduleMode.valueOf(key)
-                    else -> reminder = key.toInt()
-                }
-                openTaskChoice = null
-            },
-        )
     }
 
     if (showTaskDeletionOptions && initial != null) {
