@@ -207,3 +207,8 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - Exact beta7 backed up; only PlanAndTasksUi.kt, NavTasksUi.kt, NavTaskChoiceDialog.kt, build/version, targeted tests and beta8 workflow changed. No broad card redesign; inline advanced accordion intentionally postponed. Initial Kotlin padding syntax fixed after failing compile.
 - Final original-signed beta8 code244 CI `45222037769` SUCCESS, GitHub prerelease `v1.2.0-beta.8` SHA256 `56934f68bb872c04e002bc500b8f60d0e9bbfb3a7de441b03e6421ac4558d51b`. Recovery exact stable functional code245 CI `45221672385` PASS (only for severe beta8 regression). Public stable 1.1.0 unchanged; HONOR UI acceptance pending.
 
+## 2026-11-24 — 1.2.0-beta.9 Gesture dismissal and layered popup optics
+- Re-reviewed 20-second user recording `486809.mp4`. Task editor bottom sheet now draggable down from grab handle/title to dismiss; small drags settle back; big round in-sheet Back control removed, system Back remains. Keep existing Task Save/scheduling behavior.
+- Apply one modest blur/scrim to underlying page during sheet, then a separate subtle blur/shade to sheet content only while an anchored fully opaque Repeat/Reminder Popup opens. Popup open/close lifecycle drives this; no transparent text ghosting and no cross-window blur.
+- Signed original-key CI `45226311981` SUCCESS from beta9 source `7e43776a487bb7e3ce4091068ff5f918390c3d1e`, versionCode246, APK SHA256 `2e545ca528d937d8a4248c45ad5d541a5935c97e84052e0358fc25facd77af06`; separately signed emergency exact 1.1.0 functional recovery code247 CI `45226537092` PASS, SHA256 `651a8a1def24c7d6cb30c77f3bb95e396cefd4fd695f1ba798681d9729ad19f6`. Public stable 1.1.0 unchanged; HONOR QA pending.
+
