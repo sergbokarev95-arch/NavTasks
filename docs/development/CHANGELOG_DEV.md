@@ -194,3 +194,11 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - Private **DRAFT** recovery: https://github.com/sergbokarev95-arch/NavTasks/releases/tag/untagged-fb68cac5e5480e56d2e4; `NavTasks-0.4.194-qa14-recovery-code219.apk`, 36,986,702 bytes, SHA256 `f772bc175f8d0dc2268de8a3639cb41360439287b30b30f3f78db868cb19a471`.
 - Public stable channel confirmed `available:false`, main untouched at `908c5d3c9df9840473af882491020401da6bc86f`. No physical HONOR/Samsung tests of QA15 yet and **NO stable release**. User must export FULL profiles and separate .navlib, download both candidates while connected, install ONLY code218 IN PLACE over current QA11/code210 or whichever signed lower-code build. Do NOT uninstall/clear app data. Save recovery219 only if QA15 has a regression. If recovery installed next code must exceed219.
 - Next two-device QA: different-named vessel + same shared ID imports AS NEW profile; same name confirmation replacement; selected Services/AMOS requests roundtrip; `.navref` v2 equipment carries real PDF/DOCX that open on recipient; Handover DOCX/PDF open on Windows/iPhone with Cyrillic; PDF one-finger pan never zooms and 2-finger pinch around any page quadrant maintains focus in continuous AND paged mode; verify tasks/history/profile data unchanged, no crashes. Then independent final regression review and only with owner approval 1.0.0 public release.
+
+## 2026-11-24 — 1.2.0-beta.7 calendar-style frequency and anchored opaque Task popups
+- Exact beta6 source backed up before isolated UI-only modifications; stable 1.1.0 public update feed not changed.
+- Four frequency selections displayed as a calendar-material inline segmented control, without changing task frequencies or schedule algorithms.
+- Recurrence/Reminder options now in position-aware fully opaque Popup at clicked field with brief alpha/scale entrance (no cross-window blur, no right-edge entrance). Confirm/Cancel draft safety preserved.
+- Original-signed beta7 code242 source prerelease `v1.2.0-beta.7` GitHub Actions `45217377636` SUCCESS, checksum SHA256 `7f2e5f1a57820a7a3aec8d930d3d997f1447c40f6d650c86c738c2db5a1669a1`; original-signed exact 1.1.0 recovery code243 `v1.1.0-recovery-code243` Actions `45217002472` SUCCESS.
+- User HONOR visual/touch verification still pending. No stable 1.2.0 publication.
+
