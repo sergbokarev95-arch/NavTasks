@@ -7,12 +7,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class NavLiquidGlassActionTokensTest {
-    @Test fun coralMatchesDockInBothThemesButOtherActionsRetainTheirInk() {
+    @Test fun neutralInBothThemesButDockAndOtherActionsRetainTheirInk() {
         for (dark in listOf(false, true)) {
             val p = navPalette(dark)
             for (kind in listOf("plus", "calendar")) {
-                assertEquals(Color(0xFFFF5533), NavLiquidGlassActionTokens.glyphInk(kind, dark, p.blue))
-                assertEquals(NavLiquidDockTabs.activeInk(dark), NavLiquidGlassActionTokens.glyphInk(kind, dark, p.text))
+                val expected = if (dark) Color.White else Color.Black
+                assertEquals(expected, NavLiquidGlassActionTokens.glyphInk(kind, dark, p.blue))
+                assertEquals(expected, NavLiquidGlassActionTokens.glyphInk(kind, dark, p.text))
+                assertEquals(Color(0xFFFF5533), NavLiquidDockTabs.activeInk(dark))
             }
             for (kind in listOf("back", "search", "settings", "edit", "delete")) {
                 assertEquals(p.text, NavLiquidGlassActionTokens.glyphInk(kind, dark, p.text))
