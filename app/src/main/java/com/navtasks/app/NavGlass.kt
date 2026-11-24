@@ -444,7 +444,7 @@ fun NavGlassBottomBar(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        NavGlassGlyph(
+                        NavDockFilledGlyph(
                             kind = when (index) {
                                 0 -> "today"
                                 1 -> "work"
@@ -458,7 +458,8 @@ fun NavGlassBottomBar(
                             },
                         )
                         Spacer(Modifier.height(1.dp))
-                        Text(names[index], color = if (active) activeInk else p.muted, fontSize = 10.sp)
+                        Text(names[index], color = if (active) activeInk else p.muted, fontSize = 10.sp,
+                            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium)
                     }
                 }
             }
