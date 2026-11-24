@@ -9,6 +9,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,6 +47,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -183,32 +186,70 @@ fun NavLiquidGlassBottomBar(
         var dragging by remember { mutableStateOf(false) }
         var dragPosition by remember { mutableFloatStateOf(target) }
         var hapticIndex by remember { mutableIntStateOf(selected) }
-        // One interruptible horizontal spring owns the complete liquid jump.
-        // A new tap redirects it from the CURRENT position and velocity.
-        // There is deliberately no independent lensExpansion animation:
-        // that was the source of beta15's pause AFTER the lens landed.
-        var dragSpeedSlotsPerSecond by remember { mutableFloatStateOf(0f) }
-        var lastDragFrameMs by remember { mutableStateOf(0L) }
+        // A quick moving lens still needs VISIBLE growth. The v16 speed-only
+        // scale vanished too early in a one-slot tap. Position and deformation
+        // now start together; shrink is launched DURING the jump, not afterward.
+        // New taps cancel both and retarget from CURRENT values, not from 1x.
+        val lensExpansion = remember { Animatable(1f) }
+        var lastMotionStartMs by remember { mutableLongStateOf(0L) }
+        var draggedSinceLastRelease by remember { mutableStateOf(false) }
         LaunchedEffect(target, dragging) {
-            if (!dragging) {
-                lensPosition.animateTo(
-                    target,
-                    animationSpec = spring(
-                        dampingRatio = NavLiquidDockMotion.positionDamping,
-                        stiffness = NavLiquidDockMotion.positionStiffness,
-                        visibilityThreshold = .003f,
+            if (dragging) {
+                draggedSinceLastRelease = true
+                lensExpansion.animateTo(
+                    NavLiquidDockTabs.movingScale,
+                    animationSpec = tween(
+                        durationMillis = 140,
+                        easing = LinearOutSlowInEasing,
                     ),
                 )
+            } else {
+                val justReleasedDrag = draggedSinceLastRelease
+                draggedSinceLastRelease = false
+                val distance = abs(lensPosition.value - target)
+                if (distance > .01f) {
+                    val now = android.os.SystemClock.uptimeMillis()
+                    val rapid = !justReleasedDrag && lastMotionStartMs > 0L &&
+                        now - lastMotionStartMs < NavLiquidDockMotion.rapidRetargetWindowMillis
+                    lastMotionStartMs = now
+                    kotlinx.coroutines.coroutineScope {
+                        launch {
+                            if (!justReleasedDrag) {
+                                lensExpansion.animateTo(
+                                    NavLiquidDockMotion.peakScaleForTap(distance, rapid),
+                                    animationSpec = tween(
+                                        durationMillis = NavLiquidDockMotion.expansionRiseMillis,
+                                        easing = LinearOutSlowInEasing,
+                                    ),
+                                )
+                            }
+                            // Critically, shrink overlaps horizontal travel.
+                            // Never await lensPosition before returning to 1x.
+                            lensExpansion.animateTo(
+                                1f,
+                                animationSpec = tween(
+                                    durationMillis = NavLiquidDockMotion.expansionFallMillis,
+                                    easing = FastOutSlowInEasing,
+                                ),
+                            )
+                        }
+                        lensPosition.animateTo(
+                            target,
+                            animationSpec = spring(
+                                dampingRatio = NavLiquidDockMotion.positionDamping,
+                                stiffness = NavLiquidDockMotion.positionStiffness,
+                                visibilityThreshold = .002f,
+                            ),
+                        )
+                    }
+                } else {
+                    lensExpansion.animateTo(1f, tween(durationMillis = 105))
+                }
             }
         }
         val slide = if (dragging) dragPosition else lensPosition.value
-        // A single source of truth for expansion AND material. It rises as
-        // the moving glass accelerates and dies away as it decelerates,
-        // without a trailing rebound/fade or any fixed grow/shrink sequence.
-        val motionSpeed = if (dragging) dragSpeedSlotsPerSecond
-            else lensPosition.velocity
-        val matte = NavLiquidDockMotion.lensMatte(motionSpeed)
-        val lensScale = NavLiquidDockMotion.lensScale(motionSpeed) * tapPulse.value
+        val matte = NavLiquidDockMotion.lensMatteFromScale(lensExpansion.value)
+        val lensScale = lensExpansion.value * tapPulse.value
         val lensWidth = (cellWidth - 4.dp) * lensScale
         val lensHeight = NavLiquidDockTabs.restingLensHeightDp.dp * lensScale
         val lensX = (cellWidth * (slide + .5f) - lensWidth / 2f)
@@ -271,8 +312,6 @@ fun NavLiquidGlassBottomBar(
                             if (abs(finger.x - currentCenter) <= cellWidthPx * .72f) {
                                 dragging = true
                                 dragPosition = lensPosition.value
-                                dragSpeedSlotsPerSecond = 0f
-                                lastDragFrameMs = 0L
                                 hapticIndex = selected
                             }
                         },
@@ -282,16 +321,6 @@ fun NavLiquidGlassBottomBar(
                                 dragPosition = NavLiquidDockTabs.clampedPosition(
                                     dragPosition + delta / cellWidthPx,
                                 )
-                                val dtMs = change.uptimeMillis - lastDragFrameMs
-                                if (lastDragFrameMs != 0L && dtMs > 0L) {
-                                    val instantSpeed = (abs(delta) / cellWidthPx) *
-                                        (1000f / dtMs.toFloat())
-                                    // A small filter removes touch-event jitter without
-                                    // adding a visual after-animation at finger release.
-                                    dragSpeedSlotsPerSecond = dragSpeedSlotsPerSecond * .28f +
-                                        instantSpeed.coerceAtMost(40f) * .72f
-                                }
-                                lastDragFrameMs = change.uptimeMillis
                                 val focused = NavLiquidDockTabs.destinationForDrag(dragPosition)
                                 if (focused != hapticIndex) {
                                     hapticIndex = focused
@@ -308,7 +337,6 @@ fun NavLiquidGlassBottomBar(
                                     // into the spring, without a visible jump.
                                     lensPosition.snapTo(landing)
                                     dragging = false
-                                    dragSpeedSlotsPerSecond = 0f
                                     if (destination != selected) onSelect(destination)
                                 }
                             }
@@ -319,7 +347,6 @@ fun NavLiquidGlassBottomBar(
                                 interactionScope.launch {
                                     lensPosition.snapTo(lastFingerPosition)
                                     dragging = false
-                                    dragSpeedSlotsPerSecond = 0f
                                     // Cancel never commits a tab or resets its page.
                                 }
                             }
