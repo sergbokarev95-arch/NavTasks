@@ -72,6 +72,18 @@ class NavCalendarUiRefreshTest {
         assertTrue(calendar.contains("CalendarDayState.COMPLETE -> p.mint"))
     }
 
+    @Test fun onlyTopPeriodHeaderDisplaysFullDate() {
+        val ui = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+        val calendar = ui.substringAfter("fun PlanScreenV2(").substringBefore("private fun PlanReadOnlyTile(")
+        val month = calendar.substringAfter("1 -> Column {").substringBefore("else -> Column {")
+        val day = calendar.substringAfter("else -> Column {")
+        assertTrue(calendar.contains("Text(periodTitle,"))
+        assertTrue(!month.contains("Text(\"\${YearMonth.of(year, month)"))
+        assertTrue(!day.contains("Text(navDate(selectedDay"))
+        assertTrue(month.contains("Previous month") && month.contains("Next month"))
+        assertTrue(day.contains("Back to month") && day.contains("View year"))
+    }
+
     @Test fun compactGlassControlReturnsHeightToYearOverview() {
         assertEquals(44.dp, navCalendarModeHeight)
         assertEquals(40.dp, navCalendarModeLensHeight)

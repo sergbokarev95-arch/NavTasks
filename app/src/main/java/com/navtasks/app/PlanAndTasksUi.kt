@@ -285,8 +285,7 @@ fun PlanScreenV2(
                         ) {
                             if (month == 1) { month = 12; year-- } else month--
                         }
-                        Text("${YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase() }} $year",
-                            modifier = Modifier.weight(1f), color = p.text, fontSize = 19.sp, textAlign = TextAlign.Center)
+                        Spacer(Modifier.weight(1f))
                         NavGlassIconAction(
                             "chevron-right", p.text, localized("Следующий месяц", "Next month", lang),
                         ) {
@@ -405,10 +404,7 @@ fun PlanScreenV2(
                         NavGlassIconAction(
                             "chevron-left", p.text, localized("К месяцу", "Back to month", lang),
                         ) { level = 1 }
-                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(navDate(selectedDay, lang, true), color = p.text, fontSize = 19.sp)
-                            Text(selectedDay.dayOfWeek.getDisplayName(TextStyle.FULL, locale), color = p.muted, fontSize = 12.sp)
-                        }
+                        Spacer(Modifier.weight(1f))
                         NavGlassIconAction(
                             "calendar", p.text, localized("Выбрать год", "View year", lang),
                         ) { level = 0 }
