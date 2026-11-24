@@ -17,8 +17,23 @@ class NavPopupFrostTest {
         assertTrue(NavPopupFrostTokens.divider(false).alpha < .1f)
     }
 
+    @Test fun menuContrastUsesNeutralDenseDayAndSolidNight() {
+        assertEquals(Color(0xFFF5F6F8), NavPopupFrostTokens.menuFill(false))
+        assertEquals(Color(0xFF222222), NavPopupFrostTokens.menuFill(true))
+        assertEquals(.96f, NavPopupFrostTokens.menuTintAlpha, 0f)
+        assertEquals(8f, NavPopupFrostTokens.menuBlurRadiusDp, 0f)
+        assertEquals(12f, NavPopupFrostTokens.menuShadowDp(false), 0f)
+        assertEquals(5f, NavPopupFrostTokens.menuShadowDp(true), 0f)
+        val root = "src/main/java/com/navtasks/app/"
+        val frost = File(root + "NavPopupFrost.kt").readText()
+        val menu = File(root + "NavOverlayUi.kt").readText()
+        assertTrue(frost.contains("if (dark || capture == null ||"))
+        assertTrue(menu.contains("shadowElevation = NavPopupFrostTokens.menuShadowDp(p.dark).dp"))
+        assertTrue(menu.contains("NavPopupFrostTokens.menuRim(p.dark)"))
+    }
+
     @Test fun screenSoftensOnlyWhileAnchoredPopoverIsOpen() {
-        assertEquals(5f, NavPopupFrostTokens.screenBlurRadiusDp, 0f)
+        assertEquals(1.5f, NavPopupFrostTokens.screenBlurRadiusDp, 0f)
         assertEquals(150, NavPopupFrostTokens.screenBlurAnimationMillis)
         val source = File("src/main/java/com/navtasks/app/NavPopupFrost.kt").readText()
         assertTrue(source.contains("targetValue = if (capture.openMenus > 0) NavPopupFrostTokens.screenBlurRadiusDp.dp else 0.dp"))

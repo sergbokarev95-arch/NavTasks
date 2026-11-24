@@ -13,7 +13,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
@@ -43,15 +42,14 @@ fun NavPopoverMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
         modifier = modifier.widthIn(min = 215.dp, max = 310.dp)
-            .shadow(8.dp, shape, clip = false)
             .clip(shape)
             .navPopoverFrost(capture, p.dark)
-            .border(NavPopupFrostTokens.rimWidthDp.dp, NavPopupFrostTokens.rim(p.dark), shape),
+            .border(NavPopupFrostTokens.rimWidthDp.dp, NavPopupFrostTokens.menuRim(p.dark), shape),
         shape = shape,
         // The captured source is painted before the crisp menu content.
         containerColor = Color.Transparent,
         tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
+        shadowElevation = NavPopupFrostTokens.menuShadowDp(p.dark).dp,
         content = content,
     )
 }

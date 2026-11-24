@@ -38,7 +38,9 @@ import androidx.compose.ui.window.DialogWindowProvider
 /** Neutral HONOR-reference popup material; no changes to dock optics or global palette. */
 internal object NavPopupFrostTokens {
     const val blurRadiusDp = 10f
-    const val screenBlurRadiusDp = 5f
+    const val screenBlurRadiusDp = 1.5f
+    const val menuBlurRadiusDp = 8f
+    const val menuTintAlpha = .96f
     const val screenBlurAnimationMillis = 150
     const val tintAlpha = .90f
     const val rimWidthDp = .6f
@@ -46,11 +48,20 @@ internal object NavPopupFrostTokens {
     fun fill(dark: Boolean): Color =
         if (dark) Color(0xFF222222) else Color(0xFFF6F7F9)
 
+    // Menu-specific tones: native dialog surfaces keep their Beta25 palette.
+    fun menuFill(dark: Boolean): Color =
+        if (dark) Color(0xFF222222) else Color(0xFFF5F6F8)
+
+    fun menuRim(dark: Boolean): Color =
+        if (dark) Color(0xFF424242) else Color.White
+
+    fun menuShadowDp(dark: Boolean): Float = if (dark) 5f else 12f
+
     fun rim(dark: Boolean): Color =
         if (dark) Color(0xFF4A4A4A).copy(alpha = .65f) else Color.White.copy(alpha = .88f)
 
     fun divider(dark: Boolean): Color =
-        if (dark) Color.White.copy(alpha = .055f) else Color.Black.copy(alpha = .045f)
+        if (dark) Color.White.copy(alpha = .075f) else Color.Black.copy(alpha = .075f)
 }
 
 /**
@@ -85,17 +96,17 @@ internal fun NavPopoverBackdropHost(content: @Composable () -> Unit) {
     }
 }
 
-/** Draw actual source pixels, lightly blurred and strongly tinted; never expose raw text. */
+/** Day retains a trace of frost. Night uses an opaque graphite surface, not a second blur layer. */
 internal fun Modifier.navPopoverFrost(capture: NavPopoverCapture?, dark: Boolean): Modifier {
-    val fill = NavPopupFrostTokens.fill(dark)
-    if (capture == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+    val fill = NavPopupFrostTokens.menuFill(dark)
+    if (dark || capture == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
         return background(fill)
     return this.background(fill).hazeEffect(
         state = capture.haze,
         style = HazeStyle(
             backgroundColor = fill,
-            blurRadius = NavPopupFrostTokens.blurRadiusDp.dp,
-            tints = listOf(HazeTint(fill.copy(alpha = NavPopupFrostTokens.tintAlpha))),
+            blurRadius = NavPopupFrostTokens.menuBlurRadiusDp.dp,
+            tints = listOf(HazeTint(fill.copy(alpha = NavPopupFrostTokens.menuTintAlpha))),
             fallbackTint = HazeTint(fill),
             noiseFactor = 0f,
         ),
