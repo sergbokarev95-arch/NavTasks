@@ -451,3 +451,7 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Full signed CI `45335432089` PASS; prerelease `v1.2.0-beta.18`, code264 source `356f32c1244cd0abf8339224bd65c5c6a2511bef`, APK SHA256 `7b28e9821aa9d7f90d3b8ae215a651f7e7539d9d87e2572ccc0574d886ffaccc`. Emergency stable-functional code265 original-key CI `45335556213` PASS, separate prerelease `v1.1.0-recovery-code265` APK SHA256 `919debe6d7c264548b5c0b975024143cf2c795e8bd17bf39e39fc36865fd04a7`.
 - No app business/route/optical/icon/palette changes. Public stable 1.1.0/code230 and main not changed. Owner's real HONOR animation approval NOT yet reported.
 
+## 2026-11-24 — isolated beta19 smoother liquid dock, HONOR acceptance pending
+- User asked to slightly slow and smooth beta18 while deepening landing squash .95 -> .85. Feature `feature/navtasks-1.2.0-beta19-smoother-85-landing` from exact beta18 backup. Horizontal spring stiffness660/damping.86. Normal continuous concurrent scale envelope 86+100+62+96=344ms, peak 1.27-1.30x, squash .85x then return 1x. Rapid retargets remain interruptible with short motion. No data, view routing or optical/style changes.
+- Signed original-key workflow `45339664362` and emergency stable-functional recovery code267 workflow `45339730574` running at initial documentation; not yet physically verified on HONOR, main/stable promotion not authorized.
+
