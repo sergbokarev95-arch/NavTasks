@@ -585,3 +585,10 @@
 - [ ] Owner: export complete profiles, install beta17 code262 over beta16 code260 without uninstall; test single-tab visible zoom, longer jump, many rapid taps and immediate redirect, drag release, both themes. Capture short video if growth still invisible or timing unlike HONOR reference.
 - [ ] Do NOT declare dock approved until HONOR visuals verified. If still incorrect, target only lens animation and any actual clipping/opacity effect; do not touch app task/AMOS/Services/Handover/calendar business logic. Stable OTA 1.1.0 untouched.
 
+## NEXT — HONOR accept/revise beta18 subtle elastic landing, 2026-11-24
+- [x] Backup beta17 exact branch tip in `backup/navtasks-1.2.0-beta17-before-landing-squash`.
+- [x] Slightly slower one-slot/long hop with original visible growth, 95% touchdown compression and immediate return to 100%, all keyframes concurrent with the position spring. Rapid taps skip long bounce; drag and routing intact.
+- [x] Full original-key CI `45335432089` SUCCESS, opt-in beta18 source APK code264 SHA256 `7b28e9821aa9d7f90d3b8ae215a651f7e7539d9d87e2572ccc0574d886ffaccc`. Stable-function emergency code265 CI `45335556213` SUCCESS and source prerelease available, emergency only.
+- [ ] User: export FULL profiles; install beta18 over current installed version in-place, never uninstall/clear data. Compare normal adjacent and cross-tab jump against HONOR Calendar, identify precise touchdown 95%-to-100% visual rebound and slightly softer velocity, test quick rapid taps (cancel without forced extra bounce), direct finger drag, both themes, data present.
+- [ ] Only adjust animation spring/size keyframes if necessary; no general style/business modifications until explicit owner dock sign-off. Stable 1.2.0 publication NOT authorized, independent stable channel remains 1.1.0/code230.
+
