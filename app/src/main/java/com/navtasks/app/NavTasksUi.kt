@@ -673,23 +673,19 @@ fun NavTasksApp(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    NavBrandLabel(palette, 20.sp)
-                                    Spacer(Modifier.width(9.dp))
-                                    Row(
-                                        Modifier.glassClickable { showProfiles = true }
-                                            .padding(vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        Text(
-                                            profiles.active.title, color = palette.muted,
-                                            fontSize = 12.sp, maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.widthIn(max = 116.dp),
-                                        )
-                                        Spacer(Modifier.width(4.dp))
-                                        NavGlassGlyph("chevron-down", palette.blue, Modifier.size(14.dp))
-                                    }
+                                Row(
+                                    Modifier.glassClickable { showProfiles = true }
+                                        .padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        profiles.active.title, color = palette.text,
+                                        fontSize = 16.sp, maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false),
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    NavGlassGlyph("chevron-down", palette.text, Modifier.size(14.dp))
                                 }
                                 Text(
                                     when (tab) {
