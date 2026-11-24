@@ -1,6 +1,10 @@
 package com.navtasks.app
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -124,7 +128,8 @@ private fun WorkAgendaTodayCard(
     onNavigate: () -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().navGlass(p, radius = 17.dp, role = GlassRole.TASK)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(17.dp))
+            .background(NavTodayVisualTokens.cardSurface(p.dark), RoundedCornerShape(17.dp))
             .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -133,7 +138,7 @@ private fun WorkAgendaTodayCard(
             Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
-            Text(category, color = p.blue, fontSize = 11.sp)
+            Text(category, color = p.text, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             Text(title, color = p.text, fontSize = 14.sp,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
             completedAt?.let { done ->
@@ -156,7 +161,7 @@ private fun WorkAgendaTodayCard(
             contentAlignment = Alignment.Center,
         ) {
             Text(localized("Перейти", "Go to", lang),
-                color = p.blue, fontSize = 12.sp)
+                color = p.text, fontSize = 12.sp)
         }
     }
 }

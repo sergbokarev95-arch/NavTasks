@@ -18,6 +18,25 @@ class NavTodayVisualTokensTest {
         assertEquals(Color(0xFF202022), NavTodayVisualTokens.cardSurface(true))
     }
 
+    @Test fun neutralChecklistAndWorkCardsPreserveOtherDayWarnings() {
+        val root = "src/main/java/com/navtasks/app/"
+        val ui = File(root + "NavTasksUi.kt").readText()
+        val banner = ui.substringAfter("visible = browsingOtherDay,").substringBefore("LazyColumn(")
+        assertTrue(banner.contains("NavTodayVisualTokens.cardSurface(p.dark)"))
+        assertTrue(banner.contains("amber.copy(alpha = 0.65f)"))
+        assertTrue(banner.contains("color = amber"))
+        val row = ui.substringAfter("fun RunTileV2(")
+        assertTrue(row.contains("if (run.completed) p.muted else p.text,\n                        Modifier.size(22.dp).rotate(disclosureRotation)"))
+        assertTrue(row.contains("SpanStyle(color = if (run.completed) p.muted else p.text, fontSize = 11.sp)"))
+        assertTrue(row.contains("otherDayAccent.copy(alpha = 0.58f)"))
+        val work = File(root + "WorkAgendaUi.kt").readText()
+            .substringAfter("private fun WorkAgendaTodayCard(").substringBefore("internal fun WorkAgendaCalendarRows(")
+        assertTrue(work.contains("NavTodayVisualTokens.cardSurface(p.dark)"))
+        assertTrue(work.contains("Text(category, color = p.text, fontSize = 13.sp, fontWeight = FontWeight.Bold)"))
+        assertTrue(work.contains("color = p.text, fontSize = 12.sp"))
+        assertTrue(work.contains("glassClickable(onClick = onNavigate)"))
+    }
+
     @Test fun todayKeepsTapTargetsGreenConfirmationAndScopedDateWarning() {
         val ui = File("src/main/java/com/navtasks/app/NavTasksUi.kt").readText()
         val check = ui.substringAfter("fun RoundCheck(").substringBefore("private fun TodayScreenV2(")

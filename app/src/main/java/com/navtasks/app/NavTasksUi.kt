@@ -1212,7 +1212,8 @@ private fun TodayScreenV2(
             val amber = p.warningText
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
-                    .navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(NavTodayVisualTokens.cardSurface(p.dark), RoundedCornerShape(13.dp))
                     .border(1.dp, amber.copy(alpha = 0.65f), RoundedCornerShape(13.dp))
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1608,7 +1609,7 @@ fun RunTileV2(
                 ) {
                     NavGlassGlyph(
                         "chevron-down",
-                        if (run.completed) p.muted else p.blue,
+                        if (run.completed) p.muted else p.text,
                         Modifier.size(22.dp).rotate(disclosureRotation),
                     )
                 }
@@ -1627,7 +1628,7 @@ fun RunTileV2(
                         append(task.title)
                         if (run.checklist.isNotEmpty()) {
                             append("  ")
-                            withStyle(SpanStyle(color = p.blueText, fontSize = 11.sp)) {
+                            withStyle(SpanStyle(color = if (run.completed) p.muted else p.text, fontSize = 11.sp)) {
                                 append("${run.checkedCount}/${run.checklist.size}")
                             }
                         }
