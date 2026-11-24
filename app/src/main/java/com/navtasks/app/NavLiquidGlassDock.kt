@@ -236,10 +236,11 @@ fun NavLiquidGlassBottomBar(
                 highlight = { Highlight.Default.copy(alpha = .3f + (1f - matte) * .45f) },
                 innerShadow = { InnerShadow(radius = 8.dp, alpha = .18f) },
                 onDrawSurface = {
-                    val traveling = if (dark) Color(0xFF75B8F0).copy(alpha = .13f)
+                    val traveling = if (dark) Color(0xFF9C9C9F).copy(alpha = .12f)
                         else Color.White.copy(alpha = .19f)
-                    // Keep the accepted neutral material independent of active tint.
-                    val resting = if (dark) Color(0xFF3F4B58).copy(alpha = .82f)
+                    // Night selection follows HONOR Calendar: neutral graphite, no blue tint.
+                    // Keep the existing refractive shader and geometry unchanged.
+                    val resting = if (dark) Color(0xFF3A3A3C).copy(alpha = .93f)
                         else Color(0xFFD7D8DA).copy(alpha = .87f)
                     drawRect(lerp(traveling, resting, matte.coerceIn(0f, 1f)))
                 }
