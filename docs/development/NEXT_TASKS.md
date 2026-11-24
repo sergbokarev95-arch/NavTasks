@@ -552,3 +552,10 @@
 - [ ] Fix only any remaining local night capsule tint or layering, then ask owner to approve dock. Do NOT begin blanket interface recoloring until this element is accepted.
 - [ ] Do not change stable OTA v1.1.0/code230; recovery code253 ONLY for severe regression and future versionCode >253 if installed.
 
+## NEXT — 2026-11-24 beta13 dock icon saturation and fill HONOR QA
+- [x] Keep exact beta12 source at `backup/navtasks-1.2.0-beta12-before-filled-dock-icons`.
+- [x] Create four separate filled dock silhouettes with transparent internal cutouts; never alter global `NavGlassGlyph`. Dock-only saturated coral #FF5533 both themes, stronger caption weight, preserve neutral selected capsule, original optics and tap/drag.
+- [x] Original signer full CI `45324576506` PASS after missing fallback import fix; prerelease `v1.2.0-beta.13`, code254, SHA256 `ec2980d30a071d79d6e0a14962cb30d4f7d777b0b70b5a118421d5c058aae15b`. Emergency exact stable functional code255 CI `45324180505` SUCCESS, only for serious regressions.
+- [ ] User: export full profiles, install beta13 over beta12 without uninstall, inspect four filled pictograms and coral ink in light+night, compare directly with HONOR Calendar, verify no visual clipping/blur glitches and cutouts are truly transparent, check direct lens drag and taps/re-tap, confirm records unchanged.
+- [ ] Any follow-up should change dock pictogram artwork/tint alone until owner visually approves; only after dock accepted proceed to other home screen elements. Stable 1.2.0 OTA not authorized, stable feed remains 1.1.0/code230. After emergency code255 future versions require code>255.
+
