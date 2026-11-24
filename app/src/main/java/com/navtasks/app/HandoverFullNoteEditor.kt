@@ -76,7 +76,7 @@ internal fun HandoverFullNoteEditor(
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(top = 8.dp),
+            Modifier.fillMaxWidth().padding(top = if (personalMode) NavPersonalVisualTokens.headerTopDp.dp else 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             NavGlassCircleButton(p, "back", onClick = onCancel)
@@ -85,14 +85,15 @@ internal fun HandoverFullNoteEditor(
                 Text(
                     if (personalMode) localized("Личное", "Personal", lang)
                     else localized("Передача дел", "Handover", lang),
-                    color = p.blueText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                    color = if (personalMode) p.text else p.blueText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                 )
                 if (sectionTitle.isNotEmpty()) {
                     Text(sectionTitle, color = p.muted, fontSize = 12.sp, maxLines = 1)
                 }
             }
-            Box(Modifier.navGlass(p, radius = 13.dp,
-                role = if (canSave) GlassRole.SELECTED else GlassRole.CONTROL)) {
+            Box(if (personalMode) Modifier.personalNoteCard(p, 13.dp)
+                else Modifier.navGlass(p, radius = 13.dp,
+                    role = if (canSave) GlassRole.SELECTED else GlassRole.CONTROL)) {
                 TextButton(
                     enabled = canSave,
                     onClick = {
@@ -103,7 +104,8 @@ internal fun HandoverFullNoteEditor(
                 ) {
                     Text(
                         localized("Сохранить", "Save", lang),
-                        color = if (canSave) p.selectionContent else p.muted,
+                        color = if (!canSave) p.muted else if (personalMode)
+                            NavTodayVisualTokens.accentInk(p.dark) else p.selectionContent,
                         fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                     )
                 }
@@ -121,7 +123,7 @@ internal fun HandoverFullNoteEditor(
                 color = p.text, fontSize = 24.sp, lineHeight = 29.sp,
                 fontWeight = FontWeight.Bold,
             ),
-            cursorBrush = SolidColor(p.blue),
+            cursorBrush = SolidColor(if (personalMode) NavTodayVisualTokens.accentInk(p.dark) else p.blue),
             decorationBox = { inner ->
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
                     if (title.isEmpty()) Text(
