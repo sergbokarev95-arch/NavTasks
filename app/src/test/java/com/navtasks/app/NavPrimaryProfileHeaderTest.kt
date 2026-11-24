@@ -19,6 +19,10 @@ class NavPrimaryProfileHeaderTest {
         assertTrue(header.contains("glassClickable { showProfiles = true }"))
         assertTrue(header.contains("fontSize = 26.sp, color = palette.text"))
         assertTrue(header.contains("showSettings = true"))
-        assertTrue(ui.contains("NavBrandLabel(palette)"))
+        // Calendar intentionally no longer displays the old NavTasks brand.
+        val calendarHeader = ui.substringAfter("} else if (showCalendar) {")
+            .substringBefore("PlanScreenV2(")
+        assertFalse(calendarHeader.contains("NavBrandLabel("))
+        assertTrue(calendarHeader.contains("localized(\"План\", \"Plan\", lang)"))
     }
 }
