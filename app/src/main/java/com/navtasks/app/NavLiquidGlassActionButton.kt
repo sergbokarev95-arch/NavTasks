@@ -30,6 +30,11 @@ import com.kyant.shapes.Capsule
 internal object NavLiquidGlassActionTokens {
     const val addDiameterDp = 54f
     const val compactDiameterDp = 44f
+
+    // One trial accent, shared by all standalone glass create/calendar actions.
+    // Semantic colors and the accepted dock remain independent of this choice.
+    fun glyphInk(kind: String, dark: Boolean, normal: Color): Color =
+        if (kind == "plus" || kind == "calendar") NavLiquidDockTabs.activeInk(dark) else normal
 }
 
 @Composable
@@ -106,6 +111,6 @@ internal fun NavLiquidGlassRoundButton(
                 onClick = onClick, pressScale = NavPressFeedbackTokens.floatingActionScale),
         contentAlignment = Alignment.Center,
     ) {
-        NavGlassGlyph(kind, glyphColor, Modifier.size(glyphSize))
+        NavGlassGlyph(kind, NavLiquidGlassActionTokens.glyphInk(kind, dark, glyphColor), Modifier.size(glyphSize))
     }
 }

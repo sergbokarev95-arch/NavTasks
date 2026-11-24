@@ -347,7 +347,7 @@ fun HandoverScreen(
                                 .glassClickable { openEntryEditor(section.id, null) },
                             contentAlignment = Alignment.Center,
                         ) {
-                            NavGlassGlyph("plus", p.blue, Modifier.size(23.dp))
+                            NavGlassGlyph("plus", NavLiquidGlassActionTokens.glyphInk("plus", p.dark, p.blue), Modifier.size(23.dp))
                         }
                     }
                     AnimatedVisibility(

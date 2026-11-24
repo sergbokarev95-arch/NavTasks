@@ -475,7 +475,7 @@ fun NavGlassCircleButton(p: NavPalette, kind: String, onClick: () -> Unit) {
             .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        NavGlassGlyph(kind, p.text, Modifier.size(25.dp))
+        NavGlassGlyph(kind, NavLiquidGlassActionTokens.glyphInk(kind, p.dark, p.text), Modifier.size(25.dp))
     }
 }
 
@@ -488,7 +488,7 @@ fun NavGlassAddButton(p: NavPalette, hazeState: HazeState, onClick: () -> Unit) 
             .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        NavGlassGlyph("plus", p.blue, Modifier.size(28.dp))
+        NavGlassGlyph("plus", NavLiquidGlassActionTokens.glyphInk("plus", p.dark, p.blue), Modifier.size(28.dp))
     }
 }
 
@@ -501,7 +501,7 @@ fun NavGlassCalendarButton(p: NavPalette, hazeState: HazeState, onClick: () -> U
             .glassClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        NavGlassGlyph("calendar", p.blue, Modifier.size(26.dp))
+        NavGlassGlyph("calendar", NavLiquidGlassActionTokens.glyphInk("calendar", p.dark, p.blue), Modifier.size(26.dp))
     }
 }
 
