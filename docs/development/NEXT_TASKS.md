@@ -535,3 +535,12 @@
 - [ ] Verify tasks new/existing Save and frequency/scope prompts, deadline notifications, AMOS/Services records, Handover attachments, equipment PDFs, selective transfer and profiles remain present. Screen-capture any remaining locally hard-coded cyan surface for targeted correction.
 - [ ] Stable 1.2.0 OTA remains UNAUTHORIZED; channel 1.1.0/code230 unchanged. Emergency recovery code249 ONLY if serious regression; future build versionCode >249 if recovery installed.
 
+## NEXT — 2026-11-24 beta11 dock drag HONOR acceptance
+- [x] Inspect 14.9s reference `486853.mp4`: tap routes now, selected-lens drag follows finger while intermediate pages remain, release commits one nearest tab. Colors warm coral, not blue.
+- [x] Backup beta10 exact source `b87d1d96ade2ccaabb5af8455a437ec6d9a3be6b` at `backup/navtasks-1.2.0-beta10-before-dock-drag`.
+- [x] Isolated dock UI-only change: use original optical lens and spring; add selected-lens drag tracking and single finger-up navigation, gently interpolate icon/label tint to Day #FF5C32 or Night #FF7857. Preserve same-tab reset and all four routes. Fallback old Android uses coral active ink, unchanged optical canvas.
+- [x] Test geometry/clamp/nearest selection and unchanged Lab optical constants; original signer CI `45319560301` SUCCESS. Signed source-only `v1.2.0-beta.11` code250, SHA256 `99264150e9253da9ad3d013af0e90e973473fd2e48e9cd8f8ecf57b92fb613cc`. Emergency original stable-functional `v1.1.0-recovery-code251` CI `45319626044` PASS; strictly emergency use.
+- [ ] User FULL profile export then in-place beta11 install. Check on HONOR: ordinary tap, drag from selected capsule left/right, off-center grab, live lens follow without lag, no intermediate page switching, release nearest target, cancellation/vertical swipe safety, selected icon/label coral legibility in both themes, active tab re-tap scroll-to-top, dock glass/rim and +/Calendar buttons unchanged.
+- [ ] Compare actual video with reference, make only targeted follow-up for any drag registration issue/visual stutter/tint mismatch; never rewrite the task model or established four dock routes. Do NOT change global app accent until each UI component receives its own agreed reference and QA.
+- [ ] Stable 1.2.0 OTA remains not authorized; public channel stays 1.1.0/code230. Recovery code251 requires future versionCode >251 if used.
+
