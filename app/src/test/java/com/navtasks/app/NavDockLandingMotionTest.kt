@@ -19,6 +19,7 @@ class NavDockLandingMotionTest {
         assertEquals(NavLiquidDockMotion.normalCompressionEndMillis +
             NavLiquidDockMotion.landingRecoverMillis,
             NavLiquidDockMotion.normalMotionEndMillis)
+        assertEquals(344, NavLiquidDockMotion.normalMotionEndMillis)
         assertTrue(NavLiquidDockMotion.landingRecoverMillis <= 110)
         assertTrue(NavLiquidDockMotion.normalMotionEndMillis < 370)
         assertTrue(NavLiquidDockMotion.normalMotionEndMillis > 300)
