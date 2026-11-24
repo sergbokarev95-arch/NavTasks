@@ -16,7 +16,7 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 255
+        versionCode = 257
         versionName = "1.1.0"
     }
 
@@ -42,7 +42,7 @@ android {
         }
         release {
             isMinifyEnabled = false
-            // Optional exact-stable functional recovery over beta.13 code254.
+            // Optional exact-stable functional recovery over beta.14 code256.
             versionNameSuffix = "-recovery"
             // Same package as the installed, long-lived signed Beta. Android
             // does not migrate private app data across different package IDs.
