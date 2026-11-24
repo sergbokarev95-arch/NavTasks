@@ -268,7 +268,9 @@ fun HandoverScreen(
             onValueChange = { searchText = it },
             onDismiss = { searchOpen = false; searchText = "" },
             p = p, lang = lang,
-            placeholder = localized("Поиск по всему Handover", "Search all Handover", lang),
+            placeholder = if (personalMode) localized("Поиск по заметкам", "Search notes", lang)
+                else localized("Поиск по всему Handover", "Search all Handover", lang),
+            neutralStyle = personalMode,
             resultCount = searchResults.size,
             currentResult = searchResultIndex,
             onPreviousResult = {

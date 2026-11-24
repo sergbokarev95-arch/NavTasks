@@ -112,6 +112,7 @@ fun NavGlassAlertDialog(
     confirmButton: @Composable () -> Unit,
     dismissButton: @Composable () -> Unit = {},
     solidSurface: Boolean = false,
+    neutralActions: Boolean = false,
 ) {
     // Some dialogs contain long text and controls: the Android window blur
     // is not sufficient to guarantee readable contrast over busy list cards.
@@ -144,11 +145,13 @@ fun NavGlassAlertDialog(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(Modifier.navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)) {
+                Box(if (neutralActions) Modifier.personalNoteCard(p, 13.dp, nested = true)
+                    else Modifier.navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)) {
                     dismissButton()
                 }
                 Spacer(Modifier.width(8.dp))
-                Box(Modifier.navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)) {
+                Box(if (neutralActions) Modifier.personalNoteCard(p, 13.dp, nested = true)
+                    else Modifier.navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)) {
                     confirmButton()
                 }
             }

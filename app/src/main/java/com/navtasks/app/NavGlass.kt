@@ -751,17 +751,19 @@ fun NavGlassInput(
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = NavTitleKeyboard,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    neutralStyle: Boolean = false,
 ) {
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.height(44.dp)
-            .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL, elevation = 0.dp),
+            .then(if (neutralStyle) Modifier.personalNoteCard(p, 12.dp, nested = true)
+                else Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL, elevation = 0.dp)),
         singleLine = true,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         textStyle = TextStyle(color = p.text, fontSize = 14.sp),
-        cursorBrush = SolidColor(p.blue),
+        cursorBrush = SolidColor(if (neutralStyle) NavTodayVisualTokens.accentInk(p.dark) else p.blue),
         decorationBox = { input ->
             Box(Modifier.fillMaxSize().padding(horizontal = 13.dp), contentAlignment = Alignment.CenterStart) {
                 if (value.isBlank() && placeholder.isNotEmpty())
@@ -802,6 +804,7 @@ fun NavGlassSearchField(
     currentResult: Int = 0,
     onPreviousResult: () -> Unit = {},
     onNextResult: () -> Unit = {},
+    neutralStyle: Boolean = false,
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -816,10 +819,10 @@ fun NavGlassSearchField(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        NavGlassGlyph("search", p.blue, Modifier.size(20.dp))
+        NavGlassGlyph("search", if (neutralStyle) p.text else p.blue, Modifier.size(20.dp))
         NavGlassInput(
             value = value, onValueChange = { onValueChange(it.take(120)) }, p = p,
-            placeholder = placeholder,
+            placeholder = placeholder, neutralStyle = neutralStyle,
             modifier = Modifier.weight(1f).focusRequester(focusRequester),
         )
         if (resultCount != null) {

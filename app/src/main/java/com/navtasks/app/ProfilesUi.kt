@@ -136,7 +136,7 @@ fun ProfilesScreen(
 
     if (createOpen || editing != null) {
         val editingId = editing
-        NavGlassAlertDialog(p = p, 
+        NavGlassAlertDialog(p = p, neutralActions = true, 
             onDismissRequest = { createOpen = false; editing = null },
             title = { Text(if (editingId == null)
                 localized("Новое судно", "New vessel", lang)
@@ -146,7 +146,7 @@ fun ProfilesScreen(
                     value = name,
                     onValueChange = { name = it.take(100) },
                     p = p, modifier = Modifier.fillMaxWidth(),
-                    placeholder = localized("Название", "Name", lang),
+                    placeholder = localized("Название", "Name", lang), neutralStyle = true,
                 )
             },
             confirmButton = {
@@ -162,17 +162,17 @@ fun ProfilesScreen(
                         } else profiles.rename(editingId, name)
                     }.onFailure { error = it.message }
                         .onSuccess { error = null; editing = null; createOpen = false }
-                }) { Text(localized("Сохранить", "Save", lang)) }
+                }) { Text(localized("Сохранить", "Save", lang), color = if (name.isNotBlank()) NavTodayVisualTokens.accentInk(p.dark) else p.muted) }
             },
             dismissButton = {
                 TextButton(onClick = { createOpen = false; editing = null }) {
-                    Text(localized("Отмена", "Cancel", lang))
+                    Text(localized("Отмена", "Cancel", lang), color = p.text)
                 }
             },
         )
     }
     deleteTarget?.let { victim ->
-        NavGlassAlertDialog(p = p, 
+        NavGlassAlertDialog(p = p, neutralActions = true, 
             onDismissRequest = { deleteTarget = null },
             title = { Text(localized("Удалить профиль?", "Delete profile?", lang)) },
             text = { Text(localized(
@@ -198,7 +198,7 @@ fun ProfilesScreen(
             },
             dismissButton = {
                 TextButton(onClick = { deleteTarget = null }) {
-                    Text(localized("Отмена", "Cancel", lang))
+                    Text(localized("Отмена", "Cancel", lang), color = p.text)
                 }
             },
         )

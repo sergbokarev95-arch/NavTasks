@@ -139,7 +139,7 @@ internal fun HandoverFullNoteEditor(
                 initialPlain = initialPlain, initialHtml = initialHtml,
                 entryKey = entryKey, p = p, lang = lang,
                 placeholder = localized("Текст заметки", "Write a note", lang),
-                maxCharacters = 4000, fullPage = true,
+                maxCharacters = 4000, fullPage = true, neutralStyle = personalMode,
                 onChange = { updatedPlain, updatedHtml ->
                     plain = updatedPlain
                     html = updatedHtml
