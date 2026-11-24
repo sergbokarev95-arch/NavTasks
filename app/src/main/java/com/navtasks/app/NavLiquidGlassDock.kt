@@ -13,6 +13,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -43,6 +44,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -57,6 +60,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,6 +77,7 @@ import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
 import kotlin.math.abs
+import kotlinx.coroutines.launch
 
 /**
  * EXACT optical/lens/dock renderer copied from accepted Glass Lab 0.1.5
@@ -95,11 +100,11 @@ fun NavLiquidGlassBottomBar(
     val density = LocalDensity.current
     val ambient = if (dark) Color(0xFF111E2E).copy(alpha = .15f)
         else Color.White.copy(alpha = .12f)
-    // Exact production NavTasks active blue, inactive icon and caption colors.
-    val activeBlue = if (dark) Color(0xFF329CFF) else Color(0xFF087DFA)
-    val inactiveGlyph = if (dark) Color(0xFFF2F8FF).copy(alpha = .89f)
-        else Color(0xFF172B42).copy(alpha = .89f)
-    val inactiveLabel = if (dark) Color(0xFFAFC4D8) else Color(0xFF5F768D)
+    // Coral from the user's HONOR Calendar reference, strictly dock-local.
+    // Other app accent buttons retain their existing semantic colors.
+    val activeInk = NavLiquidDockTabs.activeInk(dark)
+    val inactiveGlyph = if (dark) Color(0xFFEDEEF1) else Color(0xFF292C31)
+    val inactiveLabel = if (dark) Color(0xFFB8BAC0) else Color(0xFF66686E)
     val fallback = if (dark) Color(0xDC1D2A38) else Color(0xEAE4EDF3)
     val surfaceSheen = Brush.verticalGradient(
         if (dark) listOf(
@@ -168,19 +173,29 @@ fun NavLiquidGlassBottomBar(
             }
         }
         val cellWidth = maxWidth / NavLiquidDockTabs.items.size
+        val cellWidthPx = with(density) { cellWidth.toPx() }
         val target = selected.coerceIn(0, NavLiquidDockTabs.items.lastIndex).toFloat()
-        // Follow the working NavTasks 0.4.59 movement: quick, interruptible spring,
-        // while extra width and material settle independently of travel.
-        val slide by animateFloatAsState(
-            targetValue = target,
-            animationSpec = spring(
-                dampingRatio = 1f,
-                stiffness = 550f,
-                visibilityThreshold = .001f
-            ),
-            label = "glassLabDockSlide"
-        )
-        val moving = abs(slide - target) > .015f
+        val view = LocalView.current
+        val interactionScope = rememberCoroutineScope()
+        // One position drives both interactions: taps spring to their target,
+        // while direct drags bypass interpolation and follow the finger.
+        val lensPosition = remember { Animatable(target) }
+        var dragging by remember { mutableStateOf(false) }
+        var dragPosition by remember { mutableFloatStateOf(target) }
+        var hapticIndex by remember { mutableIntStateOf(selected) }
+        LaunchedEffect(target, dragging) {
+            if (!dragging) {
+                lensPosition.animateTo(
+                    target,
+                    animationSpec = spring(
+                        dampingRatio = 1f, stiffness = 550f,
+                        visibilityThreshold = .001f,
+                    ),
+                )
+            }
+        }
+        val slide = if (dragging) dragPosition else lensPosition.value
+        val moving = dragging || abs(slide - target) > .015f
         val matte by animateFloatAsState(
             targetValue = if (moving) 0f else 1f,
             animationSpec = spring(dampingRatio = 1f, stiffness = 700f),
@@ -223,8 +238,7 @@ fun NavLiquidGlassBottomBar(
                 onDrawSurface = {
                     val traveling = if (dark) Color(0xFF75B8F0).copy(alpha = .13f)
                         else Color.White.copy(alpha = .19f)
-                    // Slightly deeper neutral graphite in Night so the unchanged blue
-                    // active glyph stays legible, without tinting the glass blue.
+                    // Keep the accepted neutral material independent of active tint.
                     val resting = if (dark) Color(0xFF3F4B58).copy(alpha = .82f)
                         else Color(0xFFD7D8DA).copy(alpha = .87f)
                     drawRect(lerp(traveling, resting, matte.coerceIn(0f, 1f)))
@@ -245,13 +259,69 @@ fun NavLiquidGlassBottomBar(
                 .then(selection)
         )
 
-        val view = LocalView.current
         Row(
-            Modifier.fillMaxSize().padding(vertical = 2.dp).selectableGroup(),
+            Modifier.fillMaxSize().padding(vertical = 2.dp)
+                .pointerInput(selected, cellWidthPx) {
+                    // A horizontal gesture captured on the current lens is a
+                    // preview: NEVER navigate across intermediate tabs.
+                    // Ordinary taps remain handled by each existing selectable.
+                    detectHorizontalDragGestures(
+                        onDragStart = { finger ->
+                            val currentCenter = (selected + .5f) * cellWidthPx
+                            if (abs(finger.x - currentCenter) <= cellWidthPx * .72f) {
+                                dragging = true
+                                dragPosition = lensPosition.value
+                                hapticIndex = selected
+                            }
+                        },
+                        onHorizontalDrag = { change, delta ->
+                            if (dragging && cellWidthPx > 0f) {
+                                change.consume()
+                                dragPosition = NavLiquidDockTabs.clampedPosition(
+                                    dragPosition + delta / cellWidthPx,
+                                )
+                                val focused = NavLiquidDockTabs.destinationForDrag(dragPosition)
+                                if (focused != hapticIndex) {
+                                    hapticIndex = focused
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                }
+                            }
+                        },
+                        onDragEnd = {
+                            if (dragging) {
+                                val landing = dragPosition
+                                val destination = NavLiquidDockTabs.destinationForDrag(landing)
+                                interactionScope.launch {
+                                    // Transfer the finger's exact final position
+                                    // into the spring, without a visible jump.
+                                    lensPosition.snapTo(landing)
+                                    dragging = false
+                                    if (destination != selected) onSelect(destination)
+                                }
+                            }
+                        },
+                        onDragCancel = {
+                            if (dragging) {
+                                val lastFingerPosition = dragPosition
+                                interactionScope.launch {
+                                    lensPosition.snapTo(lastFingerPosition)
+                                    dragging = false
+                                    // Cancel never commits a tab or resets its page.
+                                }
+                            }
+                        },
+                    )
+                }
+                .selectableGroup(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavLiquidDockTabs.items.forEachIndexed { index, item ->
                 val active = selected == index
+                // The reference lights up the icon directly under the moving
+                // lens, even before the page is committed at finger-up.
+                val lensFocus = (1f - abs(slide - index.toFloat())).coerceIn(0f, 1f)
+                val iconInk = lerp(inactiveGlyph, activeInk, lensFocus)
+                val labelInk = lerp(inactiveLabel, activeInk, lensFocus)
                 val interaction = remember { MutableInteractionSource() }
                 val pressed by interaction.collectIsPressedAsState()
                 val pressScale by animateFloatAsState(
@@ -281,7 +351,7 @@ fun NavLiquidGlassBottomBar(
                 ) {
                     NavGlassGlyph(
                         kind = item.glyph,
-                        color = if (active) activeBlue else inactiveGlyph,
+                        color = iconInk,
                         modifier = Modifier.size(24.dp).graphicsLayer {
                             scaleX = pressScale
                             scaleY = pressScale
@@ -295,7 +365,7 @@ fun NavLiquidGlassBottomBar(
                             2 -> "Handover"
                             else -> localized("Справочник", "Reference", lang)
                         },
-                        color = if (active) activeBlue else inactiveLabel,
+                        color = labelInk,
                         fontSize = 10.sp,
                         textAlign = TextAlign.Center
                     )
