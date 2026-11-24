@@ -596,7 +596,7 @@
 - [x] Backup exact beta18 source at `backup/navtasks-1.2.0-beta18-before-smoother-85-squash`.
 - [x] Slightly reduce movement stiffness (720->660) and increase damping (.80->.86), smoothly extend keyframe phases and set landing `landingSquashScale=.85f`; preserve 1.27-1.30x expansion, direct finger drag, retarget cancellation, existing glass/icons.
 - [x] Update landing tests for 85% squash and slower 344ms continuous envelope; launch source-only beta19 code266 CI `45339664362` and independently signed stable-functional recovery code267 CI `45339730574`.
-- [ ] Confirm both CI pass, signing certificate/package, prerelease assets, SHA256, unchanged main + stable 1.1.0 feed before providing verified download.
+- [x] Final original signer CI `45340486493` SUCCESS (first `45339664362` blocked publication due to documentation branch tip change after build). Published signed beta19 code266 SHA256 `3ab0ce58248e18de5ddbbf03e104f7b71d18b8fd30275da2b0a73b96e2323b8b`. Separate stable-functional emergency code267 CI `45339730574` PASS SHA256 `2138a222784d66f19392b870b55ad759c14de2ddae12b29b6fafa995e3ecb7ee`. Main and stable 1.1.0 code230 unchanged; recovery emergency only, future code>267 if installed.
 - [ ] User FULL profile export, in-place install beta19 on HONOR, compare hop/landing squash/rebound with calendar; test rapid repeated taps, drag-release, both themes and profiles.
 - [ ] Tune only dock animations if still necessary; never regress task business logic or promote stable without approval.
 
