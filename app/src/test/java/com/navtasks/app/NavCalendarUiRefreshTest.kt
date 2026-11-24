@@ -80,8 +80,10 @@ class NavCalendarUiRefreshTest {
         assertTrue(calendar.contains("Text(periodTitle,"))
         assertTrue(!month.contains("Text(\"\${YearMonth.of(year, month)"))
         assertTrue(!day.contains("Text(navDate(selectedDay"))
-        assertTrue(month.contains("Previous month") && month.contains("Next month"))
-        assertTrue(day.contains("Back to month") && day.contains("View year"))
+        assertTrue(!month.contains("Previous month") && !month.contains("Next month"))
+        assertTrue(!day.contains("Back to month") && !day.contains("View year"))
+        assertTrue(calendar.contains("detectHorizontalDragGestures"))
+        assertTrue(calendar.contains("NavCalendarModeControl(level, p, lang"))
     }
 
     @Test fun compactGlassControlReturnsHeightToYearOverview() {

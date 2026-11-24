@@ -279,19 +279,6 @@ fun PlanScreenV2(
                         .clip(RoundedCornerShape(25.dp))
                         .background(NavTodayVisualTokens.cardSurface(p.dark))) {
                     val weekendInk = calendarWeekendInk(p)
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        NavGlassIconAction(
-                            "chevron-left", p.text, localized("Предыдущий месяц", "Previous month", lang),
-                        ) {
-                            if (month == 1) { month = 12; year-- } else month--
-                        }
-                        Spacer(Modifier.weight(1f))
-                        NavGlassIconAction(
-                            "chevron-right", p.text, localized("Следующий месяц", "Next month", lang),
-                        ) {
-                            if (month == 12) { month = 1; year++ } else month++
-                        }
-                    }
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = 0.dp),
                         horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -400,15 +387,6 @@ fun PlanScreenV2(
                     }
                 }
                 else -> Column {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        NavGlassIconAction(
-                            "chevron-left", p.text, localized("К месяцу", "Back to month", lang),
-                        ) { level = 1 }
-                        Spacer(Modifier.weight(1f))
-                        NavGlassIconAction(
-                            "calendar", p.text, localized("Выбрать год", "View year", lang),
-                        ) { level = 0 }
-                    }
                     // Keep the week visible in Day mode, like the reference
                     // calendar, without changing task recurrence or completion.
                     val visibleWeek = navCalendarWeekDates(selectedDay)
