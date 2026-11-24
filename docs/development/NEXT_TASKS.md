@@ -568,3 +568,12 @@
 - [ ] User export FULL profiles, install beta15 over beta14 in place (never uninstall). Record on HONOR: slow click across tabs, rapid alternating clicks, repeated click active tab, drag/release from active lens and whether larger jump grows naturally without lag/overshoot or intermediate page flips.
 - [ ] Fine-tune only animation response after owner review of beta15; preserve semantic colors/filled glyphs, main/stable feed and all business logic.
 
+## NEXT — 2026-11-24 beta16 real-device QA for velocity-based lens
+- [x] Examine owner uploaded `486876.mp4` (NavTasks) vs `486877.mp4` (HONOR Calendar) frame-by-frame. Major difference: beta15 completes jump, holds expanded, then contracts; reference continuously grows/shrinks with motion, responds rapidly.
+- [x] Backup beta15 exact HEAD `bd0a6738ef5b3207a1ee50caf36908b1cec82435`, isolated beta16 branch.
+- [x] Remove awaited `lensExpansion` coroutine and replace with physical velocity-driven enlargement/material derived from same `lensPosition` spring. One 980 stiffness/.78 damping spring; `NavLiquidDockMotion` centralizes fraction in tab-slots/sec. Finger drag uses event delta/time estimate; no intermediate navigation, four filled coral glyphs and optics unchanged.
+- [x] JVM/release/original signer CI `45329621614` PASS, signed prerelease beta16 code260 SHA256 `c6649b91abdcf099b0f86541a630923140254b9038606001a6df1f6d03e2595e`. Separately signed stable-functional emergency recovery code261 `45329660126` PASS.
+- [ ] User full profile/media export then beta16 IN-PLACE update on HONOR; compare single jump and rapid alternating 3–4 tabs to Calendar, document any unnatural snap/pause/overstretch, test day/night, re-tap, direct lens drag/release and all original task records.
+- [ ] If actual render has jank even without coroutine delay, investigate drawBackdrop/layout invalidation and frame rendering narrowly; avoid changes to app routing/storage logic. Adjust spring constants only after visual evidence. Do not declare dock approved or stable 1.2.0 until user signs off.
+- [ ] Public stable OTA remains 1.1.0/code230. Emergency recovery code261 only if serious regression; after installing code261 future codes >261.
+
