@@ -10,11 +10,11 @@ class NavDockNightGraphiteTest {
     @Test fun primaryNightSelectionUsesNeutralGraphiteAndPreservesDay() {
         val dock = File("src/main/java/com/navtasks/app/NavLiquidGlassDock.kt").readText()
         assertTrue(dock.contains("Color(0xFF3A3A3C).copy(alpha = .93f)"))
-        assertTrue(dock.contains("Color(0xFF9C9C9F).copy(alpha = .12f)"))
+        assertTrue(dock.contains("drawRect(resting)"))
         assertFalse(dock.contains("Color(0xFF3F4B58).copy(alpha = .82f)"))
         assertFalse(dock.contains("Color(0xFF75B8F0).copy(alpha = .13f)"))
         assertTrue(dock.contains("else Color(0xFFD7D8DA).copy(alpha = .87f)"))
-        assertTrue(dock.contains("else Color.White.copy(alpha = .19f)"))
+        assertFalse(dock.contains("glassLabLensMatte"))
         assertTrue(dock.contains("NavLiquidDockTabs.activeInk(dark)"))
         assertTrue(dock.contains("detectHorizontalDragGestures("))
         assertTrue(dock.contains("NavLiquidDockOptics.selection.blurDp"))
