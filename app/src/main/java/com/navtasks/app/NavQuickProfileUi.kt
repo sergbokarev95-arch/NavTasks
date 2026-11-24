@@ -14,12 +14,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+
+/** Shared profile-only card material; nested dialog rows are slightly lifted for contrast. */
+internal object NavProfileVisualTokens {
+    fun cardSurface(dark: Boolean, nested: Boolean): Color =
+        if (dark && nested) Color(0xFF2A2A2C) else NavTodayVisualTokens.cardSurface(dark)
+}
+
+internal fun Modifier.profileCardStyle(
+    p: NavPalette, selected: Boolean, radius: Dp, nested: Boolean = false,
+): Modifier {
+    val shape = RoundedCornerShape(radius)
+    return clip(shape)
+        .background(NavProfileVisualTokens.cardSurface(p.dark, nested), shape)
+        .then(if (selected) Modifier.border(
+            NavTodayVisualTokens.selectedDateRimDp.dp,
+            NavTodayVisualTokens.accentInk(p.dark), shape,
+        ) else Modifier)
+}
 
 /** Physically meaningful two-finger pinch thresholds; pure/JVM-testable. */
 internal fun isQuickProfilePinch(
@@ -110,38 +130,26 @@ internal fun NavQuickProfilePicker(
             ) {
                 profiles.forEach { profile ->
                     val selected = profile.id == activeId
-                    val shape = RoundedCornerShape(16.dp)
                     Row(
                         Modifier.fillMaxWidth()
-                            .background(
-                                if (selected) p.selectionFill
-                                else if (p.dark) Color(0xFF283643)
-                                else Color(0xFFE9F1F7),
-                                shape,
-                            )
-                            .border(
-                                1.dp,
-                                if (selected) Color.White.copy(alpha = 0.24f)
-                                else p.border.copy(alpha = .65f),
-                                shape,
-                            )
+                            .profileCardStyle(p, selected, radius = 16.dp, nested = true)
                             .clickable { onSelect(profile.id) }
                             .padding(horizontal = 14.dp, vertical = 13.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(
-                                profile.title, color = if (selected) p.selectionContent else p.text, fontSize = 16.sp,
+                                profile.title, color = p.text, fontSize = 16.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                             )
                             Text(
                                 if (profile.kind == NavProfileKind.PERSONAL)
                                     localized("Личное", "Personal", lang)
                                 else localized("Судовой профиль", "Vessel profile", lang),
-                                color = if (selected) p.selectionContent.copy(alpha = 0.86f) else p.muted, fontSize = 12.sp,
+                                color = p.muted, fontSize = 12.sp,
                             )
                         }
-                        if (selected) NavGlassGlyph("check", p.selectionContent, Modifier.size(23.dp))
+                        if (selected) NavGlassGlyph("check", NavTodayVisualTokens.accentInk(p.dark), Modifier.size(23.dp))
                     }
                 }
             }

@@ -553,7 +553,6 @@ fun NavTasksApp(
                         templateFilter = Frequency.DAILY
                         expandedRun = null
                     },
-                    onSettings = { showProfiles = false; showSettings = true },
                 )
             } else if (showSettings) {
                 SettingsScreen(settings, store, palette, onBack = { showSettings = false },

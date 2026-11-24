@@ -33,7 +33,6 @@ fun ProfilesScreen(
     p: NavPalette,
     lang: UiLanguage,
     onBack: () -> Unit,
-    onSettings: () -> Unit,
 ) {
     var createOpen by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
@@ -67,8 +66,6 @@ fun ProfilesScreen(
             Spacer(Modifier.width(12.dp))
             Text(localized("Профили", "Profiles", lang), color = p.text,
                 fontSize = 24.sp, modifier = Modifier.weight(1f))
-            if (profileBackdrop != null) Spacer(Modifier.size(44.dp))
-            else NavGlassCircleButton(p, "settings", onSettings)
         }
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()),
@@ -81,8 +78,7 @@ fun ProfilesScreen(
             profiles.profiles.forEach { profile ->
                 val current = profiles.activeId == profile.id
                 Row(
-                    Modifier.fillMaxWidth().navGlass(p, radius = 18.dp,
-                        role = if (current) GlassRole.NESTED_TASK else GlassRole.PANEL)
+                    Modifier.fillMaxWidth().profileCardStyle(p, current, radius = 18.dp)
                         .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -97,10 +93,10 @@ fun ProfilesScreen(
                                     "Tasks · AMOS · Maintenance · Handover · History", lang),
                             color = p.muted, fontSize = 12.sp)
                     }
-                    if (current) NavGlassGlyph("check", p.successText, Modifier.size(19.dp))
+                    if (current) NavGlassGlyph("check", NavTodayVisualTokens.accentInk(p.dark), Modifier.size(19.dp))
                     Spacer(Modifier.width(8.dp))
                     NavGlassIconAction(
-                        "edit", p.blue, localized("Изменить профиль", "Edit profile", lang),
+                        "edit", p.text, localized("Изменить профиль", "Edit profile", lang),
                     ) {
                         editing = profile.id
                         name = profile.title
@@ -119,12 +115,12 @@ fun ProfilesScreen(
                 }
             }
             Box(
-                Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.CONTROL)
+                Modifier.fillMaxWidth().profileCardStyle(p, selected = false, radius = 18.dp)
                     .glassClickable { name = ""; editing = null; createOpen = true }
                     .padding(16.dp), contentAlignment = Alignment.Center,
             ) {
                 Text(localized("+ Добавить судно", "+ Add vessel", lang),
-                    color = p.blue, fontSize = 15.sp)
+                    color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 15.sp)
             }
             if (error != null) Text(error.orEmpty(), color = p.dangerText, fontSize = 12.sp)
             Spacer(Modifier.height(32.dp))
@@ -134,10 +130,6 @@ fun ProfilesScreen(
         Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
             .padding(start = 16.dp, top = 9.dp)) {
             NavLiquidGlassCircleButton(p, profileBackdrop, "back", onBack)
-        }
-        Box(Modifier.align(Alignment.TopEnd).statusBarsPadding()
-            .padding(end = 16.dp, top = 9.dp)) {
-            NavLiquidGlassCircleButton(p, profileBackdrop, "settings", onSettings)
         }
     }
     }
