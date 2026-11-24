@@ -6,7 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-/** Beta20: slower continuous landing with the same 15% compression. */
+/** Beta21: longer visible expansion with unchanged landing compression. */
 class NavDockLandingMotionTest {
     @Test fun deeper85PercentSquashRecoversSmoothlyAfterTouchdown() {
         assertEquals(.85f, NavLiquidDockMotion.landingSquashScale, 0f)
@@ -19,16 +19,19 @@ class NavDockLandingMotionTest {
         assertEquals(NavLiquidDockMotion.normalCompressionEndMillis +
             NavLiquidDockMotion.landingRecoverMillis,
             NavLiquidDockMotion.normalMotionEndMillis)
-        assertEquals(432, NavLiquidDockMotion.normalMotionEndMillis)
-        assertTrue(NavLiquidDockMotion.landingRecoverMillis <= 125)
-        assertTrue(NavLiquidDockMotion.normalMotionEndMillis <= 450)
-        assertTrue(NavLiquidDockMotion.normalMotionEndMillis >= 410)
+        assertEquals(471, NavLiquidDockMotion.normalMotionEndMillis)
+        assertEquals(120, NavLiquidDockMotion.landingRecoverMillis)
+        assertEquals(76, NavLiquidDockMotion.landingCompressMillis)
+        assertEquals(120, NavLiquidDockMotion.expansionRiseMillis)
+        assertEquals(155, NavLiquidDockMotion.expansionFallMillis)
+        assertTrue(NavLiquidDockMotion.normalMotionEndMillis <= 490)
+        assertTrue(NavLiquidDockMotion.normalMotionEndMillis >= 455)
     }
 
     @Test fun movementIsSlightlySlowerButRetainsOriginalJumpRange() {
-        assertTrue(NavLiquidDockMotion.positionStiffness == 420f)
-        assertTrue(NavLiquidDockMotion.positionStiffness >= 400f)
-        assertTrue(NavLiquidDockMotion.positionStiffness < 660f)
+        assertTrue(NavLiquidDockMotion.positionStiffness == 350f)
+        assertTrue(NavLiquidDockMotion.positionStiffness >= 330f)
+        assertTrue(NavLiquidDockMotion.positionStiffness < 420f)
         assertTrue(NavLiquidDockMotion.positionDamping >= .85f)
         assertEquals(1.27f, NavLiquidDockMotion.peakScaleForTap(1f, false), .0001f)
         assertEquals(1.30f, NavLiquidDockMotion.peakScaleForTap(2f, false), .0001f)
@@ -45,6 +48,7 @@ class NavDockLandingMotionTest {
         assertEquals(1.10f, NavLiquidDockMotion.peakScaleForTap(1f, true), .0001f)
         val dock = File("src/main/java/com/navtasks/app/NavLiquidGlassDock.kt").readText()
         assertTrue(dock.contains("animationSpec = keyframes {"))
+        assertTrue(dock.contains("peak at NavLiquidDockMotion.expansionRiseMillis using\n                                                FastOutSlowInEasing"))
         assertTrue(dock.contains("NavLiquidDockMotion.landingSquashScale at"))
         assertTrue(dock.contains("NavLiquidDockMotion.normalCompressionEndMillis"))
         assertTrue(dock.contains("NavLiquidDockMotion.normalMotionEndMillis"))

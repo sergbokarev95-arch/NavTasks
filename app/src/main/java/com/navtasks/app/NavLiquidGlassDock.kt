@@ -244,8 +244,9 @@ fun NavLiquidGlassBottomBar(
                                             1f at NavLiquidDockMotion.rapidMotionEndMillis using
                                                 FastOutSlowInEasing
                                         } else {
+                                            // Ease out of the enlarged shape rather than shrinking abruptly.
                                             peak at NavLiquidDockMotion.expansionRiseMillis using
-                                                LinearOutSlowInEasing
+                                                FastOutSlowInEasing
                                             1f at NavLiquidDockMotion.normalLandingStartMillis using
                                                 FastOutSlowInEasing
                                             NavLiquidDockMotion.landingSquashScale at
