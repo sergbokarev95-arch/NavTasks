@@ -666,3 +666,5 @@
 ## 2026-11-25 — Beta33 profile dialogs and Personal editor polish (CI pending)
 - Beta32 code292 CI 45436882645 SUCCESS, published v1.2.0-beta.32; recovery293 CI 45436971472 SUCCESS. Backup `backup/navtasks-1.2.0-beta32-before-editor-polish`.
 - Owner screenshots: old blue input/action styling in profile dialogs, Personal search and rich editor. Scoped neutral cards, coral focus/selected formatting ink, neutral cancel, red destructive action retained; Personal search placeholder corrected. Vessel Handover and explicit formatting palette unchanged. Beta33 code294; recovery295 required. Full CI and device QA pending; stable OTA untouched.
+
+- CI attempt 45442306789 / recovery 45442380426 failed only two hardcoded versionCode assertions (444/446 and 397/399 passed). Updated the exact expected version in both tests on each respective branch; all package/OTA assertions retained. Rebuild and signature verification pending.
