@@ -433,3 +433,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Initial CI failed solely missing fallback FontWeight import; corrected. Final original-signed CI `45324576506` PASS, prerelease `v1.2.0-beta.13` code254 signed source `1f4666f694f1eefadf50a88d7f585a28049f1322`, APK SHA256 `ec2980d30a071d79d6e0a14962cb30d4f7d777b0b70b5a118421d5c058aae15b`. Emergency original stable-functional code255 CI `45324180505` PASS, recovery SHA256 `5b10b011158d73514d196ced7684d9f81520b45b4d8f2fc784834839e83f394c`.
 - Source beta12 backup exists. Main/stable OTA remain unchanged. Phone-rendered hue, alpha cutouts, icon semantics, font size, drag performance not yet accepted by owner.
 
+## 2026-11-24 — beta14 smooth dock slide signed, HONOR approval pending
+- Based on `486869.mp4` split NavTasks/HONOR Calendar reference, removed competing selected lens stretch/rebound and matte fade that made beta13 appear hesitant after tap. The capsule now keeps 52dp size, stable neutral fill/highlight and one horizontal spring .95/850; small re-tap pulse 1.025. Direct finger drag, coral icons, glass refraction and four destinations unchanged.
+- Feature `feature/navtasks-1.2.0-beta14-calendar-dock-motion`, beta13 protected `backup/navtasks-1.2.0-beta13-before-dock-motion`. Original-key CI `45326411744` SUCCESS, released `v1.2.0-beta.14` code256 SHA256 `481464db6c38406cd321b0a5fcb2f121c3b06fbcaca6bce82a772fc07959d1f9`. Signed exact-stable functional emergency code257 CI `45325995950` PASS.
+- No real-device acceptance. Public stable 1.1.0/code230 unchanged; do not declare dock finalized yet.
+
