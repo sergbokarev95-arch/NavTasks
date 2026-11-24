@@ -19,9 +19,9 @@ internal object NavLiquidDockTabs {
         1f + (movingScale - 1f) * progress.coerceIn(0f, 1f)
 
     // Based on the user's HONOR Calendar screen recording. Active icon/label
-    // are coral, not system blue. This token is LOCAL to the bottom dock.
+    // use the same vivid saturated coral in both themes. Dock only.
     fun activeInk(dark: Boolean): Color =
-        if (dark) Color(0xFFFF7857) else Color(0xFFFF5C32)
+        Color(0xFFFF5533)
 
     // A dragged lens must stay within the real four-slot dock and commit
     // exactly ONE destination only when the finger is released.
