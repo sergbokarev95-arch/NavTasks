@@ -101,13 +101,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-            NavTasksApp(
-                store = taskStore, settings = appSettings, profiles = profileStore,
-                openRequest = openRequest,
-                onOpenRequestHandled = { handledSerial ->
-                    if (openRequest?.serial == handledSerial) openRequest = null
-                },
-            )
+            NavPopoverBackdropHost {
+                NavTasksApp(
+                    store = taskStore, settings = appSettings, profiles = profileStore,
+                    openRequest = openRequest,
+                    onOpenRequestHandled = { handledSerial ->
+                        if (openRequest?.serial == handledSerial) openRequest = null
+                    },
+                )
+            }
             val receipt = installedUpdateNotice
             if (receipt != null) {
                 NavUpdateInstalledNotice(

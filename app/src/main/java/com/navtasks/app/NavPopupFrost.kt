@@ -6,11 +6,23 @@ import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.hazeEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -19,9 +31,61 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
 
-/** Only native floating dialogs. Existing Liquid Glass dock shader is untouched. */
+/** Neutral HONOR-reference popup material; no changes to dock optics or global palette. */
 internal object NavPopupFrostTokens {
-    const val blurRadiusDp = 32f
+    const val blurRadiusDp = 10f
+    const val tintAlpha = .90f
+    const val rimWidthDp = .6f
+
+    fun fill(dark: Boolean): Color =
+        if (dark) Color(0xFF222222) else Color(0xFFF6F7F9)
+
+    fun rim(dark: Boolean): Color =
+        if (dark) Color(0xFF4A4A4A).copy(alpha = .65f) else Color.White.copy(alpha = .88f)
+
+    fun divider(dark: Boolean): Color =
+        if (dark) Color.White.copy(alpha = .055f) else Color.Black.copy(alpha = .045f)
+}
+
+/**
+ * Dedicated source for popup windows. Do not share the dock's HazeState:
+ * Haze 1.7.1 resolves coordinates across windows independently for this source.
+ * Record the Activity content only while an anchored menu is open.
+ */
+internal class NavPopoverCapture {
+    val haze = HazeState()
+    var openMenus by mutableIntStateOf(0)
+}
+
+internal val LocalNavPopoverCapture = compositionLocalOf<NavPopoverCapture?> { null }
+
+@Composable
+internal fun NavPopoverBackdropHost(content: @Composable () -> Unit) {
+    val capture = remember { NavPopoverCapture() }
+    CompositionLocalProvider(LocalNavPopoverCapture provides capture) {
+        Box(Modifier.fillMaxSize().then(
+            if (capture.openMenus > 0) Modifier.hazeSource(capture.haze) else Modifier
+        )) {
+            content()
+        }
+    }
+}
+
+/** Draw actual source pixels, lightly blurred and strongly tinted; never expose raw text. */
+internal fun Modifier.navPopoverFrost(capture: NavPopoverCapture?, dark: Boolean): Modifier {
+    val fill = NavPopupFrostTokens.fill(dark)
+    if (capture == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+        return background(fill)
+    return this.background(fill).hazeEffect(
+        state = capture.haze,
+        style = HazeStyle(
+            backgroundColor = fill,
+            blurRadius = NavPopupFrostTokens.blurRadiusDp.dp,
+            tints = listOf(HazeTint(fill.copy(alpha = NavPopupFrostTokens.tintAlpha))),
+            fallbackTint = HazeTint(fill),
+            noiseFactor = 0f,
+        ),
+    )
 }
 
 /**
@@ -72,19 +136,9 @@ internal fun Modifier.navPopupGlassSurface(
     frosted: Boolean,
     radius: Dp = 24.dp,
 ): Modifier {
-    if (!frosted) return navDialogSurface(p, radius)
     val shape = RoundedCornerShape(radius)
-    val fill = if (p.dark) Color(0xE025292E) else Color.White
-    val rim = Brush.verticalGradient(
-        if (p.dark) listOf(
-            Color.White.copy(alpha = .51f),
-            Color(0xFF6F7E8D).copy(alpha = .42f),
-            Color(0xFF485767).copy(alpha = .52f),
-        ) else listOf(
-            Color.White.copy(alpha = .88f),
-            Color(0xFFE0E2E8).copy(alpha = .68f),
-            Color(0xFFE0E2E8).copy(alpha = .80f),
-        )
-    )
-    return this.clip(shape).background(fill, shape).border(1.dp, rim, shape)
+    val base = NavPopupFrostTokens.fill(p.dark)
+    val fill = if (frosted) base.copy(alpha = NavPopupFrostTokens.tintAlpha) else base
+    return this.clip(shape).background(fill, shape)
+        .border(NavPopupFrostTokens.rimWidthDp.dp, NavPopupFrostTokens.rim(p.dark), shape)
 }

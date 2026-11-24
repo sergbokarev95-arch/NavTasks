@@ -9,9 +9,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
@@ -29,23 +31,27 @@ fun NavPopoverMenu(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(22.dp)
+    val capture = LocalNavPopoverCapture.current
+    DisposableEffect(expanded, capture) {
+        if (expanded && capture != null) capture.openMenus++
+        onDispose {
+            if (expanded && capture != null)
+                capture.openMenus = (capture.openMenus - 1).coerceAtLeast(0)
+        }
+    }
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
         modifier = modifier.widthIn(min = 215.dp, max = 310.dp)
-            .border(
-                1.dp,
-                if (p.dark) Color(0xFF4A5058)
-                else Color(0xFFE0E2E8),
-                shape,
-            ),
+            .shadow(8.dp, shape, clip = false)
+            .clip(shape)
+            .navPopoverFrost(capture, p.dark)
+            .border(NavPopupFrostTokens.rimWidthDp.dp, NavPopupFrostTokens.rim(p.dark), shape),
         shape = shape,
-        // A native DropdownMenu is rendered in a separate popup window;
-        // use the same neutral palette, but do not mistake transparency for
-        // actual refracting Liquid Glass from the page's separate backdrop.
-        containerColor = if (p.dark) Color(0xFF25292E) else Color.White,
+        // The captured source is painted before the crisp menu content.
+        containerColor = Color.Transparent,
         tonalElevation = 0.dp,
-        shadowElevation = 8.dp,
+        shadowElevation = 0.dp,
         content = content,
     )
 }
@@ -79,7 +85,7 @@ fun NavPopoverAction(
 @Composable
 fun NavPopoverDivider(p: NavPalette) {
     HorizontalDivider(
-        color = p.border.copy(alpha = if (p.dark) 0.44f else 0.66f),
+        color = NavPopupFrostTokens.divider(p.dark),
         thickness = 0.6.dp,
         modifier = Modifier.padding(horizontal = 13.dp),
     )
@@ -117,7 +123,8 @@ fun NavGlassAlertDialog(
         NavApplyDialogFrost(frost)
         Column(
             Modifier.fillMaxWidth().widthIn(max = 420.dp)
-                .navPopupGlassSurface(p, frosted = frost)
+                .then(if (solidSurface) Modifier.navDialogSurface(p)
+                    else Modifier.navPopupGlassSurface(p, frosted = frost))
                 .padding(horizontal = 20.dp, vertical = 19.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
