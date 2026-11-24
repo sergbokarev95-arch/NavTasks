@@ -1012,14 +1012,15 @@ fun RoundCheck(
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            Modifier.size(29.dp)
+            Modifier.size(NavTodayVisualTokens.checkDiameterDp.dp)
                 .background(if (checked) p.mint else Color.Transparent, CircleShape)
-                .border(2.dp, if (checked) p.mint else p.blue, CircleShape),
+                .border(NavTodayVisualTokens.checkStrokeDp.dp,
+                    if (checked) p.mint else NavTodayVisualTokens.uncheckedInk(p.dark), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             if (checked) NavGlassGlyph(
                 "check", if (p.dark) Color(0xFF103F49) else Color.White,
-                Modifier.size(18.dp),
+                Modifier.size(NavTodayVisualTokens.checkedGlyphDp.dp),
             )
         }
     }
@@ -1578,7 +1579,7 @@ fun RunTileV2(
             store.postpone(run.key, target)
         }
     }
-    val shape = RoundedCornerShape(15.dp)
+    val shape = RoundedCornerShape(NavTodayVisualTokens.cardRadiusDp.dp)
     Column(
         Modifier.fillMaxWidth().graphicsLayer {
             // Straight down only: the old up-kick and stretch are removed.
@@ -1587,14 +1588,14 @@ fun RunTileV2(
             translationY = amount * NavTaskCompletionMotion.dropDistanceDp.dp.toPx()
             scaleX = pressScale
             scaleY = pressScale
-        }.navGlass(p, radius = 15.dp,
-            role = if (run.checklist.isEmpty()) GlassRole.TASK else GlassRole.NESTED_TASK)
+        }.clip(shape)
+            .background(NavTodayVisualTokens.cardSurface(p.dark), shape)
             .then(
                 if (isOtherDay) Modifier.border(
-                    1.dp, otherDayAccent.copy(alpha = 0.58f), RoundedCornerShape(15.dp)
+                    1.dp, otherDayAccent.copy(alpha = 0.58f), shape
                 ) else Modifier
             )
-            .background(p.mint.copy(alpha = flash.value * 0.36f), RoundedCornerShape(15.dp)),
+            .background(p.mint.copy(alpha = flash.value * 0.36f), shape),
     ) {
         // Preserve 44dp control hit targets while reducing dead vertical space.
         Row(Modifier.padding(start = 11.dp, end = 6.dp, top = 3.dp, bottom = 3.dp),
