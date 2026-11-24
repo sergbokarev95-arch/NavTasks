@@ -425,8 +425,9 @@ fun NavGlassBottomBar(
                         label = "navTabPress",
                     )
                     val view = LocalView.current
-                    // Strong blue belongs to the glyph and caption, not the glass lens.
-                    val activeBlue = if (p.dark) Color(0xFF329CFF) else Color(0xFF087DFA)
+                    // Keep older-Android Haze fallback in the same dock-only
+                    // coral color scheme; do not change the refractive material.
+                    val activeInk = NavLiquidDockTabs.activeInk(p.dark)
                     Column(
                         Modifier.weight(1f).fillMaxHeight()
                             .clip(RoundedCornerShape(21.dp))
@@ -450,14 +451,14 @@ fun NavGlassBottomBar(
                                 2 -> "handover"
                                 else -> "reference"
                             },
-                            color = if (active) activeBlue else p.text.copy(alpha = 0.89f),
+                            color = if (active) activeInk else p.text.copy(alpha = 0.89f),
                             modifier = Modifier.size(24.dp).graphicsLayer {
                                 scaleX = pressScale
                                 scaleY = pressScale
                             },
                         )
                         Spacer(Modifier.height(1.dp))
-                        Text(names[index], color = if (active) activeBlue else p.muted, fontSize = 10.sp)
+                        Text(names[index], color = if (active) activeInk else p.muted, fontSize = 10.sp)
                     }
                 }
             }
