@@ -15,6 +15,6 @@ class NavLiquidGlassAllActionsTest {
         assertEquals(1.5f, NavLiquidDockOptics.selection.blurDp, 0f)
         assertEquals(10f, NavLiquidDockOptics.selection.refractionHeightDp, 0f)
         assertEquals(18f, NavLiquidDockOptics.selection.refractionAmountDp, 0f)
-        assertEquals(1.30f, NavLiquidDockTabs.movingScale, 0f)
+        assertEquals(1f, NavLiquidDockTabs.movingScale, 0f)
     }
 }
