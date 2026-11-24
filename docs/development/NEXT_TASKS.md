@@ -559,3 +559,11 @@
 - [ ] User: export full profiles, install beta13 over beta12 without uninstall, inspect four filled pictograms and coral ink in light+night, compare directly with HONOR Calendar, verify no visual clipping/blur glitches and cutouts are truly transparent, check direct lens drag and taps/re-tap, confirm records unchanged.
 - [ ] Any follow-up should change dock pictogram artwork/tint alone until owner visually approves; only after dock accepted proceed to other home screen elements. Stable 1.2.0 OTA not authorized, stable feed remains 1.1.0/code230. After emergency code255 future versions require code>255.
 
+## NEXT — 2026-11-24 beta14 Calendar-like dock motion device QA
+- [x] Inspect `486869.mp4` showing beta13 vs HONOR Calendar. Identify extra independent scale and matte springs as likely source of perceived lag.
+- [x] Exact beta13 source backup and isolated feature branch; keep four routes, labels/icons, optics and business logic unchanged.
+- [x] Keep 52dp selected capsule during movement (movingScale 1.0), eliminate extra stretch/rebound and traveling-to-resting tint fade, use one 850-stiffness .95-damping horizontal spring; reduce repeat-tap pulse to 1.025. Preserve finger drag direct frame tracking.
+- [x] Correct stale tests asserting 130% scale; full signed CI `45326411744` SUCCESS from `2b9fd18bc8b2dd1a795076d127465c55f2d529f1`, prerelease beta14 code256 SHA256 `481464db6c38406cd321b0a5fcb2f121c3b06fbcaca6bce82a772fc07959d1f9`. Emergency exact stable-functional code257 CI `45325995950` PASS.
+- [ ] User export FULL profile backups, install beta14 code256 on HONOR over beta13 IN PLACE, compare tap velocity and settle time, rapid taps, drag-to-release, active re-tap pulse, light/night. Verify no pause/color flicker, clipping, view switching or data regression.
+- [ ] Fine-tune ONLY spring parameters if owner finds motion unlike Calendar; obtain explicit dock acceptance before changing other main-screen visuals. Stable 1.2.0 not authorized, public stable feed stays 1.1.0/code230. Emergency recovery code257 only on serious regression, requires future code>257.
+
