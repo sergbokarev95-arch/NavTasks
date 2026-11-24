@@ -221,7 +221,7 @@ fun NavLiquidGlassBottomBar(
                                 lensExpansion.animateTo(
                                     1f,
                                     animationSpec = tween(
-                                        durationMillis = NavLiquidDockMotion.expansionFallMillis,
+                                        durationMillis = NavLiquidDockMotion.dragReleaseMillis,
                                         easing = FastOutSlowInEasing,
                                     ),
                                 )

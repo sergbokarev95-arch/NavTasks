@@ -6,7 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-/** Beta19: more fluid landing with a controlled 15% compression. */
+/** Beta20: slower continuous landing with the same 15% compression. */
 class NavDockLandingMotionTest {
     @Test fun deeper85PercentSquashRecoversSmoothlyAfterTouchdown() {
         assertEquals(.85f, NavLiquidDockMotion.landingSquashScale, 0f)
@@ -19,16 +19,16 @@ class NavDockLandingMotionTest {
         assertEquals(NavLiquidDockMotion.normalCompressionEndMillis +
             NavLiquidDockMotion.landingRecoverMillis,
             NavLiquidDockMotion.normalMotionEndMillis)
-        assertEquals(344, NavLiquidDockMotion.normalMotionEndMillis)
-        assertTrue(NavLiquidDockMotion.landingRecoverMillis <= 110)
-        assertTrue(NavLiquidDockMotion.normalMotionEndMillis < 370)
-        assertTrue(NavLiquidDockMotion.normalMotionEndMillis > 300)
+        assertEquals(432, NavLiquidDockMotion.normalMotionEndMillis)
+        assertTrue(NavLiquidDockMotion.landingRecoverMillis <= 125)
+        assertTrue(NavLiquidDockMotion.normalMotionEndMillis <= 450)
+        assertTrue(NavLiquidDockMotion.normalMotionEndMillis >= 410)
     }
 
     @Test fun movementIsSlightlySlowerButRetainsOriginalJumpRange() {
-        assertTrue(NavLiquidDockMotion.positionStiffness < 860f)
-        assertTrue(NavLiquidDockMotion.positionStiffness >= 650f)
-        assertTrue(NavLiquidDockMotion.positionStiffness < 720f)
+        assertTrue(NavLiquidDockMotion.positionStiffness == 420f)
+        assertTrue(NavLiquidDockMotion.positionStiffness >= 400f)
+        assertTrue(NavLiquidDockMotion.positionStiffness < 660f)
         assertTrue(NavLiquidDockMotion.positionDamping >= .85f)
         assertEquals(1.27f, NavLiquidDockMotion.peakScaleForTap(1f, false), .0001f)
         assertEquals(1.30f, NavLiquidDockMotion.peakScaleForTap(2f, false), .0001f)
@@ -37,6 +37,9 @@ class NavDockLandingMotionTest {
     }
 
     @Test fun fullSquashDoesNotReplayOnRapidRetargetOrDrag() {
+        assertEquals(176, NavLiquidDockMotion.rapidMotionEndMillis)
+        assertEquals(100, NavLiquidDockMotion.dragReleaseMillis)
+        assertEquals(225L, NavLiquidDockMotion.rapidRetargetWindowMillis)
         assertTrue(NavLiquidDockMotion.rapidMotionEndMillis <
             NavLiquidDockMotion.normalMotionEndMillis)
         assertEquals(1.10f, NavLiquidDockMotion.peakScaleForTap(1f, true), .0001f)

@@ -600,3 +600,8 @@
 - [ ] User FULL profile export, in-place install beta19 on HONOR, compare hop/landing squash/rebound with calendar; test rapid repeated taps, drag-release, both themes and profiles.
 - [ ] Tune only dock animations if still necessary; never regress task business logic or promote stable without approval.
 
+
+## 2026-11-24 — beta20 slower Liquid Glass dock (CI and device acceptance pending)
+- Owner reports beta19 is still too fast; preserve 85% landing and 127–130% visible expansion. Exact beta19 HEAD ed423bf4970188231f828719cf6fb6290a0eacd7 backed up at `backup/navtasks-1.2.0-beta19-before-slower-motion`.
+- Isolated `feature/navtasks-1.2.0-beta20-slower-liquid-dock`, 1.2.0-beta.20 code268. Horizontal stiffness 660→420, damping .86 unchanged; normal scale envelope 110+126+76+120=432ms vs 344ms, no independent post-landing wait. Rapid 176ms unchanged; rapid retarget window 225ms, direct drag release 100ms preserved. Existing optics, glyphs, palette, route and data logic untouched.
+- Updated motion regression tests and copied original-key source-only prerelease workflow. CI, APK checksum and physical HONOR result are PENDING. Do not claim success or install until signed release is verified. Stable OTA 1.1.0/code230 and main unchanged. Previous emergency code267 cannot install over code268; higher-code stable-functional recovery required before recommending beta20 installation.
