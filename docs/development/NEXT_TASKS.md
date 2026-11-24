@@ -544,3 +544,11 @@
 - [ ] Compare actual video with reference, make only targeted follow-up for any drag registration issue/visual stutter/tint mismatch; never rewrite the task model or established four dock routes. Do NOT change global app accent until each UI component receives its own agreed reference and QA.
 - [ ] Stable 1.2.0 OTA remains not authorized; public channel stays 1.1.0/code230. Recovery code251 requires future versionCode >251 if used.
 
+## NEXT — 2026-11-24 beta12 graphite selected dock HONOR QA
+- [x] Backup beta11 source; isolated night-only primary selected capsule graphite and neutral moving tint, matching old Android fallback.
+- [x] Keep dock glass physics/geometry, coral tint, finger drag, tap/re-tap, Day and task data unchanged. Add regression tests.
+- [x] Full original-key signed CI `45321897336` PASS; `v1.2.0-beta.12` code252 sha256 `404efb72f7164084b89d43c4c28a8dd75fd86f2ece0bb22e0ccd07a46cafbc1c`, plus separate stable-functional emergency code253 source prerelease `v1.1.0-recovery-code253`.
+- [ ] Owner: FULL profile backup, install beta12 code252 over beta11 code250, compare Night settled active capsule with HONOR Calendar screenshot (no blue), test motion during drag and tap in both themes, checked active coral legibility, touch handling and main dock no regression.
+- [ ] Fix only any remaining local night capsule tint or layering, then ask owner to approve dock. Do NOT begin blanket interface recoloring until this element is accepted.
+- [ ] Do not change stable OTA v1.1.0/code230; recovery code253 ONLY for severe regression and future versionCode >253 if installed.
+
