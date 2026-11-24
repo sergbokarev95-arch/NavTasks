@@ -428,3 +428,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - beta11 source backup `backup/navtasks-1.2.0-beta11-before-graphite-selection`, feature `feature/navtasks-1.2.0-beta12-night-graphite-selection`. CI `45321897336` PASS, immutable release `v1.2.0-beta.12` code252 SHA256 `404efb72f7164084b89d43c4c28a8dd75fd86f2ece0bb22e0ccd07a46cafbc1c`. Signed stable-function emergency code253 release `v1.1.0-recovery-code253` SHA256 `cb8fca991d914b8acf0f51c9c869a055f22261330b0df7c9067803d0b7576ced`.
 - Public stable OTA still 1.1.0/code230, main untouched, real HONOR night visual confirmation not yet reported.
 
+## 2026-11-24 — beta13 vivid solid dock icons signed; real HONOR review pending
+- User requested HONOR Calendar-like saturation and filled dock icon weight. Isolated `feature/navtasks-1.2.0-beta13-vivid-filled-dock-icons` now uses dock-only filled icons with transparent cutouts and active ink #FF5533 in BOTH themes; dock labels medium/semi-bold. Gray selected capsule, day/night backdrop, geometry and drag navigation retained.
+- Initial CI failed solely missing fallback FontWeight import; corrected. Final original-signed CI `45324576506` PASS, prerelease `v1.2.0-beta.13` code254 signed source `1f4666f694f1eefadf50a88d7f585a28049f1322`, APK SHA256 `ec2980d30a071d79d6e0a14962cb30d4f7d777b0b70b5a118421d5c058aae15b`. Emergency original stable-functional code255 CI `45324180505` PASS, recovery SHA256 `5b10b011158d73514d196ced7684d9f81520b45b4d8f2fc784834839e83f394c`.
+- Source beta12 backup exists. Main/stable OTA remain unchanged. Phone-rendered hue, alpha cutouts, icon semantics, font size, drag performance not yet accepted by owner.
+
