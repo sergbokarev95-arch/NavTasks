@@ -26,8 +26,8 @@ class NavLiquidDockDragTest {
     }
 
     @Test fun activeInkIsCoralNotBlueAndNightIsLegible() {
-        assertEquals(Color(0xFFFF5C32), NavLiquidDockTabs.activeInk(false))
-        assertEquals(Color(0xFFFF7857), NavLiquidDockTabs.activeInk(true))
+        assertEquals(Color(0xFFFF5533), NavLiquidDockTabs.activeInk(false))
+        assertEquals(Color(0xFFFF5533), NavLiquidDockTabs.activeInk(true))
         assertEquals(4, NavLiquidDockTabs.items.size)
     }
 
