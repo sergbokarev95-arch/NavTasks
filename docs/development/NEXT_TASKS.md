@@ -577,3 +577,11 @@
 - [ ] If actual render has jank even without coroutine delay, investigate drawBackdrop/layout invalidation and frame rendering narrowly; avoid changes to app routing/storage logic. Adjust spring constants only after visual evidence. Do not declare dock approved or stable 1.2.0 until user signs off.
 - [ ] Public stable OTA remains 1.1.0/code230. Emergency recovery code261 only if serious regression; after installing code261 future codes >261.
 
+## NEXT — HONOR QA beta17 visible elastic dock, 2026-11-24
+- [x] Save beta16 exact head `458a008e4faa1ab815f532e9284cbfde88ff5aa2` as `backup/navtasks-1.2.0-beta16-before-visible-lens-growth`.
+- [x] Replace v16 nearly invisible speed-only growth with guaranteed visible one-tab 1.27x scale, longer 1.30x and small 1.10x rapid redirects. Growth/return starts and finishes DURING horizontal travel, cancel/restart from current scale/position. No change to glass opacity system, filled icons, dock coordinates or data.
+- [x] Full CI `45333266125` SUCCESS, original signed `v1.2.0-beta.17` versionCode262, APK SHA256 `67c27482fc1403e87699678e5248170fd73cddb3ac3c03014df1ad6f8b81edc4`.
+- [ ] Confirm CI `45333317233` stable-functional fallback code263 signed/published, before offering emergency use.
+- [ ] Owner: export complete profiles, install beta17 code262 over beta16 code260 without uninstall; test single-tab visible zoom, longer jump, many rapid taps and immediate redirect, drag release, both themes. Capture short video if growth still invisible or timing unlike HONOR reference.
+- [ ] Do NOT declare dock approved until HONOR visuals verified. If still incorrect, target only lens animation and any actual clipping/opacity effect; do not touch app task/AMOS/Services/Handover/calendar business logic. Stable OTA 1.1.0 untouched.
+
