@@ -11,22 +11,22 @@ package com.navtasks.app
  * growth cycle again. All dimensions remain relative to the accepted dock.
  */
 internal object NavLiquidDockMotion {
-    // Slightly slower than beta17, keeping the same lively, interruptible hop.
-    const val positionStiffness = 720f
-    const val positionDamping = .80f
+    // Beta19: subtly slower, more damped travel without losing interruptibility.
+    const val positionStiffness = 660f
+    const val positionDamping = .86f
 
     // One continuous scale envelope runs concurrently with horizontal travel.
     // The capsule crosses its natural 1.0x size near touchdown, compresses
-    // to 0.95x as it settles, then immediately springs visually back to 1.0x.
-    const val expansionRiseMillis = 77
-    const val expansionFallMillis = 91
-    const val landingCompressMillis = 47
-    const val landingRecoverMillis = 78
-    const val landingSquashScale = .95f
+    // to 0.85x as it settles, then immediately springs visually back to 1.0x.
+    const val expansionRiseMillis = 86
+    const val expansionFallMillis = 100
+    const val landingCompressMillis = 62
+    const val landingRecoverMillis = 96
+    const val landingSquashScale = .85f
 
     // Very rapid retargets remain light: never force a complete landing pulse.
-    const val rapidRiseMillis = 46
-    const val rapidRecoverMillis = 112
+    const val rapidRiseMillis = 50
+    const val rapidRecoverMillis = 126
     const val rapidRetargetWindowMillis = 180L
 
     const val normalLandingStartMillis = expansionRiseMillis + expansionFallMillis
