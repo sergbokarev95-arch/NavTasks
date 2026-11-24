@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.spring
@@ -186,10 +187,10 @@ fun NavLiquidGlassBottomBar(
         var dragging by remember { mutableStateOf(false) }
         var dragPosition by remember { mutableFloatStateOf(target) }
         var hapticIndex by remember { mutableIntStateOf(selected) }
-        // A quick moving lens still needs VISIBLE growth. The v16 speed-only
-        // scale vanished too early in a one-slot tap. Position and deformation
-        // now start together; shrink is launched DURING the jump, not afterward.
-        // New taps cancel both and retarget from CURRENT values, not from 1x.
+        // Liquid jump: visible growth, then a brief 0.95x touchdown squash
+        // and immediate return to 1x. This timeline overlaps the slightly
+        // slower horizontal spring; there is no separate pause after landing.
+        // New taps cancel both animations at their CURRENT position and size.
         val lensExpansion = remember { Animatable(1f) }
         var lastMotionStartMs by remember { mutableLongStateOf(0L) }
         var draggedSinceLastRelease by remember { mutableStateOf(false) }
@@ -214,24 +215,48 @@ fun NavLiquidGlassBottomBar(
                     lastMotionStartMs = now
                     kotlinx.coroutines.coroutineScope {
                         launch {
-                            if (!justReleasedDrag) {
+                            if (justReleasedDrag) {
+                                // A physical drag already supplies its own expansion;
+                                // release settles without a second artificial jump.
                                 lensExpansion.animateTo(
-                                    NavLiquidDockMotion.peakScaleForTap(distance, rapid),
+                                    1f,
                                     animationSpec = tween(
-                                        durationMillis = NavLiquidDockMotion.expansionRiseMillis,
-                                        easing = LinearOutSlowInEasing,
+                                        durationMillis = NavLiquidDockMotion.expansionFallMillis,
+                                        easing = FastOutSlowInEasing,
                                     ),
                                 )
+                            } else {
+                                val peak = NavLiquidDockMotion.peakScaleForTap(distance, rapid)
+                                // ONE interruptible timeline, concurrent with movement.
+                                // As the capsule reaches its slot, it compresses slightly
+                                // below resting size then rebounds immediately to 1x.
+                                // Rapid retargets intentionally skip that full landing
+                                // envelope; no required replay of the same bounce.
+                                lensExpansion.animateTo(
+                                    targetValue = 1f,
+                                    animationSpec = keyframes {
+                                        durationMillis = if (rapid)
+                                            NavLiquidDockMotion.rapidMotionEndMillis
+                                        else NavLiquidDockMotion.normalMotionEndMillis
+                                        if (rapid) {
+                                            peak at NavLiquidDockMotion.rapidRiseMillis using
+                                                LinearOutSlowInEasing
+                                            1f at NavLiquidDockMotion.rapidMotionEndMillis using
+                                                FastOutSlowInEasing
+                                        } else {
+                                            peak at NavLiquidDockMotion.expansionRiseMillis using
+                                                LinearOutSlowInEasing
+                                            1f at NavLiquidDockMotion.normalLandingStartMillis using
+                                                FastOutSlowInEasing
+                                            NavLiquidDockMotion.landingSquashScale at
+                                                NavLiquidDockMotion.normalCompressionEndMillis using
+                                                FastOutSlowInEasing
+                                            1f at NavLiquidDockMotion.normalMotionEndMillis using
+                                                FastOutSlowInEasing
+                                        }
+                                    },
+                                )
                             }
-                            // Critically, shrink overlaps horizontal travel.
-                            // Never await lensPosition before returning to 1x.
-                            lensExpansion.animateTo(
-                                1f,
-                                animationSpec = tween(
-                                    durationMillis = NavLiquidDockMotion.expansionFallMillis,
-                                    easing = FastOutSlowInEasing,
-                                ),
-                            )
                         }
                         lensPosition.animateTo(
                             target,
