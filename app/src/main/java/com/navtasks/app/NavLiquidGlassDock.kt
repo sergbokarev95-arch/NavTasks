@@ -350,7 +350,7 @@ fun NavLiquidGlassBottomBar(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    NavGlassGlyph(
+                    NavDockFilledGlyph(
                         kind = item.glyph,
                         color = iconInk,
                         modifier = Modifier.size(24.dp).graphicsLayer {
@@ -368,6 +368,7 @@ fun NavLiquidGlassBottomBar(
                         },
                         color = labelInk,
                         fontSize = 10.sp,
+                        fontWeight = if (lensFocus > .75f) FontWeight.SemiBold else FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )
                 }
