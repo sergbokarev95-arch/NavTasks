@@ -222,3 +222,8 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - Exact beta10 source backed up; no dock optical shader/size/rim or business/nav route changes. New tests verify dragged position clamp, nearest selection, original signed optics and tint. Original-key CI `45319560301` SUCCESS; opt-in `v1.2.0-beta.11` code250 SHA256 `99264150e9253da9ad3d013af0e90e973473fd2e48e9cd8f8ecf57b92fb613cc`.
 - Exact stable-functional 1.1.0 recovery code251 CI `45319626044` SUCCESS, `v1.1.0-recovery-code251` SHA256 `46d6bddf310cb6fe9e3d29f8b388814bff1e89bd3bee500021875a9cdeb997db` (only serious regression). Public stable 1.1.0 and main unchanged; physical HONOR drag review pending.
 
+## 2026-11-24 — beta16 same-frame liquid motion, no delayed landing
+- Compared owner's `486876.mp4` NavTasks and `486877.mp4` HONOR Calendar. Root issue: beta15 waited for horizontal spring, then ran separate shrink, creating pause.
+- New dock-only velocity controller `NavLiquidDockMotion.kt` drives scale and glass surface directly from actual position-spring speed, responsive to rapid retargeting and finger drag. Spring 980/.78; full-scale ceiling 1.30. No business logic changes, all prior optical settings and filled coral icons retained.
+- Source-only beta16 code260 original signer CI `45329621614` SUCCESS, APK SHA256 `c6649b91abdcf099b0f86541a630923140254b9038606001a6df1f6d03e2595e`. Exact stable-functional emergency code261 CI `45329660126` SUCCESS, SHA256 `22412a2ae60dcc33a72f3bce1ee648dec053b635afe99a2c08ebb98f4e265084`. HONOR device QA pending; public stable 1.1.0 unchanged.
+
