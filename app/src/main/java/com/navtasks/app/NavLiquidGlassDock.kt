@@ -183,33 +183,52 @@ fun NavLiquidGlassBottomBar(
         var dragging by remember { mutableStateOf(false) }
         var dragPosition by remember { mutableFloatStateOf(target) }
         var hapticIndex by remember { mutableIntStateOf(selected) }
+        // Adaptive liquid motion: tap and direct finger drag share the same
+        // actual lens position. Growth starts immediately but takes longer
+        // to develop than horizontal travel. A quick second tap INTERRUPTS
+        // both springs at their current values; there is never a queued
+        // grow -> travel -> shrink animation to finish before a new tap.
+        val lensExpansion = remember { Animatable(1f) }
         LaunchedEffect(target, dragging) {
-            if (!dragging) {
-                lensPosition.animateTo(
-                    target,
-                    animationSpec = spring(
-                        dampingRatio = 1f, stiffness = 550f,
-                        visibilityThreshold = .001f,
-                    ),
+            if (dragging) {
+                // Finger still controls position directly; the glass gradually
+                // becomes more liquid only if the gesture lasts long enough.
+                lensExpansion.animateTo(
+                    NavLiquidDockTabs.movingScale,
+                    spring(dampingRatio = .84f, stiffness = 175f),
                 )
+            } else if (abs(lensPosition.value - target) <= .01f) {
+                lensExpansion.animateTo(1f, spring(dampingRatio = .86f, stiffness = 460f))
+            } else {
+                kotlinx.coroutines.coroutineScope {
+                    val expansion = launch {
+                        lensExpansion.animateTo(
+                            NavLiquidDockTabs.movingScale,
+                            spring(dampingRatio = .84f, stiffness = 175f),
+                        )
+                    }
+                    try {
+                        lensPosition.animateTo(
+                            target,
+                            spring(
+                                dampingRatio = .78f, stiffness = 580f,
+                                visibilityThreshold = .001f,
+                            ),
+                        )
+                    } finally {
+                        expansion.cancel()
+                    }
+                }
+                lensExpansion.animateTo(1f, spring(dampingRatio = .90f, stiffness = 480f))
             }
         }
         val slide = if (dragging) dragPosition else lensPosition.value
-        val moving = dragging || abs(slide - target) > .015f
-        val matte by animateFloatAsState(
-            targetValue = if (moving) 0f else 1f,
-            animationSpec = spring(dampingRatio = 1f, stiffness = 700f),
-            label = "glassLabLensMatte"
-        )
-        val stretched by animateFloatAsState(
-            targetValue = if (moving) 1f else 0f,
-            animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
-            label = "glassLabLensStretch"
-        )
-        // True proportional growth: both axes expand by the same factor.
-        // Unlike 0.1.3's horizontal stretch, this makes the glass rise above
-        // and drop below the 56dp navigation capsule while it is travelling.
-        val lensScale = NavLiquidDockTabs.scaleAt(stretched) * tapPulse.value
+        val stretched = ((lensExpansion.value - 1f) /
+            (NavLiquidDockTabs.movingScale - 1f)).coerceIn(0f, 1f)
+        // The refractive/graphite material follows actual expansion on the
+        // SAME FRAME, rather than waiting for a separate matte spring.
+        val matte = 1f - stretched * .70f
+        val lensScale = lensExpansion.value * tapPulse.value
         val lensWidth = (cellWidth - 4.dp) * lensScale
         val lensHeight = NavLiquidDockTabs.restingLensHeightDp.dp * lensScale
         val lensX = (cellWidth * (slide + .5f) - lensWidth / 2f)
