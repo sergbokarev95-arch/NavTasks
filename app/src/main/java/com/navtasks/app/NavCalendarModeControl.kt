@@ -2,6 +2,8 @@ package com.navtasks.app
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -44,14 +46,14 @@ internal val navCalendarModeLensHeight = 40.dp
  * The segmented control MUST use the same fill as the calendar's Year panel,
  * not a separately tinted blue-black palette.
  */
-internal fun navCalendarModeSurface(p: NavPalette): Color = p.panel
+internal fun navCalendarModeSurface(p: NavPalette): Color = NavTodayVisualTokens.cardSurface(p.dark)
 
 /** Neutral graphite / neutral gray, rather than the old blue glass selection. */
 internal fun navCalendarLensResting(dark: Boolean): Color =
-    if (dark) Color(0xFF393B40) else Color(0xFFE7E7E9)
+    if (dark) Color(0xFF3A3A3C) else Color(0xFFE7E7E9)
 
 internal fun navCalendarLensTraveling(dark: Boolean): Color =
-    if (dark) Color(0xFF303237) else Color(0xFFF0F0F1)
+    if (dark) Color(0xFF303032) else Color(0xFFF0F0F1)
 
 internal fun navCalendarRim(dark: Boolean): Brush =
     Brush.verticalGradient(
@@ -73,8 +75,8 @@ internal fun navCalendarWeekDates(selected: LocalDate): List<LocalDate> {
 
 /**
  * A lighter sibling of our accepted Liquid Glass dock: same spring/tap timing,
- * but a neutral rim and exact calendar panel fill. Graphite resting lens, subtle
- * travel expansion and tap-only haptic pulse (never hold-to-enlarge).
+ * with the approved dock spring, growth/landing envelope, rim and coral ink.
+ * Compact calendar dimensions and a neutral resting lens are preserved.
  *
  * It deliberately doesn't sample the dock's backdrop: the Calendar lives
  * INSIDE the captured Plan surface, so doing so could recursively refract
@@ -95,7 +97,7 @@ internal fun NavCalendarModeControl(
     val activeIndex = navCalendarAvailableLevels.indexOf(level).coerceAtLeast(0)
     val view = LocalView.current
     val dark = p.dark
-    val activeBlue = p.blueText
+    val activeInk = NavLiquidDockTabs.activeInk(dark)
     val inactiveInk = p.muted
     val shape = RoundedCornerShape(30.dp)
 
@@ -108,7 +110,7 @@ internal fun NavCalendarModeControl(
         Box(
             Modifier.matchParentSize().clip(shape)
                 .background(navCalendarModeSurface(p), shape)
-                .border(.75.dp, navCalendarRim(dark), shape),
+                .border(.75.dp, navLiquidGlassRim(dark), shape),
         )
 
         val cellWidth = maxWidth / navCalendarAvailableLevels.size
@@ -116,23 +118,41 @@ internal fun NavCalendarModeControl(
         val slide by animateFloatAsState(
             targetValue = target,
             animationSpec = spring(
-                dampingRatio = 1f,
-                stiffness = 550f,
+                dampingRatio = NavLiquidDockMotion.positionDamping,
+                stiffness = NavLiquidDockMotion.positionStiffness,
                 visibilityThreshold = .001f,
             ),
             label = "calendarGlassLensSlide",
         )
-        val moving = abs(slide - target) > .015f
-        val matte by animateFloatAsState(
-            targetValue = if (moving) 0f else 1f,
-            animationSpec = spring(dampingRatio = 1f, stiffness = 700f),
-            label = "calendarGlassLensMatte",
-        )
-        val stretch by animateFloatAsState(
-            targetValue = if (moving) 1f else 0f,
-            animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
-            label = "calendarGlassLensStretch",
-        )
+        val expansion = remember { Animatable(1f) }
+        var previousTarget by remember { mutableFloatStateOf(target) }
+        var lastMotionStart by remember { mutableLongStateOf(0L) }
+        LaunchedEffect(target) {
+            val distance = abs(previousTarget - target)
+            previousTarget = target
+            if (distance > .01f) {
+                val now = android.os.SystemClock.uptimeMillis()
+                val rapid = lastMotionStart > 0L &&
+                    now - lastMotionStart < NavLiquidDockMotion.rapidRetargetWindowMillis
+                lastMotionStart = now
+                val peak = NavLiquidDockMotion.peakScaleForTap(distance, rapid)
+                expansion.animateTo(1f, keyframes {
+                    durationMillis = if (rapid) NavLiquidDockMotion.rapidMotionEndMillis
+                        else NavLiquidDockMotion.normalMotionEndMillis
+                    if (rapid) {
+                        peak at NavLiquidDockMotion.rapidRiseMillis using FastOutSlowInEasing
+                        1f at NavLiquidDockMotion.rapidMotionEndMillis using FastOutSlowInEasing
+                    } else {
+                        peak at NavLiquidDockMotion.expansionRiseMillis using FastOutSlowInEasing
+                        1f at NavLiquidDockMotion.normalLandingStartMillis using FastOutSlowInEasing
+                        NavLiquidDockMotion.landingSquashScale at
+                            NavLiquidDockMotion.normalCompressionEndMillis using FastOutSlowInEasing
+                        1f at NavLiquidDockMotion.normalMotionEndMillis using FastOutSlowInEasing
+                    }
+                })
+            }
+        }
+        val matte = NavLiquidDockMotion.lensMatteFromScale(expansion.value)
         var repeatedTapSerial by remember(activeIndex) { mutableIntStateOf(0) }
         val tapPulse = remember(activeIndex) { Animatable(1f) }
         LaunchedEffect(activeIndex, repeatedTapSerial) {
@@ -141,9 +161,8 @@ internal fun NavCalendarModeControl(
                 tapPulse.animateTo(1f, tween(155))
             }
         }
-        // A little quieter than the floating dock's 1.30x lens while preserving
-        // the EXACT spring/pulse timing and neutral settled material.
-        val scale = (1f + .12f * stretch) * tapPulse.value
+        // Shared dock motion, scaled to the compact calendar height.
+        val scale = expansion.value * tapPulse.value
         val lensWidth = (cellWidth - 4.dp) * scale
         val lensHeight = navCalendarModeLensHeight * scale
         val lensX = (cellWidth * (slide + .5f) - lensWidth / 2f)
@@ -210,7 +229,7 @@ internal fun NavCalendarModeControl(
                 ) {
                     Text(
                         label,
-                        color = if (selected) activeBlue else inactiveInk,
+                        color = if (selected) activeInk else inactiveInk,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                         fontSize = 13.sp,
                         maxLines = 1,

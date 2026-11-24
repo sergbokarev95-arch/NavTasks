@@ -30,8 +30,8 @@ class NavCalendarUiRefreshTest {
 
     @Test fun modeSwitchPreservesDockSpringAndTapOnlyLensPulse() {
         val control = File("src/main/java/com/navtasks/app/NavCalendarModeControl.kt").readText()
-        assertTrue(control.contains("navCalendarRim(dark)"))
-        assertTrue(control.contains("stiffness = 550f"))
+        assertTrue(control.contains("navLiquidGlassRim(dark)"))
+        assertTrue(control.contains("stiffness = NavLiquidDockMotion.positionStiffness"))
         assertTrue(control.contains("NavLiquidDockTabs.repeatTapScale"))
         assertTrue(control.contains("calendarGlassLensSlide"))
         assertTrue(control.contains("onSelect(navCalendarAvailableLevels[index])"))
@@ -40,9 +40,9 @@ class NavCalendarUiRefreshTest {
     }
 
     @Test fun calendarSwitchMatchesExactYearCardInBothThemes() {
-        assertEquals(navPalette(true).panel, navCalendarModeSurface(navPalette(true)))
-        assertEquals(navPalette(false).panel, navCalendarModeSurface(navPalette(false)))
-        assertEquals(androidx.compose.ui.graphics.Color(0xFF393B40),
+        assertEquals(NavTodayVisualTokens.cardSurface(true), navCalendarModeSurface(navPalette(true)))
+        assertEquals(NavTodayVisualTokens.cardSurface(false), navCalendarModeSurface(navPalette(false)))
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF3A3A3C),
             navCalendarLensResting(true))
         assertEquals(androidx.compose.ui.graphics.Color(0xFFE7E7E9),
             navCalendarLensResting(false))
@@ -51,13 +51,25 @@ class NavCalendarUiRefreshTest {
         val calendar = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt")
             .readText()
         assertTrue(control.contains(".background(navCalendarModeSurface(p), shape)"))
-        assertTrue(calendar.contains(".background(p.panel)"))
+        assertTrue(calendar.contains(".background(NavTodayVisualTokens.cardSurface(p.dark))"))
         assertTrue(control.contains("val inactiveInk = p.muted"))
-        assertTrue(control.contains("val activeBlue = p.blueText"))
+        assertTrue(control.contains("val activeInk = NavLiquidDockTabs.activeInk(dark)"))
         // Neither inactive surfaces nor the glass lens contain the old blue hues.
         assertTrue(!control.contains("0x66528BAF"))
         assertTrue(!control.contains("0xE926303C"))
         assertTrue(!control.contains("0xF8EDF3F8"))
+    }
+
+    @Test fun calendarRedesignKeepsSemanticStatusColorsAndUsesDockMotion() {
+        val calendar = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+            .substringAfter("fun PlanScreenV2(").substringBefore("/** ISO-8601 calendar week")
+        val control = File("src/main/java/com/navtasks/app/NavCalendarModeControl.kt").readText()
+        assertTrue(control.contains("NavLiquidDockMotion.landingSquashScale"))
+        assertTrue(control.contains("NavLiquidDockMotion.peakScaleForTap"))
+        assertTrue(calendar.contains("\"chevron-left\", p.text"))
+        assertTrue(calendar.contains("\"more\", p.text"))
+        assertTrue(calendar.contains("CalendarDayState.INCOMPLETE -> p.systemRed"))
+        assertTrue(calendar.contains("CalendarDayState.COMPLETE -> p.mint"))
     }
 
     @Test fun compactGlassControlReturnsHeightToYearOverview() {

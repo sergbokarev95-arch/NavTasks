@@ -182,7 +182,7 @@ internal fun WorkAgendaCalendarRows(
     val plannedOrders = orders.filter { amosPlannedOnDay(it, day) }
     val plannedServices = services.filter { servicePlannedOnDay(it, day) }
     if (plannedOrders.isEmpty() && plannedServices.isEmpty()) return
-    Text(localized("Работы", "Work", lang), color = p.blue, fontSize = 14.sp,
+    Text(localized("Работы", "Work", lang), color = p.text, fontSize = 14.sp,
         modifier = Modifier.padding(top = 8.dp, bottom = 3.dp))
     plannedOrders.forEach { entry ->
         WorkAgendaCalendarRow(
@@ -208,11 +208,12 @@ private fun WorkAgendaCalendarRow(
     p: NavPalette, lang: UiLanguage, secondary: String?,
 ) {
     Column(
-        Modifier.fillMaxWidth().navGlass(p, radius = 16.dp, role = GlassRole.TASK)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+            .background(NavTodayVisualTokens.cardSurface(p.dark))
             .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
-        Text(category, color = p.blue, fontSize = 11.sp)
+        Text(category, color = p.text, fontSize = 11.sp)
         Text(title, color = p.text, fontSize = 14.sp)
         Text(navDate(date, lang, true), color = p.muted, fontSize = 12.sp)
         secondary?.let { Text(it, color = p.muted, fontSize = 11.sp) }

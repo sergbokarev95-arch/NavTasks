@@ -128,11 +128,11 @@ fun PlanScreenV2(
                 // No duplicate year header below the switch: navigation sits
                 // beside the current year, freeing space for all 12 months.
                 NavGlassIconAction(
-                    "chevron-left", p.blue,
+                    "chevron-left", p.text,
                     localized("Предыдущий год", "Previous year", lang),
                 ) { year-- }
                 NavGlassIconAction(
-                    "chevron-right", p.blue,
+                    "chevron-right", p.text,
                     localized("Следующий год", "Next year", lang),
                 ) { year++ }
             }
@@ -142,7 +142,7 @@ fun PlanScreenV2(
                 selectedDay = today
                 level = 2
             }) {
-                Text(localized("Сегодня", "Today", lang), color = p.blueText)
+                Text(localized("Сегодня", "Today", lang), color = NavTodayVisualTokens.accentInk(p.dark))
             }
         }
         NavCalendarModeControl(level, p, lang, onSelect = { level = it })
@@ -172,7 +172,7 @@ fun PlanScreenV2(
                     Modifier.fillMaxSize()
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                         .clip(RoundedCornerShape(25.dp))
-                        .background(p.panel),
+                        .background(NavTodayVisualTokens.cardSurface(p.dark)),
                 ) {
                     // Four equal-height rows ALWAYS fit the remaining viewport.
                     // This deliberately replaces LazyVerticalGrid: a scrollable
@@ -275,23 +275,26 @@ fun PlanScreenV2(
                     }
                 }
                 1 -> Column {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(25.dp))
+                        .background(NavTodayVisualTokens.cardSurface(p.dark))) {
                     val weekendInk = calendarWeekendInk(p)
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         NavGlassIconAction(
-                            "chevron-left", p.blue, localized("Предыдущий месяц", "Previous month", lang),
+                            "chevron-left", p.text, localized("Предыдущий месяц", "Previous month", lang),
                         ) {
                             if (month == 1) { month = 12; year-- } else month--
                         }
                         Text("${YearMonth.of(year, month).month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase() }} $year",
                             modifier = Modifier.weight(1f), color = p.text, fontSize = 19.sp, textAlign = TextAlign.Center)
                         NavGlassIconAction(
-                            "chevron-right", p.blue, localized("Следующий месяц", "Next month", lang),
+                            "chevron-right", p.text, localized("Следующий месяц", "Next month", lang),
                         ) {
                             if (month == 12) { month = 1; year++ } else month++
                         }
                     }
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = 0.dp),
                         horizontalArrangement = Arrangement.spacedBy(3.dp),
                     ) {
                         // Same reserved space as the ISO week numbers below.
@@ -305,7 +308,7 @@ fun PlanScreenV2(
                     }
                     monthGridDates(year, month).chunked(7).forEach { week ->
                         Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                            Modifier.fillMaxWidth().padding(horizontal = 0.dp),
                             horizontalArrangement = Arrangement.spacedBy(3.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -381,7 +384,7 @@ fun PlanScreenV2(
                         }
                         Spacer(Modifier.height(3.dp))
                     }
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 19.dp, vertical = 11.dp),
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 7.dp, vertical = 11.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         listOf(
                             p.mint to localized("Все выполнено", "All done", lang),
@@ -395,24 +398,28 @@ fun PlanScreenV2(
                             }
                         }
                     }
+                    }
                 }
                 else -> Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                         NavGlassIconAction(
-                            "chevron-left", p.blue, localized("К месяцу", "Back to month", lang),
+                            "chevron-left", p.text, localized("К месяцу", "Back to month", lang),
                         ) { level = 1 }
                         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(navDate(selectedDay, lang, true), color = p.text, fontSize = 19.sp)
                             Text(selectedDay.dayOfWeek.getDisplayName(TextStyle.FULL, locale), color = p.muted, fontSize = 12.sp)
                         }
                         NavGlassIconAction(
-                            "calendar", p.blue, localized("Выбрать год", "View year", lang),
+                            "calendar", p.text, localized("Выбрать год", "View year", lang),
                         ) { level = 0 }
                     }
                     // Keep the week visible in Day mode, like the reference
                     // calendar, without changing task recurrence or completion.
                     val visibleWeek = navCalendarWeekDates(selectedDay)
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp)) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(NavTodayVisualTokens.cardSurface(p.dark))
+                        .padding(vertical = 6.dp)) {
                         visibleWeek.forEach { date ->
                             Column(
                                 Modifier.weight(1f).glassClickable {
@@ -467,7 +474,10 @@ fun PlanScreenV2(
                         selectedDay, workOrders.entries, services.entries)
                     LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (rows.isEmpty() && !plannedWorks) item {
-                            NavPanel(p) { Text(localized("Задач на этот день нет", "No tasks for this day", lang), color = p.muted) }
+                            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+                                .background(NavTodayVisualTokens.cardSurface(p.dark)).padding(14.dp)) {
+                                Text(localized("Задач на этот день нет", "No tasks for this day", lang), color = p.muted)
+                            }
                         }
                         items(rows, key = { it.second.key }) { (task, run) ->
                             PlanReadOnlyTile(task, run, store, p, lang, onEdit)
@@ -501,8 +511,8 @@ private fun PlanReadOnlyTile(
         else store.postpone(run.key, day)
     }
     Row(
-        Modifier.fillMaxWidth().navGlass(p, radius = 15.dp,
-            role = if (run.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+            .background(NavTodayVisualTokens.cardSurface(p.dark))
             .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -522,7 +532,7 @@ private fun PlanReadOnlyTile(
         }
         Box {
             NavGlassIconAction(
-                "more", p.blue, localized("Действия с задачей", "Task actions", lang),
+                "more", p.text, localized("Действия с задачей", "Task actions", lang),
             ) { menuOpen = true }
             NavPopoverMenu(p = p, expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 NavPopoverAction(localized("Редактировать", "Edit", lang), p) {

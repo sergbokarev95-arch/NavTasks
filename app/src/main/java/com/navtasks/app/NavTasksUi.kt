@@ -590,11 +590,9 @@ fun NavTasksApp(
                         if (planBackdrop != null) Spacer(Modifier.size(44.dp))
                         else NavGlassCircleButton(palette, "back") { showCalendar = false }
                         Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            NavBrandLabel(palette)
-                            Text(localized("План", "Plan", lang),
-                                color = palette.text, fontSize = 23.sp)
-                        }
+                        Text(localized("План", "Plan", lang),
+                            modifier = Modifier.weight(1f),
+                            color = palette.text, fontSize = 24.sp)
                     }
                     Box(Modifier.fillMaxWidth().weight(1f)) {
                         // Reuse the former Plan tab's saveable key, preserving
