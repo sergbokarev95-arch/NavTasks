@@ -188,28 +188,17 @@ fun NavLiquidGlassBottomBar(
                 lensPosition.animateTo(
                     target,
                     animationSpec = spring(
-                        dampingRatio = 1f, stiffness = 550f,
+                        dampingRatio = .95f, stiffness = 850f,
                         visibilityThreshold = .001f,
                     ),
                 )
             }
         }
         val slide = if (dragging) dragPosition else lensPosition.value
-        val moving = dragging || abs(slide - target) > .015f
-        val matte by animateFloatAsState(
-            targetValue = if (moving) 0f else 1f,
-            animationSpec = spring(dampingRatio = 1f, stiffness = 700f),
-            label = "glassLabLensMatte"
-        )
-        val stretched by animateFloatAsState(
-            targetValue = if (moving) 1f else 0f,
-            animationSpec = spring(dampingRatio = 1f, stiffness = 600f),
-            label = "glassLabLensStretch"
-        )
-        // True proportional growth: both axes expand by the same factor.
-        // Unlike 0.1.3's horizontal stretch, this makes the glass rise above
-        // and drop below the 56dp navigation capsule while it is travelling.
-        val lensScale = NavLiquidDockTabs.scaleAt(stretched) * tapPulse.value
+        // HONOR Calendar reference: one spring for horizontal travel only.
+        // The capsule keeps a constant height and neutral fill while moving;
+        // separate "moving" stretch and matte springs caused visible lag.
+        val lensScale = tapPulse.value
         val lensWidth = (cellWidth - 4.dp) * lensScale
         val lensHeight = NavLiquidDockTabs.restingLensHeightDp.dp * lensScale
         val lensX = (cellWidth * (slide + .5f) - lensWidth / 2f)
@@ -219,8 +208,8 @@ fun NavLiquidGlassBottomBar(
         // Selection is a sibling of the opaque/refractive BACKING, not its child.
         // The outer BoxWithConstraints has no clip() / graphicsLayer clip; the
         // lens draws in true window coordinates beyond the 56dp bar.
-        // Exactly one moving lens. While travelling it is optically refractive;
-        // after it lands, its own face fades into neutral graphite/grey.
+        // Exactly one refractive lens. Its material never changes mid-flight;
+        // position and icon tint respond to the same frame of animation.
         val selection = if (optical) {
             Modifier.drawBackdrop(
                 backdrop = backdrop,
@@ -233,16 +222,13 @@ fun NavLiquidGlassBottomBar(
                         with(density) { NavLiquidDockOptics.selection.refractionAmountDp.dp.toPx() }
                     )
                 },
-                highlight = { Highlight.Default.copy(alpha = .3f + (1f - matte) * .45f) },
+                highlight = { Highlight.Default.copy(alpha = .3f) },
                 innerShadow = { InnerShadow(radius = 8.dp, alpha = .18f) },
                 onDrawSurface = {
-                    val traveling = if (dark) Color(0xFF9C9C9F).copy(alpha = .12f)
-                        else Color.White.copy(alpha = .19f)
-                    // Night selection follows HONOR Calendar: neutral graphite, no blue tint.
-                    // Keep the existing refractive shader and geometry unchanged.
+                    // Stable neutral capsule: no competing color fade as it moves.
                     val resting = if (dark) Color(0xFF3A3A3C).copy(alpha = .93f)
                         else Color(0xFFD7D8DA).copy(alpha = .87f)
-                    drawRect(lerp(traveling, resting, matte.coerceIn(0f, 1f)))
+                    drawRect(resting)
                 }
             )
         } else {
