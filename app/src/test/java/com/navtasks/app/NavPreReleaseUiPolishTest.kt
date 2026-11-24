@@ -12,8 +12,8 @@ class NavPreReleaseUiPolishTest {
         assertTrue(NavPressFeedbackTokens.floatingActionScale in 1.06f..1.08f)
     }
 
-    @Test fun classicDockGeometryRemainsFrozen() {
-        assertEquals(1.30f, NavLiquidDockTabs.movingScale, 0f)
+    @Test fun calendarStyleDockGeometryStaysConstantDuringTravel() {
+        assertEquals(1f, NavLiquidDockTabs.movingScale, 0f)
         assertEquals(54f, NavLiquidGlassActionTokens.addDiameterDp, 0f)
         assertEquals(44f, NavLiquidGlassActionTokens.compactDiameterDp, 0f)
     }
