@@ -559,3 +559,12 @@
 - [ ] User: export full profiles, install beta13 over beta12 without uninstall, inspect four filled pictograms and coral ink in light+night, compare directly with HONOR Calendar, verify no visual clipping/blur glitches and cutouts are truly transparent, check direct lens drag and taps/re-tap, confirm records unchanged.
 - [ ] Any follow-up should change dock pictogram artwork/tint alone until owner visually approves; only after dock accepted proceed to other home screen elements. Stable 1.2.0 OTA not authorized, stable feed remains 1.1.0/code230. After emergency code255 future versions require code>255.
 
+## NEXT — 2026-11-24 adaptive beta15 dock QA on HONOR
+- [x] Inspect new 13.865-second `486874.mp4` user-supplied reference. Important correction: NEVER eliminate lens magnification. Need interruptible animation, not one fixed grow->travel->shrink.
+- [x] Create isolated beta15 branch FROM backed-up beta13, thereby undoing beta14's removed zoom, and leave unrelated features untouched.
+- [x] Restore max 130% magnification with concurrent position and expansion, cancel/grow from current animated value on rapid target change; mate material fade to actual expansion with no extra lag; preserve direct drag release.
+- [x] Original-signed JVM/assemble/release CI `45328160372` SUCCESS; source prerelease v1.2.0-beta.15 code258 SHA256 `3c92a1863d66fc499ccaf2d1b1262a8e66944c9c61886e06bba269d312980175`.
+- [ ] Confirm fallback recovery code259 CI `45328204813` and release before recommending it as emergency.
+- [ ] User export FULL profiles, install beta15 over beta14 in place (never uninstall). Record on HONOR: slow click across tabs, rapid alternating clicks, repeated click active tab, drag/release from active lens and whether larger jump grows naturally without lag/overshoot or intermediate page flips.
+- [ ] Fine-tune only animation response after owner review of beta15; preserve semantic colors/filled glyphs, main/stable feed and all business logic.
+
