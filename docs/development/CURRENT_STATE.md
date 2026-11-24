@@ -423,3 +423,8 @@ Reviewed 2026-11-08 against GitHub main and successful signed 0.4.59 release; su
 - Exact beta10 source backed up; isolated feature `feature/navtasks-1.2.0-beta11-dock-drag-coral`, code250. Original key CI `45319560301` SUCCESS, immutable release source `4d77b92f4418d2320f3ba63aea45d72239f4715c`, prerelease `v1.2.0-beta.11` APK SHA256 `99264150e9253da9ad3d013af0e90e973473fd2e48e9cd8f8ecf57b92fb613cc`. Stable-functional emergency original-signed code251 CI `45319626044` PASS and separate `v1.1.0-recovery-code251` SHA256 `46d6bddf310cb6fe9e3d29f8b388814bff1e89bd3bee500021875a9cdeb997db`.
 - Public stable 1.1.0/code230 and main unchanged. HONOR frame pacing, touch feel and text contrast pending real device test; do not declare dock final until owner approves.
 
+## 2026-11-24 — beta.12 night graphite dock selection (signed, device QA pending)
+- Night-only selected capsule adjusted from blue slate to neutral graphite #3A3A3C (93% surface tint), moving translucent grayscale #9C9C9F (12%). Old Android dock fallback aligned. Main optical backdrop, tap/direct drag, coral selected icon/label and Day unaffected; no business changes.
+- beta11 source backup `backup/navtasks-1.2.0-beta11-before-graphite-selection`, feature `feature/navtasks-1.2.0-beta12-night-graphite-selection`. CI `45321897336` PASS, immutable release `v1.2.0-beta.12` code252 SHA256 `404efb72f7164084b89d43c4c28a8dd75fd86f2ece0bb22e0ccd07a46cafbc1c`. Signed stable-function emergency code253 release `v1.1.0-recovery-code253` SHA256 `cb8fca991d914b8acf0f51c9c869a055f22261330b0df7c9067803d0b7576ced`.
+- Public stable OTA still 1.1.0/code230, main untouched, real HONOR night visual confirmation not yet reported.
+
