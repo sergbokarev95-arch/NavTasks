@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Exact Lab 0.1.5 material constants are a non-negotiable regression gate. */
+/** Approved optical material stays untouched; selected motion now follows HONOR Calendar. */
 class NavLiquidGlassParityTest {
     @Test fun materialIsByteForByteNumericallyEqualToApprovedLab() {
         assertEquals(2.0f, NavLiquidDockOptics.bar.blurDp, 0f)
@@ -17,11 +17,10 @@ class NavLiquidGlassParityTest {
     @Test fun selectedLensAndTabOrderMatchLab() {
         assertEquals(56f, NavLiquidDockTabs.dockHeightDp, 0f)
         assertEquals(52f, NavLiquidDockTabs.restingLensHeightDp, 0f)
-        assertEquals(1.30f, NavLiquidDockTabs.movingScale, 0f)
+        assertEquals(1f, NavLiquidDockTabs.movingScale, 0f)
         assertEquals(1f, NavLiquidDockTabs.scaleAt(0f), 0f)
-        assertEquals(1.3f, NavLiquidDockTabs.scaleAt(1f), 0f)
+        assertEquals(1f, NavLiquidDockTabs.scaleAt(1f), 0f)
         assertEquals(listOf("today","work","handover","reference"), NavLiquidDockTabs.items.map{it.glyph})
-        assertTrue(NavLiquidDockTabs.restingLensHeightDp * NavLiquidDockTabs.movingScale >
-            NavLiquidDockTabs.dockHeightDp)
+        assertTrue(NavLiquidDockTabs.restingLensHeightDp <= NavLiquidDockTabs.dockHeightDp)
     }
 }
