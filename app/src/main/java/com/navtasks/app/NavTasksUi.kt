@@ -1096,7 +1096,10 @@ private fun TodayScreenV2(
         }
     }
     Column {
-        NavPanel(p, Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(NavTodayVisualTokens.cardSurface(p.dark), RoundedCornerShape(20.dp))
+            .padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(navDate(selectedDay, lang, true), color = p.muted, fontSize = 12.sp)
@@ -1108,7 +1111,7 @@ private fun TodayScreenV2(
                         color = p.text, fontSize = 15.sp,
                     )
                 }
-                Text("${complete.size}/${rows.size}", color = p.blueText, fontSize = 23.sp,
+                Text("${complete.size}/${rows.size}", color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 23.sp,
                     fontWeight = FontWeight.SemiBold)
             }
             Spacer(Modifier.height(10.dp))
@@ -1159,7 +1162,7 @@ private fun TodayScreenV2(
                         if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH)
                     DayChip(
                         label, "${day.dayOfMonth}", !showMissed && selectedDay == day,
-                        p.blue, p, weekend = calendarIsWeekend(day),
+                        p, weekend = calendarIsWeekend(day),
                         modifier = Modifier.width(55.dp).fillMaxHeight(),
                     ) {
                         showMissed = false
@@ -1191,8 +1194,8 @@ private fun TodayScreenV2(
                 )
                 extraDue.forEach { (frequency, duties) ->
                     Box(
-                        Modifier.navGlass(p, radius = 12.dp,
-                            role = GlassRole.CONTROL, elevation = 0.dp)
+                        Modifier.clip(RoundedCornerShape(12.dp))
+                            .background(NavTodayVisualTokens.cardSurface(p.dark), RoundedCornerShape(12.dp))
                             .padding(horizontal = 9.dp, vertical = 7.dp),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -1423,20 +1426,26 @@ private fun TodayFrequencyHeader(
 
 @Composable
 private fun DayChip(
-    top: String, bottom: String, selected: Boolean, accent: Color, p: NavPalette,
+    top: String, bottom: String, selected: Boolean, p: NavPalette,
     weekend: Boolean = false,
     modifier: Modifier = Modifier, action: () -> Unit,
 ) {
+    val shape = RoundedCornerShape(13.dp)
     Column(
-        modifier.navGlass(p, radius = 13.dp, role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
+        modifier.clip(shape)
+            .background(NavTodayVisualTokens.cardSurface(p.dark), shape)
+            .then(if (selected) Modifier.border(
+                NavTodayVisualTokens.selectedDateRimDp.dp,
+                NavTodayVisualTokens.accentInk(p.dark), shape,
+            ) else Modifier)
             .glassClickable(onClick = action).padding(horizontal = 4.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // Selected date chips use one solid Apple blue and white labels.
-        // Unselected weekends retain their distinct calendar ink.
-        val topColor = if (selected) p.selectionContent else if (weekend) calendarWeekendInk(p) else p.muted
-        val bottomColor = if (selected) p.selectionContent else if (weekend) calendarWeekendInk(p) else p.text
+        // Trial: only the selected rim is coral; the neutral surface and
+        // date ink (including weekend red) are identical to unselected dates.
+        val topColor = if (weekend) calendarWeekendInk(p) else p.muted
+        val bottomColor = if (weekend) calendarWeekendInk(p) else p.text
         Text(top, color = topColor, fontSize = 11.sp, maxLines = 1)
         Text(bottom, color = bottomColor, fontSize = 16.sp,
             fontWeight = FontWeight.Medium)

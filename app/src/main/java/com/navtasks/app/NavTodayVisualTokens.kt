@@ -9,6 +9,14 @@ internal object NavTodayVisualTokens {
     const val checkedGlyphDp = 15f
     const val cardRadiusDp = 20f
 
+    const val selectedDateRimDp = 1.5f
+
+    // Reuse the approved coral exactly, without modifying the dock.
+    fun accentInk(dark: Boolean): Color = NavLiquidDockTabs.activeInk(dark)
+
+    fun workNavigateNightSurface(): Color = Color(0xFF272729)
+    fun workNavigateNightRim(): Color = Color(0xFF38383A)
+
     fun uncheckedInk(dark: Boolean): Color =
         if (dark) Color(0xFF6B6B6D) else Color(0xFFA0A0A2)
 

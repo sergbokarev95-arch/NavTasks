@@ -2,6 +2,7 @@ package com.navtasks.app
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -154,14 +155,18 @@ private fun WorkAgendaTodayCard(
             }
         }
         Box(
-            Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
-                .glassClickable(onClick = onNavigate)
+            Modifier.then(
+                if (p.dark) Modifier.clip(RoundedCornerShape(12.dp))
+                    .background(NavTodayVisualTokens.workNavigateNightSurface(), RoundedCornerShape(12.dp))
+                    .border(1.dp, NavTodayVisualTokens.workNavigateNightRim(), RoundedCornerShape(12.dp))
+                else Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
+            ).glassClickable(onClick = onNavigate)
                 .heightIn(min = 44.dp)
                 .padding(horizontal = 12.dp, vertical = 11.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(localized("Перейти", "Go to", lang),
-                color = p.text, fontSize = 12.sp)
+                color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp)
         }
     }
 }

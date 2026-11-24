@@ -33,8 +33,34 @@ class NavTodayVisualTokensTest {
             .substringAfter("private fun WorkAgendaTodayCard(").substringBefore("internal fun WorkAgendaCalendarRows(")
         assertTrue(work.contains("NavTodayVisualTokens.cardSurface(p.dark)"))
         assertTrue(work.contains("Text(category, color = p.text, fontSize = 13.sp, fontWeight = FontWeight.Bold)"))
-        assertTrue(work.contains("color = p.text, fontSize = 12.sp"))
+        assertTrue(work.contains("color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp"))
         assertTrue(work.contains("glassClickable(onClick = onNavigate)"))
+    }
+
+    @Test fun todayCoralTrialKeepsNeutralDateFillAndFrequencyInk() {
+        assertEquals(Color(0xFFFF5533), NavTodayVisualTokens.accentInk(false))
+        assertEquals(Color(0xFFFF5533), NavTodayVisualTokens.accentInk(true))
+        assertEquals(1.5f, NavTodayVisualTokens.selectedDateRimDp, 0f)
+        assertEquals(Color(0xFF272729), NavTodayVisualTokens.workNavigateNightSurface())
+        assertEquals(Color(0xFF38383A), NavTodayVisualTokens.workNavigateNightRim())
+        val root = "src/main/java/com/navtasks/app/"
+        val ui = File(root + "NavTasksUi.kt").readText()
+        val day = ui.substringAfter("private fun DayChip(").substringBefore("internal fun todayMissedChipVisible(")
+        assertTrue(day.contains("background(NavTodayVisualTokens.cardSurface(p.dark), shape)"))
+        assertTrue(day.contains("if (selected) Modifier.border("))
+        assertTrue(day.contains("NavTodayVisualTokens.accentInk(p.dark), shape"))
+        assertTrue(!day.contains("GlassRole.SELECTED"))
+        assertTrue(day.contains("if (weekend) calendarWeekendInk(p) else p.text"))
+        val today = ui.substringAfter("private fun TodayScreenV2(").substringBefore("internal fun groupTodayByFrequency(")
+        assertTrue(today.contains("color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 23.sp"))
+        val badges = today.substringAfter("extraDue.forEach").substringBefore("visible = browsingOtherDay")
+        assertTrue(badges.contains("NavTodayVisualTokens.cardSurface(p.dark)"))
+        assertTrue(badges.contains("color = todayFrequencyColor(frequency, p)"))
+        val work = File(root + "WorkAgendaUi.kt").readText()
+            .substringAfter("private fun WorkAgendaTodayCard(").substringBefore("internal fun WorkAgendaCalendarRows(")
+        assertTrue(work.contains("if (p.dark) Modifier.clip"))
+        assertTrue(work.contains("NavTodayVisualTokens.workNavigateNightSurface()"))
+        assertTrue(work.contains("else Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)"))
     }
 
     @Test fun todayKeepsTapTargetsGreenConfirmationAndScopedDateWarning() {
