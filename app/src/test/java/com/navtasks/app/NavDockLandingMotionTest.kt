@@ -6,12 +6,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-/** User-approved beta17 expansion plus a slightly slower elastic touchdown. */
+/** Beta19: more fluid landing with a controlled 15% compression. */
 class NavDockLandingMotionTest {
-    @Test fun smallSquashRecoversToRestImmediatelyAfterTouchdown() {
-        assertEquals(.95f, NavLiquidDockMotion.landingSquashScale, 0f)
+    @Test fun deeper85PercentSquashRecoversSmoothlyAfterTouchdown() {
+        assertEquals(.85f, NavLiquidDockMotion.landingSquashScale, 0f)
         assertTrue(NavLiquidDockMotion.landingSquashScale < 1f)
-        assertTrue(NavLiquidDockMotion.landingSquashScale > .90f)
+        assertTrue(NavLiquidDockMotion.landingSquashScale > .80f)
         assertTrue(NavLiquidDockMotion.normalLandingStartMillis >
             NavLiquidDockMotion.expansionRiseMillis)
         assertTrue(NavLiquidDockMotion.normalCompressionEndMillis >
@@ -19,12 +19,16 @@ class NavDockLandingMotionTest {
         assertEquals(NavLiquidDockMotion.normalCompressionEndMillis +
             NavLiquidDockMotion.landingRecoverMillis,
             NavLiquidDockMotion.normalMotionEndMillis)
-        assertTrue(NavLiquidDockMotion.landingRecoverMillis <= 90)
+        assertTrue(NavLiquidDockMotion.landingRecoverMillis <= 110)
+        assertTrue(NavLiquidDockMotion.normalMotionEndMillis < 370)
+        assertTrue(NavLiquidDockMotion.normalMotionEndMillis > 300)
     }
 
     @Test fun movementIsSlightlySlowerButRetainsOriginalJumpRange() {
         assertTrue(NavLiquidDockMotion.positionStiffness < 860f)
-        assertTrue(NavLiquidDockMotion.positionStiffness > 650f)
+        assertTrue(NavLiquidDockMotion.positionStiffness >= 650f)
+        assertTrue(NavLiquidDockMotion.positionStiffness < 720f)
+        assertTrue(NavLiquidDockMotion.positionDamping >= .85f)
         assertEquals(1.27f, NavLiquidDockMotion.peakScaleForTap(1f, false), .0001f)
         assertEquals(1.30f, NavLiquidDockMotion.peakScaleForTap(2f, false), .0001f)
         assertEquals(52f, NavLiquidDockTabs.restingLensHeightDp, 0f)
