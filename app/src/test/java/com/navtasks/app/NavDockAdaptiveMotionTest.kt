@@ -34,7 +34,10 @@ class NavDockAdaptiveMotionTest {
         assertTrue(dock.contains("launch {"))
         assertTrue(dock.contains("NavLiquidDockMotion.peakScaleForTap(distance, rapid)"))
         assertTrue(dock.contains("NavLiquidDockMotion.expansionRiseMillis"))
-        assertTrue(dock.contains("NavLiquidDockMotion.expansionFallMillis"))
+        assertTrue(dock.contains("1f at NavLiquidDockMotion.normalLandingStartMillis"))
+        assertEquals(NavLiquidDockMotion.expansionRiseMillis + NavLiquidDockMotion.expansionFallMillis,
+            NavLiquidDockMotion.normalLandingStartMillis)
+        assertTrue(dock.contains("durationMillis = NavLiquidDockMotion.dragReleaseMillis"))
         assertTrue(dock.contains("NavLiquidDockMotion.lensMatteFromScale(lensExpansion.value)"))
         assertTrue(dock.contains("val lensScale = lensExpansion.value * tapPulse.value"))
         assertTrue(dock.contains("lensPosition.animateTo("))
