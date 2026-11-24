@@ -581,7 +581,7 @@
 - [x] Save beta16 exact head `458a008e4faa1ab815f532e9284cbfde88ff5aa2` as `backup/navtasks-1.2.0-beta16-before-visible-lens-growth`.
 - [x] Replace v16 nearly invisible speed-only growth with guaranteed visible one-tab 1.27x scale, longer 1.30x and small 1.10x rapid redirects. Growth/return starts and finishes DURING horizontal travel, cancel/restart from current scale/position. No change to glass opacity system, filled icons, dock coordinates or data.
 - [x] Full CI `45333266125` SUCCESS, original signed `v1.2.0-beta.17` versionCode262, APK SHA256 `67c27482fc1403e87699678e5248170fd73cddb3ac3c03014df1ad6f8b81edc4`.
-- [ ] Confirm CI `45333317233` stable-functional fallback code263 signed/published, before offering emergency use.
+- [x] CI `45333317233` original-key signed stable-functional emergency recovery `v1.1.0-recovery-code263` SUCCESS, SHA256 `ab1c26e2ee2368ebeb012ad29955798d8551b49293eb7e4aeda6a3562ed8ae4e`; ONLY use for serious regression and future versionCode >263 if installed.
 - [ ] Owner: export complete profiles, install beta17 code262 over beta16 code260 without uninstall; test single-tab visible zoom, longer jump, many rapid taps and immediate redirect, drag release, both themes. Capture short video if growth still invisible or timing unlike HONOR reference.
 - [ ] Do NOT declare dock approved until HONOR visuals verified. If still incorrect, target only lens animation and any actual clipping/opacity effect; do not touch app task/AMOS/Services/Handover/calendar business logic. Stable OTA 1.1.0 untouched.
 
