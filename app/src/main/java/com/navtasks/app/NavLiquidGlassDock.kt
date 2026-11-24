@@ -187,7 +187,7 @@ fun NavLiquidGlassBottomBar(
         var dragging by remember { mutableStateOf(false) }
         var dragPosition by remember { mutableFloatStateOf(target) }
         var hapticIndex by remember { mutableIntStateOf(selected) }
-        // Liquid jump: visible growth, then a brief 0.95x touchdown squash
+        // Liquid jump: visible growth, then a smoother 0.85x touchdown squash
         // and immediate return to 1x. This timeline overlaps the slightly
         // slower horizontal spring; there is no separate pause after landing.
         // New taps cancel both animations at their CURRENT position and size.
@@ -228,7 +228,7 @@ fun NavLiquidGlassBottomBar(
                             } else {
                                 val peak = NavLiquidDockMotion.peakScaleForTap(distance, rapid)
                                 // ONE interruptible timeline, concurrent with movement.
-                                // As the capsule reaches its slot, it compresses slightly
+                                // As the capsule reaches its slot, it compresses elastically
                                 // below resting size then rebounds immediately to 1x.
                                 // Rapid retargets intentionally skip that full landing
                                 // envelope; no required replay of the same bounce.
