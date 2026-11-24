@@ -17,6 +17,14 @@ class NavPopupFrostTest {
         assertTrue(NavPopupFrostTokens.divider(false).alpha < .1f)
     }
 
+    @Test fun screenSoftensOnlyWhileAnchoredPopoverIsOpen() {
+        assertEquals(5f, NavPopupFrostTokens.screenBlurRadiusDp, 0f)
+        assertEquals(150, NavPopupFrostTokens.screenBlurAnimationMillis)
+        val source = File("src/main/java/com/navtasks/app/NavPopupFrost.kt").readText()
+        assertTrue(source.contains("targetValue = if (capture.openMenus > 0) NavPopupFrostTokens.screenBlurRadiusDp.dp else 0.dp"))
+        assertTrue(source.contains(".blur(screenBlur, BlurredEdgeTreatment.Rectangle).then("))
+    }
+
     @Test fun sourceIsSeparateAndOnlyActiveWhileMenuIsOpen() {
         val root = "src/main/java/com/navtasks/app/"
         val frost = File(root + "NavPopupFrost.kt").readText()

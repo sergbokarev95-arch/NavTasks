@@ -3,6 +3,10 @@ package com.navtasks.app
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.view.WindowManager
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +38,8 @@ import androidx.compose.ui.window.DialogWindowProvider
 /** Neutral HONOR-reference popup material; no changes to dock optics or global palette. */
 internal object NavPopupFrostTokens {
     const val blurRadiusDp = 10f
+    const val screenBlurRadiusDp = 5f
+    const val screenBlurAnimationMillis = 150
     const val tintAlpha = .90f
     const val rimWidthDp = .6f
 
@@ -62,8 +68,16 @@ internal val LocalNavPopoverCapture = compositionLocalOf<NavPopoverCapture?> { n
 @Composable
 internal fun NavPopoverBackdropHost(content: @Composable () -> Unit) {
     val capture = remember { NavPopoverCapture() }
+    val screenBlur by animateDpAsState(
+        targetValue = if (capture.openMenus > 0) NavPopupFrostTokens.screenBlurRadiusDp.dp else 0.dp,
+        animationSpec = tween(NavPopupFrostTokens.screenBlurAnimationMillis),
+        label = "navPopoverScreenBlur",
+    )
     CompositionLocalProvider(LocalNavPopoverCapture provides capture) {
-        Box(Modifier.fillMaxSize().then(
+        // The outer blur affects only Activity content, including floating dock/buttons.
+        // DropdownMenu is a separate popup window: its text and hit targets stay sharp.
+        // Capture the original page inside the display blur so popup material is unchanged.
+        Box(Modifier.fillMaxSize().blur(screenBlur, BlurredEdgeTreatment.Rectangle).then(
             if (capture.openMenus > 0) Modifier.hazeSource(capture.haze) else Modifier
         )) {
             content()
