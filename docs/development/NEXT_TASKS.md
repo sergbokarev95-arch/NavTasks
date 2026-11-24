@@ -592,3 +592,11 @@
 - [ ] User: export FULL profiles; install beta18 over current installed version in-place, never uninstall/clear data. Compare normal adjacent and cross-tab jump against HONOR Calendar, identify precise touchdown 95%-to-100% visual rebound and slightly softer velocity, test quick rapid taps (cancel without forced extra bounce), direct finger drag, both themes, data present.
 - [ ] Only adjust animation spring/size keyframes if necessary; no general style/business modifications until explicit owner dock sign-off. Stable 1.2.0 publication NOT authorized, independent stable channel remains 1.1.0/code230.
 
+## NEXT — beta19 85% elastic dock acceptance (2026-11-24)
+- [x] Backup exact beta18 source at `backup/navtasks-1.2.0-beta18-before-smoother-85-squash`.
+- [x] Slightly reduce movement stiffness (720->660) and increase damping (.80->.86), smoothly extend keyframe phases and set landing `landingSquashScale=.85f`; preserve 1.27-1.30x expansion, direct finger drag, retarget cancellation, existing glass/icons.
+- [x] Update landing tests for 85% squash and slower 344ms continuous envelope; launch source-only beta19 code266 CI `45339664362` and independently signed stable-functional recovery code267 CI `45339730574`.
+- [ ] Confirm both CI pass, signing certificate/package, prerelease assets, SHA256, unchanged main + stable 1.1.0 feed before providing verified download.
+- [ ] User FULL profile export, in-place install beta19 on HONOR, compare hop/landing squash/rebound with calendar; test rapid repeated taps, drag-release, both themes and profiles.
+- [ ] Tune only dock animations if still necessary; never regress task business logic or promote stable without approval.
+
