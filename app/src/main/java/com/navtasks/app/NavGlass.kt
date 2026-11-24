@@ -345,13 +345,13 @@ fun NavGlassBottomBar(
                 // thin internal highlight. Only AFTER travel does it fade to
                 // a symmetrical matte-grey resting selection.
                 val settled = matte.coerceIn(0f, 1f)
-                // Night material stays unchanged. Day uses neutral WHITE/GRAPHITE,
+                // Night moving/resting capsule now uses neutral grayscale. Day stays unchanged,
                 // not blue; same translucent lens animation and draw geometry.
                 // Identical top/bottom shades eliminate the weighted lower rim.
-                val moveTop = if (p.dark) Color(0xA35A8CA9) else Color(0xC4FAFAFB)
-                val moveMid = if (p.dark) Color(0x84507696) else Color(0xA9E2E3E5)
-                val moveBottom = if (p.dark) Color(0xA33E647D) else Color(0xC4FAFAFB)
-                val restingFill = if (p.dark) Color(0x89616B77) else Color(0xB2D7D8DA)
+                val moveTop = if (p.dark) Color(0xA357575A) else Color(0xC4FAFAFB)
+                val moveMid = if (p.dark) Color(0x84505053) else Color(0xA9E2E3E5)
+                val moveBottom = if (p.dark) Color(0xA3434346) else Color(0xC4FAFAFB)
+                val restingFill = if (p.dark) Color(0xE83A3A3C) else Color(0xB2D7D8DA)
                 drawRoundRect(
                     brush = Brush.verticalGradient(
                         listOf(
@@ -365,11 +365,11 @@ fun NavGlassBottomBar(
                     cornerRadius = pillRadius,
                 )
 
-                val movingEdgeTop = if (p.dark) Color(0xC7E3F8FF)
+                val movingEdgeTop = if (p.dark) Color(0xC7E0E0E2)
                     else Color(0xEFFFFFFF)
-                val movingEdgeMid = if (p.dark) Color(0x896AAED0)
+                val movingEdgeMid = if (p.dark) Color(0x89959599)
                     else Color(0xAC818A94)
-                val restingEdge = if (p.dark) Color(0x547B8998)
+                val restingEdge = if (p.dark) Color(0x5477777A)
                     else Color(0x8AA8ACB1)
                 drawRoundRect(
                     brush = Brush.verticalGradient(
