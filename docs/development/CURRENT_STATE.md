@@ -6,6 +6,8 @@
 | Канал | Версия / code | Состояние |
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
+| Кандидат Beta47 | 1.2.0-beta.47 / 322 | CI 45635624301 in progress, APK не подтверждён |
+| Кандидат Recovery323 | 1.1.0 / 323 | CI 45635683389 queued, APK не подтверждён |
 | Последняя проверенная beta | 1.2.0-beta.46 / 320 | CI success, подписанный APK опубликован |
 | Recovery для beta46 | 1.1.0 / 321 | CI success, подписанный APK опубликован |
 | Предыдущая beta | 1.2.0-beta.45 / 318 | CI success, подписанный APK опубликован |
@@ -17,10 +19,10 @@
 | Recovery для beta41 | 1.1.0 / 311 | CI success, подписанный APK опубликован |
 | Recovery для beta40 | 1.1.0 / 309 | CI success, подписанный APK опубликован |
 
-Рабочий исходник Beta46: `feature/navtasks-1.2.0-beta46-amos-popups`, `07dff4641a9e68cbd1472bedec9cc7fa8a3cea37`. Recovery321: `qa/navtasks-1.1.0-recovery-code321-for-beta46`, `afb8fb58288762c9171d819aaeab04f2de6c7c1d`. Backup `backup/navtasks-beta45-before-amos-popup-style`. Проверенный исходник Beta45: `feature/navtasks-1.2.0-beta45-amos-style`, `e559b52ed07a396da9d15c0de7d4adae842936a5`. Recovery319: `qa/navtasks-1.1.0-recovery-code319-for-beta45`, `69cc98c70dd4f081a50b6a1876c6768f0bbce9ba`. Резервная ветка `backup/navtasks-beta44-before-amos-style`. Проверенный исходник Beta44: `feature/navtasks-1.2.0-beta44-routines-style`, `f85ac5eefe07f18d540d7e567a9bf72687567993`. Main не база beta; docs-ветка не исходник сборки.
+Рабочий кандидат Beta47: `feature/navtasks-1.2.0-beta47-amos-editor-sheet`, `b51a42de0a5c9e2650d55a124bb24e3154e42929`. Recovery323: `qa/navtasks-1.1.0-recovery-code323-for-beta47`, `7a78f2915c377591e18373c94e4742ca910a69d7`. Backup `backup/navtasks-beta46-before-amos-editor-sheet`. Проверенный исходник Beta46: `feature/navtasks-1.2.0-beta46-amos-popups`, `07dff4641a9e68cbd1472bedec9cc7fa8a3cea37`. Recovery321: `qa/navtasks-1.1.0-recovery-code321-for-beta46`, `afb8fb58288762c9171d819aaeab04f2de6c7c1d`. Backup `backup/navtasks-beta45-before-amos-popup-style`. Проверенный исходник Beta45: `feature/navtasks-1.2.0-beta45-amos-style`, `e559b52ed07a396da9d15c0de7d4adae842936a5`. Recovery319: `qa/navtasks-1.1.0-recovery-code319-for-beta45`, `69cc98c70dd4f081a50b6a1876c6768f0bbce9ba`. Резервная ветка `backup/navtasks-beta44-before-amos-style`. Проверенный исходник Beta44: `feature/navtasks-1.2.0-beta44-routines-style`, `f85ac5eefe07f18d540d7e567a9bf72687567993`. Main не база beta; docs-ветка не исходник сборки.
 
 ## Активный этап
-- Beta46 — контраст светлой строки поиска AMOS, новые непрозрачные диалоги завершения/переноса/закрытия/удаления/истории, размытие только страницы, косметическое выравнивание текущего редактора, нейтральное форматирование комментария. Полная перестройка формы по образцу рутин отложена по решению пользователя. Services, данные и расписания неизменны. [Beta CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45632880895), [Recovery CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45632931537) SUCCESS; оба APK опубликованы. Device QA pending.
+- Beta47 — AMOS bottom sheet с общей стилистикой/анимацией рутин, крестик/галочка, отдельные списки повторения и единственного предупреждения в днях, видимая дата выполнения с иконкой и стрелкой, «Выполнено» вместо «Готово». Сохранены прежние интервалы, значения, история, чек-листы, сохранение и логика сдвига графика. Services не изменены. [Beta CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45635624301), [Recovery CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45635683389) запущены.
 
 ## Подтверждённые артефакты
 - Beta46: [CI 45632880895](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45632880895) SUCCESS, source 07dff4641a9e68cbd1472bedec9cc7fa8a3cea37, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.46/NavTasks_1.2.0-beta.46.apk), 37248846 bytes, SHA256 040dcfaae302a2de3cc15545f6530824eb3b6f1be0911b7f8b9d18560ad89a57. JVM tests, release build, original signer/package/version/non-debuggable verified. Device QA pending.
