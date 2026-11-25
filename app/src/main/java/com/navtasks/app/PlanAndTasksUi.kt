@@ -724,544 +724,576 @@ fun TaskEditorScreen(
     onSheetDragStopped: (Float) -> Unit = {},
 ) {
     val p = palette
-    val context = LocalContext.current
-    var title by remember(initial?.id) { mutableStateOf(initial?.title.orEmpty()) }
-    var frequency by remember(initial?.id) {
-        mutableStateOf(initial?.let {
-            TaskSchedule.effectiveFrequency(it, LocalDate.now())
-        } ?: Frequency.EXTRA)
+    val state = remember(initial?.id) { TaskEditorState(initial) }
+    val editorBackdrop = if (!sheetMode && android.os.Build.VERSION.SDK_INT >= 33)
+        com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().then(
+            if (editorBackdrop != null) Modifier.layerBackdrop(editorBackdrop) else Modifier
+        ).then(if (sheetMode) Modifier.padding(top = 13.dp) else Modifier.statusBarsPadding())
+            .navigationBarsPadding()) {
+            state.EditorHeader(p, lang, store, sheetMode, sheetDragState, onSheetDragStopped,
+                editorBackdrop != null, onBack, onSave)
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(11.dp)) {
+                NavEventTitle(state.title, { state.title = it }, p, lang)
+                state.EditorSchedule(p, lang)
+                state.EditorReminders(p, lang)
+                state.EditorChecklist(p, lang)
+                state.EditorOther(p, lang)
+                Spacer(Modifier.height(28.dp))
+            }
+        }
+        if (!sheetMode && editorBackdrop != null) {
+            Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
+                .padding(start = 14.dp, top = 10.dp)) {
+                NavLiquidGlassCircleButton(p, editorBackdrop, "back", onBack)
+            }
+        }
     }
-    var mode by remember(initial?.id) { mutableStateOf(initial?.scheduleMode ?: ScheduleMode.CALENDAR) }
-    var date by remember(initial?.id) { mutableStateOf(initial?.startDate ?: LocalDate.now()) }
-    // A previous scoped move may have superseded the original template weekday.
-    // Start from the currently effective rule, not historical base values.
-    var weekDay by remember(initial?.id) {
-        mutableIntStateOf(initial?.let { effectiveCalendarWeekday(it, LocalDate.now()) }
-            ?: LocalDate.now().dayOfWeek.value)
-    }
-    var monthDay by remember(initial?.id) {
-        mutableStateOf((initial?.let { effectiveCalendarMonthDay(it, LocalDate.now()) }
-            ?: LocalDate.now().dayOfMonth).toString())
-    }
-    // Remember the fixed date if the user briefly selects "Last day of month".
-    // A 31 in existing profiles already means the end of every month.
-    var fixedMonthDay by remember(initial?.id) {
+    state.EditorDeletionDialogs(p, lang, store, onBack)
+    state.EditorScopeDialogs(p, lang, store, onBack)
+    state.EditorWheels(p, lang)
+    state.EditorChoiceDialogs(p, lang)
+    state.EditorChecklistNote(p, lang)
+}
+
+private class TaskEditorState(val initial: TaskTemplate?) {
+    var title: String by mutableStateOf(initial?.title.orEmpty())
+    var frequency: Frequency by mutableStateOf(initial?.let {
+        TaskSchedule.effectiveFrequency(it, LocalDate.now())
+    } ?: Frequency.EXTRA)
+    var mode: ScheduleMode by mutableStateOf(initial?.scheduleMode ?: ScheduleMode.CALENDAR)
+    var date: LocalDate by mutableStateOf(initial?.startDate ?: LocalDate.now())
+    var weekDay: Int by mutableIntStateOf(initial?.let { effectiveCalendarWeekday(it, LocalDate.now()) }
+        ?: LocalDate.now().dayOfWeek.value)
+    var monthDay: String by mutableStateOf((initial?.let { effectiveCalendarMonthDay(it, LocalDate.now()) }
+        ?: LocalDate.now().dayOfMonth).toString())
+    var fixedMonthDay: String by mutableStateOf(run {
         val selected = initial?.let { effectiveCalendarMonthDay(it, LocalDate.now()) }
             ?: LocalDate.now().dayOfMonth
-        mutableStateOf((if (selected == 31) date.dayOfMonth.coerceAtMost(30)
-            else selected).toString())
-    }
-    var interval by remember(initial?.id) { mutableStateOf((initial?.intervalCount ?: 1).toString()) }
-    var missedPolicy by remember(initial?.id) { mutableStateOf(initial?.missedPolicy ?: MissedPolicy.HISTORY) }
-    var time by remember(initial?.id) { mutableStateOf(initial?.deadlineTime) }
-    var windowStart by remember(initial?.id) { mutableStateOf(initial?.windowStartTime) }
-    var pickingStart by remember(initial?.id) { mutableStateOf(false) }
-    var showRepeat by remember(initial?.id) { mutableStateOf(false) }
-    var customRepeat by remember(initial?.id) { mutableStateOf(initial?.let {
+        (if (selected == 31) date.dayOfMonth.coerceAtMost(30) else selected).toString()
+    })
+    var interval: String by mutableStateOf((initial?.intervalCount ?: 1).toString())
+    var missedPolicy: MissedPolicy by mutableStateOf(initial?.missedPolicy ?: MissedPolicy.HISTORY)
+    var time: LocalTime? by mutableStateOf(initial?.deadlineTime)
+    var windowStart: LocalTime? by mutableStateOf(initial?.windowStartTime)
+    var pickingStart: Boolean by mutableStateOf(false)
+    var showRepeat: Boolean by mutableStateOf(false)
+    var customRepeat: Boolean by mutableStateOf(initial?.let {
         val effective = TaskSchedule.effectiveFrequency(it, LocalDate.now())
         it.scheduleMode == ScheduleMode.AFTER_COMPLETION ||
             (effective == Frequency.WEEKLY && effectiveCalendarWeekday(it, LocalDate.now()) != it.startDate.dayOfWeek.value) ||
             (effective == Frequency.MONTHLY && effectiveCalendarMonthDay(it, LocalDate.now()) != it.startDate.dayOfMonth)
-    } ?: false) }
-    var otherSettings by remember(initial?.id) { mutableStateOf(false) }
-    var showReminder by remember(initial?.id) { mutableStateOf(false) }
-    var showCustomReminder by remember(initial?.id) { mutableStateOf(false) }
-    var customMinutes by remember(initial?.id) { mutableStateOf("60") }
-    var showDateWheel by remember(initial?.id) { mutableStateOf(false) }
-    var showTimeWheel by remember(initial?.id) { mutableStateOf(false) }
-    var reminders by remember(initial?.id) { mutableStateOf(
-        initial?.let { SmartReminderTiming.offsets(it) } ?: listOf(60)
-    ) }
-    val notified = reminders.isNotEmpty()
-    val reminder = reminders.firstOrNull() ?: initial?.remindMinutesBefore ?: 60
+    } ?: false)
+    var otherSettings: Boolean by mutableStateOf(false)
+    var showReminder: Boolean by mutableStateOf(false)
+    var showCustomReminder: Boolean by mutableStateOf(false)
+    var customMinutes: String by mutableStateOf("60")
+    var showDateWheel: Boolean by mutableStateOf(false)
+    var showTimeWheel: Boolean by mutableStateOf(false)
+    var reminders: List<Int> by mutableStateOf(initial?.let { SmartReminderTiming.offsets(it) } ?: listOf(60))
+    val notified: Boolean get() = reminders.isNotEmpty()
+    val reminder: Int get() = reminders.firstOrNull() ?: initial?.remindMinutesBefore ?: 60
     fun addReminder(minutes: Int) {
         if (minutes in 0..10080 && minutes !in reminders && reminders.size < 9)
             reminders = reminders + minutes
     }
-    var checklist by remember(initial?.id) { mutableStateOf(initial?.checklist ?: emptyList()) }
-    var editingChecklistNote by remember(initial?.id) { mutableStateOf<String?>(null) }
-    var enabled by remember(initial?.id) { mutableStateOf(initial?.enabled ?: true) }
-    var showTaskDeletionOptions by remember(initial?.id) { mutableStateOf(false) }
-    var confirmPermanentTaskDeletion by remember(initial?.id) { mutableStateOf(false) }
-    var taskDeletionError by remember(initial?.id) { mutableStateOf<String?>(null) }
-    var pendingCalendarDayEdit by remember(initial?.id) {
-        mutableStateOf<Pair<TaskTemplate, CalendarDayEditPreview>?>(null)
-    }
-    var pendingFrequencyEdit by remember(initial?.id) {
-        mutableStateOf<Pair<TaskTemplate, FrequencyChangePreview>?>(null)
-    }
-    var unsupportedFrequencyEdit by remember(initial?.id) { mutableStateOf(false) }
-    val validWindow = windowStart == null || time?.let { end -> windowStart?.isBefore(end) } == true
-    val valid = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 &&
+    var checklist: List<CheckItem> by mutableStateOf(initial?.checklist ?: emptyList())
+    var editingChecklistNote: String? by mutableStateOf(null)
+    var enabled: Boolean by mutableStateOf(initial?.enabled ?: true)
+    var showTaskDeletionOptions: Boolean by mutableStateOf(false)
+    var confirmPermanentTaskDeletion: Boolean by mutableStateOf(false)
+    var taskDeletionError: String? by mutableStateOf(null)
+    var pendingCalendarDayEdit: Pair<TaskTemplate, CalendarDayEditPreview>? by mutableStateOf(null)
+    var pendingFrequencyEdit: Pair<TaskTemplate, FrequencyChangePreview>? by mutableStateOf(null)
+    var unsupportedFrequencyEdit: Boolean by mutableStateOf(false)
+    val validWindow: Boolean get() = windowStart == null || time?.let { end -> windowStart?.isBefore(end) } == true
+    val valid: Boolean get() = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 &&
         (interval.toIntOrNull() ?: 0) > 0 && validWindow
+}
 
-    val editorBackdrop = if (!sheetMode && android.os.Build.VERSION.SDK_INT >= 33)
-        com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
-    Box(Modifier.fillMaxSize()) {
-    Column(Modifier.fillMaxSize().then(
-        if (editorBackdrop != null) Modifier.layerBackdrop(editorBackdrop) else Modifier
-    )
-        .then(if (sheetMode) Modifier.padding(top = 13.dp) else Modifier.statusBarsPadding())
-        .navigationBarsPadding()) {
+@Composable
+private fun TaskEditorState.EditorHeader(p: NavPalette, lang: UiLanguage, store: TaskStore, sheetMode: Boolean, sheetDragState: DraggableState?, onSheetDragStopped: (Float) -> Unit, hasEditorBackdrop: Boolean, onBack: () -> Unit, onSave: (TaskTemplate) -> Unit) {
+    val initial = this.initial
         Row(
-            Modifier.fillMaxWidth()
-                .then(if (sheetMode && sheetDragState != null) Modifier.draggable(
-                    state = sheetDragState,
-                    orientation = Orientation.Vertical,
-                    onDragStopped = { velocity -> onSheetDragStopped(velocity) },
-                ) else Modifier)
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
+    Modifier.fillMaxWidth()
+        .then(if (sheetMode && sheetDragState != null) Modifier.draggable(
+            state = sheetDragState,
+            orientation = Orientation.Vertical,
+            onDragStopped = { velocity -> onSheetDragStopped(velocity) },
+        ) else Modifier)
+        .padding(horizontal = 14.dp, vertical = 10.dp),
+    verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (!sheetMode) {
-                if (editorBackdrop != null) Spacer(Modifier.size(44.dp))
-                else NavGlassCircleButton(p, "back", onClick = onBack)
-                Spacer(Modifier.width(12.dp))
-            }
-            if (sheetMode) {
-                NavEventHeaderAction("x", localized("Отмена", "Cancel", lang), p, true, onBack)
-            }
-            Text(localized(if (initial == null) "Новая задача" else "Редактировать задачу",
-                if (initial == null) "New task" else "Edit task", lang),
-                modifier = Modifier.weight(1f), color = p.text, fontSize = 20.sp, textAlign = TextAlign.Center)
-            NavEventHeaderAction(
-                "check", localized("Сохранить", "Save", lang), p, valid,
-                onClick = {
-                val edited = (initial ?: TaskTemplate(title = title.trim(), frequency = frequency)).copy(
-                    title = title.trim(), frequency = frequency,
-                    scheduleMode = if (frequency == Frequency.EXTRA) ScheduleMode.CALENDAR else mode,
-                    startDate = date, dayOfWeek = weekDay, dayOfMonth = monthDay.toInt(),
-                    intervalCount = interval.toInt(), missedPolicy = missedPolicy,
-                    completionMode = CompletionMode.AUTOMATIC,
-                    deadlineTime = time, notificationsEnabled = notified,
-                    remindMinutesBefore = reminder,
-                    windowStartTime = if (time != null) windowStart else null,
-                    additionalReminderMinutes = reminders.drop(1),
-                    offsetReminderKeys = initial == null || initial.offsetReminderKeys ||
-                        reminders != SmartReminderTiming.offsets(initial),
-                    legacyReminderOffset = initial?.let {
-                        if (it.offsetReminderKeys) it.legacyReminderOffset
-                        else if (it.notificationsEnabled && reminders != SmartReminderTiming.offsets(it))
-                            it.remindMinutesBefore else null
-                    },
-                    checklist = checklist.filter { it.title.isNotBlank() }.map { it.copy(required = true) },
-                    enabled = enabled,
-                )
-                val effectiveOldFrequency = initial?.let {
-                    TaskSchedule.effectiveFrequency(it, LocalDate.now())
-                }
-                if (initial != null && effectiveOldFrequency != edited.frequency) {
-                    val preview = calendarFrequencyChangePreview(
-                        initial, edited, store.runs, LocalDate.now(),
-                    )
-                    if (preview != null) pendingFrequencyEdit = edited to preview
-                    else unsupportedFrequencyEdit = true
-                } else {
-                    val preview = initial?.let {
-                        calendarDayEditPreview(it, edited, store.runs, LocalDate.now())
-                    }
-                    if (preview != null) {
-                        pendingCalendarDayEdit = edited to preview
-                    } else {
-                        // Metadata changes must retain the historical frequency
-                        // and the effective-dated calendar revisions.
-                        onSave(initial?.let {
-                            preserveHistoricalCalendarBase(it, edited, LocalDate.now())
-                        } ?: edited)
-                    }
-                }
-                },
-            )
+    if (!sheetMode) {
+        if (hasEditorBackdrop) Spacer(Modifier.size(44.dp))
+        else NavGlassCircleButton(p, "back", onClick = onBack)
+        Spacer(Modifier.width(12.dp))
+    }
+    if (sheetMode) {
+        NavEventHeaderAction("x", localized("Отмена", "Cancel", lang), p, true, onBack)
+    }
+    Text(localized(if (initial == null) "Новая задача" else "Редактировать задачу",
+        if (initial == null) "New task" else "Edit task", lang),
+        modifier = Modifier.weight(1f), color = p.text, fontSize = 20.sp, textAlign = TextAlign.Center)
+    NavEventHeaderAction(
+        "check", localized("Сохранить", "Save", lang), p, valid,
+        onClick = {
+        val edited = (initial ?: TaskTemplate(title = title.trim(), frequency = frequency)).copy(
+            title = title.trim(), frequency = frequency,
+            scheduleMode = if (frequency == Frequency.EXTRA) ScheduleMode.CALENDAR else mode,
+            startDate = date, dayOfWeek = weekDay, dayOfMonth = monthDay.toInt(),
+            intervalCount = interval.toInt(), missedPolicy = missedPolicy,
+            completionMode = CompletionMode.AUTOMATIC,
+            deadlineTime = time, notificationsEnabled = notified,
+            remindMinutesBefore = reminder,
+            windowStartTime = if (time != null) windowStart else null,
+            additionalReminderMinutes = reminders.drop(1),
+            offsetReminderKeys = initial == null || initial.offsetReminderKeys ||
+                reminders != SmartReminderTiming.offsets(initial),
+            legacyReminderOffset = initial?.let {
+                if (it.offsetReminderKeys) it.legacyReminderOffset
+                else if (it.notificationsEnabled && reminders != SmartReminderTiming.offsets(it))
+                    it.remindMinutesBefore else null
+            },
+            checklist = checklist.filter { it.title.isNotBlank() }.map { it.copy(required = true) },
+            enabled = enabled,
+        )
+        val effectiveOldFrequency = initial?.let {
+            TaskSchedule.effectiveFrequency(it, LocalDate.now())
         }
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(11.dp)) {
-            NavEventTitle(title, { title = it }, p, lang)
-            NavEditorPanel(p) {
-                Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(localized("Весь день", "All day", lang), color = p.text, modifier = Modifier.weight(1f))
-                    Switch(time == null, onCheckedChange = { allDay ->
-                        if (allDay) { time = null; windowStart = null }
-                        else time = LocalTime.of(18, 0)
-                    }, colors = navEditorSwitchColors(p))
-                }
-                NavEventDivider(p)
-                NavEventValueRow(
-                    localized("Дата начала", "Start date", lang),
-                    navDate(date, lang, true), p,
-                ) { showDateWheel = true }
-                if (time != null) {
-                    NavEventDivider(p)
-                    Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(localized("Временной интервал", "Time window", lang), color = p.text, modifier = Modifier.weight(1f))
-                        Switch(windowStart != null, onCheckedChange = { useWindow ->
-                            if (useWindow) {
-                                if (time == LocalTime.MIDNIGHT) time = LocalTime.of(1, 0)
-                                val end = time ?: LocalTime.of(18, 0)
-                                windowStart = end.minusHours(1).takeIf { it.isBefore(end) } ?: LocalTime.MIDNIGHT
-                            } else windowStart = null
-                        }, colors = navEditorSwitchColors(p))
-                    }
-                    if (windowStart != null) {
-                        NavEventValueRow(localized("Начало", "Start", lang), windowStart.toString(), p) {
-                            pickingStart = true; showTimeWheel = true
-                        }
-                    }
-                    NavEventDivider(p)
-                    NavEventValueRow(
-                        if (windowStart == null) localized("Выполнить к", "Due by", lang)
-                        else localized("Конец", "End", lang),
-                        time.toString(), p,
-                    ) { pickingStart = false; showTimeWheel = true }
-                    if (!validWindow) Text(localized("Начало должно быть раньше окончания в тот же день.",
-                        "Start must precede the end on the same day.", lang), color = p.dangerText, fontSize = 12.sp)
-                }
-                NavEventDivider(p)
-                NavEventValueRow(localized("Повторять", "Repeat", lang),
-                    navEventRepeatLabel(frequency, mode, customRepeat, lang), p, chevron = true) {
-                    showRepeat = true
-                }
-                if (customRepeat && frequency != Frequency.EXTRA) {
-                    NavEventDivider(p)
-                    NavEditorOptionLine(navEventRepeatChoices(lang).filter { it.first != "custom" },
-                        frequency.name, p) { key ->
-                        val chosen = Frequency.valueOf(key)
-                        if (frequency != chosen) {
-                            weekDay = date.dayOfWeek.value
-                            monthDay = date.dayOfMonth.toString()
-                        }
-                        frequency = chosen
-                        if (chosen == Frequency.EXTRA) { mode = ScheduleMode.CALENDAR; customRepeat = false }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    NavEditorOptionLine(navTaskRepeatChoices(lang), mode.name, p) { mode = ScheduleMode.valueOf(it) }
-                    if (frequency == Frequency.WEEKLY && mode == ScheduleMode.CALENDAR) {
-                        FormLabel("День недели", "Weekday", lang, p)
-                        val loc = if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
-                        NavEditorOptionLine((1..7).map { n -> "$n" to DayOfWeek.of(n).getDisplayName(TextStyle.SHORT, loc) },
-                            "$weekDay", p) { weekDay = it.toInt() }
-                    }
-                    if (frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR) {
-                        FormLabel("Когда выполнять каждый месяц", "Monthly execution date", lang, p)
-                        NavEditorOptionLine(listOf("fixed" to localized("В конкретное число", "Specific day", lang),
-                            "end" to localized("В последний день", "Last day", lang)),
-                            if (monthDay == "31") "end" else "fixed", p) { choice ->
-                            if (choice == "end") {
-                                if (monthDay.toIntOrNull() in 1..30) fixedMonthDay = monthDay
-                                monthDay = "31"
-                            } else monthDay = fixedMonthDay.takeIf { it.toIntOrNull() in 1..30 } ?: "1"
-                        }
-                        if (monthDay != "31") NavGlassInput(monthDay, { monthDay = it.take(2); fixedMonthDay = monthDay }, p,
-                            modifier = Modifier.fillMaxWidth(), neutralStyle = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                        val upcoming = monthlySchedulePreview(date, monthDay.toIntOrNull() ?: 0)
-                        if (upcoming.isNotEmpty()) Text(upcoming.joinToString("  ·  ") { navDate(it, lang, true) },
-                            color = p.muted, fontSize = 12.sp)
-                    }
-                    if (frequency != Frequency.EXTRA && mode == ScheduleMode.AFTER_COMPLETION) {
-                        val unit = when (frequency) {
-                            Frequency.DAILY -> localized("дней", "days", lang)
-                            Frequency.WEEKLY -> localized("недель", "weeks", lang)
-                            else -> localized("месяцев", "months", lang)
-                        }
-                        Text(localized("Интервал от выполнения", "Interval after completion", lang) + " ($unit)", color = p.muted, fontSize = 12.sp)
-                        NavGlassInput(interval, { interval = it }, p, modifier = Modifier.fillMaxWidth(),
-                            neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                    }
+        if (initial != null && effectiveOldFrequency != edited.frequency) {
+            val preview = calendarFrequencyChangePreview(
+                initial, edited, store.runs, LocalDate.now(),
+            )
+            if (preview != null) pendingFrequencyEdit = edited to preview
+            else unsupportedFrequencyEdit = true
+        } else {
+            val preview = initial?.let {
+                calendarDayEditPreview(it, edited, store.runs, LocalDate.now())
+            }
+            if (preview != null) {
+                pendingCalendarDayEdit = edited to preview
+            } else {
+                // Metadata changes must retain the historical frequency
+                // and the effective-dated calendar revisions.
+                onSave(initial?.let {
+                    preserveHistoricalCalendarBase(it, edited, LocalDate.now())
+                } ?: edited)
+            }
+        }
+        },
+    )
+        }
+}
+
+@Composable
+private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
+    NavEditorPanel(p) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(localized("Весь день", "All day", lang), color = p.text, modifier = Modifier.weight(1f))
+            Switch(time == null, onCheckedChange = { allDay ->
+                if (allDay) { time = null; windowStart = null }
+                else time = LocalTime.of(18, 0)
+            }, colors = navEditorSwitchColors(p))
+        }
+        NavEventDivider(p)
+        NavEventValueRow(
+            localized("Дата начала", "Start date", lang),
+            navDate(date, lang, true), p,
+        ) { showDateWheel = true }
+        if (time != null) {
+            NavEventDivider(p)
+            Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(localized("Временной интервал", "Time window", lang), color = p.text, modifier = Modifier.weight(1f))
+                Switch(windowStart != null, onCheckedChange = { useWindow ->
+                    if (useWindow) {
+                        if (time == LocalTime.MIDNIGHT) time = LocalTime.of(1, 0)
+                        val end = time ?: LocalTime.of(18, 0)
+                        windowStart = end.minusHours(1).takeIf { it.isBefore(end) } ?: LocalTime.MIDNIGHT
+                    } else windowStart = null
+                }, colors = navEditorSwitchColors(p))
+            }
+            if (windowStart != null) {
+                NavEventValueRow(localized("Начало", "Start", lang), windowStart.toString(), p) {
+                    pickingStart = true; showTimeWheel = true
                 }
             }
-            NavEditorPanel(p) {
-                reminders.forEach { minutes ->
-                    Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(navEventReminderLabel(minutes, lang), color = p.text, modifier = Modifier.weight(1f))
-                        NavEventHeaderAction("x", localized("Удалить напоминание", "Remove reminder", lang), p, true) {
-                            reminders = reminders.filterNot { it == minutes }
-                        }
-                    }
-                    NavEventDivider(p)
+            NavEventDivider(p)
+            NavEventValueRow(
+                if (windowStart == null) localized("Выполнить к", "Due by", lang)
+                else localized("Конец", "End", lang),
+                time.toString(), p,
+            ) { pickingStart = false; showTimeWheel = true }
+            if (!validWindow) Text(localized("Начало должно быть раньше окончания в тот же день.",
+                "Start must precede the end on the same day.", lang), color = p.dangerText, fontSize = 12.sp)
+        }
+        NavEventDivider(p)
+        NavEventValueRow(localized("Повторять", "Repeat", lang),
+            navEventRepeatLabel(frequency, mode, customRepeat, lang), p, chevron = true) {
+            showRepeat = true
+        }
+        if (customRepeat && frequency != Frequency.EXTRA) {
+            NavEventDivider(p)
+            NavEditorOptionLine(navEventRepeatChoices(lang).filter { it.first != "custom" },
+                frequency.name, p) { key ->
+                val chosen = Frequency.valueOf(key)
+                if (frequency != chosen) {
+                    weekDay = date.dayOfWeek.value
+                    monthDay = date.dayOfMonth.toString()
                 }
-                if (reminders.size < 9) Box(Modifier.fillMaxWidth().glassClickable { showReminder = true }.padding(vertical = 13.dp)) {
-                    Text(localized("Добавить напоминание", "Add reminder", lang), color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 15.sp)
+                frequency = chosen
+                if (chosen == Frequency.EXTRA) { mode = ScheduleMode.CALENDAR; customRepeat = false }
+            }
+            Spacer(Modifier.height(8.dp))
+            NavEditorOptionLine(navTaskRepeatChoices(lang), mode.name, p) { mode = ScheduleMode.valueOf(it) }
+            if (frequency == Frequency.WEEKLY && mode == ScheduleMode.CALENDAR) {
+                FormLabel("День недели", "Weekday", lang, p)
+                val loc = if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
+                NavEditorOptionLine((1..7).map { n -> "$n" to DayOfWeek.of(n).getDisplayName(TextStyle.SHORT, loc) },
+                    "$weekDay", p) { weekDay = it.toInt() }
+            }
+            if (frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR) {
+                FormLabel("Когда выполнять каждый месяц", "Monthly execution date", lang, p)
+                NavEditorOptionLine(listOf("fixed" to localized("В конкретное число", "Specific day", lang),
+                    "end" to localized("В последний день", "Last day", lang)),
+                    if (monthDay == "31") "end" else "fixed", p) { choice ->
+                    if (choice == "end") {
+                        if ((monthDay.toIntOrNull() ?: 0) in 1..30) fixedMonthDay = monthDay
+                        monthDay = "31"
+                    } else monthDay = fixedMonthDay.takeIf { (it.toIntOrNull() ?: 0) in 1..30 } ?: "1"
                 }
-                if (time == null && reminders.isNotEmpty()) Text(
-                    localized("От основного времени в настройках", "Relative to the default time in Settings", lang),
-                    color = p.muted, fontSize = 11.sp)
-                if (windowStart != null && reminders.isNotEmpty()) Text(
-                    localized("От времени начала", "Relative to the start time", lang), color = p.muted, fontSize = 11.sp)
+                if (monthDay != "31") NavGlassInput(monthDay, { monthDay = it.take(2); fixedMonthDay = monthDay }, p,
+                    modifier = Modifier.fillMaxWidth(), neutralStyle = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                val upcoming = monthlySchedulePreview(date, monthDay.toIntOrNull() ?: 0)
+                if (upcoming.isNotEmpty()) Text(upcoming.joinToString("  ·  ") { navDate(it, lang, true) },
+                    color = p.muted, fontSize = 12.sp)
             }
-            NavEditorPanel(p) {
-                ChecklistEditorPanel(
-                    items = checklist,
-                    onItemsChange = { updated ->
-                        checklist = updated
-                        if (editingChecklistNote != null &&
-                            updated.none { it.id == editingChecklistNote }) {
-                            editingChecklistNote = null
-                        }
-                    },
-                    onEditNote = { editingChecklistNote = it },
-                    p = p,
-                    lang = lang,
-                    neutralStyle = true,
-                )
+            if (frequency != Frequency.EXTRA && mode == ScheduleMode.AFTER_COMPLETION) {
+                val unit = when (frequency) {
+                    Frequency.DAILY -> localized("дней", "days", lang)
+                    Frequency.WEEKLY -> localized("недель", "weeks", lang)
+                    else -> localized("месяцев", "months", lang)
+                }
+                Text(localized("Интервал от выполнения", "Interval after completion", lang) + " ($unit)", color = p.muted, fontSize = 12.sp)
+                NavGlassInput(interval, { interval = it }, p, modifier = Modifier.fillMaxWidth(),
+                    neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
             }
-            NavEventValueRow(localized("Другие настройки", "Other settings", lang),
-                "", p, chevron = true, expanded = otherSettings) { otherSettings = !otherSettings }
-            if (otherSettings) NavEditorPanel(p) {
-                FormLabel("Если пропущена", "When overdue", lang, p)
-                NavEditorOptionLine(listOf(
-                    MissedPolicy.HISTORY.name to localized("В пропущенные", "Keep in Missed", lang),
-                    MissedPolicy.CARRY.name to localized("Автоперенос", "Auto move", lang),
-                    MissedPolicy.ASK.name to localized("Спросить", "Ask me", lang),
-                    MissedPolicy.ARCHIVE.name to localized("В историю", "Archive", lang),
-                ), missedPolicy.name, p) { missedPolicy = MissedPolicy.valueOf(it) }
-            }
-            NavEditorPanel(p) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(localized("Задача активна", "Task enabled", lang), color = p.text, modifier = Modifier.weight(1f))
-                    Switch(enabled, onCheckedChange = { enabled = it }, colors = navEditorSwitchColors(p))
+        }
+    }
+}
+
+@Composable
+private fun TaskEditorState.EditorReminders(p: NavPalette, lang: UiLanguage) {
+    NavEditorPanel(p) {
+        reminders.forEach { minutes ->
+            Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(navEventReminderLabel(minutes, lang), color = p.text, modifier = Modifier.weight(1f))
+                NavEventHeaderAction("x", localized("Удалить напоминание", "Remove reminder", lang), p, true) {
+                    reminders = reminders.filterNot { it == minutes }
                 }
             }
-            if (initial != null) {
+            NavEventDivider(p)
+        }
+        if (reminders.size < 9) Box(Modifier.fillMaxWidth().glassClickable { showReminder = true }.padding(vertical = 13.dp)) {
+            Text(localized("Добавить напоминание", "Add reminder", lang), color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 15.sp)
+        }
+        if (time == null && reminders.isNotEmpty()) Text(
+            localized("От основного времени в настройках", "Relative to the default time in Settings", lang),
+            color = p.muted, fontSize = 11.sp)
+        if (windowStart != null && reminders.isNotEmpty()) Text(
+            localized("От времени начала", "Relative to the start time", lang), color = p.muted, fontSize = 11.sp)
+    }
+}
+
+@Composable
+private fun TaskEditorState.EditorChecklist(p: NavPalette, lang: UiLanguage) {
+    NavEditorPanel(p) {
+        ChecklistEditorPanel(
+            items = checklist,
+            onItemsChange = { updated ->
+                checklist = updated
+                if (editingChecklistNote != null &&
+                    updated.none { it.id == editingChecklistNote }) {
+                    editingChecklistNote = null
+                }
+            },
+            onEditNote = { editingChecklistNote = it },
+            p = p,
+            lang = lang,
+            neutralStyle = true,
+        )
+    }
+}
+
+@Composable
+private fun TaskEditorState.EditorOther(p: NavPalette, lang: UiLanguage) {
+    val initial = this.initial
+    NavEventValueRow(localized("Другие настройки", "Other settings", lang),
+        "", p, chevron = true, expanded = otherSettings) { otherSettings = !otherSettings }
+    if (otherSettings) NavEditorPanel(p) {
+        FormLabel("Если пропущена", "When overdue", lang, p)
+        NavEditorOptionLine(listOf(
+            MissedPolicy.HISTORY.name to localized("В пропущенные", "Keep in Missed", lang),
+            MissedPolicy.CARRY.name to localized("Автоперенос", "Auto move", lang),
+            MissedPolicy.ASK.name to localized("Спросить", "Ask me", lang),
+            MissedPolicy.ARCHIVE.name to localized("В историю", "Archive", lang),
+        ), missedPolicy.name, p) { missedPolicy = MissedPolicy.valueOf(it) }
+    }
+    NavEditorPanel(p) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(localized("Задача активна", "Task enabled", lang), color = p.text, modifier = Modifier.weight(1f))
+            Switch(enabled, onCheckedChange = { enabled = it }, colors = navEditorSwitchColors(p))
+        }
+    }
+    if (initial != null) {
+        TextButton(
+            onClick = {
+                taskDeletionError = null
+                showTaskDeletionOptions = true
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(localized("Удалить задачу", "Delete task", lang),
+                color = p.systemRed, fontSize = 14.sp)
+        }
+        taskDeletionError?.let { error ->
+            Text(error, color = p.dangerText, fontSize = 12.sp)
+        }
+    }
+}
+
+@Composable
+private fun TaskEditorState.EditorDeletionDialogs(p: NavPalette, lang: UiLanguage, store: TaskStore, onBack: () -> Unit) {
+    val initial = this.initial
+    if (showTaskDeletionOptions && initial != null) {
+        NavGlassAlertDialog(
+    p = p, neutralActions = true, neutralSurface = true,
+    onDismissRequest = { showTaskDeletionOptions = false },
+    title = {
+        Text(localized("Удаление задачи", "Remove task", lang))
+    },
+    text = {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(initial.title, color = p.text, fontSize = 15.sp)
+            Text(localized(
+                "Выбери действие. Остановка сохраняет историю и позволяет снова включить задачу. Полное удаление уничтожает все её отметки и записи.",
+                "Choose an action. Stopping keeps history and allows reactivation. Permanent deletion erases all completions and records for this task.",
+                lang,
+            ), color = p.muted, fontSize = 12.sp)
+            if (initial.enabled) {
                 TextButton(
                     onClick = {
-                        taskDeletionError = null
-                        showTaskDeletionOptions = true
+                        runCatching { store.stopRepeatingTask(initial.id) }
+                            .onSuccess { stopped ->
+                                if (stopped) {
+                                    showTaskDeletionOptions = false
+                                    onBack()
+                                } else {
+                                    taskDeletionError = localized(
+                                        "Задача не найдена", "Task not found", lang)
+                                    showTaskDeletionOptions = false
+                                }
+                            }
+                            .onFailure {
+                                taskDeletionError = it.localizedMessage
+                                showTaskDeletionOptions = false
+                            }
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(localized("Удалить задачу", "Delete task", lang),
-                        color = p.systemRed, fontSize = 14.sp)
-                }
-                taskDeletionError?.let { error ->
-                    Text(error, color = p.dangerText, fontSize = 12.sp)
+                    Text(
+                        if (initial.frequency == Frequency.EXTRA)
+                            localized("Отключить задачу", "Disable task", lang)
+                        else localized("Прекратить повторения", "Stop repeating", lang),
+                        color = NavTodayVisualTokens.accentInk(p.dark),
+                    )
                 }
             }
-            Spacer(Modifier.height(28.dp))
+            TextButton(
+                onClick = {
+                    showTaskDeletionOptions = false
+                    confirmPermanentTaskDeletion = true
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(localized("Удалить полностью", "Delete permanently", lang),
+                    color = p.systemRed)
+            }
         }
-    }
-    if (!sheetMode && editorBackdrop != null) {
-        Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
-            .padding(start = 14.dp, top = 10.dp)) {
-            NavLiquidGlassCircleButton(p, editorBackdrop, "back", onBack)
+    },
+    confirmButton = {},
+    dismissButton = {
+        TextButton(onClick = { showTaskDeletionOptions = false }) {
+            Text(localized("Отмена", "Cancel", lang), color = p.text)
         }
-    }
-    }
-
-    if (showTaskDeletionOptions && initial != null) {
-        NavGlassAlertDialog(
-            p = p, neutralActions = true, neutralSurface = true,
-            onDismissRequest = { showTaskDeletionOptions = false },
-            title = {
-                Text(localized("Удаление задачи", "Remove task", lang))
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(initial.title, color = p.text, fontSize = 15.sp)
-                    Text(localized(
-                        "Выбери действие. Остановка сохраняет историю и позволяет снова включить задачу. Полное удаление уничтожает все её отметки и записи.",
-                        "Choose an action. Stopping keeps history and allows reactivation. Permanent deletion erases all completions and records for this task.",
-                        lang,
-                    ), color = p.muted, fontSize = 12.sp)
-                    if (initial.enabled) {
-                        TextButton(
-                            onClick = {
-                                runCatching { store.stopRepeatingTask(initial.id) }
-                                    .onSuccess { stopped ->
-                                        if (stopped) {
-                                            showTaskDeletionOptions = false
-                                            onBack()
-                                        } else {
-                                            taskDeletionError = localized(
-                                                "Задача не найдена", "Task not found", lang)
-                                            showTaskDeletionOptions = false
-                                        }
-                                    }
-                                    .onFailure {
-                                        taskDeletionError = it.localizedMessage
-                                        showTaskDeletionOptions = false
-                                    }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(
-                                if (initial.frequency == Frequency.EXTRA)
-                                    localized("Отключить задачу", "Disable task", lang)
-                                else localized("Прекратить повторения", "Stop repeating", lang),
-                                color = NavTodayVisualTokens.accentInk(p.dark),
-                            )
-                        }
-                    }
-                    TextButton(
-                        onClick = {
-                            showTaskDeletionOptions = false
-                            confirmPermanentTaskDeletion = true
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(localized("Удалить полностью", "Delete permanently", lang),
-                            color = p.systemRed)
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showTaskDeletionOptions = false }) {
-                    Text(localized("Отмена", "Cancel", lang), color = p.text)
-                }
-            },
+    },
         )
     }
     if (confirmPermanentTaskDeletion && initial != null) {
         NavGlassAlertDialog(
-            p = p, neutralActions = true, neutralSurface = true,
-            onDismissRequest = { confirmPermanentTaskDeletion = false },
-            title = {
-                Text(localized("Удалить навсегда?", "Delete permanently?", lang))
-            },
-            text = {
-                Text(localized(
-                    "Задача «" + initial.title + "» и вся её история выполнений, пропусков и переносов будут удалены без возможности восстановления. Остальные задачи останутся.",
-                    "The task “" + initial.title + "” and its completion, missed and moved history will be erased permanently. Other tasks stay unchanged.",
-                    lang,
-                ), color = p.muted, fontSize = 13.sp)
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    runCatching { store.deleteTaskPermanently(initial.id) }
-                        .onSuccess { deleted ->
-                            confirmPermanentTaskDeletion = false
-                            if (deleted) onBack()
-                            else taskDeletionError = localized(
-                                "Задача уже удалена", "Task already deleted", lang)
-                        }
-                        .onFailure {
-                            confirmPermanentTaskDeletion = false
-                            taskDeletionError = it.localizedMessage
-                        }
-                }) {
-                    Text(localized("Удалить полностью", "Delete permanently", lang),
-                        color = p.systemRed)
+    p = p, neutralActions = true, neutralSurface = true,
+    onDismissRequest = { confirmPermanentTaskDeletion = false },
+    title = {
+        Text(localized("Удалить навсегда?", "Delete permanently?", lang))
+    },
+    text = {
+        Text(localized(
+            "Задача «" + initial.title + "» и вся её история выполнений, пропусков и переносов будут удалены без возможности восстановления. Остальные задачи останутся.",
+            "The task “" + initial.title + "” and its completion, missed and moved history will be erased permanently. Other tasks stay unchanged.",
+            lang,
+        ), color = p.muted, fontSize = 13.sp)
+    },
+    confirmButton = {
+        TextButton(onClick = {
+            runCatching { store.deleteTaskPermanently(initial.id) }
+                .onSuccess { deleted ->
+                    confirmPermanentTaskDeletion = false
+                    if (deleted) onBack()
+                    else taskDeletionError = localized(
+                        "Задача уже удалена", "Task already deleted", lang)
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmPermanentTaskDeletion = false }) {
-                    Text(localized("Отмена", "Cancel", lang), color = p.text)
+                .onFailure {
+                    confirmPermanentTaskDeletion = false
+                    taskDeletionError = it.localizedMessage
                 }
-            },
+        }) {
+            Text(localized("Удалить полностью", "Delete permanently", lang),
+                color = p.systemRed)
+        }
+    },
+    dismissButton = {
+        TextButton(onClick = { confirmPermanentTaskDeletion = false }) {
+            Text(localized("Отмена", "Cancel", lang), color = p.text)
+        }
+    },
         )
     }
+}
 
+@Composable
+private fun TaskEditorState.EditorScopeDialogs(p: NavPalette, lang: UiLanguage, store: TaskStore, onBack: () -> Unit) {
     pendingFrequencyEdit?.let { (edited, preview) ->
         val oldLabel = when (preview.oldFrequency) {
-            Frequency.DAILY -> localized("Ежедневно", "Daily", lang)
-            Frequency.WEEKLY -> localized("Еженедельно", "Weekly", lang)
-            Frequency.MONTHLY -> localized("Ежемесячно", "Monthly", lang)
-            Frequency.EXTRA -> localized("Разово", "One-off", lang)
+    Frequency.DAILY -> localized("Ежедневно", "Daily", lang)
+    Frequency.WEEKLY -> localized("Еженедельно", "Weekly", lang)
+    Frequency.MONTHLY -> localized("Ежемесячно", "Monthly", lang)
+    Frequency.EXTRA -> localized("Разово", "One-off", lang)
         }
         val newLabel = when (preview.newFrequency) {
-            Frequency.DAILY -> localized("Ежедневно", "Daily", lang)
-            Frequency.WEEKLY -> localized("Еженедельно", "Weekly", lang)
-            Frequency.MONTHLY -> localized("Ежемесячно", "Monthly", lang)
-            Frequency.EXTRA -> localized("Разово", "One-off", lang)
+    Frequency.DAILY -> localized("Ежедневно", "Daily", lang)
+    Frequency.WEEKLY -> localized("Еженедельно", "Weekly", lang)
+    Frequency.MONTHLY -> localized("Ежемесячно", "Monthly", lang)
+    Frequency.EXTRA -> localized("Разово", "One-off", lang)
         }
         MoveScopeDialog(
-            p = p, lang = lang, title = edited.title, neutralStyle = true,
-            oldDate = preview.selectedRun.displayDate,
-            newDate = preview.newDate,
-            summary = "$oldLabel → $newLabel",
-            onOnlyThis = {
-                pendingFrequencyEdit = null
-                if (store.applyCalendarFrequencyEdit(
-                    edited, CalendarEditScope.ONLY_THIS, preview.referenceDate)) onBack()
-            },
-            onThisAndFuture = {
-                pendingFrequencyEdit = null
-                if (store.applyCalendarFrequencyEdit(
-                    edited, CalendarEditScope.THIS_AND_FUTURE, preview.referenceDate)) onBack()
-            },
-            onDismiss = { pendingFrequencyEdit = null },
+    p = p, lang = lang, title = edited.title, neutralStyle = true,
+    oldDate = preview.selectedRun.displayDate,
+    newDate = preview.newDate,
+    summary = "$oldLabel → $newLabel",
+    onOnlyThis = {
+        pendingFrequencyEdit = null
+        if (store.applyCalendarFrequencyEdit(
+            edited, CalendarEditScope.ONLY_THIS, preview.referenceDate)) onBack()
+    },
+    onThisAndFuture = {
+        pendingFrequencyEdit = null
+        if (store.applyCalendarFrequencyEdit(
+            edited, CalendarEditScope.THIS_AND_FUTURE, preview.referenceDate)) onBack()
+    },
+    onDismiss = { pendingFrequencyEdit = null },
         )
     }
     if (unsupportedFrequencyEdit) {
         NavGlassAlertDialog(
-            p = p, neutralActions = true, neutralSurface = true,
-            onDismissRequest = { unsupportedFrequencyEdit = false },
-            title = { Text(localized("Нужна отдельная настройка",
-                "Separate scheduling required", lang)) },
-            text = { Text(localized(
-                "Выбор области действия пока поддерживается для повторений по календарю: " +
-                    "День, Неделя и Месяц. Разовые и интервалы «От выполнения» " +
-                    "нельзя безопасно изменить этим способом.",
-                "Scope selection currently supports calendar-based Daily, Weekly, and Monthly " +
-                    "recurrences. One-off tasks and after-completion intervals need a separate change.",
-                lang,
-            )) },
-            confirmButton = {
-                TextButton(onClick = { unsupportedFrequencyEdit = false }) {
-                    Text(localized("Понятно", "OK", lang), color = NavTodayVisualTokens.accentInk(p.dark))
-                }
-            },
+    p = p, neutralActions = true, neutralSurface = true,
+    onDismissRequest = { unsupportedFrequencyEdit = false },
+    title = { Text(localized("Нужна отдельная настройка",
+        "Separate scheduling required", lang)) },
+    text = { Text(localized(
+        "Выбор области действия пока поддерживается для повторений по календарю: " +
+            "День, Неделя и Месяц. Разовые и интервалы «От выполнения» " +
+            "нельзя безопасно изменить этим способом.",
+        "Scope selection currently supports calendar-based Daily, Weekly, and Monthly " +
+            "recurrences. One-off tasks and after-completion intervals need a separate change.",
+        lang,
+    )) },
+    confirmButton = {
+        TextButton(onClick = { unsupportedFrequencyEdit = false }) {
+            Text(localized("Понятно", "OK", lang), color = NavTodayVisualTokens.accentInk(p.dark))
+        }
+    },
         )
     }
     pendingCalendarDayEdit?.let { (edited, preview) ->
         MoveScopeDialog(
-            p = p, lang = lang, title = edited.title, neutralStyle = true,
-            oldDate = preview.selectedRun.displayDate,
-            newDate = preview.newDate,
-            onOnlyThis = {
-                pendingCalendarDayEdit = null
-                if (store.applyCalendarDayEdit(
-                        edited, CalendarEditScope.ONLY_THIS, preview.referenceDate)) onBack()
-            },
-            onThisAndFuture = {
-                pendingCalendarDayEdit = null
-                if (store.applyCalendarDayEdit(
-                        edited, CalendarEditScope.THIS_AND_FUTURE, preview.referenceDate)) onBack()
-            },
-            onDismiss = { pendingCalendarDayEdit = null },
+    p = p, lang = lang, title = edited.title, neutralStyle = true,
+    oldDate = preview.selectedRun.displayDate,
+    newDate = preview.newDate,
+    onOnlyThis = {
+        pendingCalendarDayEdit = null
+        if (store.applyCalendarDayEdit(
+                edited, CalendarEditScope.ONLY_THIS, preview.referenceDate)) onBack()
+    },
+    onThisAndFuture = {
+        pendingCalendarDayEdit = null
+        if (store.applyCalendarDayEdit(
+                edited, CalendarEditScope.THIS_AND_FUTURE, preview.referenceDate)) onBack()
+    },
+    onDismiss = { pendingCalendarDayEdit = null },
         )
     }
+}
 
+@Composable
+private fun TaskEditorState.EditorWheels(p: NavPalette, lang: UiLanguage) {
+    val initial = this.initial
     if (showDateWheel) {
         NavDateWheelDialog(
-            initial = date, p = p, lang = lang,
-            onDismiss = { showDateWheel = false },
-            onSelected = {
-                date = it
-                if (initial == null && !customRepeat) {
-                    weekDay = it.dayOfWeek.value
-                    monthDay = it.dayOfMonth.toString()
-                }
-                showDateWheel = false
-            },
+    initial = date, p = p, lang = lang,
+    onDismiss = { showDateWheel = false },
+    onSelected = {
+        date = it
+        if (initial == null && !customRepeat) {
+            weekDay = it.dayOfWeek.value
+            monthDay = it.dayOfMonth.toString()
+        }
+        showDateWheel = false
+    },
         )
     }
     if (showTimeWheel) {
         NavTimeWheelDialog(
-            initial = (if (pickingStart) windowStart else time) ?: LocalTime.of(18, 0), p = p, lang = lang,
-            onDismiss = { showTimeWheel = false },
-            onSelected = { if (pickingStart) windowStart = it else time = it; showTimeWheel = false },
+    initial = (if (pickingStart) windowStart else time) ?: LocalTime.of(18, 0), p = p, lang = lang,
+    onDismiss = { showTimeWheel = false },
+    onSelected = { if (pickingStart) windowStart = it else time = it; showTimeWheel = false },
         )
     }
+}
+
+@Composable
+private fun TaskEditorState.EditorChoiceDialogs(p: NavPalette, lang: UiLanguage) {
     if (showRepeat) NavEventChoiceDialog(
         localized("Повторять", "Repeat", lang), navEventRepeatChoices(lang),
         if (customRepeat) "custom" else frequency.name, p, lang, confirmRequired = false,
         onDismiss = { showRepeat = false },
         onSelect = { key ->
-            showRepeat = false
-            if (key == "custom") {
-                if (frequency == Frequency.EXTRA) frequency = Frequency.DAILY
-                customRepeat = true
-            } else {
-                val chosen = Frequency.valueOf(key)
-                if (chosen != frequency || mode != ScheduleMode.CALENDAR) {
-                    weekDay = date.dayOfWeek.value
-                    monthDay = date.dayOfMonth.toString()
-                }
-                frequency = chosen
-                mode = ScheduleMode.CALENDAR
-                customRepeat = false
-            }
+    showRepeat = false
+    if (key == "custom") {
+        if (frequency == Frequency.EXTRA) frequency = Frequency.DAILY
+        customRepeat = true
+    } else {
+        val chosen = Frequency.valueOf(key)
+        if (chosen != frequency || mode != ScheduleMode.CALENDAR) {
+            weekDay = date.dayOfWeek.value
+            monthDay = date.dayOfMonth.toString()
+        }
+        frequency = chosen
+        mode = ScheduleMode.CALENDAR
+        customRepeat = false
+    }
         },
     )
     if (showReminder) NavEventChoiceDialog(
@@ -1269,12 +1301,12 @@ fun TaskEditorScreen(
         navEventReminderChoices(lang), null, p, lang,
         onDismiss = { showReminder = false },
         onSelect = { key ->
-            showReminder = false
-            when (key) {
-                "none" -> reminders = emptyList()
-                "custom" -> showCustomReminder = true
-                else -> key.toIntOrNull()?.let { addReminder(it) }
-            }
+    showReminder = false
+    when (key) {
+        "none" -> reminders = emptyList()
+        "custom" -> showCustomReminder = true
+        else -> key.toIntOrNull()?.let { addReminder(it) }
+    }
         },
     )
     if (showCustomReminder) NavGlassAlertDialog(
@@ -1282,30 +1314,34 @@ fun TaskEditorScreen(
         onDismissRequest = { showCustomReminder = false },
         title = { Text(localized("За сколько минут", "Minutes before", lang)) },
         text = {
-            Column {
-                NavGlassInput(customMinutes, { customMinutes = it.filter(Char::isDigit).take(5) }, p,
-                    neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                Text(localized("От 0 до 10080 минут (7 дней)", "0–10080 minutes (7 days)", lang), color = p.muted, fontSize = 12.sp)
-            }
+    Column {
+        NavGlassInput(customMinutes, { customMinutes = it.filter(Char::isDigit).take(5) }, p,
+            neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+        Text(localized("От 0 до 10080 минут (7 дней)", "0–10080 minutes (7 days)", lang), color = p.muted, fontSize = 12.sp)
+    }
         },
         confirmButton = { TextButton(enabled = (customMinutes.toIntOrNull() ?: -1) in 0..10080, onClick = {
-            customMinutes.toIntOrNull()?.let { addReminder(it) }; showCustomReminder = false
+    customMinutes.toIntOrNull()?.let { addReminder(it) }; showCustomReminder = false
         }) { Text(localized("OK", "OK", lang), color = NavTodayVisualTokens.accentInk(p.dark)) } },
         dismissButton = { TextButton(onClick = { showCustomReminder = false }) { Text(localized("Отмена", "Cancel", lang), color = p.text) } },
     )
+}
+
+@Composable
+private fun TaskEditorState.EditorChecklistNote(p: NavPalette, lang: UiLanguage) {
     editingChecklistNote?.let { itemId ->
         checklist.firstOrNull { it.id == itemId }?.let { item ->
-            ChecklistReferenceDialog(
-                p = p, lang = lang, title = item.title,
-                note = item.comment, noteHtml = item.commentHtml, editable = true,
-                onDismiss = { editingChecklistNote = null },
-                onSave = { text, html ->
-                    checklist = checklist.map { existing ->
-                        if (existing.id == itemId) existing.copy(comment = text, commentHtml = html) else existing
-                    }
-                    editingChecklistNote = null
-                },
-            )
+    ChecklistReferenceDialog(
+        p = p, lang = lang, title = item.title,
+        note = item.comment, noteHtml = item.commentHtml, editable = true,
+        onDismiss = { editingChecklistNote = null },
+        onSave = { text, html ->
+            checklist = checklist.map { existing ->
+                if (existing.id == itemId) existing.copy(comment = text, commentHtml = html) else existing
+            }
+            editingChecklistNote = null
+        },
+    )
         }
     }
 }

@@ -83,8 +83,8 @@ class NavTaskChoiceDialogTest {
         val section = editor.substringAfter(
             "Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)"
         )
-        val taskName = section.indexOf("NavEventTitle(title")
-        val repeat = section.indexOf("navEventRepeatLabel(frequency")
+        val taskName = section.indexOf("NavEventTitle(state.title")
+        val repeat = section.indexOf("state.EditorSchedule(p, lang)")
         assertTrue(taskName >= 0 && repeat > taskName)
         assertFalse(section.substringBefore("fun SettingsScreen(").contains("NavTaskFrequencyControl(frequency"))
         assertTrue(editor.contains("sheetMode: Boolean = false"))
