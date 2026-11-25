@@ -1640,7 +1640,9 @@ fun RunTileV2(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (run.transferred) Text(localized("Перенесено", "Moved", lang), color = p.successText, fontSize = 11.sp)
                         if (overdue) Text(navDate(run.dueDate, lang), color = p.dangerText, fontSize = 11.sp)
-                        if (task.deadlineTime != null) Text(task.deadlineTime.toString(), color = p.muted, fontSize = 11.sp)
+                        if (task.windowStartTime != null && task.deadlineTime != null)
+                            Text("${task.windowStartTime}–${task.deadlineTime}", color = p.muted, fontSize = 11.sp)
+                        else if (task.deadlineTime != null) Text(task.deadlineTime.toString(), color = p.muted, fontSize = 11.sp)
                     }
                 }
             }

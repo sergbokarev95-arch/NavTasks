@@ -757,8 +757,12 @@ fun TaskEditorScreen(
     var windowStart by remember(initial?.id) { mutableStateOf(initial?.windowStartTime) }
     var pickingStart by remember(initial?.id) { mutableStateOf(false) }
     var showRepeat by remember(initial?.id) { mutableStateOf(false) }
-    var customRepeat by remember(initial?.id) { mutableStateOf(initial?.scheduleMode == ScheduleMode.AFTER_COMPLETION ||
-        initial?.let { TaskSchedule.effectiveFrequency(it, LocalDate.now()) in listOf(Frequency.WEEKLY, Frequency.MONTHLY) } == true) }
+    var customRepeat by remember(initial?.id) { mutableStateOf(initial?.let {
+        val effective = TaskSchedule.effectiveFrequency(it, LocalDate.now())
+        it.scheduleMode == ScheduleMode.AFTER_COMPLETION ||
+            (effective == Frequency.WEEKLY && effectiveCalendarWeekday(it, LocalDate.now()) != it.startDate.dayOfWeek.value) ||
+            (effective == Frequency.MONTHLY && effectiveCalendarMonthDay(it, LocalDate.now()) != it.startDate.dayOfMonth)
+    } ?: false) }
     var otherSettings by remember(initial?.id) { mutableStateOf(false) }
     var showReminder by remember(initial?.id) { mutableStateOf(false) }
     var showCustomReminder by remember(initial?.id) { mutableStateOf(false) }
@@ -774,9 +778,6 @@ fun TaskEditorScreen(
         if (minutes in 0..10080 && minutes !in reminders && reminders.size < 9)
             reminders = reminders + minutes
     }
-    // A single popup-active token controls blur/shade of this sheet's CONTENT,
-    // never the choice popup itself. Avoid duplicate overlapping window blurs.
-    var activeChoice by remember(initial?.id) { mutableStateOf<String?>(null) }
     var checklist by remember(initial?.id) { mutableStateOf(initial?.checklist ?: emptyList()) }
     var editingChecklistNote by remember(initial?.id) { mutableStateOf<String?>(null) }
     var enabled by remember(initial?.id) { mutableStateOf(initial?.enabled ?: true) }
@@ -799,7 +800,7 @@ fun TaskEditorScreen(
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().then(
         if (editorBackdrop != null) Modifier.layerBackdrop(editorBackdrop) else Modifier
-    ).blur(if (activeChoice != null) 5.dp else 0.dp)
+    )
         .then(if (sheetMode) Modifier.padding(top = 13.dp) else Modifier.statusBarsPadding())
         .navigationBarsPadding()) {
         Row(
@@ -836,6 +837,13 @@ fun TaskEditorScreen(
                     remindMinutesBefore = reminder,
                     windowStartTime = if (time != null) windowStart else null,
                     additionalReminderMinutes = reminders.drop(1),
+                    offsetReminderKeys = initial == null || initial.offsetReminderKeys ||
+                        reminders != SmartReminderTiming.offsets(initial),
+                    legacyReminderOffset = initial?.let {
+                        if (it.offsetReminderKeys) it.legacyReminderOffset
+                        else if (it.notificationsEnabled && reminders != SmartReminderTiming.offsets(it))
+                            it.remindMinutesBefore else null
+                    },
                     checklist = checklist.filter { it.title.isNotBlank() }.map { it.copy(required = true) },
                     enabled = enabled,
                 )
@@ -883,18 +891,14 @@ fun TaskEditorScreen(
                 ) { showDateWheel = true }
                 if (time != null) {
                     NavEventDivider(p)
-                    NavEventValueRow(
-                        if (windowStart == null) localized("Выполнить к", "Due by", lang)
-                        else localized("Конец", "End", lang),
-                        time.toString(), p,
-                    ) { pickingStart = false; showTimeWheel = true }
                     NavEventDivider(p)
                     Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(localized("Временной интервал", "Time window", lang), color = p.text, modifier = Modifier.weight(1f))
                         Switch(windowStart != null, onCheckedChange = { useWindow ->
                             if (useWindow) {
                                 if (time == LocalTime.MIDNIGHT) time = LocalTime.of(1, 0)
-                                windowStart = time?.minusHours(1)?.takeIf { time?.let { end -> it.isBefore(end) } == true } ?: LocalTime.MIDNIGHT
+                                val end = time ?: LocalTime.of(18, 0)
+                                windowStart = end.minusHours(1).takeIf { it.isBefore(end) } ?: LocalTime.MIDNIGHT
                             } else windowStart = null
                         }, colors = navEditorSwitchColors(p))
                     }
@@ -903,6 +907,11 @@ fun TaskEditorScreen(
                             pickingStart = true; showTimeWheel = true
                         }
                     }
+                    NavEventValueRow(
+                        if (windowStart == null) localized("Выполнить к", "Due by", lang)
+                        else localized("Конец", "End", lang),
+                        time.toString(), p,
+                    ) { pickingStart = false; showTimeWheel = true }
                     if (!validWindow) Text(localized("Начало должно быть раньше окончания в тот же день.",
                         "Start must precede the end on the same day.", lang), color = p.dangerText, fontSize = 12.sp)
                 }
@@ -913,7 +922,13 @@ fun TaskEditorScreen(
                 }
                 if (customRepeat && frequency != Frequency.EXTRA) {
                     NavEventDivider(p)
-                    NavTaskFrequencyControl(frequency, p, lang) { chosen ->
+                    NavEditorOptionLine(navEventRepeatChoices(lang).filter { it.first != "custom" },
+                        frequency.name, p) { key ->
+                        val chosen = Frequency.valueOf(key)
+                        if (frequency != chosen) {
+                            weekDay = date.dayOfWeek.value
+                            monthDay = date.dayOfMonth.toString()
+                        }
                         frequency = chosen
                         if (chosen == Frequency.EXTRA) { mode = ScheduleMode.CALENDAR; customRepeat = false }
                     }
@@ -990,7 +1005,7 @@ fun TaskEditorScreen(
                 )
             }
             NavEventValueRow(localized("Другие настройки", "Other settings", lang),
-                "", p, chevron = true) { otherSettings = !otherSettings }
+                "", p, chevron = true, expanded = otherSettings) { otherSettings = !otherSettings }
             if (otherSettings) NavEditorPanel(p) {
                 FormLabel("Если пропущена", "When overdue", lang, p)
                 NavEditorOptionLine(listOf(
@@ -1023,12 +1038,6 @@ fun TaskEditorScreen(
             }
             Spacer(Modifier.height(28.dp))
         }
-    }
-    if (activeChoice != null) {
-        // One light scrim over the blurred editor, beneath the separate opaque
-        // anchored Popup. The base page has its own ONE independent sheet scrim.
-        Box(Modifier.matchParentSize()
-            .background(Color.Black.copy(alpha = if (p.dark) .15f else .09f)))
     }
     if (!sheetMode && editorBackdrop != null) {
         Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
@@ -1236,7 +1245,7 @@ fun TaskEditorScreen(
     }
     if (showRepeat) NavEventChoiceDialog(
         localized("Повторять", "Repeat", lang), navEventRepeatChoices(lang),
-        if (customRepeat) "custom" else frequency.name, p, lang,
+        if (customRepeat) "custom" else frequency.name, p, lang, confirmRequired = false,
         onDismiss = { showRepeat = false },
         onSelect = { key ->
             showRepeat = false

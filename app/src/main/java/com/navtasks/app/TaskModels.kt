@@ -141,6 +141,9 @@ data class TaskTemplate(
     val windowStartTime: LocalTime? = null,
     /** Additional lead times; the legacy primary reminder remains readable by older builds. */
     val additionalReminderMinutes: List<Int> = emptyList(),
+    val offsetReminderKeys: Boolean = false,
+    /** Preserve the original delivered-marker identity when migrating a legacy task. */
+    val legacyReminderOffset: Int? = null,
 ) {
     fun toJson() = JSONObject()
         .put("id", id)
@@ -158,6 +161,8 @@ data class TaskTemplate(
         .put("remindMinutesBefore", remindMinutesBefore)
         .put("windowStartTime", windowStartTime?.toString() ?: "")
         .put("additionalReminderMinutes", JSONArray().apply { additionalReminderMinutes.forEach { put(it) } })
+        .put("offsetReminderKeys", offsetReminderKeys)
+        .put("legacyReminderOffset", legacyReminderOffset ?: -1)
         .put("enabled", enabled)
         .put("checklist", JSONArray().apply { checklist.forEach { put(it.toJson()) } })
         .put("calendarRevisions", JSONArray().apply {
@@ -189,6 +194,8 @@ data class TaskTemplate(
                 windowStartTime = start?.takeIf { end != null && it.isBefore(end) },
                 additionalReminderMinutes = (0 until minOf(extra.length(), 32)).map { extra.optInt(it, -1) }
                     .filter { it in 0..10080 }.distinct().take(8),
+                offsetReminderKeys = json.optBoolean("offsetReminderKeys", false),
+                legacyReminderOffset = json.optInt("legacyReminderOffset", -1).takeIf { it >= 0 },
                 notificationsEnabled = json.optBoolean("notificationsEnabled", true),
                 remindMinutesBefore = json.optInt("remindMinutesBefore", 60).coerceAtLeast(0),
                 enabled = json.optBoolean("enabled", true),

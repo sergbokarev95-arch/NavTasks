@@ -183,7 +183,7 @@ object NavNotifications {
             return
         }
         // Keep the AlarmManager queue bounded; independent ROLL extends the horizon.
-        val horizon = today.plusDays(7)
+        val horizon = today.plusDays(8) // seven-day lead time plus rollover margin
         store.refresh(today, horizon)
         for (run in store.runs.values) {
             if (run.completed || run.skipped || run.displayDate.isAfter(horizon)) continue
@@ -342,7 +342,7 @@ object NavNotifications {
             for (minutes in SmartReminderTiming.offsets(task)) {
                 if (reminderTime(task, run, settings, minutes).atZone(zone).toInstant() != targetInstant) continue
                 if (target.isAfter(dueTime(task, run))) continue
-                val alarmKey = SmartReminderTiming.alarmKey(task, run, minutes)
+                val alarmKey = SmartReminderTiming.deliveryAlarmKey(task, run, minutes)
                 val eventKey = active.activeId + ":" + REMINDER + ":" + alarmKey + ":" + run.displayDate
                 if (!previouslyDelivered(context, eventKey)) {
                     events += DueReminder(eventKey, task.title, taskRunKey = run.key)
@@ -523,7 +523,8 @@ object NavNotifications {
             (minutes > 0 || task.windowStartTime != null)) return
         if (kind == MISSED && !store.isOverdue(task, run) && !autoMoved) return
         if (!mayNotify(context)) return
-        if (alreadyNotified(context, ProfileStore(context).activeId + ":" + kind + ":" + runKey + ":" + run.displayDate)) return
+        val deliveryKey = if (kind == REMINDER) SmartReminderTiming.deliveryAlarmKey(task, run, minutes) else runKey
+        if (alreadyNotified(context, ProfileStore(context).activeId + ":" + kind + ":" + deliveryKey + ":" + run.displayDate)) return
 
         val isMissed = kind == MISSED
         val message = if (autoMoved)
@@ -560,7 +561,7 @@ object NavNotifications {
         manager(context).cancel(("$MISSED:$runKey").hashCode())
         manager(context).cancel(("$REMINDER:$runKey").hashCode())
         val task = store.runs[runKey]?.let { run -> store.templates.firstOrNull { it.id == run.taskId } }
-        task?.additionalReminderMinutes?.forEach { minutes ->
+        task?.let { SmartReminderTiming.offsets(it) }?.forEach { minutes ->
             manager(context).cancel(("$REMINDER:$runKey|$minutes").hashCode())
         }
     }

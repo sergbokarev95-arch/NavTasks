@@ -42,7 +42,7 @@ internal fun navEventReminderLabel(minutes: Int, lang: UiLanguage): String = whe
 }
 
 internal fun navEventReminderChoices(lang: UiLanguage): List<Pair<String, String>> =
-    listOf("none" to localized("Нет", "None", lang)) +
+    listOf("none" to localized("Нет (убрать все)", "None (remove all)", lang)) +
         listOf(0, 5, 10, 15, 30, 60, 120, 1440, 2880, 10080).map { "$it" to navEventReminderLabel(it, lang) } +
         listOf("custom" to localized("Настроить", "Customize", lang))
 
@@ -75,7 +75,7 @@ internal fun NavEventDivider(p: NavPalette) {
 }
 
 @Composable
-internal fun NavEventValueRow(label: String, value: String, p: NavPalette, chevron: Boolean = false, onClick: () -> Unit) {
+internal fun NavEventValueRow(label: String, value: String, p: NavPalette, chevron: Boolean = false, expanded: Boolean? = null, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).glassClickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(label, color = p.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
@@ -85,13 +85,14 @@ internal fun NavEventValueRow(label: String, value: String, p: NavPalette, chevr
                 Text(value, color = p.text, fontSize = 13.sp)
             }
         }
-        if (chevron) NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
+        if (chevron) NavGlassGlyph(if (expanded == null) "chevron-right" else if (expanded) "chevron-up" else "chevron-down", p.muted, Modifier.size(17.dp))
     }
 }
 
 @Composable
 internal fun NavEventChoiceDialog(
     title: String, options: List<Pair<String, String>>, selected: String?, p: NavPalette, lang: UiLanguage,
+    confirmRequired: Boolean = true,
     onDismiss: () -> Unit, onSelect: (String) -> Unit,
 ) {
     var draft by remember(selected, options) { mutableStateOf(selected) }
@@ -102,7 +103,7 @@ internal fun NavEventChoiceDialog(
             Column(Modifier.fillMaxWidth().heightIn(max = 410.dp).verticalScroll(rememberScrollState())) {
                 options.forEachIndexed { index, (key, label) ->
                     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                        .selectable(selected = draft == key, role = Role.RadioButton, onClick = { draft = key })
+                        .selectable(selected = draft == key, role = Role.RadioButton, onClick = { if (confirmRequired) draft = key else onSelect(key) })
                         .padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(label, color = p.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
                         RadioButton(selected = draft == key, onClick = null,
@@ -116,7 +117,7 @@ internal fun NavEventChoiceDialog(
                     .glassClickable(onClick = onDismiss).padding(13.dp), contentAlignment = Alignment.Center) {
                     Text(localized("Отмена", "Cancel", lang), color = p.text)
                 }
-                Box(Modifier.weight(1f).personalNoteCard(p, 24.dp, nested = true)
+                if (confirmRequired) Box(Modifier.weight(1f).personalNoteCard(p, 24.dp, nested = true)
                     .glassClickable { draft?.let(onSelect) }.padding(13.dp), contentAlignment = Alignment.Center) {
                     Text("OK", color = if (draft != null) NavTodayVisualTokens.accentInk(p.dark) else p.muted)
                 }

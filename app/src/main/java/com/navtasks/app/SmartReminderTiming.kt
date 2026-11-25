@@ -22,13 +22,18 @@ internal object SmartReminderTiming {
             .filter { it >= 0 }.distinct()
 
     fun alarmKey(task: TaskTemplate, run: TaskRun, minutes: Int): String =
-        if (minutes == task.remindMinutesBefore) run.key else "${run.key}|$minutes"
+        if (!task.offsetReminderKeys && minutes == task.remindMinutesBefore) run.key
+        else "${run.key}|$minutes"
+
+    fun deliveryAlarmKey(task: TaskTemplate, run: TaskRun, minutes: Int): String =
+        if (task.legacyReminderOffset == minutes) run.key else alarmKey(task, run, minutes)
 
     fun alarmOffset(task: TaskTemplate, key: String): Int? {
-        val offset = if ('|' in key) key.substringAfterLast('|').toIntOrNull()
+        val encoded = '|' in key
+        val offset = if (encoded) key.substringAfterLast('|').toIntOrNull()
             else task.remindMinutesBefore
         return offset?.takeIf { it in offsets(task) &&
-            (('|' in key) == (it != task.remindMinutesBefore)) }
+            encoded == (task.offsetReminderKeys || it != task.remindMinutesBefore) }
     }
 
     fun atDeadline(task: TaskTemplate): Boolean =
