@@ -26,3 +26,5 @@
 - Beta41: use a shared 48dp minimum row height and equal-width repeat cells with explicit spacing; checklist comment editing uses a scoped visible inset field and prominent heading, no changes to read-only reference behavior or other rich editors. Retain Beta40 schedule logic.
 
 - Beta41/recovery311 verified CI and publication; physical layout/keyboard QA remains pending.
+
+- Beta42: owner requests coherent spacing across app. Apply shared NavEventLayout to task editor first: compact card vertical padding 4dp, horizontal 14dp, 48dp minimum rows, 10dp card gap, 8dp internal and 12dp group spacing. Missed policy same 2-column grid as recurrence; active switch same row as all-day; scoped checklist compact mode. Keep minimum touch targets and no logic changes. Do not globally change unrelated screens without visual review.

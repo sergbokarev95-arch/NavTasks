@@ -7,10 +7,15 @@
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
 | Последняя проверенная beta | 1.2.0-beta.41 / 310 | CI success, подписанный APK опубликован |
+| Beta в работе | 1.2.0-beta.42 / 312 | CI in_progress |
+| Recovery для beta42 | 1.1.0 / 313 | CI in_progress |
 | Recovery для beta41 | 1.1.0 / 311 | CI success, подписанный APK опубликован |
 | Recovery для beta40 | 1.1.0 / 309 | CI success, подписанный APK опубликован |
 
 Рабочий исходник Beta40: `feature/navtasks-1.2.0-beta40-event-editor`, `5f646eefd0c0e39038485b8f0e7808078d6892e2`. Main до документационного обновления: 908c5d3c9df9840473af882491020401da6bc86f; не база новой beta. Документационная ветка не является исходником новой сборки.
+
+## Активная разработка
+- Beta42 source 396c87bb4b23d2a97cb7d7aceb1532ade1064f6e, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45567527725): shared NavEventLayout (card horizontal 14dp, vertical 4dp, row 48dp, choices min44dp, gap10dp, inner8dp, group12dp). All editor cards share layout; missed options 2×2, active switch uses same row; scoped compact checklist. No scheduling/storage changes. Recovery313 source 66303fbb8b3be55b8fac82a75ccc922c0b8da521, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45567569802). Both pending.
 
 ## Подтверждённые артефакты
 - Beta41: [CI 45565768088](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45565768088) SUCCESS, source 511d887a91f9a71c1c9f1f0acc58cbf78d61b781, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.41/NavTasks_1.2.0-beta.41.apk), 37248846 bytes, SHA256 e144d34ecb2c7800fe81492af9d100c371a06d69bb7185c515d39bb1026f4583. JVM tests 1m32s, release 2m44s. Original signer/package/version/non-debuggable verified. Visual-only changes: 48dp minimum rows, 2-column repeat grid, checklist inset rich text field with placeholder and heading. Device QA pending.
