@@ -366,3 +366,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-26 — Beta47 CI 45635624301 SUCCESS, b51a42de0a5c9e2650d55a124bb24e3154e42929, SHA256 18f9dc6c768266516b8c21eaca2fcb9e71c6c538f1c1fe52ff119780d1e4a0cc, 37265230 bytes. Recovery323 CI 45635683389 SUCCESS, 7a78f2915c377591e18373c94e4742ca910a69d7, SHA256 7643c22967b2349770b9a0a0ff65c3ca87f8dddd396aa0c5a3dd8fde0c125fb7, 37068614 bytes. Original signer/package/version/non-debuggable and release publication verified. Stable OTA unchanged; device QA pending.
 
 - 2026-11-26 — Beta48 source dee84299c19caeccb8b7553b3b5a879c978bf42d, CI 45637583664 started; Recovery325 8afdbddd6bd7ef27df19a181170e4b344f54b545, CI 45637636371 started. AMOS active accents and inset rich comment. CI/release verification pending.
+
+- 2026-11-26 — Beta48 first CI 45637583664 failed compileDebugKotlin because library Material3 color factory requires explicit opt-in. Scoped @OptIn(ExperimentalMaterial3Api::class) on NavRichNoteEditor only; corrected SHA 189cb401880e9483136e7a72b74feccfeb43e69c, CI 45637913492 started. Existing recovery run continues. APK pending.
