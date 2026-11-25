@@ -40,14 +40,26 @@ jobs:
           printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
           chmod 600 "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
           test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
-      - name: Run complete JVM tests and build beta APK
+      - name: Run complete JVM tests
+        timeout-minutes: 20
         env:
           NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
           NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
         run: |
           set -euo pipefail
           test -n "$NAVTASKS_BETA_SIGN_PASSWORD"
-          gradle :app:testDebugUnitTest :app:assembleRelease --no-daemon
+          free -h
+          gradle :app:testDebugUnitTest --no-daemon --max-workers=1 --console=plain --stacktrace -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8" -Pkotlin.compiler.execution.strategy=in-process
+      - name: Build signed beta APK
+        timeout-minutes: 20
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NAVTASKS_BETA_SIGN_PASSWORD"
+          free -h
+          gradle :app:assembleRelease --no-daemon --max-workers=1 --console=plain --stacktrace -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8" -Pkotlin.compiler.execution.strategy=in-process
       - name: Verify package, release version, non-debuggable and original signer
         run: |
           set -euo pipefail
