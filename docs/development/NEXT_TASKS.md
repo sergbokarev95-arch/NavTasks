@@ -1,7 +1,7 @@
 # NavTasks — следующие действия
 
 ## Beta49
-- Проверить уже запущенные [Beta49 CI 45640816693](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45640816693) и [Recovery327 CI 45640883230](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45640883230), JVM, release, оригинальный signer/package/version, фактические assets. Не запускать дубль.
+- Recovery327 SUCCESS и APK опубликован. Beta49 attempt 1 passed JVM/build/signer but release publication HTTP 403; same run 45640816693 attempt 2 started without changing code or token. Проверить attempt 2 и фактическую публикацию; не запускать дубль.
 - На HONOR проверить обе темы Services: поиск и фильтры, работы/заявки/закрытые, карточки, историю, номер заявки, попапы, bottom sheet (Back/drag/keyboard), planned/unplanned, даты, собственный интервал, предупреждение, rich comments, сохранение и выполнение.
 - Проверить, что внеплановые заявки не приобрели срок/уведомления, а плановые сохраняют ручные даты и пересчёт от фактического выполнения.
 
