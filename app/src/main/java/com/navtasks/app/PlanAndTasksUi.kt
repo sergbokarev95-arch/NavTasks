@@ -604,19 +604,18 @@ fun TasksScreenV2(
             p = p,
             modifier = Modifier.padding(horizontal = NavEventLayout.screenInset, vertical = 3.dp),
         ) { index -> onFilter(Frequency.entries[index]) }
-        // This panel is informative, not a disclosure control: tasks remain visible.
+        // Same inline section treatment as Today: label, count, trailing rule.
         Row(
             Modifier.fillMaxWidth()
-                .padding(horizontal = NavEventLayout.screenInset, vertical = 5.dp)
-                .personalNoteCard(p, NavEventLayout.cardRadius)
-                .heightIn(min = 36.dp)
-                .padding(horizontal = NavEventLayout.cardInset, vertical = NavEventLayout.cardVertical),
+                .padding(horizontal = NavEventLayout.screenInset)
+                .padding(top = 8.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(localized("Список задач", "Task list", lang), color = p.text,
-                fontSize = 13.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-            Text(filtered.size.toString() + " " + localized("задач", "tasks", lang),
-                color = p.muted, fontSize = 12.sp)
+            Text(localized("Список задач", "Task list", lang), color = p.text, fontSize = 13.sp)
+            Spacer(Modifier.width(7.dp))
+            Text(filtered.size.toString(), color = p.muted, fontSize = 11.sp)
+            Spacer(Modifier.width(12.dp))
+            Box(Modifier.weight(1f).height(1.dp).background(p.border.copy(alpha = 0.58f)))
         }
         // Keep the same lazy list, stable item keys and editing navigation.
         LazyColumn(

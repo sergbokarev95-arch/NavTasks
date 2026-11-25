@@ -4,6 +4,9 @@ import dev.chrisbanes.haze.hazeSource
 import com.kyant.backdrop.backdrops.layerBackdrop
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -159,10 +162,8 @@ fun WorkOrdersScreen(
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
             else NavGlassCircleButton(p, "back", onBack)
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                NavBrandLabel(p)
-                Text("AMOS / By Crew", color = p.text, fontSize = 22.sp)
-            }
+            Text("AMOS / By Crew", modifier = Modifier.weight(1f),
+                color = p.text, fontSize = 24.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
             else NavGlassCircleButton(p, "search") {
                 searchOpen = !searchOpen
@@ -176,6 +177,7 @@ fun WorkOrdersScreen(
             onDismiss = { searchOpen = false; searchText = "" },
             p = p, lang = lang,
             placeholder = localized("Поиск по работам", "Search work names", lang),
+            neutralStyle = true,
             resultCount = searchResults.size,
             currentResult = searchResultIndex,
             onPreviousResult = {
@@ -192,69 +194,53 @@ fun WorkOrdersScreen(
                 .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }
                 .dismissSearchImeOnResultsGesture(searchOpen),
             state = listState,
-            contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp,
+            contentPadding = PaddingValues(start = NavEventLayout.screenInset, top = 6.dp, end = NavEventLayout.screenInset,
                 bottom = navFloatingActionBottomPadding(embeddedInTab = false, edgeToEdgeStandalone = true)),
-            verticalArrangement = Arrangement.spacedBy(11.dp),
+            verticalArrangement = Arrangement.spacedBy(NavEventLayout.sectionGap),
         ) {
             item {
-                NavPanel(p) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        WorkOrderCount(
-                            localized("Все", "All", lang), activeOrders.size, p.blue, p,
-                            selected = !showClosed && selectedFilter == WorkOverviewFilter.ALL,
-                            modifier = Modifier.weight(1f),
-                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.ALL }
-                        WorkOrderCount(
-                            localized("Скоро", "Soon", lang), soon,
-                            if (soon > 0) p.warningText else p.muted, p,
-                            selected = !showClosed && selectedFilter == WorkOverviewFilter.SOON,
-                            modifier = Modifier.weight(1f),
-                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.SOON }
-                        WorkOrderCount(
-                            localized("Просрочено", "Overdue", lang), overdue,
-                            if (overdue > 0) p.dangerText else p.muted, p,
-                            selected = !showClosed && selectedFilter == WorkOverviewFilter.OVERDUE,
-                            modifier = Modifier.weight(1f),
-                        ) { showClosed = false; selectedFilter = WorkOverviewFilter.OVERDUE }
-                    }
-                    Text(
-                        localized(
-                            "Работы AMOS и проверки экипажа. Даты и история сохраняются на телефоне.",
-                            "AMOS jobs and crew checks. Dates and history stay on this phone.",
-                            lang,
-                        ),
-                        color = p.muted, fontSize = 11.sp,
-                    )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
+                    WorkOrderCount(
+                        localized("Все", "All", lang), activeOrders.size, p.text, p,
+                        selected = !showClosed && selectedFilter == WorkOverviewFilter.ALL,
+                        modifier = Modifier.weight(1f),
+                    ) { showClosed = false; selectedFilter = WorkOverviewFilter.ALL }
+                    WorkOrderCount(
+                        localized("Скоро", "Soon", lang), soon,
+                        if (soon > 0) p.systemOrange else p.muted, p,
+                        selected = !showClosed && selectedFilter == WorkOverviewFilter.SOON,
+                        modifier = Modifier.weight(1f),
+                    ) { showClosed = false; selectedFilter = WorkOverviewFilter.SOON }
+                    WorkOrderCount(
+                        localized("Просрочено", "Overdue", lang), overdue,
+                        if (overdue > 0) p.dangerText else p.muted, p,
+                        selected = !showClosed && selectedFilter == WorkOverviewFilter.OVERDUE,
+                        modifier = Modifier.weight(1f),
+                    ) { showClosed = false; selectedFilter = WorkOverviewFilter.OVERDUE }
                 }
             }
             completionNotice?.let { notice ->
                 item(key = "completion-notice") {
-                    NavPanel(p) {
+                    NavAmosPanel(p) {
                         Text(notice, color = p.successText, fontSize = 13.sp)
                     }
                 }
             }
             item {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(9.dp),
-                ) {
-                    WorkOrderChip(
+                NavCalendarSegmentedControl(
+                    labels = listOf(
                         localized("Работы · ${activeOrders.size}", "Work · ${activeOrders.size}", lang),
-                        !showClosed, p, Modifier.weight(1f),
-                    ) { showClosed = false }
-                    WorkOrderChip(
                         localized("Закрытые · ${closedOrders.size}", "Closed · ${closedOrders.size}", lang),
-                        showClosed, p, Modifier.weight(1f),
-                    ) { showClosed = true }
-                }
+                    ),
+                    activeIndex = if (showClosed) 1 else 0, p = p,
+                ) { index -> showClosed = index == 1 }
             }
             feedback?.let { msg ->
                 item { Text(msg, color = p.dangerText, fontSize = 12.sp) }
             }
             if (visibleResults.isEmpty()) {
                 item {
-                    NavPanel(p) {
+                    NavAmosPanel(p) {
                         Text(
                             if (activeQuery.isNotBlank())
                                 localized("Работы с таким названием не найдены.",
@@ -542,6 +528,16 @@ fun WorkOrdersScreen(
     }
 }
 
+@Composable
+private fun NavAmosPanel(p: NavPalette, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
+            .padding(NavEventLayout.cardInset),
+        verticalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap),
+        content = content,
+    )
+}
+
 /** Closed means explicitly removed, not completed. Preserves all cycles. */
 @Composable
 private fun WorkOrderClosedCard(
@@ -550,13 +546,13 @@ private fun WorkOrderClosedCard(
     onHistory: () -> Unit, onRestore: () -> Unit, onPurge: () -> Unit,
 ) {
     Column(
-        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
-            .padding(horizontal = 14.dp, vertical = 11.dp),
+        Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
+            .padding(horizontal = NavEventLayout.cardInset, vertical = NavEventLayout.groupGap),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Column(Modifier.fillMaxWidth().glassClickable(onClick = onHistory)
             .padding(vertical = 3.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text(localized("Работа", "Work", lang), color = p.blueText, fontSize = 11.sp)
+            Text(localized("Работа", "Work", lang), color = p.muted, fontSize = 11.sp)
             NavSearchMarkedText(order.title, searchQuery, p, fontSize = 15.sp,
                 focused = focusedSearchResult)
             order.closedAt?.let {
@@ -584,16 +580,18 @@ private fun WorkOrderCount(
     selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit,
 ) {
     Column(
-        modifier.navGlass(p, radius = 14.dp,
-            role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
+        modifier.personalNoteCard(p, NavEventLayout.cardRadius)
+            .then(if (selected) Modifier.border(1.5.dp,
+                NavTodayVisualTokens.accentInk(p.dark), RoundedCornerShape(NavEventLayout.cardRadius))
+                else Modifier)
             .glassClickable(onClick = onClick)
-            .heightIn(min = 75.dp)
-            .padding(horizontal = 8.dp, vertical = 9.dp),
+            .heightIn(min = 66.dp)
+            .padding(horizontal = 6.dp, vertical = NavEventLayout.innerGap),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(number.toString(), color = if (selected) p.selectionContent else color, fontSize = 21.sp)
-        Text(label, color = if (selected) p.selectionContent else p.muted, fontSize = 11.sp,
+        Text(number.toString(), color = color, fontSize = 21.sp, fontWeight = FontWeight.Medium)
+        Text(label, color = if (selected) NavTodayVisualTokens.accentInk(p.dark) else p.muted, fontSize = 11.sp,
             maxLines = 1)
     }
 }
@@ -611,13 +609,13 @@ private fun WorkOrderCard(
     val accent = when (status) {
         WorkOrderState.COMPLETED -> p.successText
         WorkOrderState.OVERDUE -> p.dangerText
-        WorkOrderState.SOON -> p.warningText
-        WorkOrderState.OPEN -> p.blue
+        WorkOrderState.SOON -> p.systemOrange
+        WorkOrderState.OPEN -> p.muted
     }
     Column(
-        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
+        Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
             .glassClickable(onClick = onHistory)
-            .padding(horizontal = 14.dp, vertical = 11.dp),
+            .padding(horizontal = NavEventLayout.cardInset, vertical = NavEventLayout.groupGap),
         verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -625,7 +623,7 @@ private fun WorkOrderCard(
                 Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(localized("Работа", "Work", lang), color = p.blueText, fontSize = 12.sp)
+                Text(localized("Работа", "Work", lang), color = p.muted, fontSize = 12.sp)
                 NavSearchMarkedText(
                     value = order.title, query = searchQuery, p = p,
                     fontSize = 15.sp, maxLines = 3, overflow = TextOverflow.Ellipsis,
@@ -694,15 +692,16 @@ private fun WorkOrderChip(
     onClick: () -> Unit,
 ) {
     Box(
-        modifier.navGlass(p, radius = 12.dp,
-            role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL,
-            elevation = 0.dp)
+        modifier.personalNoteCard(p, 12.dp, nested = true)
+            .then(if (selected) Modifier.border(1.5.dp,
+                NavTodayVisualTokens.accentInk(p.dark), RoundedCornerShape(12.dp))
+                else Modifier)
             .glassClickable(onClick = onClick)
-            .heightIn(min = 44.dp)
-            .padding(horizontal = 9.dp, vertical = 10.dp),
+            .heightIn(min = NavEventLayout.choiceHeight)
+            .padding(horizontal = 9.dp, vertical = NavEventLayout.innerGap),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (selected) p.selectionContent
+        Text(label, color = if (selected) NavTodayVisualTokens.accentInk(p.dark)
             else if (destructive) p.systemRed else p.text,
             fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
@@ -756,7 +755,7 @@ private fun WorkOrderEditorDialog(
                     color = p.muted, fontSize = 12.sp)
                 NavGlassInput(title, { title = it.take(200) }, p,
                     placeholder = localized("Описание задания", "Work description", lang),
-                    modifier = Modifier.fillMaxWidth())
+                    modifier = Modifier.fillMaxWidth(), neutralStyle = true)
                 Text(localized("Дата начала работы", "Work start date", lang),
                     color = p.muted, fontSize = 12.sp)
                 WorkOrderChip(navDate(dueDate, lang, true), false, p,
@@ -806,7 +805,7 @@ private fun WorkOrderEditorDialog(
                             }
                         },
                         p = p, modifier = Modifier.fillMaxWidth(),
-                        placeholder = "9",
+                        placeholder = "9", neutralStyle = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     )
                 }
@@ -949,11 +948,11 @@ private fun WorkOrderHistoryCard(
 ) {
     val completion = archive.completion
     Column(
-        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
+        Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(localized("Работа", "Work", lang), color = p.blueText, fontSize = 12.sp)
+        Text(localized("Работа", "Work", lang), color = p.muted, fontSize = 12.sp)
         Text(archive.order.title, color = p.text, fontSize = 15.sp)
         Text(localized("Срок: ", "Due: ", lang) +
             navDate(completion.dueDate, lang, true),
