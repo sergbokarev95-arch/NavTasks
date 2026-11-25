@@ -1,7 +1,7 @@
 # NavTasks — следующие действия
 
 ## Beta47
-- Проверить уже запущенные [Beta47 CI 45635624301](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45635624301) и [Recovery323 CI 45635683389](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45635683389), JVM, release, оригинальный signer/package/version, фактические assets. Не запускать дубль.
+- Beta47 и Recovery323: CI SUCCESS, оба APK опубликованы и проверены (см. CURRENT_STATE).
 - На HONOR проверить обе темы: добавление/изменение, появление снизу и закрытие, Back/drag/клавиатуру, дату, список повторения (включая свой срок), предупреждение, комментарий, галочку, сохранение прежней работы без изменения графика, выполнение и выбор даты.
 - Services — только после отдельного согласования.
 
