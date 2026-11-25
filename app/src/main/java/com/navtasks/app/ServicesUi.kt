@@ -3,7 +3,31 @@ package com.navtasks.app
 import dev.chrisbanes.haze.hazeSource
 import com.kyant.backdrop.backdrops.layerBackdrop
 
-import android.app.DatePickerDialog
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -108,7 +132,10 @@ fun ServicesScreen(
 
     fun reschedule() { NavNotifications.reschedule(context, tasks, settings) }
 
+    val modalOpen = showEditor || requestTarget != null || confirmingDelete != null ||
+        confirmingPurge != null || confirmingComplete != null || viewingHistory != null
     Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().blur(if (modalOpen) 4.dp else 0.dp)) {
     // Edge-to-edge scroll content, matching Today; keep only the Add FAB inset.
     Column(Modifier.fillMaxSize().statusBarsPadding()
         .hazeSource(hazeState)
@@ -120,10 +147,9 @@ fun ServicesScreen(
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
             else NavGlassCircleButton(p, "back", onClick = onBack)
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                NavBrandLabel(p)
-                Text(localized("Сервисы", "Maintenance", lang), color = p.text, fontSize = 23.sp)
-            }
+            Text(localized("Сервисы", "Maintenance", lang), color = p.text,
+                fontSize = 24.sp, modifier = Modifier.weight(1f), maxLines = 1,
+                overflow = TextOverflow.Ellipsis)
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
             else NavGlassCircleButton(p, "search") {
                 searchOpen = !searchOpen
@@ -138,6 +164,7 @@ fun ServicesScreen(
             p = p, lang = lang,
             placeholder = localized("Поиск по названию оборудования",
                 "Search equipment names", lang),
+            neutralStyle = true, highContrastField = true,
             resultCount = searchResults.size,
             currentResult = searchResultIndex,
             onPreviousResult = {
@@ -154,22 +181,21 @@ fun ServicesScreen(
                 .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }
                 .dismissSearchImeOnResultsGesture(searchOpen),
             state = listState,
-            contentPadding = PaddingValues(16.dp, 6.dp, 16.dp,
+            contentPadding = PaddingValues(NavEventLayout.screenInset, 6.dp, NavEventLayout.screenInset,
                 navFloatingActionBottomPadding(embeddedInTab = false, edgeToEdgeStandalone = true)),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(NavEventLayout.sectionGap),
         ) {
             item {
-                NavPanel(p) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
                         ServiceCount(
-                            localized("Всего", "All", lang), activeServices.size, p.blue, p,
+                            localized("Всего", "All", lang), activeServices.size, p.text, p,
                             selected = selectedView == ServiceListView.WORKS &&
                                 selectedFilter == WorkOverviewFilter.ALL,
                             modifier = Modifier.weight(1f),
                         ) { selectedView = ServiceListView.WORKS; selectedFilter = WorkOverviewFilter.ALL }
                         ServiceCount(
                             localized("Скоро", "Soon", lang), soon,
-                            if (soon > 0) p.warningText else p.muted, p,
+                            if (soon > 0) p.systemOrange else p.muted, p,
                             selected = selectedView == ServiceListView.WORKS &&
                                 selectedFilter == WorkOverviewFilter.SOON,
                             modifier = Modifier.weight(1f),
@@ -181,41 +207,27 @@ fun ServicesScreen(
                                 selectedFilter == WorkOverviewFilter.OVERDUE,
                             modifier = Modifier.weight(1f),
                         ) { selectedView = ServiceListView.WORKS; selectedFilter = WorkOverviewFilter.OVERDUE }
-                    }
-                    Text(localized("Оборудование, даты, комментарии. Без вложений.",
-                        "Equipment, dates and notes. No attachments.", lang),
-                        color = p.muted, fontSize = 11.sp)
                 }
             }
             item {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(9.dp),
-                ) {
-                    ServiceOption(
+                NavCalendarSegmentedControl(
+                    labels = listOf(
                         localized("Работы · ${activeServices.size}", "Work · ${activeServices.size}", lang),
-                        p, selectedView == ServiceListView.WORKS, modifier = Modifier.weight(1f),
-                        compact = true,
-                    ) {
-                        selectedView = ServiceListView.WORKS
-                        selectedFilter = WorkOverviewFilter.ALL
-                    }
-                    ServiceOption(
                         localized("Заявки · ${activeRequests.size}", "Requests · ${activeRequests.size}", lang),
-                        p, selectedView == ServiceListView.REQUESTS, modifier = Modifier.weight(1f),
-                        compact = true,
-                    ) {
-                        selectedView = ServiceListView.REQUESTS
-                        selectedFilter = WorkOverviewFilter.ALL
-                    }
-                    ServiceOption(
                         localized("Закрытые · ${closedServices.size}", "Closed · ${closedServices.size}", lang),
-                        p, selectedView == ServiceListView.CLOSED, modifier = Modifier.weight(1f),
-                        compact = true,
-                    ) {
-                        selectedView = ServiceListView.CLOSED
-                        selectedFilter = WorkOverviewFilter.ALL
+                    ),
+                    activeIndex = when (selectedView) {
+                        ServiceListView.WORKS -> 0
+                        ServiceListView.REQUESTS -> 1
+                        ServiceListView.CLOSED -> 2
+                    }, p = p,
+                ) { index ->
+                    selectedView = when (index) {
+                        1 -> ServiceListView.REQUESTS
+                        2 -> ServiceListView.CLOSED
+                        else -> ServiceListView.WORKS
                     }
+                    selectedFilter = WorkOverviewFilter.ALL
                 }
             }
             message?.let { msg ->
@@ -223,7 +235,7 @@ fun ServicesScreen(
             }
             if (visibleResults.isEmpty()) {
                 item {
-                    NavPanel(p) {
+                    ServicePanel(p) {
                         Text(
                             if (activeQuery.isNotBlank())
                                 localized("Нет работ с таким названием.",
@@ -263,13 +275,13 @@ fun ServicesScreen(
                 val late = !completed && !service.unplanned && due?.isBefore(now) == true
                 val approaching = serviceDueSoon(service, now)
                 val accent = if (completed) p.successText
-                    else if (service.unplanned) p.blue
+                    else if (service.unplanned) NavTodayVisualTokens.accentInk(p.dark)
                     else if (late) p.dangerText
-                    else if (approaching) p.warningText else p.blueText
+                    else if (approaching) p.systemOrange else p.muted
                 Column(
-                    Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
+                    Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
                         .glassClickable { viewingHistory = service }
-                        .padding(horizontal = 14.dp, vertical = 11.dp),
+                        .padding(horizontal = NavEventLayout.cardInset, vertical = NavEventLayout.groupGap),
                     verticalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -290,7 +302,7 @@ fun ServicesScreen(
                         else localized("Последнее обслуживание: ", "Last serviced: ", lang) +
                             navDate(service.serviceHistory.lastOrNull()?.completedAt
                                 ?: service.lastDate, lang, true),
-                        color = if (service.unplanned) p.blue else p.successText, fontSize = 12.sp,
+                        color = if (service.unplanned) p.muted else p.successText, fontSize = 12.sp,
                     )
                     if (!completed) {
                         if (!service.unplanned && due != null) {
@@ -331,7 +343,7 @@ fun ServicesScreen(
                             modifier = Modifier.weight(1f),
                         ) { selected = service; showEditor = true }
                         if (!completed) {
-                            ServiceOption(localized("Проведено", "Serviced", lang), p, false,
+                            ServiceOption(localized("Выполнено", "Completed", lang), p, false,
                                 modifier = Modifier.weight(1f)) {
                                 confirmingComplete = service
                                 completionDate = LocalDate.now()
@@ -377,10 +389,9 @@ fun ServicesScreen(
             }
         }
     }
-    } // End maintenance screen and floating Add overlay.
-    if (showEditor) {
-        ServiceEditorDialog(
-            selected, p, lang,
+    } // End blurred maintenance page and floating actions.
+        ServiceEditorOverlay(
+            showEditor, selected, p, lang,
             onDismiss = { showEditor = false },
             onSave = {
                 runCatching { services.upsert(it); reschedule() }
@@ -391,10 +402,11 @@ fun ServicesScreen(
                     .onFailure { e -> message = e.localizedMessage }
             },
         )
-    }
+    } // Sheet remains outside the blurred page.
+    BackHandler(enabled = showEditor) { showEditor = false }
     requestTarget?.let { entry ->
         ServiceRequestDialog(
-            entry, p, lang, onDismiss = { requestTarget = null },
+            entry, p, lang, onDismiss = { requestTarget = null }, neutralStyle = true,
             onSave = { number ->
                 runCatching { services.setRequestNumber(entry.id, number) }
                     .onSuccess { requestTarget = null; message = null }
@@ -421,7 +433,7 @@ fun ServicesScreen(
             entry.equipment + "\n" + localized(
                 "Сервис и ВСЯ история обслуживания будут уничтожены без восстановления.",
                 "The service and ALL maintenance history will be permanently erased.", lang),
-            lang, onDismiss = { confirmingPurge = null },
+            lang, onDismiss = { confirmingPurge = null }, destructive = true,
         ) {
             runCatching { services.deletePermanently(entry.id); reschedule() }
                 .onFailure { message = it.localizedMessage }
@@ -434,28 +446,25 @@ fun ServicesScreen(
             completionDatePicker = false
         }) {
             Column(
-                Modifier.fillMaxWidth().navDialogSurface(p).padding(18.dp),
+                Modifier.fillMaxWidth().personalNoteCard(p, 26.dp).padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(localized("Сервис проведён?", "Service completed?", lang),
+                Text(localized("Сервис выполнен?", "Service completed?", lang),
                     color = p.text, fontSize = 20.sp)
                 Text(entry.equipment, color = p.muted, fontSize = 14.sp)
-                Text(localized("Дата проведения", "Actual service date", lang),
+                Text(localized("Дата выполнения", "Actual service date", lang),
                     color = p.muted, fontSize = 12.sp)
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(9.dp),
-                ) {
-                    ServiceOption(
-                        localized("Сегодня", "Today", lang), p,
-                        completionDate == LocalDate.now(), Modifier.weight(1f),
-                    ) { completionDate = LocalDate.now() }
-                    ServiceOption(
-                        localized("Выбрать дату", "Choose date", lang), p,
-                        completionDate != LocalDate.now(), Modifier.weight(1f),
-                    ) { completionDatePicker = true }
+                Row(Modifier.fillMaxWidth().personalNoteCard(p, 12.dp, nested = true)
+                    .border(1.dp, NavTodayVisualTokens.checklistInsetRim(p.dark), RoundedCornerShape(12.dp))
+                    .glassClickable { completionDatePicker = true }
+                    .heightIn(min = NavEventRowHeight).padding(horizontal = NavEventLayout.cardInset),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
+                    NavGlassGlyph("calendar", NavTodayVisualTokens.accentInk(p.dark), Modifier.size(20.dp))
+                    Text(navDate(completionDate, lang, true), color = p.text,
+                        fontSize = 14.sp, modifier = Modifier.weight(1f))
+                    NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                 }
-                Text(navDate(completionDate, lang, true), color = p.blueText, fontSize = 13.sp)
                 if (entry.unplanned) {
                     Text(localized(
                         "Внеплановая заявка будет завершена без следующего срока.",
@@ -466,7 +475,7 @@ fun ServicesScreen(
                         localized("Следующий сервис: ", "Next service: ", lang) +
                             navDate(completionDate.plusMonths(entry.periodMonths.toLong()),
                                 lang, true),
-                        color = p.blueText, fontSize = 13.sp,
+                        color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 13.sp,
                     )
                 } else {
                     Text(localized("Без повтора — запись перейдёт в завершённые.",
@@ -514,7 +523,7 @@ fun ServicesScreen(
     }
     viewingHistory?.let { entry ->
         NavGlassAlertDialog(
-            p = p,
+            p = p, neutralActions = true, neutralSurface = true,
             onDismissRequest = { viewingHistory = null },
             title = { Text(localized("История обслуживания", "Service history", lang)) },
             text = {
@@ -525,8 +534,8 @@ fun ServicesScreen(
                     Text(entry.equipment, color = p.text, fontSize = 15.sp)
                     if (entry.serviceHistory.isEmpty()) {
                         Text(localized(
-                            "Обслуживаний пока нет. После «Проведено» здесь появится история.",
-                            "No services recorded yet. History appears here after Serviced.",
+                            "Обслуживаний пока нет. После «Выполнено» здесь появится история.",
+                            "No services recorded yet. History appears here after marking completed.",
                             lang,
                         ), color = p.muted, fontSize = 13.sp)
                     }
@@ -545,7 +554,7 @@ fun ServicesScreen(
                                     color = p.muted, fontSize = 12.sp)
                             }
                             Text(
-                                localized("Проведено: ", "Completed: ", lang) +
+                                localized("Выполнено: ", "Completed: ", lang) +
                                     navDate(item.completedAt, lang, true),
                                 color = p.successText, fontSize = 12.sp,
                             )
@@ -553,7 +562,7 @@ fun ServicesScreen(
                                 Text(
                                     localized("Заявка AMOS: ", "AMOS request: ", lang) +
                                         item.requestNumber,
-                                    color = p.blueText, fontSize = 12.sp,
+                                    color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp,
                                 )
                             }
                         }
@@ -562,7 +571,7 @@ fun ServicesScreen(
             },
             confirmButton = {
                 TextButton(onClick = { viewingHistory = null }) {
-                    Text(localized("Закрыть", "Close", lang))
+                    Text(localized("Закрыть", "Close", lang), color = NavTodayVisualTokens.accentInk(p.dark))
                 }
             },
         )
@@ -577,8 +586,8 @@ private fun ServiceClosedCard(
     onHistory: () -> Unit, onRestore: () -> Unit, onPurge: () -> Unit,
 ) {
     Column(
-        Modifier.fillMaxWidth().navGlass(p, radius = 18.dp, role = GlassRole.TASK)
-            .padding(horizontal = 14.dp, vertical = 11.dp),
+        Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
+            .padding(horizontal = NavEventLayout.cardInset, vertical = NavEventLayout.groupGap),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Column(
@@ -613,26 +622,95 @@ private fun ServiceCount(
     selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit,
 ) {
     Column(
-        modifier.navGlass(p, radius = 14.dp,
-            role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
+        modifier.personalNoteCard(p, NavEventLayout.cardRadius)
+            .then(if (selected) Modifier.border(1.5.dp, NavTodayVisualTokens.accentInk(p.dark),
+                RoundedCornerShape(NavEventLayout.cardRadius)) else Modifier)
             .glassClickable(onClick = onClick)
-            .heightIn(min = 75.dp)
-            .padding(horizontal = 8.dp, vertical = 9.dp),
+            .heightIn(min = 66.dp)
+            .padding(horizontal = 6.dp, vertical = NavEventLayout.innerGap),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(number.toString(), color = if (selected) p.selectionContent else color, fontSize = 22.sp)
-        Text(label, color = if (selected) p.selectionContent else p.muted, fontSize = 11.sp,
+        Text(number.toString(), color = color, fontSize = 21.sp, fontWeight = FontWeight.Medium)
+        Text(label, color = if (selected) NavTodayVisualTokens.accentInk(p.dark) else p.muted, fontSize = 11.sp,
             maxLines = 1)
     }
 }
 
+/** Same bottom-up presentation and handle behavior as the routine event editor. */
 @Composable
-private fun ServiceEditorDialog(
+private fun BoxScope.ServiceEditorOverlay(
+    visible: Boolean, existing: ServiceEntry?, p: NavPalette, lang: UiLanguage,
+    onDismiss: () -> Unit, onSave: (ServiceEntry) -> Unit,
+) {
+    var dragPx by remember { mutableFloatStateOf(0f) }
+    val scope = rememberCoroutineScope()
+    val returnJob = remember { mutableStateOf<Job?>(null) }
+    val dragState = rememberDraggableState { delta ->
+        returnJob.value?.cancel()
+        returnJob.value = null
+        dragPx = (dragPx + delta).coerceIn(0f, 1600f)
+    }
+    val dismissDistance = with(LocalDensity.current) { 110.dp.toPx() }
+    val dragStopped: (Float) -> Unit = { velocity ->
+        if (dragPx >= dismissDistance || velocity > 1150f) onDismiss()
+        else {
+            val offset = dragPx
+            returnJob.value = scope.launch {
+                Animatable(offset).animateTo(0f, spring(dampingRatio = .96f, stiffness = 680f)) {
+                    dragPx = value
+                }
+                returnJob.value = null
+            }
+        }
+    }
+    LaunchedEffect(visible) {
+        if (!visible) delay(250)
+        returnJob.value?.cancel()
+        returnJob.value = null
+        dragPx = 0f
+    }
+    AnimatedVisibility(
+        visible = visible, modifier = Modifier.fillMaxSize(),
+        enter = fadeIn(tween(150)), exit = fadeOut(tween(175)),
+        label = "serviceEditorScrim",
+    ) {
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .36f))
+            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                /* Preserve draft; dismiss via header, handle or Back. */
+            })
+    }
+    AnimatedVisibility(
+        visible = visible, modifier = Modifier.align(Alignment.BottomCenter),
+        enter = slideInVertically(initialOffsetY = { it },
+            animationSpec = spring(dampingRatio = .92f, stiffness = 620f)) + fadeIn(tween(115)),
+        exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220)) + fadeOut(tween(140)),
+        label = "serviceEditorBottomSheet",
+    ) {
+        val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        Box(Modifier.fillMaxWidth().fillMaxHeight(.94f)
+            .offset { IntOffset(0, dragPx.roundToInt()) }
+            .shadow(16.dp, shape).clip(shape)
+            .background(navEditorSheetSurface(p), shape)
+            .border(1.dp, p.border.copy(alpha = .65f), shape)) {
+            ServiceEditorSheet(existing, p, lang, onDismiss, onSave)
+            Box(Modifier.align(Alignment.TopCenter).size(width = 112.dp, height = 30.dp)
+                .draggable(state = dragState, orientation = Orientation.Vertical,
+                    onDragStopped = { velocity -> dragStopped(velocity) }),
+                contentAlignment = Alignment.TopCenter) {
+                Box(Modifier.padding(top = 8.dp).size(width = 42.dp, height = 4.dp)
+                    .background(p.muted.copy(alpha = .58f), CircleShape))
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun ServiceEditorSheet(
     existing: ServiceEntry?, p: NavPalette, lang: UiLanguage,
     onDismiss: () -> Unit, onSave: (ServiceEntry) -> Unit,
 ) {
-    val context = LocalContext.current
     var equipment by remember(existing?.id) { mutableStateOf(existing?.equipment.orEmpty()) }
     var unplanned by remember(existing?.id) { mutableStateOf(existing?.unplanned ?: false) }
     var requestNumber by remember(existing?.id) {
@@ -666,106 +744,114 @@ private fun ServiceEditorDialog(
     var alert by remember(existing?.id) { mutableIntStateOf(existing?.remindMonths ?: 0) }
     var error by remember { mutableStateOf<String?>(null) }
     var pickingDate by remember(existing?.id) { mutableStateOf<String?>(null) }
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            Modifier.fillMaxWidth().navDialogSurface(p)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(11.dp),
-        ) {
+
+    var repeatOpen by remember(existing?.id) { mutableStateOf(false) }
+    var reminderOpen by remember(existing?.id) { mutableStateOf(false) }
+    val intervals = presetIntervals.map { months -> months.toString() to
+        if (months == 0) localized("Без повтора", "One-off", lang)
+        else localized("$months мес.", "$months mo", lang) } +
+        ("custom" to localized("Настроить", "Customize", lang))
+    val reminders = listOf(0, 1, 2, 3).map { months -> months.toString() to
+        if (months == 0) localized("Нет", "None", lang)
+        else localized("За $months мес.", "$months mo before", lang) }
+    val repeatLabel = if (customSelected) localized("$period мес.", "$period mo", lang)
+        else intervals.firstOrNull { it.first == period.toString() }?.second ?: "$period"
+    val reminderLabel = reminders.firstOrNull { it.first == alert.toString() }?.second ?: "$alert"
+    val years = customYears.toIntOrNull()
+    val months = customMonths.toIntOrNull()
+    val valid = equipment.isNotBlank() && (if (unplanned) requestNumber.isNotBlank()
+        else !customSelected || (years != null && months != null && years >= 0 &&
+            months in 0..11 && years * 12 + months in 1..1200))
+    Column(Modifier.fillMaxSize().padding(top = 13.dp).navigationBarsPadding().imePadding()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            NavEventHeaderAction("x", localized("Отмена", "Cancel", lang), p, true, onDismiss)
             Text(if (existing == null) localized("Новый сервис", "New service", lang)
-                else localized("Редактировать", "Edit service", lang),
-                color = p.text, fontSize = 21.sp)
-            Column(Modifier.fillMaxWidth().heightIn(max = 430.dp)
-                .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(9.dp),
-            ) {
-                Text(localized("Тип обслуживания", "Maintenance type", lang),
-                    color = p.muted, fontSize = 12.sp)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ServiceOption(localized("Плановое", "Planned", lang), p, !unplanned,
-                        modifier = Modifier.weight(1f)) {
-                        if (existing?.serviceHistory.isNullOrEmpty()) unplanned = false
-                    }
-                    ServiceOption(localized("Внеплановое", "Unplanned", lang), p, unplanned,
-                        modifier = Modifier.weight(1f)) {
-                        if (existing?.serviceHistory.isNullOrEmpty()) unplanned = true
-                    }
-                }
-                if (existing?.serviceHistory?.isNotEmpty() == true) {
-                    Text(localized("Тип закреплён: у записи уже есть история обслуживания.",
-                        "Type is fixed because this record already has service history.", lang),
-                        color = p.muted, fontSize = 11.sp)
-                }
-                Text(localized("Оборудование", "Equipment", lang), color = p.muted, fontSize = 12.sp)
-                ServiceInput(equipment, { equipment = it.take(200) },
-                    localized("Название", "Name", lang), p, false)
-                if (unplanned) {
+                else localized("Редактировать сервис", "Edit service", lang),
+                modifier = Modifier.weight(1f), color = p.text, fontSize = 20.sp,
+                textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            NavEventHeaderAction("check", localized("Сохранить", "Save", lang), p, valid, accent = true) {
+                    runCatching {
+                        require(existing?.serviceHistory.isNullOrEmpty() ||
+                            existing?.unplanned == unplanned) {
+                            "Cannot change the type of a service with archived history"
+                        }
+                        require(!unplanned || requestNumber.trim().isNotBlank()) {
+                            "An unplanned request needs its AMOS number"
+                        }
+                        require(navRichNoteAllowed(note, noteHtml, 6000))
+                        val total = if (unplanned) 0 else if (customSelected) {
+                            val years = customYears.toIntOrNull() ?: -1
+                            val months = customMonths.toIntOrNull() ?: -1
+                            require(years >= 0 && months in 0..11 && years * 12 + months in 1..1200)
+                            years * 12 + months
+                        } else period
+                        ServiceEntry(
+                            id = existing?.id ?: UUID.randomUUID().toString(),
+                            equipment = equipment.trim(),
+                            // A planned service uses the actual user-selected previous
+                            // maintenance date; never fabricate "next date - 1 day".
+                            // Unplanned keeps its informational AMOS request date.
+                            lastDate = if (unplanned) requestDate else lastServiceDate,
+                            nextDate = if (unplanned) null else next,
+                            comment = note.trim(),
+                            commentHtml = noteHtml,
+                            periodMonths = total,
+                            remindMonths = if (unplanned) 0 else alert,
+                            requestNumber = if (unplanned) requestNumber.trim()
+                                else existing?.requestNumber.orEmpty(),
+                            serviceHistory = existing?.serviceHistory.orEmpty(),
+                            completedAt = existing?.completedAt,
+                            unplanned = unplanned,
+                        )
+                    }.onSuccess { onSave(it) }
+                        .onFailure {
+                            error = if (unplanned && requestNumber.trim().isBlank())
+                                localized("Укажи номер созданной заявки AMOS.",
+                                    "Enter the created AMOS request number.", lang)
+                            else localized(
+                                "Проверь название, даты и параметры обслуживания.",
+                                "Check equipment name, dates and service parameters.", lang)
+                        }
+            }
+        }
+        Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())
+            .padding(horizontal = NavEventLayout.screenInset),
+            verticalArrangement = Arrangement.spacedBy(NavEventLayout.sectionGap)) {
+            NavCalendarSegmentedControl(
+                labels = listOf(localized("Плановое", "Planned", lang), localized("Внеплановое", "Unplanned", lang)),
+                activeIndex = if (unplanned) 1 else 0, p = p,
+            ) { index -> if (existing?.serviceHistory.isNullOrEmpty()) unplanned = index == 1 }
+            if (existing?.serviceHistory?.isNotEmpty() == true) {
+                Text(localized("Тип закреплён: у записи уже есть история обслуживания.",
+                    "Type is fixed because this record already has service history.", lang),
+                    color = p.muted, fontSize = 11.sp)
+            }
+            ServiceInput(equipment, { equipment = it.take(200) },
+                localized("Название оборудования", "Equipment name", lang), p, false)
+            if (unplanned) {
+                NavEventSchedulePanel(p) {
                     Text(localized("Номер заявки AMOS", "AMOS request number", lang),
-                        color = p.muted, fontSize = 12.sp)
+                        color = p.text, fontSize = 15.sp, modifier = Modifier.padding(vertical = 8.dp))
                     ServiceInput(requestNumber, { requestNumber = it.take(100) },
-                        localized("Номер из AMOS", "Request number from AMOS", lang), p, false,
-                        identifier = true)
-                    Text(localized("Дата заявки AMOS", "AMOS request date", lang),
-                        color = p.muted, fontSize = 12.sp)
-                    ServiceOption(navDate(requestDate, lang, true), p, false,
-                        Modifier.fillMaxWidth()) {
-                        pickingDate = "request"
-                    }
+                        localized("Номер из AMOS", "Request number from AMOS", lang), p, false, identifier = true)
+                    NavEventDivider(p)
+                    NavEventValueRow(localized("Дата заявки AMOS", "AMOS request date", lang),
+                        navDate(requestDate, lang, true), p) { pickingDate = "request" }
                     Text(localized("Только для информации — не влияет на сроки и уведомления.",
                         "For reference only — no effect on due dates or reminders.", lang),
-                        color = p.muted, fontSize = 11.sp)
-                } else {
-                    Text(localized("Последнее обслуживание", "Last service date", lang),
-                        color = p.muted, fontSize = 12.sp)
-                    ServiceOption(navDate(lastServiceDate, lang, true), p, false,
-                        Modifier.fillMaxWidth()) {
-                        pickingDate = "last"
-                    }
-                    Text(localized("Следующее обслуживание", "Next service date", lang),
-                        color = p.muted, fontSize = 12.sp)
-                    ServiceOption(navDate(next, lang, true), p, false, Modifier.fillMaxWidth()) {
-                        pickingDate = "next"
-                    }
+                        color = p.muted, fontSize = 11.sp, modifier = Modifier.padding(bottom = 8.dp))
                 }
-                Text(localized("Комментарий", "Comment", lang), color = p.muted, fontSize = 12.sp)
-                NavRichNoteEditor(
-                    initialPlain = existing?.comment.orEmpty(),
-                    initialHtml = existing?.commentHtml.orEmpty(),
-                    entryKey = existing?.id ?: "new-service", p = p, lang = lang,
-                    maxCharacters = 6000,
-                    placeholder = localized("Работы, расходники, примечания…",
-                        "Details and remarks…", lang),
-                    onChange = { text, html -> note = text; noteHtml = html },
-                )
-                if (!unplanned) {
-                Text(localized("Периодичность", "Interval", lang), color = p.muted, fontSize = 12.sp)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    presetIntervals.forEach { months ->
-                        ServiceOption(if (months == 0) localized("Без повтора", "One-off", lang)
-                            else localized(months.toString() + " мес.", months.toString() + " mo", lang),
-                            p, !customSelected && period == months) {
-
-                            customSelected = false
-                            period = months
-                            if (months > 0) next = calculatedNextServiceDate(lastServiceDate, months)
-                        }
-                    }
-                    ServiceOption(
-                        localized("Своя…", "Custom…", lang), p, customSelected,
-                    ) {
-                        if (!customSelected) {
-                            val candidate = (customYears.toIntOrNull() ?: 0) * 12 +
-                                (customMonths.toIntOrNull() ?: 0)
-                            if (candidate in 1..1200) {
-
-                                period = candidate
-                                next = calculatedNextServiceDate(lastServiceDate, candidate)
-                            }
-                        }
-                        customSelected = true
-                    }
-                }
+            } else {
+                NavEventSchedulePanel(p) {
+                    NavEventValueRow(localized("Последнее обслуживание", "Last service", lang),
+                        navDate(lastServiceDate, lang, true), p) { pickingDate = "last" }
+                    NavEventDivider(p)
+                    NavEventValueRow(localized("Следующее обслуживание", "Next service", lang),
+                        navDate(next, lang, true), p) { pickingDate = "next" }
+                    NavEventDivider(p)
+                    NavEventValueRow(localized("Периодичность", "Interval", lang), repeatLabel, p,
+                        chevron = true, valueAccent = period > 0) { repeatOpen = true }
                 if (customSelected) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                         Column(Modifier.weight(1f)) {
@@ -813,75 +899,55 @@ private fun ServiceEditorDialog(
                         fontSize = 11.sp,
                     )
                 }
-                Text(localized("Предупреждение заранее", "Reminder in advance", lang),
-                    color = p.muted, fontSize = 12.sp)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    listOf(0, 1, 2, 3).forEach { months ->
-                        ServiceOption(if (months == 0) localized("Нет", "Off", lang)
-                            else localized(months.toString() + " мес.", months.toString() + " mo", lang),
-                            p, alert == months) { alert = months }
-                    }
+
+                    if (period > 0) Text(localized(
+                        "«Выполнено» пересчитает срок от фактической даты выполнения.",
+                        "Completion calculates next due from the actual completion date.", lang),
+                        color = p.muted, fontSize = 11.sp, modifier = Modifier.padding(vertical = 8.dp))
                 }
-                if (period > 0) {
-                    Text(localized(
-                        "«Проведено» пересчитает срок от фактической даты выполнения.",
-                        "Serviced will calculate next due from the actual completion date.", lang),
-                        color = p.muted, fontSize = 11.sp)
-                }
-                } // Planned schedule fields
-                error?.let { Text(it, color = p.dangerText, fontSize = 12.sp) }
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                ServiceOption(localized("Отмена", "Cancel", lang), p, false, onClick = onDismiss)
-                Spacer(Modifier.width(8.dp))
-                ServiceOption(localized("Сохранить", "Save", lang), p, true) {
-                    runCatching {
-                        require(existing?.serviceHistory.isNullOrEmpty() ||
-                            existing?.unplanned == unplanned) {
-                            "Cannot change the type of a service with archived history"
-                        }
-                        require(!unplanned || requestNumber.trim().isNotBlank()) {
-                            "An unplanned request needs its AMOS number"
-                        }
-                        require(navRichNoteAllowed(note, noteHtml, 6000))
-                        val total = if (unplanned) 0 else if (customSelected) {
-                            val years = customYears.toIntOrNull() ?: -1
-                            val months = customMonths.toIntOrNull() ?: -1
-                            require(years >= 0 && months in 0..11 && years * 12 + months in 1..1200)
-                            years * 12 + months
-                        } else period
-                        ServiceEntry(
-                            id = existing?.id ?: UUID.randomUUID().toString(),
-                            equipment = equipment.trim(),
-                            // A planned service uses the actual user-selected previous
-                            // maintenance date; never fabricate "next date - 1 day".
-                            // Unplanned keeps its informational AMOS request date.
-                            lastDate = if (unplanned) requestDate else lastServiceDate,
-                            nextDate = if (unplanned) null else next,
-                            comment = note.trim(),
-                            commentHtml = noteHtml,
-                            periodMonths = total,
-                            remindMonths = if (unplanned) 0 else alert,
-                            requestNumber = if (unplanned) requestNumber.trim()
-                                else existing?.requestNumber.orEmpty(),
-                            serviceHistory = existing?.serviceHistory.orEmpty(),
-                            completedAt = existing?.completedAt,
-                            unplanned = unplanned,
-                        )
-                    }.onSuccess { onSave(it) }
-                        .onFailure {
-                            error = if (unplanned && requestNumber.trim().isBlank())
-                                localized("Укажи номер созданной заявки AMOS.",
-                                    "Enter the created AMOS request number.", lang)
-                            else localized(
-                                "Проверь название, даты и параметры обслуживания.",
-                                "Check equipment name, dates and service parameters.", lang)
-                        }
+                NavEventSchedulePanel(p) {
+                    NavEventValueRow(localized("Предупредить заранее", "Remind before due", lang),
+                        reminderLabel, p, chevron = true, valueAccent = alert > 0) { reminderOpen = true }
                 }
             }
+            NavEventSchedulePanel(p) {
+                Text(localized("Комментарий", "Comment", lang), color = p.text, fontSize = 15.sp,
+                    modifier = Modifier.padding(vertical = NavEventLayout.innerGap))
+                NavRichNoteEditor(initialPlain = existing?.comment.orEmpty(), initialHtml = existing?.commentHtml.orEmpty(),
+                    entryKey = existing?.id ?: "new-service", p = p, lang = lang,
+                    maxCharacters = 6000, neutralStyle = true, amosCommentField = true,
+                    placeholder = localized("Работы, расходники, примечания…", "Details and remarks…", lang),
+                    onChange = { text, html -> note = text; noteHtml = html })
+                Spacer(Modifier.height(NavEventLayout.innerGap))
+            }
+            error?.let { Text(it, color = p.dangerText, fontSize = 12.sp) }
+            Spacer(Modifier.height(NavEventLayout.innerGap))
         }
     }
+    if (repeatOpen) NavEventChoiceDialog(
+        localized("Периодичность", "Interval", lang), intervals,
+        if (customSelected) "custom" else period.toString(), p, lang, confirmRequired = false,
+        onDismiss = { repeatOpen = false }, onSelect = { key ->
+            repeatOpen = false
+            if (key == "custom") {
+                if (!customSelected) {
+                    val candidate = (customYears.toIntOrNull() ?: 0) * 12 + (customMonths.toIntOrNull() ?: 0)
+                    if (candidate in 1..1200) {
+                        period = candidate
+                        next = calculatedNextServiceDate(lastServiceDate, candidate)
+                    }
+                }
+                customSelected = true
+            } else {
+                customSelected = false
+                period = key.toInt()
+                if (period > 0) next = calculatedNextServiceDate(lastServiceDate, period)
+            }
+        })
+    if (reminderOpen) NavEventChoiceDialog(
+        localized("Предупредить заранее", "Remind before due", lang), reminders, alert.toString(), p, lang,
+        confirmRequired = false, onDismiss = { reminderOpen = false },
+        onSelect = { key -> alert = key.toInt(); reminderOpen = false })
     if (pickingDate != null) {
         val forRequest = pickingDate == "request"
         val forLastService = pickingDate == "last"
@@ -917,13 +983,13 @@ private fun ServiceInput(
         maxLines = if (multiline) 5 else 1,
         keyboardOptions = if (identifier) NavIdentifierKeyboard else NavSentenceKeyboard,
         textStyle = TextStyle(color = p.text, fontSize = 14.sp),
-        cursorBrush = SolidColor(p.blue),
-        modifier = Modifier.fillMaxWidth().height(if (multiline) 86.dp else 44.dp)
-            .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL),
+        cursorBrush = SolidColor(NavTodayVisualTokens.accentInk(p.dark)),
+        modifier = Modifier.fillMaxWidth().height(if (multiline) 86.dp else if (identifier) 48.dp else NavEventRowHeight + NavEventLayout.cardVertical * 2)
+            .personalNoteCard(p, if (identifier) 12.dp else NavEventLayout.cardRadius, nested = identifier),
         decorationBox = { inner ->
             Box(Modifier.fillMaxSize().padding(12.dp),
                 contentAlignment = if (multiline) Alignment.TopStart else Alignment.CenterStart) {
-                if (value.isEmpty()) Text(hint, color = p.muted, fontSize = 12.sp)
+                if (value.isEmpty()) Text(hint, color = p.muted, fontSize = 14.sp)
                 inner()
             }
         },
@@ -944,9 +1010,9 @@ private fun ServiceNumberInput(
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         textStyle = TextStyle(color = p.text, fontSize = 14.sp),
-        cursorBrush = SolidColor(p.blue),
+        cursorBrush = SolidColor(NavTodayVisualTokens.accentInk(p.dark)),
         modifier = Modifier.fillMaxWidth().height(44.dp)
-            .navGlass(p, radius = 11.dp, role = GlassRole.CONTROL),
+            .personalNoteCard(p, 11.dp, nested = true),
         decorationBox = { field ->
             Box(Modifier.fillMaxSize().padding(horizontal = 12.dp),
                 contentAlignment = Alignment.CenterStart) {
@@ -962,14 +1028,15 @@ private fun ServiceOption(
     modifier: Modifier = Modifier, compact: Boolean = false,
     destructive: Boolean = false, onClick: () -> Unit,
 ) {
-    Box(modifier.navGlass(p, radius = 12.dp,
-        role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
+    Box(modifier.personalNoteCard(p, 12.dp, nested = true)
+        .then(if (selected) Modifier.border(1.5.dp, NavTodayVisualTokens.accentInk(p.dark),
+            RoundedCornerShape(12.dp)) else Modifier)
         .glassClickable(onClick = onClick)
         .heightIn(min = 44.dp)
         .padding(horizontal = if (compact) 5.dp else 10.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center) {
-        Text(label, color = if (selected) p.selectionContent
-            else if (destructive) p.systemRed else p.text,
+        Text(label, color = if (destructive) p.systemRed
+            else if (selected) NavTodayVisualTokens.accentInk(p.dark) else p.text,
             fontSize = if (compact) 11.sp else 12.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
@@ -977,7 +1044,7 @@ private fun ServiceOption(
 
 /**
  * Only the AMOS request badge inside Services uses the chosen warm accent.
- * Keep the action/filter selection system blue and preserve the glass dock.
+ * Preserve the distinct warm request badge and the glass dock.
  */
 internal data class ServiceAmosBadgeColors(
     val fill: Color, val outline: Color, val text: Color,
@@ -1027,10 +1094,10 @@ private fun ServiceAmosRequestButton(
 @Composable
 private fun ServiceConfirmDialog(
     p: NavPalette, title: String, detail: String, lang: UiLanguage,
-    onDismiss: () -> Unit, onConfirmed: () -> Unit,
+    onDismiss: () -> Unit, destructive: Boolean = false, onConfirmed: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        Column(Modifier.fillMaxWidth().navDialogSurface(p)
+        Column(Modifier.fillMaxWidth().personalNoteCard(p, 26.dp)
             .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(title, color = p.text, fontSize = 20.sp)
@@ -1038,8 +1105,14 @@ private fun ServiceConfirmDialog(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 ServiceOption(localized("Отмена", "Cancel", lang), p, false, onClick = onDismiss)
                 Spacer(Modifier.width(8.dp))
-                ServiceOption(localized("Подтвердить", "Confirm", lang), p, true, onClick = onConfirmed)
+                ServiceOption(localized("Подтвердить", "Confirm", lang), p, true, destructive = destructive, onClick = onConfirmed)
             }
         }
     }
+}
+
+@Composable
+private fun ServicePanel(p: NavPalette, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
+        .padding(NavEventLayout.cardInset), verticalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap), content = content)
 }

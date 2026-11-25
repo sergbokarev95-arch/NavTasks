@@ -223,15 +223,24 @@ private fun WorkAgendaCalendarRow(
 /** Service requisition number is separate from the equipment service record. */
 @Composable
 internal fun ServiceRequestDialog(
+    service: ServiceEntry, p: NavPalette, lang: UiLanguage,
+    onDismiss: () -> Unit, onSave: (String) -> Unit,
+) {
+    ServiceRequestDialog(service, p, lang, onDismiss, neutralStyle = false, onSave = onSave)
+}
+
+@Composable
+internal fun ServiceRequestDialog(
     service: ServiceEntry,
     p: NavPalette,
     lang: UiLanguage,
     onDismiss: () -> Unit,
+    neutralStyle: Boolean,
     onSave: (String) -> Unit,
 ) {
     var number by remember(service.id) { mutableStateOf(service.requestNumber) }
     NavGlassAlertDialog(
-        p = p,
+        p = p, neutralSurface = neutralStyle, neutralActions = neutralStyle,
         onDismissRequest = onDismiss,
         title = { Text(localized("Заявка AMOS", "AMOS request", lang)) },
         text = {
@@ -245,7 +254,7 @@ internal fun ServiceRequestDialog(
                     p = p,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = localized("Номер из AMOS", "Number from AMOS", lang),
-                    keyboardOptions = NavIdentifierKeyboard,
+                    keyboardOptions = NavIdentifierKeyboard, neutralStyle = neutralStyle,
                 )
                 if (service.requestNumber.isNotBlank()) {
                     Text(localized("Очисти поле, чтобы убрать номер заявки.",
@@ -256,12 +265,12 @@ internal fun ServiceRequestDialog(
         },
         confirmButton = {
             TextButton(onClick = { onSave(number.trim()) }) {
-                Text(localized("Сохранить", "Save", lang))
+                Text(localized("Сохранить", "Save", lang), color = if (neutralStyle) NavTodayVisualTokens.accentInk(p.dark) else androidx.compose.ui.graphics.Color.Unspecified)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(localized("Отмена", "Cancel", lang))
+                Text(localized("Отмена", "Cancel", lang), color = if (neutralStyle) p.text else androidx.compose.ui.graphics.Color.Unspecified)
             }
         },
     )
