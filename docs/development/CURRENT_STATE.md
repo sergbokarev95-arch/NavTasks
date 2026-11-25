@@ -6,8 +6,8 @@
 | Канал | Версия / code | Состояние |
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
-| Кандидат Beta54 | 1.2.0-beta.54 / 336 | CI 45660950080 in progress |
-| Кандидат Recovery337 | 1.1.0 / 337 | CI 45661019514 in progress |
+| Кандидат Beta54 | 1.2.0-beta.54 / 336 | JVM tests success; signed build in progress |
+| Recovery337 | 1.1.0 / 337 | JVM/build/signer/archive success; release HTTP403 |
 | Beta53 | 1.2.0-beta.53 / 334 | CI SUCCESS, signed APK published |
 | Recovery335 | 1.1.0 / 335 | JVM/build/signer/archive success; Releases HTTP403 |
 | Beta52 | 1.2.0-beta.52 / 332 | JVM/build/signer/artifact success; Releases HTTP 403 |
@@ -39,6 +39,7 @@
 - Beta54 — equipment action deduplication, distinct folder/equipment icons, centered delete, compact folder dialog. [Beta CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45660950080), [Recovery CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45661019514) in progress.
 
 ## Подтверждённые артефакты
+- Recovery337 [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45661019514), [verified ZIP](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45661019514/artifacts/15045441807), APK SHA256 60fe368cd9dc57a5b3e1c6e504b7b2fd9f22753e6632f68165dd15dc339b907c; publication HTTP403.
 - Beta53 [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656282445) SUCCESS; [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.53/NavTasks_1.2.0-beta.53.apk), 37330766 bytes SHA256 6d4ae5625956e1dc059eceef0976501e82b387f7ad02cea14d40a1bc5f4e541f; [ZIP](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656282445/artifacts/15043861370).
 - Recovery335 [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656346039), [verified APK ZIP](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656346039/artifacts/15043651676), APK SHA256 a084e8f8c6f17a6282e60752ad98683df18cbdf3fdeb95ce392878b96f1445f8; verified signed APK, publication HTTP403.
 - Beta52 [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653015395), [verified ZIP](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653015395/artifacts/15042405562), APK SHA256 f60932388188aba3b534a239a3f8cc1d7dd721ab61a635f4302fd887cbed1066. JVM/build/package/version/non-debuggable/original signer/archive success; publication HTTP 403.
