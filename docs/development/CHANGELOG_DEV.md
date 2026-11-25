@@ -350,3 +350,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-25 — Beta44 routines style source f85ac5eefe07f18d540d7e567a9bf72687567993, CI 45572098541 pending; Recovery317 0f7100eee77b27a9e88ec559af9340af2913bcbc, CI 45572145523 pending. UI-only, stable OTA unchanged.
 
 - 2026-11-25 — Beta44 CI 45572098541 SUCCESS, f85ac5eefe07f18d540d7e567a9bf72687567993, SHA256 c012f717b6f67625d3a9fc10765a7b3c7ad650f7a852c51b2ac043e5f75615cd, 37248846 bytes. Recovery317 CI 45572145523 SUCCESS, 0f7100eee77b27a9e88ec559af9340af2913bcbc, SHA256 34d696f7f9c22c5dfc95aaf8ca7632c1b21cb82423bb8f29692402c680613597, 37068614 bytes. Original signer and publication verified. Stable OTA unchanged. Device QA pending.
+
+- 2026-11-25 — Beta45 source 4ac5e64803d9d37c07699727d7999ebe8851657d, CI 45622058402 started; Recovery319 2b14595ce4323c23a2c49d10d86d90bb2c71ea58, CI 45622112228 started. Inline routines header and AMOS neutral list redesign, source regression tests; backup before change. Stable OTA unchanged. CI and release verification pending.

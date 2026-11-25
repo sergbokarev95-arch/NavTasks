@@ -38,3 +38,5 @@
 - Beta44: Routine tasks use shared calendar segmented control (neutral lens, coral active ink), neutral header without NavTasks, compact matte cards, neutral list count and coral checklist count; existing Liquid Glass back/add unchanged. Preserve effective frequency, ordering, disabled strikethrough, stable keys, editing and data. No unrelated screen changes.
 
 - Beta44/recovery317 verified CI and release publication; device visual QA pending.
+
+- Beta45: по замечаниям пользователя убрать плашку заголовка рутин, использовать текст/число/линию в стиле Today. AMOS list: neutral header and search, matte cards, compact status filters with coral selection rim and semantic status ink, common calendar segmented control for active/closed. Preserve callbacks, filtering, recurrence, history and stable keys; Services unchanged. Shared AMOS chips and editor text inputs also neutral; no editor behavior changes.

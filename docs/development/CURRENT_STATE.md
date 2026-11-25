@@ -6,6 +6,8 @@
 | Канал | Версия / code | Состояние |
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
+| Кандидат Beta45 | 1.2.0-beta.45 / 318 | CI 45622058402 in progress, APK не подтверждён |
+| Кандидат Recovery319 | 1.1.0 / 319 | CI 45622112228 in progress, APK не подтверждён |
 | Последняя проверенная beta | 1.2.0-beta.44 / 316 | CI success, подписанный APK опубликован |
 | Recovery для beta44 | 1.1.0 / 317 | CI success, подписанный APK опубликован |
 | Recovery для beta43 | 1.1.0 / 315 | CI success, подписанный APK опубликован |
@@ -13,10 +15,10 @@
 | Recovery для beta41 | 1.1.0 / 311 | CI success, подписанный APK опубликован |
 | Recovery для beta40 | 1.1.0 / 309 | CI success, подписанный APK опубликован |
 
-Рабочий исходник Beta44: `feature/navtasks-1.2.0-beta44-routines-style`, `f85ac5eefe07f18d540d7e567a9bf72687567993`. Main не база beta; docs-ветка не исходник сборки.
+Рабочий кандидат Beta45: `feature/navtasks-1.2.0-beta45-amos-style`, `4ac5e64803d9d37c07699727d7999ebe8851657d`. Recovery319: `qa/navtasks-1.1.0-recovery-code319-for-beta45`, `2b14595ce4323c23a2c49d10d86d90bb2c71ea58`. Резервная ветка `backup/navtasks-beta44-before-amos-style`. Проверенный исходник Beta44: `feature/navtasks-1.2.0-beta44-routines-style`, `f85ac5eefe07f18d540d7e567a9bf72687567993`. Main не база beta; docs-ветка не исходник сборки.
 
 ## Активный этап
-- Сегодня завершён. Beta44 — рутинные задачи в новом стиле, CI success, device QA pending. AMOS и сервис не изменены.
+- Сегодня завершён. Beta45 — заголовок списка рутин без плашки, AMOS: нейтральная шапка/поиск, компактные фильтры, общий переключатель, матовые открытые/закрытые карточки и история, нейтральные кнопки и поля редактора. Расписание, история, фильтры, поиск, модели и Services без функциональных изменений. [Beta CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45622058402), [Recovery CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45622112228): проверка продолжается. Device QA pending.
 
 ## Подтверждённые артефакты
 - Beta44: [CI 45572098541](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45572098541) SUCCESS, source f85ac5eefe07f18d540d7e567a9bf72687567993, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.44/NavTasks_1.2.0-beta.44.apk), 37248846 bytes, SHA256 c012f717b6f67625d3a9fc10765a7b3c7ad650f7a852c51b2ac043e5f75615cd. JVM tests, release build, original signer/package/version/non-debuggable verified. Device QA pending.
