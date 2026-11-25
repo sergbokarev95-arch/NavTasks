@@ -370,3 +370,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-26 — Beta48 first CI 45637583664 failed compileDebugKotlin because library Material3 color factory requires explicit opt-in. Scoped @OptIn(ExperimentalMaterial3Api::class) on NavRichNoteEditor only; corrected SHA 189cb401880e9483136e7a72b74feccfeb43e69c, CI 45637913492 started. Existing recovery run continues. APK pending.
 
 - 2026-11-26 — Beta48 CI 45637913492 SUCCESS, 189cb401880e9483136e7a72b74feccfeb43e69c, SHA256 e3b4736ae07f8652fb932ff0f70b4ce6d086170bec7b00f9531a9554c538646a, 37281614 bytes. Recovery325 CI 45637636371 SUCCESS, 8afdbddd6bd7ef27df19a181170e4b344f54b545, SHA256 3ead1c9caff2cd6386a9f1e0d883def98eb42c9a16634b3d3fcbc2d86f480c14, 37068614 bytes. Original signer/package/version/non-debuggable and release publication verified. Stable OTA unchanged; device QA pending.
+
+- 2026-11-26 — Beta49 source e0457a2b205d407357d1e23a12760745065482c0, CI 45640816693 started; Recovery327 650e66abb131026e3c20305f68551974591664a0, CI 45640883230 started. Services redesign, regression checks, backup. CI/release verification pending.
