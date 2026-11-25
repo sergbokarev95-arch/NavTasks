@@ -62,3 +62,5 @@
 - Beta55: user requested a visible button for folder deletion only in rename popup, remove duplicate deletion inside folder, give equipment title a separate multi-line row; neutral export button and pencil/plus on separate action row. Preserve existing folder-safe deletion, export, editor routing and all data.
 
 - Beta56: redesign My Materials consistent with equipment and existing neutral UI; use common reference editor sheet, folder edit from parent row and delete from rename popup only. Keep empty-folder deletion guard, preserve existing reference document and excerpt storage/backup formats, existing PDF viewing mechanism. Restore shared settled top-pull gesture and high-contrast search. Online library remains in development; status only, no live service.
+
+- Settings: reuse neutral cards and shared event choice grid (2 language / 3 theme), coral selected rim and switches, neutral nested action controls and transfer dialogs. Preserve existing optical Back, notification/update and profile transfer behavior.
