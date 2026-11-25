@@ -53,4 +53,22 @@ class NavAmosVisualTest {
         assertTrue(navAmosReminderOptions(UiLanguage.RU).map { it.first } ==
             listOf("0", "1", "3", "7", "14", "30", "90"))
     }
+    @Test fun amosAccentsAreOptInAndCommentFieldKeepsRichTextState() {
+        val root = "src/main/java/com/navtasks/app/"
+        val ui = File(root + "WorkOrdersUi.kt").readText()
+        val event = File(root + "NavEventEditorUi.kt").readText()
+        val rich = File(root + "NavRichNoteUi.kt").readText()
+        assertTrue(ui.contains("p, valid, accent = true"))
+        assertTrue(ui.contains("valueAccent = repeatDays > 0 || repeatMonths > 0 || customInterval"))
+        assertTrue(ui.contains("valueAccent = remindDays > 0"))
+        assertTrue(ui.contains("amosCommentField = true"))
+        assertTrue(event.contains("accent = false, onClick = onClick"))
+        assertTrue(event.contains("valueAccent = false, onClick = onClick"))
+        assertTrue(rich.contains("amosCommentField: Boolean = false"))
+        assertTrue(rich.contains("nestedSurface = amosCommentField"))
+        assertTrue(rich.contains("focusedIndicatorColor = Color.Transparent"))
+        assertTrue(rich.contains("unfocusedIndicatorColor = Color.Transparent"))
+        assertTrue(rich.contains("placeholder = fieldPlaceholder"))
+        assertTrue(rich.contains("onChange(state.annotatedString.text, state.toHtml())"))
+    }
 }

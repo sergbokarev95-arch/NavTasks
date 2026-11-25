@@ -889,7 +889,7 @@ private fun WorkOrderEditorSheet(
                 else localized("Редактировать работу", "Edit work item", lang),
                 modifier = Modifier.weight(1f), color = p.text, fontSize = 20.sp,
                 textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            NavEventHeaderAction("check", localized("Сохранить", "Save", lang), p, valid) {
+            NavEventHeaderAction("check", localized("Сохранить", "Save", lang), p, valid, accent = true) {
                 val candidate = runCatching {
                     require(navRichNoteAllowed(comment, commentHtml, 6000))
                     if (customInterval) {
@@ -939,7 +939,7 @@ private fun WorkOrderEditorSheet(
                     navDate(dueDate, lang, true), p) { pickingDate = true }
                 NavEventDivider(p)
                 NavEventValueRow(localized("Повторять", "Repeat", lang), repeatLabel,
-                    p, chevron = true) { showRepeat = true }
+                    p, chevron = true, valueAccent = repeatDays > 0 || repeatMonths > 0 || customInterval) { showRepeat = true }
                 if (customInterval) {
                     NavEventDivider(p)
                     Text(localized("Месяцев (1–1200)", "Months (1–1200)", lang),
@@ -957,19 +957,19 @@ private fun WorkOrderEditorSheet(
                     "Повторения отсчитываются от выбранной даты начала, независимо от даты выполнения.",
                     "Repeats follow the selected start date, not the completion date.", lang),
                     color = p.muted, fontSize = 12.sp,
-                    modifier = Modifier.padding(vertical = NavEventLayout.innerGap))
+                    modifier = Modifier.padding(top = NavEventLayout.cardVertical, bottom = NavEventLayout.innerGap))
             }
             NavEventSchedulePanel(p) {
                 NavEventValueRow(localized("Предупредить заранее", "Remind before due", lang),
-                    reminderLabel, p, chevron = true) { showReminder = true }
+                    reminderLabel, p, chevron = true, valueAccent = remindDays > 0) { showReminder = true }
             }
             NavEventSchedulePanel(p) {
                 Text(localized("Комментарий", "Notes", lang), color = p.text, fontSize = 15.sp,
-                    modifier = Modifier.padding(vertical = NavEventLayout.groupGap))
+                    modifier = Modifier.padding(top = NavEventLayout.innerGap, bottom = NavEventLayout.innerGap))
                 NavRichNoteEditor(
                     initialPlain = existing?.comment.orEmpty(), initialHtml = existing?.commentHtml.orEmpty(),
                     entryKey = existing?.id ?: "new-amos", p = p, lang = lang,
-                    maxCharacters = 6000, neutralStyle = true,
+                    maxCharacters = 6000, neutralStyle = true, amosCommentField = true,
                     placeholder = localized("Детали, замечания…", "Details and remarks…", lang),
                     onChange = { text, html -> comment = text; commentHtml = html },
                 )

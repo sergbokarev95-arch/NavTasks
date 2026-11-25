@@ -51,8 +51,15 @@ internal fun navEventReminderChoices(lang: UiLanguage): List<Pair<String, String
 
 @Composable
 internal fun NavEventHeaderAction(kind: String, label: String, p: NavPalette, enabled: Boolean, onClick: () -> Unit) {
+    NavEventHeaderAction(kind, label, p, enabled, accent = false, onClick = onClick)
+}
+
+/** Opt-in action accent; existing task editor retains its neutral header. */
+@Composable
+internal fun NavEventHeaderAction(kind: String, label: String, p: NavPalette, enabled: Boolean, accent: Boolean, onClick: () -> Unit) {
     IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(44.dp).semantics { contentDescription = label }) {
-        NavGlassGlyph(kind, if (enabled) p.text else p.muted, Modifier.size(25.dp))
+        val ink = if (!enabled) p.muted else if (accent) NavTodayVisualTokens.accentInk(p.dark) else p.text
+        NavGlassGlyph(kind, ink, Modifier.size(25.dp))
     }
 }
 
@@ -142,11 +149,17 @@ internal fun NavEventOptionGrid(options: List<Pair<String, String>>, selected: S
 
 @Composable
 internal fun NavEventValueRow(label: String, value: String, p: NavPalette, chevron: Boolean = false, expanded: Boolean? = null, onClick: () -> Unit) {
+    NavEventValueRow(label, value, p, chevron, expanded, valueAccent = false, onClick = onClick)
+}
+
+/** Opt-in selected-value ink; label, chevron and unconfigured value stay neutral. */
+@Composable
+internal fun NavEventValueRow(label: String, value: String, p: NavPalette, chevron: Boolean = false, expanded: Boolean? = null, valueAccent: Boolean, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = NavEventRowHeight).glassClickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
         Text(label, color = p.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
         if (value.isNotEmpty()) {
-            if (chevron) Text(value, color = p.muted, fontSize = 13.sp)
+            if (chevron) Text(value, color = if (valueAccent) NavTodayVisualTokens.accentInk(p.dark) else p.muted, fontSize = 13.sp)
             else Box(Modifier.personalNoteCard(p, 18.dp, nested = true).heightIn(min = 34.dp).padding(horizontal = 12.dp, vertical = 6.dp)) {
                 Text(value, color = p.text, fontSize = 13.sp)
             }

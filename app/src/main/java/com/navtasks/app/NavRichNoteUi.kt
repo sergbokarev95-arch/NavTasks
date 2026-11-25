@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
+import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
 
 internal val NavSentenceKeyboard = KeyboardOptions(
     capitalization = KeyboardCapitalization.Sentences, autoCorrectEnabled = true)
@@ -69,6 +70,7 @@ internal fun NavRichNoteEditor(
     fullPage: Boolean = false,
     neutralStyle: Boolean = false,
     checklistField: Boolean = false,
+    amosCommentField: Boolean = false,
 ) {
     val state = rememberRichTextState()
     var ready by remember(entryKey) { mutableStateOf(false) }
@@ -86,15 +88,15 @@ internal fun NavRichNoteEditor(
         val formattingTools: @Composable () -> Unit = {
         Row(Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            NavRichTool("B", p, neutralStyle = neutralStyle, selected = state.currentSpanStyle.fontWeight == FontWeight.Bold) { state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) }
-            NavRichTool("I", p, neutralStyle = neutralStyle, selected = state.currentSpanStyle.fontStyle == FontStyle.Italic) { state.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) }
-            NavRichTool("U̲", p, neutralStyle = neutralStyle, selected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.Underline) == true) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline)) }
-            NavRichTool("S̶", p, neutralStyle = neutralStyle, selected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) }
-            NavRichTool("◉", p, neutralStyle = neutralStyle, selected = paletteMode == NavRichPaletteMode.TEXT) {
+            NavRichTool("B", p, neutralStyle = neutralStyle, nestedSurface = amosCommentField, selected = state.currentSpanStyle.fontWeight == FontWeight.Bold) { state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) }
+            NavRichTool("I", p, neutralStyle = neutralStyle, nestedSurface = amosCommentField, selected = state.currentSpanStyle.fontStyle == FontStyle.Italic) { state.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) }
+            NavRichTool("U̲", p, neutralStyle = neutralStyle, nestedSurface = amosCommentField, selected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.Underline) == true) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline)) }
+            NavRichTool("S̶", p, neutralStyle = neutralStyle, nestedSurface = amosCommentField, selected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true) { state.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) }
+            NavRichTool("◉", p, neutralStyle = neutralStyle, nestedSurface = amosCommentField, selected = paletteMode == NavRichPaletteMode.TEXT) {
                 paletteMode = if (paletteMode == NavRichPaletteMode.TEXT) null
                     else NavRichPaletteMode.TEXT
             }
-            NavRichTool("▰", p, neutralStyle = neutralStyle, selected = paletteMode == NavRichPaletteMode.HIGHLIGHT) {
+            NavRichTool("▰", p, neutralStyle = neutralStyle, nestedSurface = amosCommentField, selected = paletteMode == NavRichPaletteMode.HIGHLIGHT) {
                 paletteMode = if (paletteMode == NavRichPaletteMode.HIGHLIGHT) null
                     else NavRichPaletteMode.HIGHLIGHT
             }
@@ -103,7 +105,7 @@ internal fun NavRichNoteEditor(
             horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             val mode = paletteMode
             (listOf<Color?>(null) + navRichNoteSwatches(p)).forEach { color ->
-                NavRichColorSwatch(color, p, neutralStyle) {
+                NavRichColorSwatch(color, p, neutralStyle, nestedSurface = amosCommentField) {
                     when (mode) {
                         NavRichPaletteMode.TEXT -> {
                             val oldColor = state.currentSpanStyle.color
@@ -131,10 +133,12 @@ internal fun NavRichNoteEditor(
             else Modifier.fillMaxWidth().heightIn(min = 115.dp, max = 200.dp)
         Box(editorModifier.then(if (checklistField) Modifier.personalNoteCard(p, 12.dp, nested = true)
                 .border(1.dp, NavTodayVisualTokens.checklistInsetRim(p.dark), RoundedCornerShape(12.dp))
+                else if (amosCommentField) Modifier.personalNoteCard(p, 12.dp, nested = true)
+                    .border(1.dp, NavTodayVisualTokens.checklistInsetRim(p.dark), RoundedCornerShape(12.dp))
                 else if (neutralStyle) Modifier.personalNoteCard(p, 12.dp)
                 else Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL))
-                .padding(if (checklistField) 4.dp else 10.dp)) {
-            if (!checklistField && ready && state.annotatedString.text.isEmpty())
+                .padding(if (amosCommentField) 0.dp else if (checklistField) 4.dp else 10.dp)) {
+            if (!checklistField && !amosCommentField && ready && state.annotatedString.text.isEmpty())
                 Text(placeholder, color = p.muted, fontSize = 12.sp)
             if (ready) {
                 val scheme = androidx.compose.material3.MaterialTheme.colorScheme
@@ -143,8 +147,20 @@ internal fun NavRichNoteEditor(
                         surface = NavPersonalVisualTokens.cardSurface(p.dark, checklistField),
                         surfaceVariant = NavPersonalVisualTokens.cardSurface(p.dark, checklistField),
                         onSurface = p.text, onSurfaceVariant = p.muted) else scheme) {
+                val fieldPlaceholder: (@Composable () -> Unit)? = if (amosCommentField) {
+                    { Text(placeholder, color = p.muted, fontSize = 14.sp) }
+                } else null
                 RichTextEditor(
                 state = state,
+                placeholder = fieldPlaceholder,
+                colors = if (amosCommentField) RichTextEditorDefaults.richTextEditorColors(
+                    containerColor = Color.Transparent,
+                    cursorColor = NavTodayVisualTokens.accentInk(p.dark),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                ) else RichTextEditorDefaults.richTextEditorColors(),
                 modifier = if (fullPage) Modifier.fillMaxSize()
                     else Modifier.fillMaxWidth().heightIn(min = if (checklistField) 128.dp else 95.dp),
                 textStyle = TextStyle(
@@ -174,8 +190,8 @@ internal fun NavRichNoteEditor(
 }
 /** Visible black/white swatches in both themes; first chip resets formatting. */
 @Composable
-private fun NavRichColorSwatch(color: Color?, p: NavPalette, neutralStyle: Boolean = false, onClick: () -> Unit) {
-    Box(Modifier.size(42.dp).then(if (neutralStyle) Modifier.personalNoteCard(p, 11.dp)
+private fun NavRichColorSwatch(color: Color?, p: NavPalette, neutralStyle: Boolean = false, nestedSurface: Boolean = false, onClick: () -> Unit) {
+    Box(Modifier.size(42.dp).then(if (neutralStyle) Modifier.personalNoteCard(p, 11.dp, nested = nestedSurface)
         else Modifier.navGlass(p, radius = 11.dp, role = GlassRole.CONTROL))
         .glassClickable(onClick), contentAlignment = Alignment.Center) {
         if (color == null) {
@@ -189,8 +205,9 @@ private fun NavRichColorSwatch(color: Color?, p: NavPalette, neutralStyle: Boole
 
 @Composable
 private fun NavRichTool(label: String, p: NavPalette, fg: Color = p.text,
-    selected: Boolean = false, neutralStyle: Boolean = false, onClick: () -> Unit) {
-    Box(Modifier.size(42.dp).then(if (neutralStyle) Modifier.personalNoteCard(p, 11.dp)
+    selected: Boolean = false, neutralStyle: Boolean = false, nestedSurface: Boolean = false, onClick: () -> Unit) {
+    Box(Modifier.size(42.dp).then(if (neutralStyle) Modifier.personalNoteCard(p, 11.dp, nested = nestedSurface)
+        .then(if (nestedSurface && selected) Modifier.border(1.dp, NavTodayVisualTokens.accentInk(p.dark), RoundedCornerShape(11.dp)) else Modifier)
         else Modifier.navGlass(p, radius = 11.dp,
             role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL))
         .glassClickable(onClick), contentAlignment = Alignment.Center) {
