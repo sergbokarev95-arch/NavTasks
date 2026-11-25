@@ -3,8 +3,8 @@
 Обновлено 2026-11-26. Канонический контекст: `docs/navtasks-development`. [Регламент](../../AGENTS.md).
 
 ## Прямо сейчас
-- Beta55/code338: `feature/navtasks-1.2.0-beta55-equipment-actions-layout`, SHA dab5b7498ae45bbe50d15d58dd6a32bc6215e58b, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45674952156) in_progress. Title gets its own row (up to three lines), neutral Export button and edit/add controls in separate row; visible centered destructive folder button only in rename popup. No delete inside folder. Data and exchange unchanged. Backup `backup/navtasks-beta54-before-equipment-actions-layout`.
-- Recovery339: `qa/navtasks-1.1.0-recovery-code339-for-beta55`, SHA b8f7e7ea11a22f81a397deb6324fd608a6d76845, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45674959685) in_progress. Same stable logic as Recovery337, bumped code only. No stable OTA change.
+- Beta55/code338: `feature/navtasks-1.2.0-beta55-equipment-actions-layout`, SHA 1495b438bc8ddb9e8996596fee40d433b02a50b9, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45675435302) in_progress. Title gets its own row (up to three lines), neutral Export button and edit/add controls in separate row; visible centered destructive folder button only in rename popup. No delete inside folder. Data and exchange unchanged. Backup `backup/navtasks-beta54-before-equipment-actions-layout`.
+- Recovery339: `qa/navtasks-1.1.0-recovery-code339-for-beta55`, SHA 1feee2c9748b28d9f7db792571854ab31c9cd767, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45675542756) in_progress. Same stable logic as Recovery337, bumped code only. No stable OTA change.
 - Continue polling these exact runs. No duplicate builds. Neither APK is verified or published yet.
 
 ## Предыдущая проверенная сборка
