@@ -891,7 +891,6 @@ fun TaskEditorScreen(
                 ) { showDateWheel = true }
                 if (time != null) {
                     NavEventDivider(p)
-                    NavEventDivider(p)
                     Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(localized("Временной интервал", "Time window", lang), color = p.text, modifier = Modifier.weight(1f))
                         Switch(windowStart != null, onCheckedChange = { useWindow ->
@@ -907,6 +906,7 @@ fun TaskEditorScreen(
                             pickingStart = true; showTimeWheel = true
                         }
                     }
+                    NavEventDivider(p)
                     NavEventValueRow(
                         if (windowStart == null) localized("Выполнить к", "Due by", lang)
                         else localized("Конец", "End", lang),

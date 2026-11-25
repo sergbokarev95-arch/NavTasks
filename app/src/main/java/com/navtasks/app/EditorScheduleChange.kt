@@ -119,6 +119,7 @@ internal fun preserveHistoricalCalendarBase(
         else -> true
     }
     return if (unchanged) edited.copy(
+        frequency = original.frequency,
         dayOfWeek = original.dayOfWeek,
         dayOfMonth = original.dayOfMonth,
         calendarRevisions = original.calendarRevisions,

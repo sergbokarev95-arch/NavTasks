@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -85,7 +86,8 @@ internal fun NavEventValueRow(label: String, value: String, p: NavPalette, chevr
                 Text(value, color = p.text, fontSize = 13.sp)
             }
         }
-        if (chevron) NavGlassGlyph(if (expanded == null) "chevron-right" else if (expanded) "chevron-up" else "chevron-down", p.muted, Modifier.size(17.dp))
+        if (chevron) NavGlassGlyph(if (expanded == null) "chevron-right" else "chevron-down", p.muted,
+            Modifier.size(17.dp).rotate(if (expanded == true) 180f else 0f))
     }
 }
 

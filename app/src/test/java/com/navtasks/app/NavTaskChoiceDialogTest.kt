@@ -51,10 +51,10 @@ class NavTaskChoiceDialogTest {
         assertFalse(ui.contains("navPopupGlassSurface("))
         assertTrue(ui.contains("NavTodayVisualTokens.cardSurface(p.dark)"))
         assertTrue(ui.contains("NavTodayVisualTokens.checklistInsetSurface(p.dark)"))
-        assertTrue(editor.contains("NavTaskFrequencyControl(frequency, p, lang)"))
-        assertTrue(editor.contains("frequency = it"))
-        assertTrue(editor.contains("mode = ScheduleMode.valueOf(key)"))
-        assertTrue(editor.contains("reminder = key.toInt()"))
+        assertTrue(editor.contains("navEventRepeatChoices(lang)"))
+        assertTrue(editor.contains("frequency = chosen"))
+        assertTrue(editor.contains("mode = ScheduleMode.valueOf(it)"))
+        assertTrue(editor.contains("key.toIntOrNull()?.let { addReminder(it) }"))
         assertTrue(editor.contains("remindMinutesBefore = reminder"))
         assertTrue(editor.contains("notificationsEnabled = notified"))
         assertFalse(editor.contains("openTaskChoice"))
@@ -76,17 +76,17 @@ class NavTaskChoiceDialogTest {
         assertFalse(segmented.contains("TaskStore("))
     }
 
-    @Test fun frequencySitsOutsideNamePanelAndEditorUsesBottomUpMotion() {
+    @Test fun eventNamePrecedesRepeatAndEditorUsesBottomUpMotion() {
         val editor = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
         val root = File("src/main/java/com/navtasks/app/NavTasksUi.kt").readText()
         val choice = File("src/main/java/com/navtasks/app/NavTaskChoiceDialog.kt").readText()
         val section = editor.substringAfter(
             "Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)"
         )
-        val period = section.indexOf("NavTaskFrequencyControl(frequency, p, lang)")
-        val firstPanel = section.indexOf("NavEditorPanel(p) {")
-        val taskName = section.indexOf("FormLabel(\"Название задачи\"")
-        assertTrue(period >= 0 && firstPanel > period && taskName > firstPanel)
+        val taskName = section.indexOf("NavEventTitle(title")
+        val repeat = section.indexOf("navEventRepeatLabel(frequency")
+        assertTrue(taskName >= 0 && repeat > taskName)
+        assertFalse(section.substringBefore("fun SettingsScreen(").contains("NavTaskFrequencyControl(frequency"))
         assertTrue(editor.contains("sheetMode: Boolean = false"))
         assertTrue(root.contains("label = \"taskEditorBottomSheet\""))
         assertTrue(root.contains("label = \"taskEditorScrim\""))
@@ -121,22 +121,20 @@ class NavTaskChoiceDialogTest {
         // blurred once, opaque Popup drawn ABOVE the editor's light scrim.
         assertTrue(root.contains("editorOpen -> 4.dp"))
         assertTrue(root.contains("alpha = 0.36f"))
-        assertTrue(editor.contains(".blur(if (activeChoice != null) 5.dp else 0.dp)"))
-        assertTrue(editor.contains("if (activeChoice != null)"))
+        assertTrue(editor.contains("if (showRepeat) NavEventChoiceDialog("))
+        assertTrue(editor.contains("if (showReminder) NavEventChoiceDialog("))
         assertTrue(choice.contains("onExpandedChange(true)"))
         assertTrue(choice.contains("onExpandedChange(false)"))
         assertFalse(choice.contains("NavApplyDialogFrost("))
         assertTrue(choice.contains("Popup("))
     }
 
-    @Test fun taskEditorUsesCoralSaveWithoutChangingPersistence() {
+    @Test fun taskEditorUsesHeaderCheckWithoutChangingPersistence() {
         val editor = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
-        assertTrue(editor.contains("Button("))
-        assertTrue(editor.contains("enabled = valid"))
-        assertTrue(editor.contains("containerColor = NavTodayVisualTokens.cardSurface(p.dark)"))
-        assertTrue(editor.contains("contentColor = NavTodayVisualTokens.accentInk(p.dark)"))
-        assertTrue(editor.contains("disabledContainerColor = NavTodayVisualTokens.checklistInsetSurface(p.dark)"))
-        assertTrue(editor.contains("Text(localized(\"Сохранить\", \"Save\", lang)"))
+        val header = File("src/main/java/com/navtasks/app/NavEventEditorUi.kt").readText()
+        assertTrue(editor.contains("NavEventHeaderAction("))
+        assertTrue(editor.contains("\"check\", localized(\"Сохранить\", \"Save\", lang), p, valid"))
+        assertTrue(header.contains("IconButton(onClick = onClick, enabled = enabled"))
         assertTrue(editor.contains("preserveHistoricalCalendarBase(it, edited, LocalDate.now())"))
         assertTrue(editor.contains("pendingFrequencyEdit = edited to preview"))
     }
@@ -157,6 +155,6 @@ class NavTaskChoiceDialogTest {
         assertTrue(ui.contains("calendarDayEditPreview(it, edited, store.runs"))
         assertTrue(ui.contains("preserveHistoricalCalendarBase(it, edited, LocalDate.now())"))
         assertTrue(ui.contains("if (frequency != Frequency.EXTRA && mode == ScheduleMode.AFTER_COMPLETION)"))
-        assertTrue(ui.contains("SmartReminderTiming").not()) // timing belongs to notifications, not this UI.
+        assertFalse(ui.contains("SmartReminderTiming.trigger(")) // alarm scheduling stays outside the UI.
     }
 }
