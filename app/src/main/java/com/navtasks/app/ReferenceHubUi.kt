@@ -242,6 +242,8 @@ internal fun ReferenceHubScreen(
                 Text(localized("Оборудование и мои материалы доступны офлайн.",
                     "Equipment and my materials are available offline.", lang),
                     color = p.muted, fontSize = 12.sp)
+                Text(localized("Онлайн-библиотека — в разработке", "Online library — in development", lang),
+                    color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp)
             }
             Spacer(Modifier.width(8.dp))
             ReferenceHubAction(p, "search", localized("Поиск", "Search", lang)) {

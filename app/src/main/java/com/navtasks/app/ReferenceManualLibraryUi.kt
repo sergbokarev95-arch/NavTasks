@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -206,26 +207,30 @@ internal fun ReferenceManualLibraryScreen(
     }
     BackHandler { navigateBack() }
 
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+    val modalOpen = menuOpen || newFolder || newExcerpt || deleteFolder != null ||
+        deleteDocument != null || deleteExcerpt != null || stagedImport != null
+    Column(Modifier.fillMaxSize().blur(if (modalOpen) 4.dp else 0.dp)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            NavGlassCircleButton(p, "back") { navigateBack() }
+            ReferenceManualHeaderAction(p, "back", localized("Назад", "Back", lang)) { navigateBack() }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(localized("Справочник", "Reference", lang), color = p.blueText,
-                    fontSize = 12.sp)
-                Text(selectedDocument?.title ?: activeFolder?.title ?: when (sectionId) {
+                Text(selectedExcerpt?.title ?: selectedDocument?.title ?: activeFolder?.title ?: when (sectionId) {
                     NavReferenceSections.SIRE -> "SIRE 2.0"
                     NavReferenceSections.VIQ7 -> "VIQ7"
                     else -> localized("Мои материалы", "My materials", lang)
                 }, color = p.text, fontSize = 20.sp, maxLines = 1,
                     overflow = TextOverflow.Ellipsis)
             }
-            if (selectedDocument == null && selectedExcerpt == null && current != null) {
+            if (selectedExcerpt != null) {
+                ReferenceManualHeaderAction(p, "edit", localized("Изменить", "Edit", lang)) {
+                    if (!busy) { editingExcerpt = selectedExcerpt; newExcerpt = true }
+                }
+            } else if (selectedDocument == null && current != null) {
                 Box {
-                    NavGlassCircleButton(p, "plus") { if (!busy) menuOpen = true }
+                    ReferenceManualHeaderAction(p, "plus", localized("Добавить", "Add", lang)) { if (!busy) menuOpen = true }
                     NavPopoverMenu(p, expanded = menuOpen,
-                        onDismissRequest = { menuOpen = false }) {
+                        onDismissRequest = { menuOpen = false }, neutralStyle = true) {
                         NavPopoverAction(localized("Добавить PDF / Word",
                             "Import PDF / Word", lang), p) {
                             menuOpen = false
@@ -253,10 +258,11 @@ internal fun ReferenceManualLibraryScreen(
                     }
                 }
                 Spacer(Modifier.width(7.dp))
-                NavGlassCircleButton(p, "search") {
-                    if (busy) return@NavGlassCircleButton
-                    showSearch = !showSearch
-                    if (!showSearch) search = ""
+                ReferenceManualHeaderAction(p, "search", localized("Поиск", "Search", lang)) {
+                    if (!busy) {
+                        showSearch = !showSearch
+                        if (!showSearch) search = ""
+                    }
                 }
             }
         }
@@ -264,10 +270,10 @@ internal fun ReferenceManualLibraryScreen(
         if (busy) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                color = p.blueText)
+                color = NavTodayVisualTokens.accentInk(p.dark))
         }
         if (feedback != null) {
-            Text(feedback.orEmpty(), color = if (error) p.systemRed else p.blueText,
+            Text(feedback.orEmpty(), color = if (error) p.systemRed else NavTodayVisualTokens.accentInk(p.dark),
                 modifier = Modifier.padding(horizontal = 17.dp, vertical = 6.dp),
                 fontSize = 12.sp)
         }
@@ -279,12 +285,11 @@ internal fun ReferenceManualLibraryScreen(
         } else if (selectedExcerpt != null) {
             ReferenceManualExcerptReader(
                 selectedExcerpt, p, lang,
-                onEdit = { editingExcerpt = selectedExcerpt; newExcerpt = true },
                 onRemove = { deleteExcerpt = selectedExcerpt },
             )
         } else {
             if (current == null) {
-                NavPanel(p) {
+                ReferenceManualPanel(p) {
                     Text(localized(
                         "Каталог требует проверки. Импорт заблокирован; данные не удалены.",
                         "Manual catalog needs inspection. Import is locked; data was preserved.",
@@ -297,34 +302,26 @@ internal fun ReferenceManualLibraryScreen(
                     p = p, lang = lang,
                     placeholder = localized("Поиск по названиям документов",
                         "Search document titles", lang),
+                    neutralStyle = true, highContrastField = true,
                     resultCount = totalSearchResults,
                     currentResult = selectedSearchResult,
                     onPreviousResult = { moveSearchResult(-1) },
                     onNextResult = { moveSearchResult(1) },
                 )
+                Box(Modifier.padding(horizontal = 16.dp)) { NavEventDivider(p) }
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f).fillMaxWidth()
+                        .revealSearchOnSettledTopPull(listState, showSearch || busy || modalOpen) {
+                            showSearch = true
+                        }
+                        .dismissSearchImeOnResultsGesture(showSearch),
                     state = listState,
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
                         top = 8.dp, bottom = 125.dp),
                     verticalArrangement = Arrangement.spacedBy(11.dp),
                 ) {
-                    if (activeFolder != null && q.isBlank()) item {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(localized("Папка", "Folder", lang), color = p.muted,
-                                fontSize = 12.sp, modifier = Modifier.weight(1f))
-                            TextButton(onClick = {
-                                folderName = activeFolder.title
-                                folderEdit = activeFolder
-                                newFolder = true
-                            }) { Text(localized("Изменить", "Rename", lang), color = p.blueText) }
-                            TextButton(onClick = { deleteFolder = activeFolder }) {
-                                Text(localized("Удалить", "Delete", lang), color = p.systemRed)
-                            }
-                        }
-                    }
                     if (folders.isEmpty() && documents.isEmpty() && excerpts.isEmpty()) item {
-                        NavPanel(p) {
+                        ReferenceManualPanel(p) {
                             Text(if (q.isNotBlank())
                                 localized("Ничего не найдено.", "No matching documents.", lang)
                             else localized("Нажми «+», чтобы импортировать мануал или создать папку.",
@@ -335,8 +332,11 @@ internal fun ReferenceManualLibraryScreen(
                     items(folders, key = { "folder-" + it.id }) { item ->
                         ReferenceManualListRow(
                             item.title, localized("Папка", "Folder", lang), p,
-                            query = q,
+                            query = q, glyph = "equipment-folder", isFolder = true,
                             onClick = { folderId = item.id; showSearch = false; search = "" },
+                            onEdit = {
+                                if (!busy) { folderName = item.title; folderEdit = item; newFolder = true }
+                            },
                         )
                     }
                     items(documents, key = { "document-" + it.id }) { doc ->
@@ -344,7 +344,7 @@ internal fun ReferenceManualLibraryScreen(
                             doc.title,
                             if (doc.mimeType == ReferenceManualMime.PDF) "PDF"
                                 else "Word DOCX",
-                            p, query = q, onClick = {
+                            p, query = q, glyph = "reference", onClick = {
                                 if (doc.mimeType == ReferenceManualMime.PDF &&
                                     navNativePdfSupported()) {
                                     runCatching {
@@ -368,8 +368,7 @@ internal fun ReferenceManualLibraryScreen(
                                 .firstOrNull { it.contains(q, ignoreCase = true) }
                                 ?.take(110)
                                 ?: localized("Выдержка", "Excerpt", lang),
-                            p, query = q, onClick = { excerptId = excerpt.id },
-                            onRemove = { deleteExcerpt = excerpt },
+                            p, query = q, glyph = "work-order", onClick = { excerptId = excerpt.id },
                         )
                     }
                 }
@@ -397,11 +396,11 @@ internal fun ReferenceManualLibraryScreen(
                     ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    NavGlassCircleButton(p, "back") { documentId = null }
+                    ReferenceManualHeaderAction(p, "back", localized("Назад", "Back", lang)) { documentId = null }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(localized("Чтение документа", "Document reader", lang),
-                            fontSize = 12.sp, color = p.blueText)
+                            fontSize = 12.sp, color = NavTodayVisualTokens.accentInk(p.dark))
                         Text(document.title, color = p.text, fontSize = 17.sp,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
@@ -439,7 +438,7 @@ internal fun ReferenceManualLibraryScreen(
     }
     if (deleteExcerpt != null) {
         val excerpt = deleteExcerpt!!
-        NavGlassAlertDialog(p, onDismissRequest = { deleteExcerpt = null },
+        NavGlassAlertDialog(p, neutralSurface = true, neutralActions = true, onDismissRequest = { deleteExcerpt = null },
             title = { Text(localized("Удалить выдержку?", "Delete excerpt?", lang)) },
             text = { Text(localized("Удаление нельзя отменить.",
                 "This action cannot be undone.", lang)) },
@@ -466,15 +465,31 @@ internal fun ReferenceManualLibraryScreen(
     }
 
     if (newFolder) {
-        NavGlassAlertDialog(p, onDismissRequest = { newFolder = false },
-            title = { Text(localized("Папка справочника", "Reference folder", lang)) },
+        NavGlassAlertDialog(p, neutralSurface = true, neutralActions = true, onDismissRequest = { newFolder = false },
+            title = { Text(localized(if (folderEdit == null) "Новая папка" else "Название папки",
+                if (folderEdit == null) "New folder" else "Rename folder", lang)) },
             text = {
-                NavGlassInput(folderName, { folderName = it.take(120) }, p,
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = localized("Название папки", "Folder name", lang))
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ReferenceField(localized("Название", "Name", lang), folderName,
+                        { folderName = it.take(120) }, p)
+                    folderEdit?.let { item ->
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Box(Modifier.personalNoteCard(p, 14.dp, nested = true)) {
+                                TextButton(enabled = !busy, onClick = {
+                                    newFolder = false
+                                    deleteFolder = item
+                                }, modifier = Modifier.heightIn(min = 44.dp)) {
+                                    Text(localized("Удалить папку", "Delete folder", lang), color = p.systemRed)
+                                }
+                            }
+                        }
+                    }
+                }
             },
             confirmButton = {
-                TextButton(enabled = !busy && folderName.isNotBlank(), onClick = {
+                val canSave = !busy && folderName.isNotBlank() &&
+                    folderName.trim() != folderEdit?.title.orEmpty().trim()
+                TextButton(enabled = canSave, onClick = {
                     val folder = (folderEdit ?: ReferenceManualFolder(
                         title = folderName.trim(), sectionId = sectionId,
                         parentId = folderId)).copy(title = folderName.trim())
@@ -486,7 +501,7 @@ internal fun ReferenceManualLibraryScreen(
                         finish(result, localized("Папка сохранена.", "Folder saved.", lang))
                         if (result.isSuccess) newFolder = false
                     }
-                }) { Text(localized("Сохранить", "Save", lang), color = p.blueText) }
+                }) { Text(localized("Сохранить", "Save", lang), color = NavTodayVisualTokens.accentInk(p.dark)) }
             },
             dismissButton = { TextButton(onClick = { newFolder = false }) {
                 Text(localized("Отмена", "Cancel", lang), color = p.muted)
@@ -495,7 +510,7 @@ internal fun ReferenceManualLibraryScreen(
     }
     if (deleteFolder != null) {
         val item = deleteFolder!!
-        NavGlassAlertDialog(p, onDismissRequest = { deleteFolder = null },
+        NavGlassAlertDialog(p, neutralSurface = true, neutralActions = true, onDismissRequest = { deleteFolder = null },
             title = { Text(localized("Удалить пустую папку?", "Delete empty folder?", lang)) },
             text = { Text(localized(
                 "Папку с документами или вложенными папками удалить нельзя.",
@@ -507,7 +522,10 @@ internal fun ReferenceManualLibraryScreen(
                         runCatching { store.deleteEmptyFolder(item.id); store.read() }
                     }
                     finish(result, localized("Папка удалена.", "Folder deleted.", lang))
-                    if (result.isSuccess) { folderId = item.parentId; deleteFolder = null }
+                    if (result.isSuccess) {
+                        if (folderId == item.id) folderId = item.parentId
+                        deleteFolder = null
+                    }
                 }
             }) { Text(localized("Удалить", "Delete", lang), color = p.systemRed) } },
             dismissButton = { TextButton(onClick = { deleteFolder = null }) {
@@ -517,7 +535,7 @@ internal fun ReferenceManualLibraryScreen(
     }
     if (deleteDocument != null) {
         val item = deleteDocument!!
-        NavGlassAlertDialog(p, onDismissRequest = { deleteDocument = null },
+        NavGlassAlertDialog(p, neutralSurface = true, neutralActions = true, onDismissRequest = { deleteDocument = null },
             title = { Text(localized("Убрать документ из библиотеки?",
                 "Remove document from library?", lang)) },
             text = { Text(localized(
@@ -540,7 +558,7 @@ internal fun ReferenceManualLibraryScreen(
         )
     }
     stagedImport?.let { staged ->
-        NavGlassAlertDialog(p, onDismissRequest = {
+        NavGlassAlertDialog(p, neutralSurface = true, neutralActions = true, onDismissRequest = {
             if (!busy && !restoringArchive) stagedImport = null
         }, title = {
             Text(localized("Восстановить мануалы", "Restore manuals", lang))
@@ -576,7 +594,7 @@ internal fun ReferenceManualLibraryScreen(
                         busy = false
                     }
                 }
-            }) { Text(localized("Добавить копии", "Add copies", lang), color = p.blueText) }
+            }) { Text(localized("Добавить копии", "Add copies", lang), color = NavTodayVisualTokens.accentInk(p.dark)) }
         }, dismissButton = {
             TextButton(enabled = !busy && !restoringArchive,
                 onClick = { stagedImport = null }) {
@@ -589,27 +607,53 @@ internal fun ReferenceManualLibraryScreen(
 @Composable
 private fun ReferenceManualListRow(
     title: String, subtitle: String, p: NavPalette,
-    query: String = "", onClick: () -> Unit, onRemove: (() -> Unit)? = null,
+    query: String = "", glyph: String = "reference", isFolder: Boolean = false,
+    onClick: () -> Unit, onRemove: (() -> Unit)? = null, onEdit: (() -> Unit)? = null,
 ) {
-    Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp, role = GlassRole.TASK)
-        .padding(horizontal = 12.dp, vertical = 10.dp),
+    Row(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
+        .padding(horizontal = 13.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        Row(Modifier.weight(1f).glassClickable(onClick).padding(vertical = 5.dp),
+        Row(Modifier.weight(1f).glassClickable(onClick).padding(vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            NavGlassGlyph("reference", p.blueText, Modifier.size(24.dp))
-            Spacer(Modifier.width(11.dp))
-            Column(Modifier.weight(1f)) {
+            Box(Modifier.size(42.dp).personalNoteCard(p, 12.dp, nested = true),
+                contentAlignment = Alignment.Center) {
+                NavGlassGlyph(glyph, if (isFolder) NavTodayVisualTokens.accentInk(p.dark) else p.text,
+                    Modifier.size(25.dp))
+            }
+            Spacer(Modifier.width(13.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 NavSearchMarkedText(title, query, p, color = p.text, fontSize = 15.sp,
                     maxLines = 2, overflow = TextOverflow.Ellipsis)
-                NavSearchMarkedText(subtitle, query, p, color = p.muted, fontSize = 12.sp)
+                NavSearchMarkedText(subtitle, query, p,
+                    color = if (isFolder) NavTodayVisualTokens.accentInk(p.dark) else p.muted,
+                    fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
-            NavGlassGlyph("chevron-right", p.muted, Modifier.size(18.dp))
+            NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
+        }
+        if (onEdit != null) {
+            Spacer(Modifier.width(6.dp))
+            Box(Modifier.size(42.dp).glassClickable(onEdit), contentAlignment = Alignment.Center) {
+                NavGlassGlyph("edit", p.muted, Modifier.size(20.dp))
+            }
         }
         if (onRemove != null) {
-            Spacer(Modifier.width(5.dp))
-            TextButton(onClick = onRemove) {
-                Text("×", color = p.systemRed, fontSize = 21.sp)
+            Spacer(Modifier.width(6.dp))
+            Box(Modifier.size(44.dp).glassClickable(onRemove), contentAlignment = Alignment.Center) {
+                NavGlassGlyph("x", p.systemRed, Modifier.size(20.dp))
             }
         }
     }
+}
+
+@Composable
+private fun ReferenceManualHeaderAction(p: NavPalette, kind: String, label: String, onClick: () -> Unit) {
+    Box(Modifier.personalNoteCard(p, 22.dp)) {
+        NavEventHeaderAction(kind, label, p, true, onClick)
+    }
+}
+
+@Composable
+internal fun ReferenceManualPanel(p: NavPalette, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius).padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
 }

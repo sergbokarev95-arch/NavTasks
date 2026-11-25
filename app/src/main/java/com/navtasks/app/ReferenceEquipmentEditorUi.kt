@@ -199,7 +199,7 @@ internal fun ReferenceProcedureEditor(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ReferenceEditorSheet(
+internal fun ReferenceEditorSheet(
     p: NavPalette, lang: UiLanguage, heading: String, canSave: Boolean,
     onDismiss: () -> Unit, onSave: () -> Unit, content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -230,7 +230,7 @@ private fun ReferenceEditorSheet(
 }
 
 @Composable
-private fun ReferenceField(
+internal fun ReferenceField(
     label: String, value: String, onValueChange: (String) -> Unit,
     p: NavPalette, multiline: Boolean = false,
 ) {

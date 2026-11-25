@@ -26,7 +26,7 @@ internal fun ReferenceManualReader(
         runCatching { store.findOriginal(document) }
     }
     if (original.isFailure) {
-        NavPanel(p) {
+        ReferenceManualPanel(p) {
             Text(localized(
                 "Оригинальный файл отсутствует или неполный. Восстанови архив библиотеки.",
                 "Original manual is missing or incomplete. Restore your library backup.", lang),
@@ -54,7 +54,7 @@ private fun ReferenceDocxReader(file: File, p: NavPalette, lang: UiLanguage) {
     }
     val data = paragraphs
     when {
-        data == null -> CircularProgressIndicator(color = p.blueText)
+        data == null -> CircularProgressIndicator(color = NavTodayVisualTokens.accentInk(p.dark))
         data.isFailure -> Text(data.exceptionOrNull()?.localizedMessage ?: "DOCX error",
             color = p.systemRed, modifier = Modifier.padding(16.dp))
         else -> {
@@ -82,11 +82,11 @@ private fun ReferenceDocxReader(file: File, p: NavPalette, lang: UiLanguage) {
                         TextButton(onClick = {
                             currentResult = (currentResult - 1 + hits.size) % hits.size
                             scope.launch { listState.animateScrollToItem(hits[currentResult]) }
-                        }) { Text("↑", color = p.blueText) }
+                        }) { Text("↑", color = NavTodayVisualTokens.accentInk(p.dark)) }
                         TextButton(onClick = {
                             currentResult = (currentResult + 1) % hits.size
                             scope.launch { listState.animateScrollToItem(hits[currentResult]) }
-                        }) { Text("↓", color = p.blueText) }
+                        }) { Text("↓", color = NavTodayVisualTokens.accentInk(p.dark)) }
                     }
                 }
                 LazyColumn(state = listState, contentPadding = PaddingValues(bottom = 125.dp),
