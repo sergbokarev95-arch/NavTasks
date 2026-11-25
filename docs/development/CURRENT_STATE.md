@@ -7,9 +7,14 @@
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
 | Последняя проверенная beta | 1.2.0-beta.40 / 308 | CI success, подписанный APK опубликован |
+| Beta в работе | 1.2.0-beta.41 / 310 | CI in_progress |
+| Recovery для beta41 | 1.1.0 / 311 | CI in_progress |
 | Recovery для beta40 | 1.1.0 / 309 | CI success, подписанный APK опубликован |
 
 Рабочий исходник Beta40: `feature/navtasks-1.2.0-beta40-event-editor`, `5f646eefd0c0e39038485b8f0e7808078d6892e2`. Main до документационного обновления: 908c5d3c9df9840473af882491020401da6bc86f; не база новой beta. Документационная ветка не является исходником новой сборки.
+
+## Активная разработка
+- Beta41 source 511d887a91f9a71c1c9f1f0acc58cbf78d61b781, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45565768088): layout-only polish, 48dp common row, equal repeat grid, visible rich comment field, no scheduling/storage changes. Recovery311 source 6bc78cbc8d39ada5976c73506f9e82a94d25b4e8, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45565827169). Both pending verification.
 
 ## Подтверждённые артефакты
 - Beta39: [CI 45548098247](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45548098247), source 89c4bdfd89a908d4340b51ed5b43d3d929e9be1d; [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.39/NavTasks_1.2.0-beta.39.apk), 37183310 bytes, SHA256 9aefff9748ee3d6c5dfb9a8126684050abd6e51e843b5df80dd41ab92aa3c86d.
