@@ -49,6 +49,7 @@ class NavReferenceExchangeRouteTest {
         assertTrue(handover.contains("Modifier.fillMaxWidth()"))
         val dialogs = source("NavOverlayUi")
         assertTrue(dialogs.contains("solidSurface: Boolean = false"))
-        assertTrue(dialogs.contains("!solidSurface && navPopupFrostAvailable()"))
+        assertTrue(dialogs.contains("!solidSurface && !neutralSurface && navPopupFrostAvailable()"))
+        assertTrue(dialogs.contains("neutralSurface: Boolean = false"))
     }
 }
