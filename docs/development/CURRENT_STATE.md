@@ -6,8 +6,8 @@
 | Канал | Версия / code | Состояние |
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
-| Кандидат Beta51 | 1.2.0-beta.51 / 330 | CI 45650863007 in progress |
-| Кандидат Recovery331 | 1.1.0 / 331 | CI 45650510826 in progress |
+| Beta51 | 1.2.0-beta.51 / 330 | JVM/build/signer/artifact success; release draft only, HTTP 500 |
+| Кандидат Recovery331 | 1.1.0 / 331 | JVM/build/signer success; publication HTTP 500; unavailable |
 | Последняя проверенная beta | 1.2.0-beta.50 / 328 | CI success attempt 2, APK опубликован |
 | Recovery для beta50 | 1.1.0 / 329 | CI success, подписанный APK опубликован |
 | Предыдущая beta | 1.2.0-beta.49 / 326 | CI success attempt 2, подписанный APK опубликован |
@@ -33,6 +33,7 @@
 - Beta51: Handover redesign, neutral accordion, pinned export beside search, plain heading/count/divider, dialogs and full-page editor. Existing search, accordion, rich notes, photos, Word/PDF and profile storage preserved. [Beta CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650863007), [Recovery CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650510826) in progress.
 
 ## Подтверждённые артефакты
+- Beta51: [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650863007) failed only publication HTTP 500 after tests/build/signer/archive success; [ZIP artifact](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650863007/artifacts/15041465730), verified APK 37314382 bytes SHA256 74fca855ccb101d857e2d852d352db2c8ac438377ace6cc3a84fdcd8437b64bc. Draft release 458337636 contains same uploaded APK, not public. Recovery331 unavailable: [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650510826) publication failure, connector retries failed. Recovery329 is lower than beta51 and cannot be installed over it.
 - Beta50: [CI 45645900538](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45645900538) SUCCESS attempt 2, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.50/NavTasks_1.2.0-beta.50.apk), 37297998 bytes, SHA256 58e156b493c0264e5c20d3f59170c7abe7d373dc35ffd9d07680c9cd2879c92d.
 - Recovery329: [CI 45645966445](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45645966445) SUCCESS, source 7895fc9f250cd2feeb7b21699b12b1f71ac1b06a, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.1.0-recovery-code329/NavTasks_1.1.0-recovery-code329.apk), 37068614 bytes, SHA256 cd317420d1f3017332e1c271e38a4d5f3888b68c707a6a8a040b6e331c6a5c43. Original signer/package/version verified.
 - Beta50 attempt 1: signed APK verified (JVM, package/version/original signer), [ZIP artifact](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45645900538/artifacts/15038495580), APK SHA256 2bd5f141248b2e7c1b5d97b35e0951a200a201d52160fbdeb047b9582b4f352b; publication failed HTTP 403; retry pending.

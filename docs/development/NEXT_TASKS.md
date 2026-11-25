@@ -1,7 +1,7 @@
 # NavTasks — следующие действия
 
 ## Beta51
-- Проверить [Beta51 CI 45650863007](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650863007) и [Recovery331 CI 45650510826](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650510826), JVM, release, оригинальный signer/package/version, APK assets. Не запускать дубль.
+- Beta51 JVM/build/original signer/ZIP artifact success; publication HTTP 500. Draft 458337636 contains uploaded verified APK. Publish existing draft, do not duplicate. Recovery331 publication HTTP 500, retries/ref updates failed; check ref and run before further retry. Recovery329 cannot roll back over code330. Verified ZIP: https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650863007/artifacts/15041465730
 - На устройстве проверить обе темы Handover: заголовок/счётчик/разделитель, экспорт сверху независимо от списка и поиска, разделы и записи, поиск и scroll-to-match, создание/редактирование/удаление, rich formatting, фото, dirty save, Word/PDF. Проверить Personal regression и предыдущие правки Beta50.
 
 ## Защитные ограничения
