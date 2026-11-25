@@ -1408,7 +1408,7 @@ fun SettingsScreen(
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().then(
         if (settingsBackdrop != null) Modifier.layerBackdrop(settingsBackdrop) else Modifier
-    ).statusBarsPadding()) {
+    ).statusBarsPadding().blur(if (showReminderWheel || showDigestWheel) 4.dp else 0.dp)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             if (settingsBackdrop != null) Spacer(Modifier.size(44.dp))
             else NavGlassCircleButton(p, "back", onClick = onBack)
@@ -1420,30 +1420,32 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            NavPanel(p) {
-                FormLabel("Язык", "Language", lang, p)
-                OptionLine(listOf("RU" to "Русский", "EN" to "English"), settings.language.name, p) {
+            NavSettingsPanel(p) {
+                NavSettingsHeading(localized("Язык", "Language", lang), p)
+                NavEventOptionGrid(listOf("RU" to "Русский", "EN" to "English"), settings.language.name, p, columns = 2) {
                     settings.updateLanguage(UiLanguage.valueOf(it))
                     syncSettings()
                 }
-                Spacer(Modifier.height(12.dp))
-                FormLabel("Оформление", "Appearance", lang, p)
-                OptionLine(listOf(
+                NavEventDivider(p)
+                NavSettingsHeading(localized("Оформление", "Appearance", lang), p)
+                NavEventOptionGrid(listOf(
                     "SYSTEM" to localized("Как в системе", "Follow system", lang),
                     "LIGHT" to localized("День", "Light", lang),
                     "DARK" to localized("Ночь", "Dark", lang),
-                ), settings.theme.name, p) { settings.updateTheme(UiTheme.valueOf(it)); syncSettings() }
+                ), settings.theme.name, p, columns = 3) { settings.updateTheme(UiTheme.valueOf(it)); syncSettings() }
             }
-            NavPanel(p) {
+            NavSettingsPanel(p) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(localized("Уведомления", "Notifications", lang), color = p.text, modifier = Modifier.weight(1f))
-                    Switch(settings.notificationsEnabled, onCheckedChange = { settings.setNotifications(it); syncSettings() }, colors = navSwitchColors(p))
+                    Text(localized("Уведомления", "Notifications", lang), color = p.text,
+                        fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                    Switch(settings.notificationsEnabled, onCheckedChange = { settings.setNotifications(it); syncSettings() }, colors = navEditorSwitchColors(p))
                 }
                 if (settings.notificationsEnabled) {
-                    OutlinedButton(onClick = { showReminderWheel = true },
-                        modifier = Modifier.fillMaxWidth()) {
-                        Text(localized("Основное время напоминаний", "Default reminder time", lang) +
-                            "  %02d:%02d".format(settings.reminderHour, settings.reminderMinute))
+                    Box(Modifier.fillMaxWidth().personalNoteCard(p, 13.dp, nested = true)
+                        .padding(horizontal = 12.dp)) {
+                        NavEventValueRow(localized("Основное время напоминаний", "Default reminder time", lang),
+                            "%02d:%02d".format(settings.reminderHour, settings.reminderMinute), p,
+                            chevron = true, valueAccent = true) { showReminderWheel = true }
                     }
                     Text(localized(
                         "Для задач «До конца дня» уведомление отсчитывается от этого времени. " +
@@ -1461,19 +1463,20 @@ fun SettingsScreen(
                             settings.updateReminderGrouping(it)
                             syncSettings()
                         },
-                        enabled = settings.notificationsEnabled, colors = navSwitchColors(p))
+                        enabled = settings.notificationsEnabled, colors = navEditorSwitchColors(p))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(localized("Ежедневная сводка пропусков", "Daily missed-task digest", lang),
                         color = p.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
                     Switch(settings.dailyDigestEnabled, onCheckedChange = { settings.setDigest(it); syncSettings() },
-                        enabled = settings.notificationsEnabled, colors = navSwitchColors(p))
+                        enabled = settings.notificationsEnabled, colors = navEditorSwitchColors(p))
                 }
                 if (settings.notificationsEnabled && settings.dailyDigestEnabled) {
-                    OutlinedButton(onClick = { showDigestWheel = true },
-                        modifier = Modifier.fillMaxWidth()) {
-                        Text(localized("Время сводки пропусков", "Missed-task digest time", lang) +
-                            "  %02d:%02d".format(settings.digestHour, settings.digestMinute))
+                    Box(Modifier.fillMaxWidth().personalNoteCard(p, 13.dp, nested = true)
+                        .padding(horizontal = 12.dp)) {
+                        NavEventValueRow(localized("Время сводки пропусков", "Missed-task digest time", lang),
+                            "%02d:%02d".format(settings.digestHour, settings.digestMinute), p,
+                            chevron = true, valueAccent = true) { showDigestWheel = true }
                     }
                 }
 
@@ -1485,11 +1488,9 @@ fun SettingsScreen(
                     Text(localized("Для напоминаний строго по времени разреши точные будильники в настройках Android.",
                         "For precise reminders, allow exact alarms in Android settings.", lang),
                         color = p.muted, fontSize = 12.sp)
-                    OutlinedButton(onClick = {
+                    NavSettingsAction(localized("Разрешить точные напоминания", "Allow exact reminders", lang), p) {
                         context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
                             Uri.parse("package:${context.packageName}")))
-                    }, modifier = Modifier.fillMaxWidth()) {
-                        Text(localized("Разрешить точные напоминания", "Allow exact reminders", lang))
                     }
                 }
             }
@@ -1503,15 +1504,14 @@ fun SettingsScreen(
             // Reference tab. Settings intentionally keeps only Full Profile Transfer
             // and Selective Exchange; never merge Reference data into those flows.
             // This panel invokes the shared optional update flow. No app-data writes.
-            NavPanel(p) {
-                Text(localized("Обновления", "Updates", lang),
-                    color = p.text, fontWeight = FontWeight.Medium)
+            NavSettingsPanel(p) {
+                NavSettingsHeading(localized("Обновления", "Updates", lang), p)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(localized("Предлагать обновления", "Offer updates automatically", lang),
                         color = p.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
                     Switch(settings.automaticUpdateOffers,
                         onCheckedChange = { settings.updateAutomaticUpdateOffers(it) },
-                        colors = navSwitchColors(p))
+                        colors = navEditorSwitchColors(p))
                 }
                 Text(localized("Если выключено, при запуске не проверяем обновления. Ручная проверка доступна всегда.",
                     "When off, startup checks are disabled. Manual checking remains available.", lang),
@@ -1530,14 +1530,11 @@ fun SettingsScreen(
                 val update = NavUpdateChecker.candidate
                 if (update != null) {
                     Text(localized("Доступна версия", "Available version", lang) +
-                        " " + update.versionName, color = p.blue)
+                        " " + update.versionName, color = NavTodayVisualTokens.accentInk(p.dark))
                     Text(if (lang == UiLanguage.RU) update.notesRu else update.notesEn,
                         color = p.muted, fontSize = 13.sp)
-                    OutlinedButton(
-                        onClick = { NavUpdateFlow.open() },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(localized("Обновить", "Update", lang))
+                    NavSettingsAction(localized("Обновить", "Update", lang), p, accent = true) {
+                        NavUpdateFlow.open()
                     }
                 }
                 val manualResult = NavUpdateChecker.lastManualMessage
@@ -1575,17 +1572,11 @@ fun SettingsScreen(
                     }, color = p.muted, fontSize = 12.sp)
                 }
                 val scope = rememberCoroutineScope()
-                OutlinedButton(
-                    onClick = { scope.launch { NavUpdateChecker.check(context, manual = true) } },
-                    enabled = !NavUpdateChecker.checking,
-                    modifier = Modifier.fillMaxWidth(),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, p.blue),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = p.blueText),
-                ) {
-                    Text(if (NavUpdateChecker.checking)
-                        localized("Проверяем…", "Checking…", lang)
-                        else localized("Проверить обновления", "Check for updates", lang))
-                }
+                NavSettingsAction(
+                    if (NavUpdateChecker.checking) localized("Проверяем…", "Checking…", lang)
+                    else localized("Проверить обновления", "Check for updates", lang),
+                    p, enabled = !NavUpdateChecker.checking, accent = true,
+                ) { scope.launch { NavUpdateChecker.check(context, manual = true) } }
                 // QA-only control absent from production 1.0.x.
                 if (NavUpdateQa.isQaBuild(context)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1595,7 +1586,7 @@ fun SettingsScreen(
                         Switch(settings.qaAutomaticTestOffers,
                             onCheckedChange = { settings.updateQaAutomaticTestOffers(it) },
                             enabled = settings.automaticUpdateOffers,
-                            colors = navSwitchColors(p))
+                            colors = navEditorSwitchColors(p))
                     }
                     Text(localized("Только RC: при следующем запуске проверяется тестовый канал.",
                         "RC only: next launch checks the test feed.", lang),
@@ -1604,23 +1595,18 @@ fun SettingsScreen(
                 // TEST discovery stays available for the original signed RC15 QA build,
                 // but is hidden from every ordinary production 1.0.x Settings screen.
                 if (NavUpdateQa.isQaBuild(context)) {
-                    OutlinedButton(
-                        onClick = {
-                            scope.launch {
-                                if (NavUpdateChecker.checkTest(context)) NavUpdateFlow.openTest()
-                            }
-                        },
-                        enabled = !NavUpdateChecker.checking,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(localized("Проверить тестовый канал", "Check test channel", lang))
+                    NavSettingsAction(localized("Проверить тестовый канал", "Check test channel", lang),
+                        p, enabled = !NavUpdateChecker.checking) {
+                        scope.launch {
+                            if (NavUpdateChecker.checkTest(context)) NavUpdateFlow.openTest()
+                        }
                     }
                     Text(localized("Тестовые версии устанавливаются только по вашему выбору.",
                         "Test builds install only after your approval.", lang),
                         color = p.muted, fontSize = 12.sp)
                 }
             }
-            NavPanel(p) {
+            NavSettingsPanel(p) {
                 Text("NavTasks " + actualVersion, color = p.text, fontWeight = FontWeight.Medium)
                 Text(localized("Данные сохраняются на телефоне и доступны без интернета.",
                     "Data stays on this device and works offline.", lang), color = p.muted, fontSize = 12.sp)
@@ -1631,7 +1617,7 @@ fun SettingsScreen(
     }
     if (settingsBackdrop != null) {
         Box(Modifier.align(Alignment.TopStart).statusBarsPadding()
-            .padding(start = 16.dp, top = 10.dp)) {
+            .padding(start = 16.dp, top = 10.dp).blur(if (showReminderWheel || showDigestWheel) 4.dp else 0.dp)) {
             NavLiquidGlassCircleButton(p, settingsBackdrop, "back", onBack)
         }
     }
@@ -1640,11 +1626,26 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun navSwitchColors(p: NavPalette) = SwitchDefaults.colors(
-    checkedTrackColor = p.blue,
-    checkedThumbColor = Color.White,
-    checkedBorderColor = p.blue,
-    uncheckedTrackColor = p.panel,
-    uncheckedThumbColor = p.muted,
-    uncheckedBorderColor = p.border,
-)
+internal fun NavSettingsPanel(p: NavPalette, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
+        .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
+}
+
+@Composable
+internal fun NavSettingsHeading(label: String, p: NavPalette) {
+    Text(label, color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+}
+
+@Composable
+internal fun NavSettingsAction(label: String, p: NavPalette, enabled: Boolean = true,
+    accent: Boolean = false, onClick: () -> Unit) {
+    TextButton(onClick = onClick, enabled = enabled,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 46.dp)
+            .personalNoteCard(p, 13.dp, nested = true)) {
+        Text(label, color = if (!enabled) p.muted else if (accent)
+            NavTodayVisualTokens.accentInk(p.dark) else p.text,
+            fontSize = 14.sp, textAlign = TextAlign.Center)
+    }
+}
+

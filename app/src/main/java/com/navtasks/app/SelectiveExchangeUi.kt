@@ -3,6 +3,8 @@ package com.navtasks.app
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -23,12 +25,13 @@ private fun ShareOption(
     label: String, selected: Boolean, p: NavPalette,
     modifier: Modifier = Modifier, onClick: () -> Unit,
 ) {
-    Box(modifier.navGlass(p, radius = 12.dp,
-        role = if (selected) GlassRole.SELECTED else GlassRole.CONTROL)
+    Box(modifier.personalNoteCard(p, 13.dp, nested = true)
+        .then(if (selected) Modifier.border(1.5.dp, NavTodayVisualTokens.accentInk(p.dark),
+            RoundedCornerShape(13.dp)) else Modifier)
         .glassClickable(onClick = onClick).heightIn(min = 44.dp)
         .padding(horizontal = 8.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center) {
-        Text(label, color = if (selected) p.selectionContent else p.text, fontSize = 12.sp,
+        Text(label, color = if (selected) NavTodayVisualTokens.accentInk(p.dark) else p.text, fontSize = 12.sp,
             maxLines = 1)
     }
 }
@@ -130,7 +133,7 @@ internal fun SelectiveExchangePanel(
         }
     }
 
-    NavPanel(p) {
+    NavSettingsPanel(p) {
         Text(localized("Выборочный обмен", "Selective exchange", lang),
             color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(4.dp))
@@ -165,7 +168,7 @@ internal fun SelectiveExchangePanel(
     }
 
     if (choosing) NavGlassAlertDialog(
-        p = p, onDismissRequest = { choosing = false },
+        p = p, neutralSurface = true, neutralActions = true, onDismissRequest = { choosing = false },
         title = { Text(localized("Что отправить?", "What to share?", lang)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -209,7 +212,7 @@ internal fun SelectiveExchangePanel(
                     }
                 }
                 Text(localized("Выбрано: ", "Selected: ", lang) + checked.size,
-                    color = p.blue, fontSize = 12.sp)
+                    color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp)
                 if (options.isEmpty()) Text(
                     localized("В этой категории пока пусто.", "No records in this category.", lang),
                     color = p.muted, fontSize = 12.sp)
@@ -222,12 +225,12 @@ internal fun SelectiveExchangePanel(
                             selected = if (checked.size == options.size)
                                 emptySet() else shownIds
                         }.padding(vertical = 6.dp),
-                        color = p.blue, fontSize = 12.sp,
+                        color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp,
                     )
                     options.forEach { (id, label) ->
                         Row(
                             Modifier.fillMaxWidth()
-                                .navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
+                                .personalNoteCard(p, 13.dp, nested = true)
                                 .glassClickable {
                                     selected = if (id in selected) selected - id
                                         else selected + id
@@ -235,7 +238,7 @@ internal fun SelectiveExchangePanel(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             NavGlassGlyph(if (id in selected) "check" else "plus",
-                                if (id in selected) p.successText else p.muted,
+                                if (id in selected) NavTodayVisualTokens.accentInk(p.dark) else p.muted,
                                 Modifier.size(19.dp))
                             Spacer(Modifier.width(10.dp))
                             Text(label, color = p.text, fontSize = 13.sp,
@@ -265,7 +268,7 @@ internal fun SelectiveExchangePanel(
             mergeSelective(profiles.snapshot(profiles.activeId), bundle)
         }
         NavGlassAlertDialog(
-            p = p, onDismissRequest = { pending = null },
+            p = p, neutralSurface = true, neutralActions = true, onDismissRequest = { pending = null },
             title = { Text(localized("Импорт записей", "Import selected items", lang)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {

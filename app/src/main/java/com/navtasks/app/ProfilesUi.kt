@@ -269,7 +269,7 @@ fun ProfileExchangePanel(
         }
     }
 
-    NavPanel(p) {
+    NavSettingsPanel(p) {
         Text(localized("Полный обмен профилями", "Full profile transfer", lang),
             color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         Text(localized(
@@ -281,7 +281,7 @@ fun ProfileExchangePanel(
         Box(Modifier.fillMaxWidth()) {
             Row(
                 Modifier.fillMaxWidth()
-                    .navGlass(p, radius = 14.dp, role = GlassRole.CONTROL)
+                    .personalNoteCard(p, 13.dp, nested = true)
                     .glassClickable { selectorExpanded = true }
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -293,18 +293,18 @@ fun ProfileExchangePanel(
                     maxLines = 1,
                 )
                 Spacer(Modifier.width(8.dp))
-                NavGlassGlyph("chevron-down", p.blue, Modifier.size(17.dp))
+                NavGlassGlyph("chevron-down", p.muted, Modifier.size(17.dp))
             }
             NavPopoverMenu(p = p, 
                 expanded = selectorExpanded,
-                onDismissRequest = { selectorExpanded = false },
+                onDismissRequest = { selectorExpanded = false }, neutralStyle = true,
             ) {
                 profiles.profiles.forEach { item ->
                     DropdownMenuItem(
                         text = { Text(item.title, color = p.text, fontSize = 14.sp) },
                         leadingIcon = {
                             if (item.id == selectedId)
-                                Text("✓", color = p.successText, fontSize = 16.sp)
+                                Text("✓", color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 16.sp)
                             else Spacer(Modifier.width(14.dp))
                         },
                         onClick = {
@@ -319,19 +319,19 @@ fun ProfileExchangePanel(
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(9.dp),
             modifier = Modifier.fillMaxWidth()) {
-            Box(Modifier.weight(1f).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
+            Box(Modifier.weight(1f).personalNoteCard(p, 13.dp, nested = true)
                 .glassClickable {
                     val name = profiles.profiles.first { it.id == selectedId }.title
                         .replace(Regex("[^a-zA-Z0-9а-яА-Я_-]"), "_").take(40)
                     saveFile.launch("NavTasks_" + name + "_" + LocalDate.now() + ".json")
-                }.padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
-                Text(localized("Экспорт", "Export", lang), color = p.blue, fontSize = 13.sp)
+                }.heightIn(min = 46.dp).padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
+                Text(localized("Экспорт", "Export", lang), color = p.text, fontSize = 13.sp)
             }
-            Box(Modifier.weight(1f).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
+            Box(Modifier.weight(1f).personalNoteCard(p, 13.dp, nested = true)
                 .glassClickable {
                     openFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
-                }.padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
-                Text(localized("Импорт", "Import", lang), color = p.blue, fontSize = 13.sp)
+                }.heightIn(min = 46.dp).padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
+                Text(localized("Импорт", "Import", lang), color = p.text, fontSize = 13.sp)
             }
         }
         Text(localized(
@@ -343,9 +343,9 @@ fun ProfileExchangePanel(
             Spacer(Modifier.height(9.dp))
             Box(
                 Modifier.fillMaxWidth()
-                    .navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
+                    .personalNoteCard(p, 13.dp, nested = true)
                     .glassClickable { deleteTarget = selectedProfile }
-                    .padding(vertical = 12.dp),
+                    .heightIn(min = 46.dp).padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(localized("Удалить выбранный профиль", "Delete selected profile", lang),
@@ -361,7 +361,7 @@ fun ProfileExchangePanel(
             fontSize = 12.sp) }
     }
     deleteTarget?.let { victim ->
-        NavGlassAlertDialog(p = p, 
+        NavGlassAlertDialog(p = p, neutralSurface = true, neutralActions = true, 
             onDismissRequest = { deleteTarget = null },
             title = { Text(localized("Удалить профиль «" + victim.title + "»?",
                 "Delete profile " + victim.title + "?", lang)) },
@@ -403,7 +403,7 @@ fun ProfileExchangePanel(
     pending?.let { incoming ->
         val matched = profiles.findMatch(incoming.profile)
         val title = incoming.profile.title
-        NavGlassAlertDialog(p = p, 
+        NavGlassAlertDialog(p = p, neutralSurface = true, neutralActions = true, 
             onDismissRequest = { pending = null },
             title = { Text(if (matched == null)
                 localized("Добавить новый профиль?", "Add a new profile?", lang)
@@ -424,7 +424,7 @@ fun ProfileExchangePanel(
                                 matched.title + "» будут удалены и заменены содержимым файла.",
                             "WARNING: all existing tasks, history and notes in " +
                                 matched.title + " will be erased and replaced with the file.",
-                            lang), color = Color(0xFFD37B69))
+                            lang), color = p.systemRed)
                     }
                 }
             },
@@ -450,7 +450,8 @@ fun ProfileExchangePanel(
                 }) {
                     Text(if (matched != null)
                         localized("Заменить", "Replace", lang)
-                        else localized("Добавить профиль", "Add profile", lang))
+                        else localized("Добавить профиль", "Add profile", lang),
+                        color = if (matched != null) p.systemRed else NavTodayVisualTokens.accentInk(p.dark))
                 }
             },
             dismissButton = {
