@@ -907,7 +907,7 @@ fun NavTasksApp(
                     .offset { IntOffset(0, editorSheetDragPx.roundToInt()) }
                     .shadow(16.dp, sheetShape)
                     .clip(sheetShape)
-                    .background(palette.background, sheetShape)
+                    .background(navEditorSheetSurface(palette), sheetShape)
                     .border(1.dp, palette.border.copy(alpha = .65f), sheetShape),
             ) {
                 TaskEditorScreen(

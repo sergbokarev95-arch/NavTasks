@@ -14,6 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/** The editor is a raised sheet, not the black main screen. HONOR reference: #2C2C2C. */
+internal fun navEditorSheetSurface(p: NavPalette): Color =
+    if (p.dark) Color(0xFF2C2C2C) else p.background
+
 @Composable
 internal fun NavEditorPanel(p: NavPalette, content: @Composable ColumnScope.() -> Unit) {
     Column(

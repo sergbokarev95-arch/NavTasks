@@ -141,6 +141,15 @@ class NavTaskChoiceDialogTest {
         assertTrue(editor.contains("pendingFrequencyEdit = edited to preview"))
     }
 
+    @Test fun raisedEditorSheetUsesReferenceGraphiteWithoutChangingMainCanvas() {
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF2C2C2C), navEditorSheetSurface(navPalette(true)))
+        assertEquals(navPalette(false).background, navEditorSheetSurface(navPalette(false)))
+        assertEquals(androidx.compose.ui.graphics.Color.Black, navPalette(true).background)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF202022), NavTodayVisualTokens.cardSurface(true))
+        val root = File("src/main/java/com/navtasks/app/NavTasksUi.kt").readText()
+        assertTrue(root.contains(".background(navEditorSheetSurface(palette), sheetShape)"))
+    }
+
     @Test fun existingTaskCalendarAndNotificationModulesStayUnmodified() {
         val ui = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
         assertTrue(ui.contains("TaskSchedule.effectiveFrequency(it, LocalDate.now())"))
