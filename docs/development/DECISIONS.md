@@ -28,3 +28,5 @@
 - Beta41/recovery311 verified CI and publication; physical layout/keyboard QA remains pending.
 
 - Beta42: owner requests coherent spacing across app. Apply shared NavEventLayout to task editor first: compact card vertical padding 4dp, horizontal 14dp, 48dp minimum rows, 10dp card gap, 8dp internal and 12dp group spacing. Missed policy same 2-column grid as recurrence; active switch same row as all-day; scoped checklist compact mode. Keep minimum touch targets and no logic changes. Do not globally change unrelated screens without visual review.
+
+- Beta42/recovery313 verified CI and release publication. Device visual QA pending; apply shared spacing to further agreed UI changes rather than independent hardcoded paddings.

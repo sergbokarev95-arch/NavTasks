@@ -6,18 +6,16 @@
 | Канал | Версия / code | Состояние |
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
-| Последняя проверенная beta | 1.2.0-beta.41 / 310 | CI success, подписанный APK опубликован |
-| Beta в работе | 1.2.0-beta.42 / 312 | CI in_progress |
-| Recovery для beta42 | 1.1.0 / 313 | CI in_progress |
+| Последняя проверенная beta | 1.2.0-beta.42 / 312 | CI success, подписанный APK опубликован |
+| Recovery для beta42 | 1.1.0 / 313 | CI success, подписанный APK опубликован |
 | Recovery для beta41 | 1.1.0 / 311 | CI success, подписанный APK опубликован |
 | Recovery для beta40 | 1.1.0 / 309 | CI success, подписанный APK опубликован |
 
 Рабочий исходник Beta40: `feature/navtasks-1.2.0-beta40-event-editor`, `5f646eefd0c0e39038485b8f0e7808078d6892e2`. Main до документационного обновления: 908c5d3c9df9840473af882491020401da6bc86f; не база новой beta. Документационная ветка не является исходником новой сборки.
 
-## Активная разработка
-- Beta42 source 396c87bb4b23d2a97cb7d7aceb1532ade1064f6e, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45567527725): shared NavEventLayout (card horizontal 14dp, vertical 4dp, row 48dp, choices min44dp, gap10dp, inner8dp, group12dp). All editor cards share layout; missed options 2×2, active switch uses same row; scoped compact checklist. No scheduling/storage changes. Recovery313 source 66303fbb8b3be55b8fac82a75ccc922c0b8da521, [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45567569802). Both pending.
-
 ## Подтверждённые артефакты
+- Beta42: [CI 45567527725](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45567527725) SUCCESS, source 396c87bb4b23d2a97cb7d7aceb1532ade1064f6e, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.42/NavTasks_1.2.0-beta.42.apk), 37248846 bytes, SHA256 7a8e0af0066448697862a6ffadc8671a643f8b9872d8d3256c0cefebcf5f0450. JVM tests 1m20s, release 2m23s. Original signer/package/version/non-debuggable verified. Shared compact editor metrics, missed-policy grid, active switch and scoped checklist; device QA pending.
+- Recovery313: [CI 45567569802](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45567569802) SUCCESS, source 66303fbb8b3be55b8fac82a75ccc922c0b8da521, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.1.0-recovery-code313/NavTasks_1.1.0-recovery-code313.apk), 37068614 bytes, SHA256 4983be4b288c8bae4b38995833f1a7b38adfeede7ca2acbbc7b80e616a69a668. Stable OTA unchanged.
 - Beta41: [CI 45565768088](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45565768088) SUCCESS, source 511d887a91f9a71c1c9f1f0acc58cbf78d61b781, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.41/NavTasks_1.2.0-beta.41.apk), 37248846 bytes, SHA256 e144d34ecb2c7800fe81492af9d100c371a06d69bb7185c515d39bb1026f4583. JVM tests 1m32s, release 2m44s. Original signer/package/version/non-debuggable verified. Visual-only changes: 48dp minimum rows, 2-column repeat grid, checklist inset rich text field with placeholder and heading. Device QA pending.
 - Recovery311: [CI 45565827169](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45565827169) SUCCESS, source 6bc78cbc8d39ada5976c73506f9e82a94d25b4e8, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.1.0-recovery-code311/NavTasks_1.1.0-recovery-code311.apk), 37068614 bytes, SHA256 971d162672d4a63ded035b4dace087e76d51d9d0327a45ee140df2f57651ccb5. Stable OTA unchanged.
 - Beta39: [CI 45548098247](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45548098247), source 89c4bdfd89a908d4340b51ed5b43d3d929e9be1d; [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.39/NavTasks_1.2.0-beta.39.apk), 37183310 bytes, SHA256 9aefff9748ee3d6c5dfb9a8126684050abd6e51e843b5df80dd41ab92aa3c86d.
