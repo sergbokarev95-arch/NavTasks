@@ -19,6 +19,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.foundation.layout.*
@@ -222,8 +223,10 @@ fun HandoverScreen(
         entryNotesHtml = entry?.notesHtml.orEmpty()
     }
 
+    val modalOpen = addSection || confirmDelete != null || exportOpen || exportFeedback != null
     val headerTop = if (personalMode) NavPersonalVisualTokens.headerTopDp.dp else 8.dp
     Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().blur(if (!personalMode && modalOpen) 4.dp else 0.dp)) {
     Column(
         Modifier.fillMaxSize().hazeSource(hazeState)
             .then(if (embeddedInTab) Modifier else Modifier.statusBarsPadding().navigationBarsPadding())
@@ -234,13 +237,13 @@ fun HandoverScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (embeddedInTab) {
-                // Section label is informative, not a button. Reuse exactly
-                // the warm informational surface of Work and Reference.
-                NavInfoSectionBanner(
-                    p = p,
-                    title = localized("Разделы передачи дел", "Handover sections", lang),
-                    modifier = Modifier.weight(1f),
-                )
+                Column(Modifier.weight(1f)) {
+                    Text(localized("Разделы передачи дел", "Handover sections", lang),
+                        color = p.text, fontSize = 14.sp, maxLines = 2)
+                    Text(localized("Разделов: ${handover.sections.size}", "Sections: ${handover.sections.size}", lang),
+                        color = p.muted, fontSize = 12.sp)
+                }
+                HandoverExportAction(p, lang, enabled = !exportRunning) { exportOpen = true }
                 Spacer(Modifier.width(8.dp))
             } else {
                 if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
@@ -250,11 +253,15 @@ fun HandoverScreen(
                     if (personalMode) {
                         Text(localized("Личное", "Personal", lang),
                             color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                    } else NavBrandLabel(p)
+                    }
                     Text(if (personalMode) localized("Заметки", "Notes", lang)
                         else localized("Передача дел", "Handover notes", lang),
                         color = p.text, fontSize = 22.sp)
                 }
+            }
+            if (!embeddedInTab && !personalMode) {
+                HandoverExportAction(p, lang, enabled = !exportRunning) { exportOpen = true }
+                Spacer(Modifier.width(8.dp))
             }
             if (actionBackdrop != null) Spacer(Modifier.size(44.dp))
             else NavGlassCircleButton(p, "search") {
@@ -270,7 +277,7 @@ fun HandoverScreen(
             p = p, lang = lang,
             placeholder = if (personalMode) localized("Поиск по заметкам", "Search notes", lang)
                 else localized("Поиск по всему Handover", "Search all Handover", lang),
-            neutralStyle = personalMode,
+            neutralStyle = true, highContrastField = !personalMode,
             resultCount = searchResults.size,
             currentResult = searchResultIndex,
             onPreviousResult = {
@@ -282,6 +289,7 @@ fun HandoverScreen(
                 searchNavigationSerial++
             },
         )
+        if (!personalMode) Box(Modifier.padding(horizontal = 16.dp)) { NavEventDivider(p) }
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize()
@@ -294,12 +302,12 @@ fun HandoverScreen(
                 // button (including the navigation gesture inset in dock tabs).
                 bottom = navFloatingActionBottomPadding(embeddedInTab),
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(if (personalMode) 12.dp else NavEventLayout.sectionGap),
         ) {
             if (shownSections.isEmpty()) {
                 item {
                     Column(Modifier.fillMaxWidth().then(if (personalMode) Modifier.personalNoteCard(p, 19.dp)
-                        else Modifier.navGlass(p, radius = 20.dp, role = GlassRole.PANEL)).padding(14.dp)) {
+                        else Modifier.personalNoteCard(p, NavEventLayout.cardRadius)).padding(14.dp)) {
                         Text(
                             if (query.isNotBlank() && searchOpen)
                                 localized("Совпадений не найдено.", "No matches found.", lang)
@@ -319,7 +327,7 @@ fun HandoverScreen(
                 )
                 Column(
                     Modifier.fillMaxWidth().then(if (personalMode) Modifier.personalNoteCard(p, 19.dp)
-                        else Modifier.navGlass(p, radius = 19.dp, role = GlassRole.PANEL))
+                        else Modifier.personalNoteCard(p, NavEventLayout.cardRadius))
                         .padding(9.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -348,7 +356,7 @@ fun HandoverScreen(
                             Spacer(Modifier.width(7.dp))
                             Text(
                                 "${section.entries.size}",
-                                color = if (personalMode) p.text else p.muted, fontSize = 12.sp,
+                                color = if (personalMode) p.text else if (expanded) NavTodayVisualTokens.accentInk(p.dark) else p.muted, fontSize = 12.sp,
                             )
                             Spacer(Modifier.width(5.dp))
                             NavGlassGlyph(
@@ -362,7 +370,7 @@ fun HandoverScreen(
                                 .glassClickable { openSectionEditor(section) },
                             contentAlignment = Alignment.Center,
                         ) {
-                            NavGlassGlyph("edit", if (personalMode) p.text else p.muted, Modifier.size(21.dp))
+                            NavGlassGlyph("edit", p.text, Modifier.size(21.dp))
                         }
                         Box(
                             Modifier.size(44.dp)
@@ -462,7 +470,7 @@ fun HandoverScreen(
                                 Column(
                                     Modifier.fillMaxWidth()
                                         .then(if (personalMode) Modifier.personalNoteCard(p, 13.dp, nested = true)
-                                            else Modifier.navGlass(p, radius = 13.dp, role = GlassRole.TASK))
+                                            else Modifier.personalNoteCard(p, 15.dp, nested = true))
                                         .padding(horizontal = 14.dp, vertical = 10.dp),
                                     verticalArrangement = Arrangement.spacedBy(2.dp),
                                 ) {
@@ -550,27 +558,7 @@ fun HandoverScreen(
                     }
                 }
             }
-            if (!personalMode) {
-                item(key = "handover-export") {
-                    Box(
-                        Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 8.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        OutlinedButton(
-                            enabled = !exportRunning,
-                            onClick = { exportOpen = true },
-                            modifier = Modifier.widthIn(min = 174.dp).heightIn(min = 46.dp),
-                            shape = RoundedCornerShape(18.dp),
-                            border = androidx.compose.foundation.BorderStroke(
-                                1.dp, p.blueText.copy(alpha = 0.55f)),
-                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-                        ) {
-                            Text(localized("Экспорт Handover", "Export Handover", lang),
-                                color = p.blueText, fontSize = 14.sp)
-                        }
-                    }
-                }
-            }
+
         }
     }
     if (actionBackdrop != null) {
@@ -603,10 +591,11 @@ fun HandoverScreen(
             }
         }
     }
-    } // Content and floating Add button share the same glass source.
+    } // Blurred page content and floating actions.
+    } // Dialogs remain outside the blurred page.
 
     if (exportOpen && !personalMode) {
-        NavGlassAlertDialog(p = p,
+        NavGlassAlertDialog(p = p, neutralSurface = true, neutralActions = true,
             onDismissRequest = { exportOpen = false },
             solidSurface = true,
             title = { Text(localized("Экспорт Handover", "Export Handover", lang)) },
@@ -616,38 +605,26 @@ fun HandoverScreen(
                         "Создать документ для передачи сменщику. Все разделы и записи будут доступны без NavTasks.",
                         "Create a document readable without NavTasks, including all sections and notes.",
                         lang))
-                    Button(
-                        onClick = {
-                            exportSnapshot = handover.sections.toList()
-                            exportOpen = false
-                            wordExport.launch("NavTasks_Handover_" + LocalDate.now() + ".docx")
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = p.blue, contentColor = Color.White),
-                    ) { Text("Word (.docx)", color = Color.White) }
-                    OutlinedButton(
-                        onClick = {
-                            exportSnapshot = handover.sections.toList()
-                            exportOpen = false
-                            pdfExport.launch("NavTasks_Handover_" + LocalDate.now() + ".pdf")
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp, p.blueText.copy(alpha = 0.45f)),
-                    ) { Text("PDF", color = p.blueText) }
+                    HandoverExportOption("Word (.docx)", p) {
+                        exportSnapshot = handover.sections.toList()
+                        exportOpen = false
+                        wordExport.launch("NavTasks_Handover_" + LocalDate.now() + ".docx")
+                    }
+                    HandoverExportOption("PDF", p) {
+                        exportSnapshot = handover.sections.toList()
+                        exportOpen = false
+                        pdfExport.launch("NavTasks_Handover_" + LocalDate.now() + ".pdf")
+                    }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { exportOpen = false }) {
-                    Text(localized("Отмена", "Cancel", lang), color = p.muted)
+                    Text(localized("Отмена", "Cancel", lang), color = p.text)
                 }
             })
     }
     if (exportFeedback != null) {
-        NavGlassAlertDialog(p = p,
+        NavGlassAlertDialog(p = p, neutralSurface = true, neutralActions = true,
             onDismissRequest = { exportFeedback = null },
             solidSurface = true,
             title = { Text(localized("Экспорт Handover", "Handover export", lang)) },
@@ -655,14 +632,14 @@ fun HandoverScreen(
                 color = if (exportFailed) p.systemRed else p.text) },
             confirmButton = {
                 TextButton(onClick = { exportFeedback = null }) {
-                    Text("OK", color = p.blueText)
+                    Text("OK", color = NavTodayVisualTokens.accentInk(p.dark))
                 }
             })
     }
 
     if (addSection) {
         HandoverGlassDialog(
-            p = p, 
+            p = p, personalMode = personalMode,
             onDismissRequest = { addSection = false },
             title = { Text(if (editSectionId == null) localized("Новый раздел", "New section", lang)
                 else localized("Редактировать раздел", "Edit section", lang)) },
@@ -675,7 +652,9 @@ fun HandoverScreen(
             },
             confirmButton = {
                 HandoverDialogAction(localized("Сохранить", "Save", lang), p,
-                    enabled = sectionName.isNotBlank(), personalMode = personalMode) {
+                    enabled = sectionName.isNotBlank() && (personalMode ||
+                        sectionName.trim() != handover.sections.firstOrNull { it.id == editSectionId }?.title.orEmpty().trim()),
+                    personalMode = personalMode, accent = true) {
                     handover.saveSection(sectionName, editSectionId)
                     addSection = false
                 }
@@ -737,7 +716,7 @@ fun HandoverScreen(
 
     confirmDelete?.let { (sectionId, entryId) ->
         HandoverGlassDialog(
-            p = p, 
+            p = p, personalMode = personalMode,
             onDismissRequest = { confirmDelete = null },
             title = { Text(localized("Удалить без возможности восстановления?", "Delete permanently?", lang)) },
             text = { Text(localized("Пункт или раздел будет удалён из передачи дел.",
@@ -764,7 +743,7 @@ fun HandoverScreen(
 /** The same glass language as NavTasks cards. Avoids lavender Material alert surfaces. */
 @Composable
 private fun HandoverGlassDialog(
-    p: NavPalette,
+    p: NavPalette, personalMode: Boolean,
     onDismissRequest: () -> Unit,
     title: @Composable () -> Unit,
     text: @Composable () -> Unit,
@@ -773,10 +752,11 @@ private fun HandoverGlassDialog(
 ) {
     val frost = navPopupFrostAvailable()
     Dialog(onDismissRequest = onDismissRequest) {
-        NavApplyDialogFrost(frost)
+        if (personalMode) NavApplyDialogFrost(frost)
         Column(
             Modifier.fillMaxWidth()
-                .navPopupGlassSurface(p, frosted = frost)
+                .then(if (personalMode) Modifier.navPopupGlassSurface(p, frosted = frost)
+                    else Modifier.personalNoteCard(p, 26.dp))
                 .padding(horizontal = 18.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(13.dp),
         ) {
@@ -806,10 +786,10 @@ private fun HandoverDialogAction(
     label: String, p: NavPalette,
     destructive: Boolean = false, enabled: Boolean = true,
     personalMode: Boolean = false,
+    accent: Boolean = false,
     onClick: () -> Unit,
 ) {
-    Box(if (personalMode) Modifier.personalNoteCard(p, 12.dp, nested = true)
-        else Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)) {
+    Box(Modifier.personalNoteCard(p, 12.dp, nested = true)) {
         TextButton(
             onClick = onClick, enabled = enabled,
             modifier = Modifier.heightIn(min = 44.dp),
@@ -818,7 +798,7 @@ private fun HandoverDialogAction(
             Text(label,
                 color = if (!enabled) p.muted
                     else if (destructive) p.systemRed
-                    else if (personalMode) NavTodayVisualTokens.accentInk(p.dark) else p.blueText,
+                    else if (personalMode || accent) NavTodayVisualTokens.accentInk(p.dark) else p.text,
                 fontSize = 13.sp)
         }
     }
@@ -842,10 +822,9 @@ private fun HandoverGlassInput(
         maxLines = if (multiline) 5 else 1,
         keyboardOptions = NavSentenceKeyboard,
         textStyle = TextStyle(color = p.text, fontSize = 14.sp),
-        cursorBrush = SolidColor(if (personalMode) NavTodayVisualTokens.accentInk(p.dark) else p.blue),
+        cursorBrush = SolidColor(NavTodayVisualTokens.accentInk(p.dark)),
         modifier = modifier.height(if (multiline) 100.dp else 46.dp)
-            .then(if (personalMode) Modifier.personalNoteCard(p, 12.dp, nested = true)
-                else Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)),
+            .personalNoteCard(p, 12.dp, nested = true),
         decorationBox = { inner ->
             Box(
                 Modifier.fillMaxSize().padding(horizontal = 13.dp, vertical = if (multiline) 12.dp else 0.dp),
@@ -858,4 +837,26 @@ private fun HandoverGlassInput(
             }
         },
     )
+}
+
+/** Export all sections, never just the currently visible search results. */
+@Composable
+private fun HandoverExportAction(p: NavPalette, lang: UiLanguage, enabled: Boolean, onClick: () -> Unit) {
+    TextButton(onClick = onClick, enabled = enabled,
+        modifier = Modifier.heightIn(min = 44.dp).personalNoteCard(p, 18.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)) {
+        Text(localized("Экспорт", "Export", lang),
+            color = if (enabled) NavTodayVisualTokens.accentInk(p.dark) else p.muted,
+            fontSize = 13.sp, maxLines = 1)
+    }
+}
+
+@Composable
+private fun HandoverExportOption(label: String, p: NavPalette, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().personalNoteCard(p, 16.dp, nested = true)
+        .glassClickable(onClick = onClick).heightIn(min = 48.dp).padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = p.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
+        NavGlassGlyph("chevron-right", NavTodayVisualTokens.accentInk(p.dark), Modifier.size(17.dp))
+    }
 }

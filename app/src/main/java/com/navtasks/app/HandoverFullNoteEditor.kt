@@ -66,8 +66,10 @@ internal fun HandoverFullNoteEditor(
         }
     }
     var saveError by remember(entryKey) { mutableStateOf(false) }
+    var originalBody by remember(entryKey) { mutableStateOf(initialPlain to initialHtml) }
+    val dirty = title.trim() != initialTitle.trim() || (plain to html) != originalBody || photos != initialPhotos
     // Only Personal notes may be saved without a title when they have a body.
-    val canSave = !photoLoading && navRichNoteAllowed(plain, html, 4000) &&
+    val canSave = (personalMode || dirty) && !photoLoading && navRichNoteAllowed(plain, html, 4000) &&
         (title.isNotBlank() || (personalMode && (plain.isNotBlank() || photos.isNotEmpty())))
     Column(
         Modifier.fillMaxSize().background(p.background)
@@ -79,21 +81,20 @@ internal fun HandoverFullNoteEditor(
             Modifier.fillMaxWidth().padding(top = if (personalMode) NavPersonalVisualTokens.headerTopDp.dp else 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NavGlassCircleButton(p, "back", onClick = onCancel)
+            if (personalMode) NavGlassCircleButton(p, "back", onClick = onCancel)
+            else NavEventHeaderAction("back", localized("Назад", "Back", lang), p, true, onCancel)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     if (personalMode) localized("Личное", "Personal", lang)
                     else localized("Передача дел", "Handover", lang),
-                    color = if (personalMode) p.text else p.blueText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                    color = p.text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                 )
                 if (sectionTitle.isNotEmpty()) {
                     Text(sectionTitle, color = p.muted, fontSize = 12.sp, maxLines = 1)
                 }
             }
-            Box(if (personalMode) Modifier.personalNoteCard(p, 13.dp)
-                else Modifier.navGlass(p, radius = 13.dp,
-                    role = if (canSave) GlassRole.SELECTED else GlassRole.CONTROL)) {
+            if (personalMode) Box(Modifier.personalNoteCard(p, 13.dp)) {
                 TextButton(
                     enabled = canSave,
                     onClick = {
@@ -109,6 +110,9 @@ internal fun HandoverFullNoteEditor(
                         fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                     )
                 }
+            } else NavEventHeaderAction("check", localized("Сохранить", "Save", lang),
+                p, canSave, accent = true) {
+                saveError = !onSave(title, plain, html, photos)
             }
         }
         BasicTextField(
@@ -123,7 +127,7 @@ internal fun HandoverFullNoteEditor(
                 color = p.text, fontSize = 24.sp, lineHeight = 29.sp,
                 fontWeight = FontWeight.Bold,
             ),
-            cursorBrush = SolidColor(if (personalMode) NavTodayVisualTokens.accentInk(p.dark) else p.blue),
+            cursorBrush = SolidColor(NavTodayVisualTokens.accentInk(p.dark)),
             decorationBox = { inner ->
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
                     if (title.isEmpty()) Text(
@@ -139,7 +143,15 @@ internal fun HandoverFullNoteEditor(
                 initialPlain = initialPlain, initialHtml = initialHtml,
                 entryKey = entryKey, p = p, lang = lang,
                 placeholder = localized("Текст заметки", "Write a note", lang),
-                maxCharacters = 4000, fullPage = true, neutralStyle = personalMode,
+                maxCharacters = 4000, fullPage = true, neutralStyle = true,
+                amosCommentField = !personalMode,
+                onInitialized = { text, normalizedHtml ->
+                    if (!personalMode) {
+                        originalBody = text to normalizedHtml
+                        plain = text
+                        html = normalizedHtml
+                    }
+                },
                 onChange = { updatedPlain, updatedHtml ->
                     plain = updatedPlain
                     html = updatedHtml
@@ -153,7 +165,7 @@ internal fun HandoverFullNoteEditor(
                     enabled = !photoLoading && photos.size < HandoverPhoto.MAX_PER_ENTRY,
                 ) {
                     Text(localized("Прикрепить фото", "Attach photos", lang),
-                        color = p.blueText, fontSize = 14.sp)
+                        color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 14.sp)
                 }
                 Spacer(Modifier.weight(1f))
                 Text(photos.size.toString() + " / " + HandoverPhoto.MAX_PER_ENTRY,
