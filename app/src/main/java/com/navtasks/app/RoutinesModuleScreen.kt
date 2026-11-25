@@ -49,11 +49,9 @@ internal fun RoutinesModuleScreen(
                 if (backdrop != null) Spacer(Modifier.size(44.dp))
                 else NavGlassCircleButton(p, "back", onBack)
                 Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    NavBrandLabel(p)
-                    Text(localized("Рутинные задачи", "Routine tasks", lang),
-                        color = p.text, fontSize = 23.sp)
-                }
+                Text(localized("Рутинные задачи", "Routine tasks", lang),
+                    modifier = Modifier.weight(1f),
+                    color = p.text, fontSize = 24.sp)
             }
             Box(Modifier.fillMaxWidth().weight(1f)) {
                 TasksScreenV2(

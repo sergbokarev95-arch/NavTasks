@@ -598,49 +598,49 @@ fun TasksScreenV2(
         TaskSchedule.effectiveFrequency(it, LocalDate.now()) == filter
     }.sortedBy { if (it.enabled) 0 else 1 }
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Frequency.entries.forEachIndexed { i, freq ->
-                Box(Modifier.weight(1f).navGlass(p, radius = 14.dp,
-                    role = if (filter == freq) GlassRole.SELECTED else GlassRole.CONTROL, elevation = 0.dp)
-                    .glassClickable { onFilter(freq) }.padding(vertical = 11.dp),
-                    contentAlignment = Alignment.Center) {
-                    Text(labels[i], color = if (filter == freq) p.selectionContent else p.text, fontSize = 11.sp, maxLines = 1)
-                }
-            }
-        }
+        NavCalendarSegmentedControl(
+            labels = labels,
+            activeIndex = Frequency.entries.indexOf(filter).coerceAtLeast(0),
+            p = p,
+            modifier = Modifier.padding(horizontal = NavEventLayout.screenInset, vertical = 3.dp),
+        ) { index -> onFilter(Frequency.entries[index]) }
         // This panel is informative, not a disclosure control: tasks remain visible.
         Row(
             Modifier.fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 5.dp)
-                .navGlass(p, radius = 14.dp, role = GlassRole.PANEL)
-                .border(1.dp, p.warningText.copy(alpha = 0.52f), RoundedCornerShape(14.dp))
-                .background(p.warningText.copy(alpha = if (p.dark) 0.10f else 0.055f),
-                    RoundedCornerShape(14.dp))
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(horizontal = NavEventLayout.screenInset, vertical = 5.dp)
+                .personalNoteCard(p, NavEventLayout.cardRadius)
+                .heightIn(min = 36.dp)
+                .padding(horizontal = NavEventLayout.cardInset, vertical = NavEventLayout.cardVertical),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(localized("Список задач", "Task list", lang), color = p.warningText,
-                fontSize = 13.sp, modifier = Modifier.weight(1f))
+            Text(localized("Список задач", "Task list", lang), color = p.text,
+                fontSize = 13.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
             Text(filtered.size.toString() + " " + localized("задач", "tasks", lang),
-                color = p.warningText, fontSize = 12.sp)
+                color = p.muted, fontSize = 12.sp)
         }
         // Keep the same lazy list, stable item keys and editing navigation.
         LazyColumn(
             Modifier.weight(1f), state = listState,
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
-                top = 5.dp, bottom = 180.dp),
-            verticalArrangement = Arrangement.spacedBy(9.dp),
+            contentPadding = PaddingValues(start = NavEventLayout.screenInset, end = NavEventLayout.screenInset,
+                top = 5.dp, bottom = 100.dp),
+            verticalArrangement = Arrangement.spacedBy(NavEventLayout.sectionGap),
         ) {
-            if (filtered.isEmpty()) item { NavPanel(p) { Text(localized("Задач пока нет", "No tasks yet", lang), color = p.muted) } }
+            if (filtered.isEmpty()) item {
+                Box(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
+                    .padding(NavEventLayout.cardInset)) {
+                    Text(localized("Задач пока нет", "No tasks yet", lang), color = p.muted)
+                }
+            }
             itemsIndexed(filtered, key = { _, item -> item.id }) { _, task ->
-                    Row(Modifier.fillMaxWidth().navGlass(p, radius = 17.dp,
-                    role = if (task.checklist.isNotEmpty()) GlassRole.NESTED_TASK else GlassRole.TASK)
+                Row(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
                     .glassClickable { onEdit(task) }
-                    .padding(horizontal = 13.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    .heightIn(min = 60.dp)
+                    .padding(horizontal = NavEventLayout.cardInset, vertical = NavEventLayout.innerGap),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
                     // Templates are not executable, so no fake empty checkbox or checkbox icon here.
-                    Spacer(Modifier.width(1.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(task.title, color = if (task.enabled) p.text else p.muted, fontSize = 14.sp,
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(task.title, color = if (task.enabled) p.text else p.muted, fontSize = 15.sp,
                             textDecoration = if (task.enabled) androidx.compose.ui.text.style.TextDecoration.None
                                 else androidx.compose.ui.text.style.TextDecoration.LineThrough)
                         Text(
@@ -651,11 +651,11 @@ fun TasksScreenV2(
                                     TextStyle.FULL, if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH)
                                 TaskSchedule.effectiveFrequency(task, LocalDate.now()) == Frequency.MONTHLY -> "${effectiveCalendarMonthDay(task, LocalDate.now())}"
                                 else -> localized("Каждый день", "Every day", lang)
-                            }, color = p.muted, fontSize = 11.sp,
+                            }, color = p.muted, fontSize = 12.sp,
                         )
                     }
-                    if (task.checklist.isNotEmpty()) Text("${task.checklist.size}", color = p.blueText, fontSize = 12.sp)
-                    Spacer(Modifier.width(5.dp))
+                    if (task.checklist.isNotEmpty()) Text("${task.checklist.size}",
+                        color = if (task.enabled) NavTodayVisualTokens.accentInk(p.dark) else p.muted, fontSize = 12.sp)
                     NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                     }
             }
