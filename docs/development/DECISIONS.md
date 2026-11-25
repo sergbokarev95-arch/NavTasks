@@ -24,3 +24,5 @@
 - Beta40: editor state refactor and ten composable sections resolved Kotlin compilation blocker. Full CI passed; retain bounded components and explicit typed state in further edits. No stable OTA change. Physical QA remains pending.
 
 - Beta41: use a shared 48dp minimum row height and equal-width repeat cells with explicit spacing; checklist comment editing uses a scoped visible inset field and prominent heading, no changes to read-only reference behavior or other rich editors. Retain Beta40 schedule logic.
+
+- Beta41/recovery311 verified CI and publication; physical layout/keyboard QA remains pending.
