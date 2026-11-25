@@ -808,6 +808,12 @@ private class TaskEditorState(val initial: TaskTemplate?) {
     var pendingCalendarDayEdit: Pair<TaskTemplate, CalendarDayEditPreview>? by mutableStateOf(null)
     var pendingFrequencyEdit: Pair<TaskTemplate, FrequencyChangePreview>? by mutableStateOf(null)
     var unsupportedFrequencyEdit: Boolean by mutableStateOf(false)
+    // Compare editable fields, not dialog visibility or expanded sections.
+    private fun saveFields(): List<Any?> = listOf(title.trim(), frequency, mode, date,
+        weekDay, monthDay, interval, missedPolicy, time, windowStart, reminders,
+        checklist.filter { it.title.isNotBlank() }, enabled)
+    private val initialSaveFields = saveFields()
+    val dirty: Boolean get() = saveFields() != initialSaveFields
     val validWindow: Boolean get() = windowStart == null || time?.let { end -> windowStart?.isBefore(end) } == true
     val valid: Boolean get() = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 &&
         (interval.toIntOrNull() ?: 0) > 0 && validWindow
@@ -838,7 +844,7 @@ private fun TaskEditorState.EditorHeader(p: NavPalette, lang: UiLanguage, store:
         if (initial == null) "New task" else "Edit task", lang),
         modifier = Modifier.weight(1f), color = p.text, fontSize = 20.sp, textAlign = TextAlign.Center)
     NavEventHeaderAction(
-        "check", localized("Сохранить", "Save", lang), p, valid,
+        "check", localized("Сохранить", "Save", lang), p, valid && dirty, accent = true,
         onClick = {
         val edited = (initial ?: TaskTemplate(title = title.trim(), frequency = frequency)).copy(
             title = title.trim(), frequency = frequency,

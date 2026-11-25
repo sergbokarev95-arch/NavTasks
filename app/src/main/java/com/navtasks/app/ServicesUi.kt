@@ -295,15 +295,16 @@ fun ServicesScreen(
                         )
                         NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                     }
-                    Text(
-                        if (service.unplanned)
-                            localized("Заявка от: ", "Request dated: ", lang) +
-                                navDate(service.lastDate, lang, true)
-                        else localized("Последнее обслуживание: ", "Last serviced: ", lang) +
+                    if (!service.unplanned) Text(
+                        localized("Последнее обслуживание: ", "Last serviced: ", lang) +
                             navDate(service.serviceHistory.lastOrNull()?.completedAt
                                 ?: service.lastDate, lang, true),
-                        color = if (service.unplanned) p.muted else p.successText, fontSize = 12.sp,
+                        color = p.successText, fontSize = 12.sp,
                     )
+                    if (!completed) service.effectiveRequestDate?.let { date ->
+                        Text(localized("Заявка от: ", "Request dated: ", lang) +
+                            navDate(date, lang, true), color = p.muted, fontSize = 12.sp)
+                    }
                     if (!completed) {
                         if (!service.unplanned && due != null) {
                             Text(localized("Следующее обслуживание: ", "Next service: ", lang) +
@@ -345,9 +346,15 @@ fun ServicesScreen(
                         if (!completed) {
                             ServiceOption(localized("Выполнено", "Completed", lang), p, false,
                                 modifier = Modifier.weight(1f)) {
-                                confirmingComplete = service
-                                completionDate = LocalDate.now()
-                                completionDatePicker = false
+                                if (service.unplanned && service.requestNumber.isBlank()) {
+                                    requestTarget = service
+                                    message = localized("Сначала укажи номер заявки AMOS.",
+                                        "Enter the AMOS request number first.", lang)
+                                } else {
+                                    confirmingComplete = service
+                                    completionDate = LocalDate.now()
+                                    completionDatePicker = false
+                                }
                             }
                         }
                         ServiceOption(localized("Удалить", "Delete", lang), p, false,
@@ -407,8 +414,8 @@ fun ServicesScreen(
     requestTarget?.let { entry ->
         ServiceRequestDialog(
             entry, p, lang, onDismiss = { requestTarget = null }, neutralStyle = true,
-            onSave = { number ->
-                runCatching { services.setRequestNumber(entry.id, number) }
+            onSave = { number, date ->
+                runCatching { services.setRequest(entry.id, number, date) }
                     .onSuccess { requestTarget = null; message = null }
                     .onFailure { message = it.localizedMessage }
             },
@@ -564,6 +571,10 @@ fun ServicesScreen(
                                         item.requestNumber,
                                     color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp,
                                 )
+                                item.requestDate?.let { date ->
+                                    Text(localized("Дата заявки: ", "Request date: ", lang) +
+                                        navDate(date, lang, true), color = p.muted, fontSize = 12.sp)
+                                }
                             }
                         }
                     }
@@ -718,7 +729,7 @@ private fun ServiceEditorSheet(
     }
     // Informational date only: never used as a service deadline or reminder.
     var requestDate by remember(existing?.id) {
-        mutableStateOf(existing?.takeIf { it.unplanned }?.lastDate ?: LocalDate.now())
+        mutableStateOf(existing?.effectiveRequestDate ?: existing?.takeIf { it.unplanned }?.lastDate ?: LocalDate.now())
     }
     // Planned equipment has a real last-service date, independently editable.
     // Legacy entries keep both stored dates as-is until the user edits them.
@@ -759,9 +770,20 @@ private fun ServiceEditorSheet(
     val reminderLabel = reminders.firstOrNull { it.first == alert.toString() }?.second ?: "$alert"
     val years = customYears.toIntOrNull()
     val months = customMonths.toIntOrNull()
-    val valid = equipment.isNotBlank() && (if (unplanned) requestNumber.isNotBlank()
-        else !customSelected || (years != null && months != null && years >= 0 &&
-            months in 0..11 && years * 12 + months in 1..1200))
+    var initialNote by remember(existing?.id) {
+        mutableStateOf(existing?.comment.orEmpty() to existing?.commentHtml.orEmpty())
+    }
+    val originalFields = remember(existing?.id) {
+        listOf(equipment.trim(), unplanned, requestNumber.trim(), requestDate, lastServiceDate,
+            next, period, alert, customSelected, if (customSelected) customYears else "",
+            if (customSelected) customMonths else "")
+    }
+    val dirty = listOf(equipment.trim(), unplanned, requestNumber.trim(), requestDate, lastServiceDate,
+        next, period, alert, customSelected, if (customSelected) customYears else "",
+        if (customSelected) customMonths else "") != originalFields || (note to noteHtml) != initialNote
+    val valid = equipment.isNotBlank() && (unplanned || (next.isAfter(lastServiceDate) &&
+        (!customSelected || (years != null && months != null && years >= 0 &&
+            months in 0..11 && years * 12 + months in 1..1200))))
     Column(Modifier.fillMaxSize().padding(top = 13.dp).navigationBarsPadding().imePadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically) {
@@ -770,14 +792,11 @@ private fun ServiceEditorSheet(
                 else localized("Редактировать сервис", "Edit service", lang),
                 modifier = Modifier.weight(1f), color = p.text, fontSize = 20.sp,
                 textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            NavEventHeaderAction("check", localized("Сохранить", "Save", lang), p, valid, accent = true) {
+            NavEventHeaderAction("check", localized("Сохранить", "Save", lang), p, valid && dirty, accent = true) {
                     runCatching {
                         require(existing?.serviceHistory.isNullOrEmpty() ||
                             existing?.unplanned == unplanned) {
                             "Cannot change the type of a service with archived history"
-                        }
-                        require(!unplanned || requestNumber.trim().isNotBlank()) {
-                            "An unplanned request needs its AMOS number"
                         }
                         require(navRichNoteAllowed(note, noteHtml, 6000))
                         val total = if (unplanned) 0 else if (customSelected) {
@@ -800,16 +819,16 @@ private fun ServiceEditorSheet(
                             remindMonths = if (unplanned) 0 else alert,
                             requestNumber = if (unplanned) requestNumber.trim()
                                 else existing?.requestNumber.orEmpty(),
+                            requestDate = if (unplanned) requestDate.takeIf { requestNumber.isNotBlank() }
+                                else existing?.effectiveRequestDate,
+                            closedAt = existing?.closedAt,
                             serviceHistory = existing?.serviceHistory.orEmpty(),
                             completedAt = existing?.completedAt,
                             unplanned = unplanned,
                         )
                     }.onSuccess { onSave(it) }
                         .onFailure {
-                            error = if (unplanned && requestNumber.trim().isBlank())
-                                localized("Укажи номер созданной заявки AMOS.",
-                                    "Enter the created AMOS request number.", lang)
-                            else localized(
+                            error = localized(
                                 "Проверь название, даты и параметры обслуживания.",
                                 "Check equipment name, dates and service parameters.", lang)
                         }
@@ -833,10 +852,12 @@ private fun ServiceEditorSheet(
                 NavEventSchedulePanel(p) {
                     Text(localized("Номер заявки AMOS", "AMOS request number", lang),
                         color = p.text, fontSize = 15.sp, modifier = Modifier.padding(vertical = 8.dp))
-                    ServiceInput(requestNumber, { requestNumber = it.take(100) },
-                        localized("Номер из AMOS", "Request number from AMOS", lang), p, false, identifier = true)
-                    NavEventDivider(p)
-                    NavEventValueRow(localized("Дата заявки AMOS", "AMOS request date", lang),
+                    ServiceRequestNumberField(requestNumber, p, lang, onChange = { value ->
+                        if (requestNumber.isBlank() && value.isNotBlank()) requestDate = LocalDate.now()
+                        requestNumber = value
+                    })
+                    Spacer(Modifier.height(NavEventLayout.innerGap))
+                    if (requestNumber.isNotBlank()) NavEventValueRow(localized("Дата заявки AMOS", "AMOS request date", lang),
                         navDate(requestDate, lang, true), p) { pickingDate = "request" }
                     Text(localized("Только для информации — не влияет на сроки и уведомления.",
                         "For reference only — no effect on due dates or reminders.", lang),
@@ -917,7 +938,8 @@ private fun ServiceEditorSheet(
                     entryKey = existing?.id ?: "new-service", p = p, lang = lang,
                     maxCharacters = 6000, neutralStyle = true, amosCommentField = true,
                     placeholder = localized("Работы, расходники, примечания…", "Details and remarks…", lang),
-                    onChange = { text, html -> note = text; noteHtml = html })
+                    onChange = { text, html -> note = text; noteHtml = html },
+                    onInitialized = { text, html -> initialNote = text to html; note = text; noteHtml = html })
                 Spacer(Modifier.height(NavEventLayout.innerGap))
             }
             error?.let { Text(it, color = p.dangerText, fontSize = 12.sp) }

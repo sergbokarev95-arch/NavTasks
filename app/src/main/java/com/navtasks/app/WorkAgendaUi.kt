@@ -220,25 +220,35 @@ private fun WorkAgendaCalendarRow(
     }
 }
 
-/** Service requisition number is separate from the equipment service record. */
+/** The current requisition is independent of the maintenance schedule. */
 @Composable
-internal fun ServiceRequestDialog(
-    service: ServiceEntry, p: NavPalette, lang: UiLanguage,
-    onDismiss: () -> Unit, onSave: (String) -> Unit,
+internal fun ServiceRequestNumberField(
+    number: String, p: NavPalette, lang: UiLanguage, onChange: (String) -> Unit,
+    neutralStyle: Boolean = true,
 ) {
-    ServiceRequestDialog(service, p, lang, onDismiss, neutralStyle = false, onSave = onSave)
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
+        NavGlassInput(value = number, onValueChange = { onChange(it.take(100)) },
+            p = p, modifier = Modifier.weight(1f),
+            placeholder = localized("Номер из AMOS", "Number from AMOS", lang),
+            keyboardOptions = NavIdentifierKeyboard, neutralStyle = neutralStyle)
+        if (number.isNotEmpty()) {
+            NavEventHeaderAction("x", localized("Очистить номер заявки", "Clear request number", lang),
+                p, true) { onChange("") }
+        }
+    }
 }
 
 @Composable
 internal fun ServiceRequestDialog(
-    service: ServiceEntry,
-    p: NavPalette,
-    lang: UiLanguage,
-    onDismiss: () -> Unit,
-    neutralStyle: Boolean,
-    onSave: (String) -> Unit,
+    service: ServiceEntry, p: NavPalette, lang: UiLanguage,
+    onDismiss: () -> Unit, neutralStyle: Boolean = true,
+    onSave: (String, LocalDate?) -> Unit,
 ) {
     var number by remember(service.id) { mutableStateOf(service.requestNumber) }
+    var date by remember(service.id) { mutableStateOf(service.effectiveRequestDate) }
+    var pickingDate by remember(service.id) { mutableStateOf(false) }
+    val dirty = number.trim() != service.requestNumber.trim() || date != service.effectiveRequestDate
     NavGlassAlertDialog(
         p = p, neutralSurface = neutralStyle, neutralActions = neutralStyle,
         onDismissRequest = onDismiss,
@@ -248,30 +258,35 @@ internal fun ServiceRequestDialog(
                 Text(service.equipment, color = p.muted, fontSize = 13.sp)
                 Text(localized("Номер созданной заявки", "Created request number", lang),
                     color = p.muted, fontSize = 12.sp)
-                NavGlassInput(
-                    value = number,
-                    onValueChange = { number = it.take(100) },
-                    p = p,
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = localized("Номер из AMOS", "Number from AMOS", lang),
-                    keyboardOptions = NavIdentifierKeyboard, neutralStyle = neutralStyle,
-                )
-                if (service.requestNumber.isNotBlank()) {
-                    Text(localized("Очисти поле, чтобы убрать номер заявки.",
-                        "Clear the field to remove the request number.", lang),
+                ServiceRequestNumberField(number, p, lang, onChange = { value ->
+                    if (value.isBlank()) date = null
+                    else if (number.isBlank() && date == null) date = LocalDate.now()
+                    number = value
+                }, neutralStyle = neutralStyle)
+                if (number.isNotBlank()) {
+                    NavEventValueRow(localized("Дата заявки AMOS", "AMOS request date", lang),
+                        date?.let { navDate(it, lang, true) }
+                            ?: localized("Указать", "Set date", lang), p, chevron = true,
+                        valueAccent = date != null) { pickingDate = true }
+                    Text(localized("Дата заявки не влияет на сроки обслуживания.",
+                        "Request date does not affect maintenance due dates.", lang),
                         color = p.muted, fontSize = 11.sp)
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(number.trim()) }) {
-                Text(localized("Сохранить", "Save", lang), color = if (neutralStyle) NavTodayVisualTokens.accentInk(p.dark) else androidx.compose.ui.graphics.Color.Unspecified)
+            TextButton(enabled = dirty, onClick = { onSave(number.trim(), date) }) {
+                Text(localized("Сохранить", "Save", lang),
+                    color = if (dirty) NavTodayVisualTokens.accentInk(p.dark) else p.muted)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(localized("Отмена", "Cancel", lang), color = if (neutralStyle) p.text else androidx.compose.ui.graphics.Color.Unspecified)
+                Text(localized("Отмена", "Cancel", lang), color = p.text)
             }
         },
     )
+    if (pickingDate) NavDateWheelDialog(initial = date ?: LocalDate.now(), p = p, lang = lang,
+        onDismiss = { pickingDate = false },
+        onSelected = { date = it; pickingDate = false })
 }

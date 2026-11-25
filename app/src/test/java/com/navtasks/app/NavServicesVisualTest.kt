@@ -17,5 +17,7 @@ class NavServicesVisualTest {
         assertTrue(ui.contains("serviceHistory = existing?.serviceHistory.orEmpty()"))
         assertTrue(ui.contains("services.complete(entry.id, completionDate)"))
         assertTrue(ui.contains("currentServiceRequests(activeServices)"))
+        assertTrue(ui.contains("p, valid && dirty, accent = true"))
+        assertTrue(ui.contains("ServiceRequestNumberField(requestNumber"))
     }
 }

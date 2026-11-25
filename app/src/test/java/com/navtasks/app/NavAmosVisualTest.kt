@@ -58,7 +58,7 @@ class NavAmosVisualTest {
         val ui = File(root + "WorkOrdersUi.kt").readText()
         val event = File(root + "NavEventEditorUi.kt").readText()
         val rich = File(root + "NavRichNoteUi.kt").readText()
-        assertTrue(ui.contains("p, valid, accent = true"))
+        assertTrue(ui.contains("p, valid && dirty, accent = true"))
         assertTrue(ui.contains("valueAccent = repeatDays > 0 || repeatMonths > 0 || customInterval"))
         assertTrue(ui.contains("valueAccent = remindDays > 0"))
         assertTrue(ui.contains("amosCommentField = true"))

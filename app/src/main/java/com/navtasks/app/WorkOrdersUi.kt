@@ -879,6 +879,16 @@ private fun WorkOrderEditorSheet(
             ?: localized("$repeatDays дн. / $repeatMonths мес.", "$repeatDays days / $repeatMonths months", lang)
     val reminderLabel = reminderOptions.firstOrNull { it.first == remindDays.toString() }?.second
         ?: localized("За $remindDays дней", "$remindDays days before", lang)
+    var initialNote by remember(existing?.id) {
+        mutableStateOf(existing?.comment.orEmpty() to existing?.commentHtml.orEmpty())
+    }
+    val originalFields = remember(existing?.id) {
+        listOf(title.trim(), dueDate, remindDays, repeatDays, repeatMonths, customInterval,
+            if (customInterval) customMonths else "", checklist)
+    }
+    val dirty = listOf(title.trim(), dueDate, remindDays, repeatDays, repeatMonths, customInterval,
+        if (customInterval) customMonths else "", checklist) != originalFields ||
+        (comment to commentHtml) != initialNote
     val valid = title.isNotBlank() && (!customInterval || (customMonths.toIntOrNull() ?: 0) in 1..1200)
 
     Column(Modifier.fillMaxSize().padding(top = 13.dp).navigationBarsPadding().imePadding()) {
@@ -889,7 +899,7 @@ private fun WorkOrderEditorSheet(
                 else localized("Редактировать работу", "Edit work item", lang),
                 modifier = Modifier.weight(1f), color = p.text, fontSize = 20.sp,
                 textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            NavEventHeaderAction("check", localized("Сохранить", "Save", lang), p, valid, accent = true) {
+            NavEventHeaderAction("check", localized("Сохранить", "Save", lang), p, valid && dirty, accent = true) {
                 val candidate = runCatching {
                     require(navRichNoteAllowed(comment, commentHtml, 6000))
                     if (customInterval) {
@@ -972,6 +982,7 @@ private fun WorkOrderEditorSheet(
                     maxCharacters = 6000, neutralStyle = true, amosCommentField = true,
                     placeholder = localized("Детали, замечания…", "Details and remarks…", lang),
                     onChange = { text, html -> comment = text; commentHtml = html },
+                    onInitialized = { text, html -> initialNote = text to html; comment = text; commentHtml = html },
                 )
                 Spacer(Modifier.height(NavEventLayout.innerGap))
             }

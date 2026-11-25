@@ -72,6 +72,7 @@ internal fun NavRichNoteEditor(
     neutralStyle: Boolean = false,
     checklistField: Boolean = false,
     amosCommentField: Boolean = false,
+    onInitialized: ((String, String) -> Unit)? = null,
 ) {
     val state = rememberRichTextState()
     var ready by remember(entryKey) { mutableStateOf(false) }
@@ -79,6 +80,7 @@ internal fun NavRichNoteEditor(
     LaunchedEffect(entryKey) {
         ready = false
         state.setHtml(initialHtml.takeIf { it.isNotBlank() } ?: navEscapeNoteHtml(initialPlain))
+        onInitialized?.invoke(state.annotatedString.text, state.toHtml())
         ready = true
     }
     LaunchedEffect(state.annotatedString, ready) {

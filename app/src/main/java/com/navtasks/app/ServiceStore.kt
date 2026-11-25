@@ -18,6 +18,7 @@ data class ServiceCompletion(
     val comment: String = "",
     val commentHtml: String = "",
     val intervalMonths: Int = 0,
+    val requestDate: LocalDate? = null,
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("scheduledDate", scheduledDate?.toString() ?: JSONObject.NULL)
@@ -27,6 +28,7 @@ data class ServiceCompletion(
         .put("comment", comment)
         .put("commentHtml", commentHtml)
         .put("intervalMonths", intervalMonths)
+        .put("requestDate", requestDate?.toString() ?: JSONObject.NULL)
 
     companion object {
         fun fromJson(json: JSONObject): ServiceCompletion = ServiceCompletion(
@@ -39,6 +41,7 @@ data class ServiceCompletion(
             comment = json.optString("comment", ""),
             commentHtml = json.optString("commentHtml", ""),
             intervalMonths = json.optInt("intervalMonths", 0),
+            requestDate = serviceOptionalDate(json, "requestDate"),
         )
     }
 }
@@ -65,7 +68,11 @@ data class ServiceEntry(
     val closedAt: LocalDate? = null,
     /** Unplanned work has an AMOS request, not a fabricated next-due date. */
     val unplanned: Boolean = false,
+    /** Date the current AMOS request was filed; not a scheduled maintenance date. */
+    val requestDate: LocalDate? = null,
 ) {
+    val effectiveRequestDate: LocalDate? get() = if (requestNumber.isBlank()) null
+        else requestDate ?: lastDate.takeIf { unplanned }
     init {
         require(id.isNotBlank() && id.length <= 100)
         require(equipment.isNotBlank() && equipment.length <= 200)
@@ -100,6 +107,7 @@ data class ServiceEntry(
         .put("periodMonths", periodMonths)
         .put("remindMonths", remindMonths)
         .put("requestNumber", requestNumber)
+        .put("requestDate", requestDate?.toString() ?: JSONObject.NULL)
         .put("completedAt", completedAt?.toString() ?: JSONObject.NULL)
         .put("closedAt", closedAt?.toString() ?: JSONObject.NULL)
         .put("serviceHistory", JSONArray().apply {
@@ -133,8 +141,20 @@ data class ServiceEntry(
             }?.let(LocalDate::parse),
             // Missing in every pre-0.4.50 profile/export means planned.
             unplanned = json.optBoolean("unplanned", false),
+            requestDate = serviceOptionalDate(json, "requestDate"),
         )
     }
+}
+
+private fun serviceOptionalDate(json: JSONObject, key: String): LocalDate? =
+    json.optString(key, "").takeUnless { it.isBlank() || it == "null" }?.let(LocalDate::parse)
+
+/** Update only current request metadata; keep schedule and archived cycles intact. */
+internal fun withServiceRequest(entry: ServiceEntry, number: String, date: LocalDate?): ServiceEntry {
+    val normalized = number.trim()
+    val actualDate = date.takeIf { normalized.isNotBlank() }
+    return entry.copy(requestNumber = normalized, requestDate = actualDate,
+        lastDate = if (entry.unplanned && actualDate != null) actualDate else entry.lastDate)
 }
 
 /**
@@ -170,6 +190,7 @@ internal fun completeServiceCycle(entry: ServiceEntry, on: LocalDate): ServiceEn
         comment = entry.comment,
         commentHtml = entry.commentHtml,
         intervalMonths = entry.periodMonths,
+        requestDate = entry.effectiveRequestDate,
     )
     val history = entry.serviceHistory + snapshot
     return if (entry.periodMonths > 0) {
@@ -178,6 +199,7 @@ internal fun completeServiceCycle(entry: ServiceEntry, on: LocalDate): ServiceEn
             nextDate = on.plusMonths(entry.periodMonths.toLong()),
             completedAt = null,
             requestNumber = "",
+            requestDate = null,
             serviceHistory = history,
         )
     } else {
@@ -186,6 +208,7 @@ internal fun completeServiceCycle(entry: ServiceEntry, on: LocalDate): ServiceEn
         entry.copy(
             completedAt = on,
             requestNumber = "",
+            requestDate = null,
             serviceHistory = history,
         )
     }
@@ -232,13 +255,12 @@ class ServiceStore(context: Context, private val profiles: ProfileStore) {
 
     fun setRequestNumber(id: String, number: String) {
         val item = entries.firstOrNull { it.id == id } ?: error("Service not found")
-        val normalized = number.trim()
-        if (item.unplanned && item.completedAt == null) {
-            require(normalized.isNotBlank()) {
-                "Unplanned maintenance requires an AMOS request number"
-            }
-        }
-        upsert(item.copy(requestNumber = normalized))
+        upsert(withServiceRequest(item, number, item.effectiveRequestDate))
+    }
+
+    fun setRequest(id: String, number: String, date: LocalDate?) {
+        val item = entries.firstOrNull { it.id == id } ?: error("Service not found")
+        upsert(withServiceRequest(item, number, date))
     }
 
     /** First delete only closes this record; history is retained. */
