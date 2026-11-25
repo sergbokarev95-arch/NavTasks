@@ -1680,8 +1680,13 @@ fun RunTileV2(
                 HorizontalDivider(color = p.border)
                 run.checklist.forEach { item ->
                     Row(verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth().navGlass(p, radius = 16.dp,
-                            role = GlassRole.CONTROL, elevation = 0.dp)
+                        modifier = Modifier.fillMaxWidth().then(
+                            if (p.dark) Modifier.clip(RoundedCornerShape(16.dp))
+                                .background(NavTodayVisualTokens.checklistInsetSurface(true))
+                                .border(1.dp, NavTodayVisualTokens.checklistInsetRim(true), RoundedCornerShape(16.dp))
+                            else Modifier.navGlass(p, radius = 16.dp,
+                                role = GlassRole.CONTROL, elevation = 0.dp)
+                            )
                             .heightIn(min = 46.dp)
                             .padding(horizontal = 7.dp, vertical = 1.dp)) {
                         RoundCheck(item.id in run.checkedIds || (confirming && run.checklist.all { it.id == item.id || it.id in run.checkedIds }), p,

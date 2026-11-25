@@ -32,7 +32,7 @@ fun ChecklistReferenceButton(
     onClick: () -> Unit,
 ) {
     // Reference/help is informational, not a primary blue action.
-    val accent = if (hasNote) p.systemOrange else p.muted
+    val accent = if (hasNote) NavTodayVisualTokens.accentInk(p.dark) else p.muted
     Box(
         Modifier.size(44.dp).clip(CircleShape)
             .glassClickable(onClick = onClick),
@@ -40,8 +40,9 @@ fun ChecklistReferenceButton(
     ) {
         Box(
             Modifier.size(33.dp)
-                .navGlass(p, radius = 17.dp, role = GlassRole.CONTROL)
-                .border(1.dp, accent.copy(alpha = if (hasNote) 0.65f else 0.25f), CircleShape),
+                .clip(CircleShape)
+                .background(NavTodayVisualTokens.checklistInsetSurface(p.dark))
+                .border(1.dp, NavTodayVisualTokens.checklistInsetRim(p.dark), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Text("?", color = accent, fontSize = 17.sp, fontWeight = FontWeight.Medium)
@@ -68,7 +69,8 @@ fun ChecklistReferenceDialog(
     Dialog(onDismissRequest = onDismiss) {
         Column(
             Modifier.fillMaxWidth()
-                .navDialogSurface(p)
+                .clip(RoundedCornerShape(26.dp))
+                .background(NavTodayVisualTokens.cardSurface(p.dark))
                 .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -77,7 +79,7 @@ fun ChecklistReferenceDialog(
                     if (editable) "Комментарий к проверке" else "Памятка к проверке",
                     if (editable) "Edit checklist note" else "Checklist reference", lang,
                 ),
-                color = p.blue, fontSize = 12.sp,
+                color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp,
             )
             Text(title, color = p.text, fontSize = 20.sp, maxLines = 3)
             if (editable) {
@@ -91,7 +93,7 @@ fun ChecklistReferenceDialog(
                 NavRichNoteEditor(
                     initialPlain = note, initialHtml = noteHtml,
                     entryKey = title + ":" + note.hashCode(),
-                    p = p, lang = lang, maxCharacters = 6000,
+                    p = p, lang = lang, maxCharacters = 6000, neutralStyle = true,
                     placeholder = localized("Текст подсказки…", "Reference note…", lang),
                     onChange = { text, html -> draft = text; draftHtml = html },
                 )
@@ -99,7 +101,8 @@ fun ChecklistReferenceDialog(
                 SelectionContainer {
                     Column(
                         Modifier.fillMaxWidth().heightIn(max = 340.dp)
-                            .navGlass(p, radius = 13.dp, role = GlassRole.CONTROL)
+                            .clip(RoundedCornerShape(13.dp))
+                            .background(NavTodayVisualTokens.checklistInsetSurface(p.dark))
                             .verticalScroll(rememberScrollState())
                             .padding(14.dp),
                     ) {
@@ -152,11 +155,12 @@ private fun ChecklistNoteAction(
     onClick: () -> Unit,
 ) {
     Box(
-        Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
+        Modifier.clip(RoundedCornerShape(12.dp))
+            .background(NavTodayVisualTokens.checklistInsetSurface(p.dark))
             .glassClickable(onClick = onClick)
             .padding(horizontal = 13.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (accent) p.blue else p.muted, fontSize = 13.sp)
+        Text(label, color = if (accent) NavTodayVisualTokens.accentInk(p.dark) else p.text, fontSize = 13.sp)
     }
 }

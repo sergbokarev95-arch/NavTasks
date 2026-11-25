@@ -63,6 +63,24 @@ class NavTodayVisualTokensTest {
         assertTrue(work.contains("else Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)"))
     }
 
+    @Test fun checklistAndMemoUseNeutralSurfacesAndCoralActions() {
+        assertEquals(Color(0xFF272729), NavTodayVisualTokens.checklistInsetSurface(true))
+        assertEquals(Color(0xFFF2F3F7), NavTodayVisualTokens.checklistInsetSurface(false))
+        assertEquals(Color(0xFF38383A), NavTodayVisualTokens.checklistInsetRim(true))
+        val root = "src/main/java/com/navtasks/app/"
+        val row = File(root + "NavTasksUi.kt").readText().substringAfter("fun RunTileV2(")
+        assertTrue(row.contains("NavTodayVisualTokens.checklistInsetSurface(true)"))
+        assertTrue(row.contains("NavTodayVisualTokens.checklistInsetRim(true)"))
+        val memo = File(root + "ChecklistNotesUi.kt").readText()
+        assertTrue(memo.contains("NavTodayVisualTokens.cardSurface(p.dark)"))
+        assertTrue(memo.contains("NavTodayVisualTokens.accentInk(p.dark)"))
+        assertTrue(memo.contains("neutralStyle = true"))
+        assertTrue(!memo.contains("p.blue"))
+        assertTrue(!memo.contains("p.systemOrange"))
+        assertTrue(memo.contains("clipboard.setText(AnnotatedString(note))"))
+        assertTrue(memo.contains("onSave(draft.trim(), draftHtml)"))
+    }
+
     @Test fun todayKeepsTapTargetsGreenConfirmationAndScopedDateWarning() {
         val ui = File("src/main/java/com/navtasks/app/NavTasksUi.kt").readText()
         val check = ui.substringAfter("fun RoundCheck(").substringBefore("private fun TodayScreenV2(")

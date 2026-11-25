@@ -17,6 +17,13 @@ internal object NavTodayVisualTokens {
     fun workNavigateNightSurface(): Color = Color(0xFF272729)
     fun workNavigateNightRim(): Color = Color(0xFF38383A)
 
+    // Scoped checklist surfaces: neutral graphite inside the matte parent card.
+    fun checklistInsetSurface(dark: Boolean): Color =
+        if (dark) Color(0xFF272729) else Color(0xFFF2F3F7)
+
+    fun checklistInsetRim(dark: Boolean): Color =
+        if (dark) Color(0xFF38383A) else Color(0xFFE0E2E8)
+
     fun uncheckedInk(dark: Boolean): Color =
         if (dark) Color(0xFF6B6B6D) else Color(0xFFA0A0A2)
 

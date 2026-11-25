@@ -119,7 +119,7 @@ fun ProfilesScreen(
                     .glassClickable { name = ""; editing = null; createOpen = true }
                     .padding(16.dp), contentAlignment = Alignment.Center,
             ) {
-                Text(localized("+ Добавить судно", "+ Add vessel", lang),
+                Text(localized("+ Добавить профиль", "+ Add profile", lang),
                     color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 15.sp)
             }
             if (error != null) Text(error.orEmpty(), color = p.dangerText, fontSize = 12.sp)
@@ -139,7 +139,7 @@ fun ProfilesScreen(
         NavGlassAlertDialog(p = p, neutralActions = true, 
             onDismissRequest = { createOpen = false; editing = null },
             title = { Text(if (editingId == null)
-                localized("Новое судно", "New vessel", lang)
+                localized("Новый профиль", "New profile", lang)
                 else localized("Название профиля", "Profile name", lang)) },
             text = {
                 NavGlassInput(
