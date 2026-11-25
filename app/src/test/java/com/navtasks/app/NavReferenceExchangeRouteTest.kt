@@ -35,17 +35,19 @@ class NavReferenceExchangeRouteTest {
         assertTrue(equipment.contains("!staged.legacyMissingAttachments"))
     }
 
-    @Test fun handoverExportIsBelowSectionsNotBesideSearchAndDialogIsOpaque() {
+    @Test fun handoverExportIsPinnedBesideSearchAndDialogIsOpaque() {
         val handover = source("HandoverUi")
         val listStart = handover.indexOf("LazyColumn(")
         val sections = handover.indexOf("items(shownSections", listStart)
-        val export = handover.indexOf("item(key = \"handover-export\")", sections)
-        assertTrue("Export must appear after all sections inside LazyColumn",
-            listStart >= 0 && sections > listStart && export > sections)
-        assertEquals(1, Regex("onClick = \\{ exportOpen = true \\}")
-            .findAll(handover).count())
+        val export = handover.indexOf("HandoverExportAction(p, lang")
+        assertTrue("Export must be accessible before scrolling the section list",
+            export >= 0 && listStart > export && sections > listStart)
+        assertFalse(handover.contains("item(key = \"handover-export\")"))
         assertTrue(handover.contains("solidSurface = true"))
-        assertTrue(handover.contains("Text(\"Word (.docx)\", color = Color.White)"))
+        assertTrue(handover.contains("neutralSurface = true, neutralActions = true"))
+        assertTrue(handover.contains("HandoverExportOption(\"Word (.docx)\", p)"))
+        assertTrue(handover.contains("HandoverExportOption(\"PDF\", p)"))
+        assertTrue(handover.contains("exportSnapshot = handover.sections.toList()"))
         assertTrue(handover.contains("Modifier.fillMaxWidth()"))
         val dialogs = source("NavOverlayUi")
         assertTrue(dialogs.contains("solidSurface: Boolean = false"))
