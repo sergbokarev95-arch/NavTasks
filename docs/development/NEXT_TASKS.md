@@ -1,10 +1,10 @@
 # NavTasks — следующие действия
 
-## Beta52
-- Beta52 и Recovery333: тесты, сборка, оригинальный signer/package/version, архивы SUCCESS. [Beta ZIP](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653015395/artifacts/15042405562) и [Recovery ZIP](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653086318/artifacts/15041583532). Публикация обоих релизов HTTP 403 Resource not accessible by integration, тег-релизы отсутствуют. Не дублировать сборки без проверки текущего статуса.
-- Device QA: главный справочник и инспекции в обеих темах, поиск, SIRE/VIQ7 no click and no restored navigation, «В разработке», back, оборудование, личные материалы, обмен. Сохранённые документы не удалять.
-- Beta51 draft 458337636 remains unpublished, do not duplicate. Recovery333 supersedes unpublished Recovery331.
+## Beta53
+- Verify [Beta53 CI 45656282445](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656282445) and [Recovery335 CI 45656346039](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656346039), JVM, signed APK, package/version, archive and actual release. No duplicate runs.
+- Device QA: both themes, root/folder search, rename and delete folder (empty and nonempty), preserve child IDs and attachments, compact detail actions, bottom editors with keyboard, save state, reader, PDF/DOCX attachment and export/import.
+- Beta52 and Recovery333 verified archives; release HTTP403. Recovery335 supersedes Recovery333.
 
 ## Защитные ограничения
-- Экспорт профиля перед установкой. Recovery333 only emergency; old version may drop newer fields on write. Следующий versionCode >333 после публикации.
-- Stable OTA не менять. CI не заменяет device QA.
+- Export profile before installation. Recovery335 only emergency, old code can lose newer fields when writing. Next versionCode >335 after publication.
+- Stable OTA unchanged. CI does not replace device QA.
