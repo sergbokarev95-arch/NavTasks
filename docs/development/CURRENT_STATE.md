@@ -6,8 +6,8 @@
 | Канал | Версия / code | Состояние |
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
-| Кандидат Beta50 | 1.2.0-beta.50 / 328 | CI 45645900538 in progress |
-| Кандидат Recovery329 | 1.1.0 / 329 | CI 45645966445 in progress |
+| Кандидат Beta50 | 1.2.0-beta.50 / 328 | CI 45645900538 attempt 1 JVM/build/signer/artifact success, release HTTP 403; attempt 2 queued |
+| Recovery для beta50 | 1.1.0 / 329 | CI success, подписанный APK опубликован |
 | Последняя проверенная beta | 1.2.0-beta.49 / 326 | CI success attempt 2, подписанный APK опубликован |
 | Recovery для beta49 | 1.1.0 / 327 | CI success, подписанный APK опубликован |
 | Предыдущая beta | 1.2.0-beta.48 / 324 | CI success, подписанный APK опубликован |
@@ -31,6 +31,8 @@
 - Beta50 — dirty+valid save в рутинах, AMOS, Services. Rich initialization baseline. Заявка AMOS: X очистки, отступ, nullable requestDate in entry/completion JSON, независимый от плановых сроков; legacy unplanned fallback, legacy planned unknown. Current date defaults for new request; clearing clears current metadata only; unplanned draft allowed, completion requires number. Regression tests. [Beta CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45645900538), [Recovery CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45645966445) in progress.
 
 ## Подтверждённые артефакты
+- Recovery329: [CI 45645966445](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45645966445) SUCCESS, source 7895fc9f250cd2feeb7b21699b12b1f71ac1b06a, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.1.0-recovery-code329/NavTasks_1.1.0-recovery-code329.apk), 37068614 bytes, SHA256 cd317420d1f3017332e1c271e38a4d5f3888b68c707a6a8a040b6e331c6a5c43. Original signer/package/version verified.
+- Beta50 attempt 1: signed APK verified (JVM, package/version/original signer), [ZIP artifact](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45645900538/artifacts/15038495580), APK SHA256 2bd5f141248b2e7c1b5d97b35e0951a200a201d52160fbdeb047b9582b4f352b; publication failed HTTP 403; retry pending.
 - Beta49: [CI 45640816693](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45640816693) SUCCESS attempt 2, source e0457a2b205d407357d1e23a12760745065482c0, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.49/NavTasks_1.2.0-beta.49.apk), 37297998 bytes, SHA256 38f3856194984d07ed59d86f4763e28be1e9d4ade40a3e4223dcfde91da4f16d. JVM, release, original signer/package/version/non-debuggable verified. Device QA pending.
 - Recovery327: [CI 45640883230](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45640883230) SUCCESS, source 650e66abb131026e3c20305f68551974591664a0, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.1.0-recovery-code327/NavTasks_1.1.0-recovery-code327.apk), 37068614 bytes, SHA256 100259142213fca1d36bbd58b489e04d0531fd76ed032ab31c8ce28d1466e1eb. Original signer/package/version verified. Stable OTA unchanged.
 - Beta48: [CI 45637913492](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45637913492) SUCCESS, source 189cb401880e9483136e7a72b74feccfeb43e69c, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.48/NavTasks_1.2.0-beta.48.apk), 37281614 bytes, SHA256 e3b4736ae07f8652fb932ff0f70b4ce6d086170bec7b00f9531a9554c538646a. JVM, release, original signer/package/version/non-debuggable verified. Device QA pending.
