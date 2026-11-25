@@ -1,0 +1,90 @@
+name: NavTasks 1.1.0 Recovery code343 original-key prerelease
+on:
+  push:
+    branches:
+      - qa/navtasks-1.1.0-recovery-code343-for-beta57
+    paths:
+      - 'app/**'
+      - '.github/workflows/navtasks-1.1.0-recovery-code343-for-beta57.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: navtasks-1.1.0-recovery-code343-for-beta57
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  recovery-verified:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'platforms;android-36-ext19' 'build-tools;35.0.0' 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Restore EXISTING original signing certificate
+        env:
+          KEYSTORE_B64: ${{ secrets.NAVTASKS_BETA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          chmod 600 "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+          test -s "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
+      - name: Run complete JVM tests and build recovery APK
+        env:
+          NAVTASKS_BETA_KEYSTORE_PATH: ${{ github.workspace }}/navtasks-beta-sign.p12
+          NAVTASKS_BETA_SIGN_PASSWORD: ${{ secrets.NAVTASKS_BETA_SIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$NAVTASKS_BETA_SIGN_PASSWORD"
+          gradle :app:testDebugUnitTest :app:assembleRelease --no-daemon
+      - name: Verify package, release version, non-debuggable and original signer
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/release/app-release.apk
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.navtasks.app.glass' versionCode='343' versionName='1.1.0-recovery'"
+          ! "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -Fq 'application-debuggable'
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --min-sdk-version 31 "$APK"
+          ACTUAL="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}')"
+          test "$ACTUAL" = 0cb8a3c691e3fb2198682dff8c226aec710e77c7b8fded7d260a92f359a49c54
+          sha256sum "$APK"
+      - name: Archive verified signed recovery APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NavTasks_1.1.0-recovery-code343
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+      - name: Publish original-key recovery code343 SOURCE ONLY prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test ! -z "$GITHUB_SHA"
+          LATEST_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/qa%2Fnavtasks-1.1.0-recovery-code343-for-beta57" --jq '.commit.sha')"
+          test "$LATEST_SHA" = "$GITHUB_SHA" || {
+            echo "Branch has changed since this runner started: refusing stale stable release publication."
+            exit 1
+          }
+          if gh release view v1.1.0-recovery-code343 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v1.1.0-recovery-code343 already exists; will not overwrite immutable stable release."
+            exit 1
+          fi
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/NavTasks_1.1.0-recovery-code343.apk"
+          gh release create v1.1.0-recovery-code343 "$RUNNER_TEMP/NavTasks_1.1.0-recovery-code343.apk" \
+            --repo "$GITHUB_REPOSITORY" --prerelease --latest=false \
+            --target "$GITHUB_SHA" --title "NavTasks 1.1.0 Recovery code343" \
+            --notes "EMERGENCY IN-PLACE RECOVERY ONLY: exact stable 1.1.0 application logic rebuilt at versionCode 343 with original Android application ID and signing key. Enables rollback over UI beta57 code342 without uninstalling or clearing data. Keep profile backups. This is NOT a public stable OTA update. Future beta/stable builds must use versionCode >343 if recovery installed."
+      - name: Erase temporary signing key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/navtasks-beta-sign.p12"
