@@ -328,3 +328,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - Recovery309, CI 45557631091 SUCCESS: оригинальная подпись проверена, APK опубликован, SHA256 29315f1a687ab3557d2e0137a0421062bcdf4e180b3ab3ae39a98b5dbb2133cc, 37068614 bytes.
 - Beta40 CI 45557597680 при проверке IN_PROGRESS; релиза нет. Не изменять активный build SHA.
 - Канонические короткие документы перенесены в docs/navtasks-development; полный неизменяемый снимок всех пяти старых файлов — https://github.com/sergbokarev95-arch/NavTasks/tree/fadae2ae6ba8d8eaf81397f56f0fd0680a2f8690/docs/development; резервная ветка backup/navtasks-docs-before-cleanup-20261125. Исходники, workflows, stable OTA и активная beta-ветка без изменений. История сохранена полностью.
+
+- 2026-11-25 — Beta40 initial CI 45557597680 cancelled by owner authorization after abnormal runtime. Log confirms Kotlin compiler OOM, GC overhead limit exceeded, compileReleaseKotlin FAILED. New source-identical build workflow commit 763a2b69e578b785551a6bc9417f3d12e5600403 splits tests and release, 4 GiB heap, single worker, in-process compiler. New CI 45560588828 in_progress. Recovery309 unchanged.

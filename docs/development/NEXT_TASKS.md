@@ -1,7 +1,7 @@
 # NavTasks — следующие действия
 
 ## Блокирующий этап
-1. Проверить [Beta40 CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45557597680), job 139013303032; если active, не запускать повторно. Если completed failure/cancelled/timed_out — прочитать доступный лог и определить точную причину. При success проверить фактический release asset v1.2.0-beta.40, оригинальную подпись, package/versionCode308 и размер/digest. Recovery309 уже подтверждён.
+1. Проверить [Beta40 CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45560588828) после workflow-only OOM correction; если active, не запускать повторно. Если completed failure/cancelled/timed_out — прочитать доступный лог и определить точную причину. При success проверить фактический release asset v1.2.0-beta.40, оригинальную подпись, package/versionCode308 и размер/digest. Recovery309 уже подтверждён.
 2. Записать результат в актуальный HANDOFF/CURRENT_STATE, убрать завершённый пункт отсюда; добавить событие в CHANGELOG_DEV. Выдать проверенную ссылку.
 
 ## После публикации: устройство HONOR
