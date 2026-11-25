@@ -346,3 +346,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-25 — Beta43 Works hub source 99e6297a72d738511d0d5525d902c104a56c8869, CI 45569665465 pending; Recovery315 ae0e75e70e10911919e3830a811a5d7d20f19a44, CI 45569708596 pending. User accepted Today stage; moved to Works landing only. Stable OTA untouched.
 
 - 2026-11-25 — Beta43 CI 45569665465 SUCCESS (JVM 1m24s, release 2m31s), 99e6297a72d738511d0d5525d902c104a56c8869, SHA256 8ae1006f72929a0b4648fca736b7226f8e19d037d1f7d8be1a82e0e2a7f8e243, 37248846 bytes. Recovery315 CI 45569708596 SUCCESS, ae0e75e70e10911919e3830a811a5d7d20f19a44, SHA256 f8548ef5ed55b4f2176e28d69623090b53e7cb0f9c2ec0982f291ef7f6009169, 37068614 bytes. Original signer and publication verified. Stable OTA unchanged. Device QA pending.
+
+- 2026-11-25 — Beta44 routines style source f85ac5eefe07f18d540d7e567a9bf72687567993, CI 45572098541 pending; Recovery317 0f7100eee77b27a9e88ec559af9340af2913bcbc, CI 45572145523 pending. UI-only, stable OTA unchanged.

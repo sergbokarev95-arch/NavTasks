@@ -7,15 +7,17 @@
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
 | Последняя проверенная beta | 1.2.0-beta.43 / 314 | CI success, подписанный APK опубликован |
+| Beta в работе | 1.2.0-beta.44 / 316 | CI in_progress |
+| Recovery для beta44 | 1.1.0 / 317 | CI in_progress |
 | Recovery для beta43 | 1.1.0 / 315 | CI success, подписанный APK опубликован |
 | Recovery для beta42 | 1.1.0 / 313 | CI success, подписанный APK опубликован |
 | Recovery для beta41 | 1.1.0 / 311 | CI success, подписанный APK опубликован |
 | Recovery для beta40 | 1.1.0 / 309 | CI success, подписанный APK опубликован |
 
-Рабочий исходник Beta43: `feature/navtasks-1.2.0-beta43-works-hub`, `99e6297a72d738511d0d5525d902c104a56c8869`. Main не база beta; docs-ветка не исходник сборки.
+Рабочий исходник Beta44: `feature/navtasks-1.2.0-beta44-routines-style`, `f85ac5eefe07f18d540d7e567a9bf72687567993`. Main не база beta; docs-ветка не исходник сборки.
 
 ## Активный этап
-- «Сегодня» завершён по решению пользователя; главный экран «Работы» обновлён в Beta43, device QA pending. Внутренние экраны не изменены.
+- Сегодня завершён. Beta44 — список рутинных задач, UI-only; общий календарный selector и matte карточки. CI 45572098541, Recovery317 CI 45572145523, оба in_progress. AMOS и сервис без изменений.
 
 ## Подтверждённые артефакты
 - Beta43: [CI 45569665465](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45569665465) SUCCESS, source 99e6297a72d738511d0d5525d902c104a56c8869, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.43/NavTasks_1.2.0-beta.43.apk), 37248846 bytes, SHA256 8ae1006f72929a0b4648fca736b7226f8e19d037d1f7d8be1a82e0e2a7f8e243. JVM tests 1m24s, release 2m31s. Original signer/package/version/non-debuggable verified. Works hub only; device QA pending.

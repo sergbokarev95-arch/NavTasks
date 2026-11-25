@@ -34,3 +34,5 @@
 - Beta43: пользователь завершил «Сегодня» и начал «Работы» с главного экрана. Использовать общие matte surfaces и размеры; три компактные карточки, коралловые иконки, серые обычные счётчики, красный overdue и оранжевый soon только при ненулевых значениях. Убран дублирующий вводный баннер. Маршруты, модели, расчёты и внутренние экраны неизменны.
 
 - Beta43/recovery315 verified CI and published APKs. Device visual QA pending.
+
+- Beta44: Routine tasks use shared calendar segmented control (neutral lens, coral active ink), neutral header without NavTasks, compact matte cards, neutral list count and coral checklist count; existing Liquid Glass back/add unchanged. Preserve effective frequency, ordering, disabled strikethrough, stable keys, editing and data. No unrelated screen changes.
