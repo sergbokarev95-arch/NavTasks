@@ -342,3 +342,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-25 — Beta42 source 396c87bb4b23d2a97cb7d7aceb1532ade1064f6e, CI 45567527725 pending; Recovery313 66303fbb8b3be55b8fac82a75ccc922c0b8da521, CI 45567569802 pending. Unified compact editor card metrics following owner screenshots. No model, notifications or stable OTA changes.
 
 - 2026-11-25 — Beta42 CI 45567527725 SUCCESS (JVM 1m20s, release 2m23s), original signer and APK publication verified, 396c87bb4b23d2a97cb7d7aceb1532ade1064f6e, SHA256 7a8e0af0066448697862a6ffadc8671a643f8b9872d8d3256c0cefebcf5f0450, 37248846 bytes. Recovery313 CI 45567569802 SUCCESS, 66303fbb8b3be55b8fac82a75ccc922c0b8da521, SHA256 4983be4b288c8bae4b38995833f1a7b38adfeede7ca2acbbc7b80e616a69a668, 37068614 bytes. No stable OTA changes. Device QA pending.
+
+- 2026-11-25 — Beta43 Works hub source 99e6297a72d738511d0d5525d902c104a56c8869, CI 45569665465 pending; Recovery315 ae0e75e70e10911919e3830a811a5d7d20f19a44, CI 45569708596 pending. User accepted Today stage; moved to Works landing only. Stable OTA untouched.

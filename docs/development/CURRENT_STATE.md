@@ -7,11 +7,16 @@
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
 | Последняя проверенная beta | 1.2.0-beta.42 / 312 | CI success, подписанный APK опубликован |
+| Beta в работе | 1.2.0-beta.43 / 314 | CI in_progress |
+| Recovery для beta43 | 1.1.0 / 315 | CI in_progress |
 | Recovery для beta42 | 1.1.0 / 313 | CI success, подписанный APK опубликован |
 | Recovery для beta41 | 1.1.0 / 311 | CI success, подписанный APK опубликован |
 | Recovery для beta40 | 1.1.0 / 309 | CI success, подписанный APK опубликован |
 
-Рабочий исходник Beta40: `feature/navtasks-1.2.0-beta40-event-editor`, `5f646eefd0c0e39038485b8f0e7808078d6892e2`. Main до документационного обновления: 908c5d3c9df9840473af882491020401da6bc86f; не база новой beta. Документационная ветка не является исходником новой сборки.
+Рабочий исходник Beta43: `feature/navtasks-1.2.0-beta43-works-hub`, `99e6297a72d738511d0d5525d902c104a56c8869`. Main не база beta; docs-ветка не исходник сборки.
+
+## Активный этап
+- Сегодня принят пользователем. Beta43 Works hub [CI 45569665465](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45569665465), source 99e6297a72d738511d0d5525d902c104a56c8869; Recovery315 [CI 45569708596](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45569708596), source ae0e75e70e10911919e3830a811a5d7d20f19a44. UI-only, pending verification.
 
 ## Подтверждённые артефакты
 - Beta42: [CI 45567527725](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45567527725) SUCCESS, source 396c87bb4b23d2a97cb7d7aceb1532ade1064f6e, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.42/NavTasks_1.2.0-beta.42.apk), 37248846 bytes, SHA256 7a8e0af0066448697862a6ffadc8671a643f8b9872d8d3256c0cefebcf5f0450. JVM tests 1m20s, release 2m23s. Original signer/package/version/non-debuggable verified. Shared compact editor metrics, missed-policy grid, active switch and scoped checklist; device QA pending.
