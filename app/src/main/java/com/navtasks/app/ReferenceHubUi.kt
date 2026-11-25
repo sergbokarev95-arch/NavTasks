@@ -1,13 +1,15 @@
 package com.navtasks.app
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -17,7 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** Keep search across the existing SIRE/VIQ7, equipment and personal sources. */
+/** Inspections are a visible preview until the online library is ready.
+ * This guard also covers a restored navigation state from an older APK.
+ */
+internal fun referenceLibraryRouteAvailable(sectionId: String?): Boolean =
+    sectionId == NavReferenceSections.PERSONAL
+
+/** Keep search across the existing SIRE/VIQ7 headings, equipment and personal sources. */
 internal fun referencePlaceholderMatches(query: String, vararg fields: String): Boolean {
     val needle = query.trim()
     return needle.isEmpty() || fields.any { it.contains(needle, ignoreCase = true) }
@@ -55,19 +63,18 @@ internal fun ReferenceHubScreen(
     val inspectionsSubtitle = localized("SIRE 2.0 и VIQ7", "SIRE 2.0 and VIQ7", lang)
     val sireSubtitle = localized("Подготовка к инспекциям", "Inspection preparation", lang)
     val viqSubtitle = localized("Архивный справочник", "Historical reference", lang)
-    val later = localized("Материалы будут добавлены позже", "Content coming later", lang)
+    val later = localized("В разработке", "In development", lang)
     val manualMatches = if (query.isBlank()) emptyList()
         else manuals?.let { referenceManualSearch(it, query) }.orEmpty()
+            .filter { referenceLibraryRouteAvailable(it.sectionId) }
     val excerptMatches = if (query.isBlank()) emptyList()
-        else manuals?.excerpts?.filter { referenceExcerptMatches(it, query) }.orEmpty()
-    val sireHits = manualMatches.count { it.sectionId == NavReferenceSections.SIRE } +
-        excerptMatches.count { it.sectionId == NavReferenceSections.SIRE }
-    val viqHits = manualMatches.count { it.sectionId == NavReferenceSections.VIQ7 } +
-        excerptMatches.count { it.sectionId == NavReferenceSections.VIQ7 }
+        else manuals?.excerpts?.filter {
+            referenceLibraryRouteAvailable(it.sectionId) && referenceExcerptMatches(it, query)
+        }.orEmpty()
     val personalHits = manualMatches.count { it.sectionId == NavReferenceSections.PERSONAL } +
         excerptMatches.count { it.sectionId == NavReferenceSections.PERSONAL }
-    val showSire = referencePlaceholderMatches(query, "SIRE 2.0", sireSubtitle) || sireHits > 0
-    val showViq = referencePlaceholderMatches(query, "VIQ7", viqSubtitle) || viqHits > 0
+    val showSire = referencePlaceholderMatches(query, "SIRE 2.0", sireSubtitle, later)
+    val showViq = referencePlaceholderMatches(query, "VIQ7", viqSubtitle, later)
     val inspectionsMatch = referencePlaceholderMatches(query,
         "Инспекции", "Inspections", inspectionsSubtitle)
     val showInspections = inspectionsMatch || showSire || showViq
@@ -136,7 +143,16 @@ internal fun ReferenceHubScreen(
             manualSearch = ""
         }
     }
-    if (manualSection != null) {
+    // An upgrade may restore SIRE/VIQ7 as the current destination. Redirect
+    // to the inspections overview without opening the catalog or touching files.
+    LaunchedEffect(manualSection) {
+        if (manualSection != null && !referenceLibraryRouteAvailable(manualSection)) {
+            inspectionsOpen = true
+            manualSection = null
+            manualSearch = ""
+        }
+    }
+    if (referenceLibraryRouteAvailable(manualSection)) {
         ReferenceManualLibraryScreen(
             sectionId = manualSection!!, p = p, lang = lang,
             initialQuery = manualSearch,
@@ -177,12 +193,12 @@ internal fun ReferenceHubScreen(
                 Spacer(Modifier.height(125.dp))
             }
         }
-    } else if (inspectionsOpen) {
-        BackHandler { inspectionsOpen = false }
+    } else if (inspectionsOpen || (manualSection != null && !referenceLibraryRouteAvailable(manualSection))) {
+        BackHandler { inspectionsOpen = false; manualSection = null; manualSearch = "" }
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                NavGlassCircleButton(p, "back") { inspectionsOpen = false }
+                ReferenceHubAction(p, "back", localized("Назад", "Back", lang)) { inspectionsOpen = false; manualSection = null; manualSearch = "" }
                 Spacer(Modifier.width(12.dp))
                 Text(inspectionsName, color = p.text, fontSize = 21.sp)
             }
@@ -190,43 +206,25 @@ internal fun ReferenceHubScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
                     start = 16.dp, top = 8.dp, end = 16.dp, bottom = 125.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(NavEventLayout.sectionGap),
             ) {
                 if (showSire || inspectionsMatch) {
                     item(key = "inspection-sire") {
                         ReferencePlaceholderTile(
-                            p, "SIRE 2.0", sireSubtitle,
-                            localized("Документов: ", "Documents: ", lang) +
-                                (manuals?.documents.orEmpty().count {
-                                    it.sectionId == NavReferenceSections.SIRE
-                                } + manuals?.excerpts.orEmpty().count {
-                                    it.sectionId == NavReferenceSections.SIRE
-                                }),
-                            query,
+                            p, "SIRE 2.0", sireSubtitle, later, query,
                             activeHit = focusedSearchHit?.takeIf { it.sectionId == "sire" },
-                            onClick = {
-                                manualSection = NavReferenceSections.SIRE
-                                manualSearch = query
-                            },
+                            unavailable = true,
+                            onClick = null,
                         )
                     }
                 }
                 if (showViq || inspectionsMatch) {
                     item(key = "inspection-viq") {
                         ReferencePlaceholderTile(
-                            p, "VIQ7", viqSubtitle,
-                            localized("Документов: ", "Documents: ", lang) +
-                                (manuals?.documents.orEmpty().count {
-                                    it.sectionId == NavReferenceSections.VIQ7
-                                } + manuals?.excerpts.orEmpty().count {
-                                    it.sectionId == NavReferenceSections.VIQ7
-                                }),
-                            query,
+                            p, "VIQ7", viqSubtitle, later, query,
                             activeHit = focusedSearchHit?.takeIf { it.sectionId == "viq" },
-                            onClick = {
-                                manualSection = NavReferenceSections.VIQ7
-                                manualSearch = query
-                            },
+                            unavailable = true,
+                            onClick = null,
                         )
                     }
                 }
@@ -238,18 +236,15 @@ internal fun ReferenceHubScreen(
                 .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NavInfoSectionBanner(
-                p = p,
-                title = localized("Материалы для работы", "Working references", lang),
-                description = localized(
-                    "Инспекции, оборудование и мои материалы. Всё доступно офлайн.",
-                    "Inspections, equipment and my materials. Available offline.",
-                    lang,
-                ),
-                modifier = Modifier.weight(1f),
-            )
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(localized("Материалы для работы", "Working references", lang),
+                    color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                Text(localized("Оборудование и мои материалы доступны офлайн.",
+                    "Equipment and my materials are available offline.", lang),
+                    color = p.muted, fontSize = 12.sp)
+            }
             Spacer(Modifier.width(8.dp))
-            NavGlassCircleButton(p, "search") {
+            ReferenceHubAction(p, "search", localized("Поиск", "Search", lang)) {
                 searchOpen = !searchOpen
                 if (!searchOpen) searchText = ""
             }
@@ -261,6 +256,7 @@ internal fun ReferenceHubScreen(
             onDismiss = { searchOpen = false; searchText = "" },
             p = p, lang = lang,
             placeholder = localized("Поиск по справочнику", "Search references", lang),
+            neutralStyle = true, highContrastField = true,
             resultCount = searchResults.size,
             currentResult = searchResultIndex,
             onPreviousResult = {
@@ -272,6 +268,7 @@ internal fun ReferenceHubScreen(
                 searchNavigationSerial++
             },
         )
+        Box(Modifier.padding(horizontal = 16.dp)) { NavEventDivider(p) }
         LazyColumn(
             modifier = Modifier.weight(1f)
                 .revealSearchOnSettledTopPull(listState, searchOpen) { searchOpen = true }
@@ -280,12 +277,12 @@ internal fun ReferenceHubScreen(
             contentPadding = PaddingValues(
                 start = 16.dp, top = 6.dp, end = 16.dp, bottom = 125.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(NavEventLayout.sectionGap),
         ) {
             if (query.isNotBlank() && !showInspections &&
                 !showEquipment && !showPersonal) {
                 item {
-                    NavPanel(p) {
+                    Column(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius).padding(14.dp)) {
                         Text(localized("Разделов по запросу не найдено.",
                             "No reference sections match the search.", lang),
                             color = p.muted, fontSize = 13.sp)
@@ -296,13 +293,12 @@ internal fun ReferenceHubScreen(
                 item(key = "reference-inspections") {
                     ReferencePlaceholderTile(
                         p, inspectionsName, inspectionsSubtitle,
-                        localized("Разделы: SIRE 2.0 · VIQ7",
-                            "Sections: SIRE 2.0 · VIQ7", lang),
+                        later,
                         query,
                         activeHit = focusedSearchHit?.takeIf {
                             it.sectionId == "inspections"
                         },
-                        glyph = "check",
+                        glyph = "check", statusAccent = true,
                         onClick = { inspectionsOpen = true },
                     )
                 }
@@ -310,7 +306,7 @@ internal fun ReferenceHubScreen(
             if (showEquipment) {
                 item(key = "reference-equipment") {
                     if (catalog == null) {
-                        NavPanel(p) {
+                        Column(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius).padding(14.dp)) {
                             Text(localized("Справочник оборудования недоступен: данные требуют проверки. Ничего не перезаписано.",
                                 "Equipment storage needs inspection. No data was overwritten.", lang),
                                 color = p.systemRed, fontSize = 13.sp)
@@ -337,7 +333,7 @@ internal fun ReferenceHubScreen(
             if (showPersonal) {
                 item(key = "reference-personal") {
                     if (manuals == null) {
-                        NavPanel(p) {
+                        Column(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius).padding(14.dp)) {
                             Text(localized("Библиотека требует проверки. Данные не перезаписаны.",
                                 "Manual library needs inspection. Data was preserved.", lang),
                                 color = p.systemRed, fontSize = 13.sp)
@@ -361,23 +357,21 @@ internal fun ReferenceHubScreen(
                     }
                 }
             }
-            // Same centered, compact blue-outlined action as Export Handover.
-            // Anchored after all Reference sections, clear of search and dock.
+            // Keep the existing independent equipment exchange entry point below the three categories.
             if (query.isBlank()) {
                 item(key = "reference-exchange") {
                     Box(
                         Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 8.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        OutlinedButton(
+                        TextButton(
                             onClick = { exchangeOpen = true },
-                            modifier = Modifier.widthIn(min = 174.dp).heightIn(min = 46.dp),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
-                            border = BorderStroke(1.dp, p.blueText.copy(alpha = 0.55f)),
+                            modifier = Modifier.widthIn(min = 174.dp).heightIn(min = 46.dp)
+                                .personalNoteCard(p, 18.dp),
                             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
                         ) {
                             Text(localized("Импорт и экспорт", "Import and export", lang),
-                                color = p.blueText, fontSize = 14.sp)
+                                color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 14.sp)
                         }
                     }
                 }
@@ -396,21 +390,24 @@ private fun ReferencePlaceholderTile(
     query: String = "",
     activeHit: NavReferenceSearchHit? = null,
     glyph: String = "reference",
+    unavailable: Boolean = false,
+    statusAccent: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
     Row(
         Modifier.fillMaxWidth()
-            .navGlass(p, radius = 19.dp, role = GlassRole.TASK)
-            .then(if (onClick != null) Modifier.glassClickable(onClick) else Modifier)
-            .padding(horizontal = 16.dp, vertical = 18.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.Top,
+            .personalNoteCard(p, NavEventLayout.cardRadius)
+            .then(if (!unavailable && onClick != null) Modifier.glassClickable(onClick)
+                else if (unavailable) Modifier.semantics { disabled() } else Modifier)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(39.dp).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL),
+            Modifier.size(42.dp).personalNoteCard(p, 13.dp, nested = true),
             contentAlignment = Alignment.Center,
         ) {
-            NavGlassGlyph(glyph, p.muted, Modifier.size(22.dp))
+            NavGlassGlyph(glyph, p.text, Modifier.size(22.dp))
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
             NavSearchMarkedText(title, query, p, fontSize = 16.sp,
@@ -419,10 +416,20 @@ private fun ReferencePlaceholderTile(
             NavSearchMarkedText(subtitle, query, p, color = p.muted,
                 fontSize = 12.sp, activeMatchStart = activeHit?.takeIf {
                     it.field == NavReferenceField.SUBTITLE }?.start)
-            Spacer(Modifier.height(5.dp))
-            NavSearchMarkedText(footer, query, p, color = p.muted,
+            NavSearchMarkedText(footer, query, p,
+                color = if (unavailable || statusAccent) NavTodayVisualTokens.accentInk(p.dark) else p.muted,
                 fontSize = 11.sp, activeMatchStart = activeHit?.takeIf {
                     it.field == NavReferenceField.FOOTER }?.start)
         }
+        if (!unavailable && onClick != null) {
+            NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
+        }
+    }
+}
+
+@Composable
+private fun ReferenceHubAction(p: NavPalette, kind: String, label: String, onClick: () -> Unit) {
+    Box(Modifier.personalNoteCard(p, 22.dp)) {
+        NavEventHeaderAction(kind, label, p, true, onClick)
     }
 }

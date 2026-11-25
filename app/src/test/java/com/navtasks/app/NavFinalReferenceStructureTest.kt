@@ -33,10 +33,14 @@ class NavFinalReferenceStructureTest {
         assertTrue(hub.contains("item(key = \"inspection-viq\")"))
         val exchange = hub.indexOf("item(key = \"reference-exchange\")")
         assertTrue("Reference import/export is below the last category", exchange > personal)
-        assertTrue("Reference import/export uses the Export Handover centered dimensions",
+        assertTrue("Reference import/export retains compact centered dimensions",
             hub.contains("Modifier.widthIn(min = 174.dp).heightIn(min = 46.dp)"))
-        assertTrue(hub.contains("manualSection = NavReferenceSections.SIRE"))
-        assertTrue(hub.contains("manualSection = NavReferenceSections.VIQ7"))
+        assertFalse(hub.contains("manualSection = NavReferenceSections.SIRE"))
+        assertFalse(hub.contains("manualSection = NavReferenceSections.VIQ7"))
+        assertTrue(hub.contains("manualSection = NavReferenceSections.PERSONAL"))
+        assertTrue(hub.contains("if (referenceLibraryRouteAvailable(manualSection))"))
+        assertTrue(hub.contains("unavailable = true"))
+        assertTrue(hub.contains("localized(\"В разработке\", \"In development\", lang)"))
     }
 
     @Test fun independentReferenceExchangeRetainsVerifiedPdfDocxTransfer() {
