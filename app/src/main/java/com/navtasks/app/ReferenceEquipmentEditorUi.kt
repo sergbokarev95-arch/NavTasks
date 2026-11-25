@@ -35,10 +35,23 @@ internal fun ReferenceFolderEditor(
         title = { Text(localized(if (original == null) "Новая папка" else "Название папки",
             if (original == null) "New folder" else "Rename folder", lang)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ReferenceField(localized("Название", "Name", lang), name, { name = it.take(120) }, p)
-                if (onDelete != null) TextButton(onClick = onDelete) {
-                    Text(localized("Удалить папку", "Delete folder", lang), color = p.systemRed)
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                BasicTextField(value = name, onValueChange = { name = it.take(120) },
+                    singleLine = true, textStyle = TextStyle(color = p.text, fontSize = 15.sp),
+                    cursorBrush = SolidColor(NavTodayVisualTokens.accentInk(p.dark)),
+                    modifier = Modifier.fillMaxWidth().personalNoteCard(p, 12.dp, nested = true),
+                    decorationBox = { inner ->
+                        Box(Modifier.fillMaxWidth().heightIn(min = 44.dp).padding(horizontal = 12.dp),
+                            contentAlignment = Alignment.CenterStart) {
+                            if (name.isEmpty()) Text(localized("Название", "Name", lang),
+                                color = p.muted, fontSize = 15.sp)
+                            inner()
+                        }
+                    })
+                if (onDelete != null) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    TextButton(onClick = onDelete) {
+                        Text(localized("Удалить папку", "Delete folder", lang), color = p.systemRed)
+                    }
                 }
             }
         },
@@ -51,7 +64,7 @@ internal fun ReferenceFolderEditor(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(localized("Отмена", "Cancel", lang), color = p.muted)
+                Text(localized("Отмена", "Cancel", lang), color = p.text)
             }
         },
     )

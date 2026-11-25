@@ -591,6 +591,19 @@ fun NavGlassGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 drawLine(color, pt(20.5f,15.5f), pt(23f,18f), width, cap = StrokeCap.Round)
                 drawLine(color, pt(20.5f,20.5f), pt(23f,18f), width, cap = StrokeCap.Round)
             }
+            "equipment-folder" -> {
+                val folderOutline = Path().apply {
+                    moveTo(3f*s, 9f*s)
+                    lineTo(3f*s, 6f*s)
+                    lineTo(12f*s, 6f*s)
+                    lineTo(15f*s, 9f*s)
+                    lineTo(27f*s, 9f*s)
+                    lineTo(27f*s, 24f*s)
+                    lineTo(3f*s, 24f*s)
+                    close()
+                }
+                drawPath(folderOutline, color, style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
             "reference" -> {
                 // Thin open-book outline, drawn with the same stroke as the dock.
                 // No filled emoji or extra dependency; centered at 24dp.

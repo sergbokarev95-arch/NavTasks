@@ -263,12 +263,17 @@ internal fun ReferenceEquipmentScreen(
             Spacer(Modifier.width(12.dp))
             Text(sectionTitle, color = p.text, fontSize = 20.sp, modifier = Modifier.weight(1f),
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (procedure == null) {
+            if (procedure != null) {
+                ReferenceEquipmentHeaderAction(p, "edit", localized("Изменить", "Edit", lang)) { procedureEditor = procedure }
+            } else if (equipment != null) {
+                ReferenceEquipmentHeaderAction(p, "edit", localized("Изменить", "Edit", lang)) { equipmentEditor = equipment }
+                Spacer(Modifier.width(6.dp))
+                ReferenceEquipmentHeaderAction(p, "plus", localized("Добавить процедуру", "Add procedure", lang)) { newProcedure = true }
+            } else {
                 Box {
                     ReferenceEquipmentHeaderAction(p, "plus", localized("Добавить", "Add", lang)) { addMenu = true }
                     NavPopoverMenu(p, expanded = addMenu, onDismissRequest = { addMenu = false }, neutralStyle = true) {
-                        if (equipment == null) {
-                            NavPopoverAction(localized("Добавить папку", "New folder", lang), p) {
+                        NavPopoverAction(localized("Добавить папку", "New folder", lang), p) {
                                 addMenu = false
                                 newFolder = true
                             }
@@ -277,38 +282,12 @@ internal fun ReferenceEquipmentScreen(
                                 newEquipment = true
                             }
                             NavPopoverDivider(p)
-                            if (folder != null) {
-                                NavPopoverAction(localized("Удалить папку", "Delete folder", lang), p, destructive = true) {
-                                    addMenu = false
-                                    deleteTarget = "folder" to folder.id
-                                }
-                                NavPopoverDivider(p)
-                            }
                             NavPopoverAction(localized("Импорт оборудования", "Import equipment", lang), p) {
                                 addMenu = false
                                 importLauncher.launch(arrayOf("*/*"))
                             }
-                        } else {
-                            NavPopoverAction(localized("Добавить процедуру", "Add procedure", lang), p) {
-                                addMenu = false
-                                newProcedure = true
-                            }
-                            NavPopoverAction(localized("Редактировать", "Edit equipment", lang), p) {
-                                addMenu = false
-                                equipmentEditor = equipment
-                            }
-                            NavPopoverAction(localized("Экспортировать", "Export equipment", lang), p) {
-                                addMenu = false
-                                exportingId = equipment.id
-                                val safe = equipment.title.replace(
-                                    Regex("[^\\p{L}\\p{N}_-]"), "_").take(60)
-                                exportLauncher.launch("$safe.navref")
-                            }
-                        }
                     }
                 }
-            } else {
-                ReferenceEquipmentHeaderAction(p, "edit", localized("Изменить", "Edit", lang)) { procedureEditor = procedure }
             }
         }
         if (feedback != null) {
@@ -321,7 +300,6 @@ internal fun ReferenceEquipmentScreen(
                 ReferenceProcedureReader(
                     procedure, p, lang,
                     attaching = attaching,
-                    onEdit = { procedureEditor = procedure },
                     onDelete = { deleteTarget = "procedure" to procedure.id },
                     onAttach = {
                         if (!attaching) {
@@ -374,7 +352,6 @@ internal fun ReferenceEquipmentScreen(
                 ReferenceEquipmentDetails(
                     equipment, p, lang,
                     onOpenProcedure = { procedureId = it },
-                    onEdit = { equipmentEditor = equipment },
                     onDelete = { deleteTarget = "equipment" to equipment.id },
                     onExport = {
                         exportingId = equipment.id
@@ -382,23 +359,12 @@ internal fun ReferenceEquipmentScreen(
                             equipment.title.replace(Regex("[^\\p{L}\\p{N}_-]"), "_")
                                 .take(60) + ".navref")
                     },
-                    onAddProcedure = { newProcedure = true },
                 )
             }
             else -> {
                 if (folder != null) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp),
-                        verticalAlignment = Alignment.CenterVertically) {
-                        Text(localized("Раздел оборудования", "Equipment folder", lang),
-                            color = p.muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { folderEditor = folder }) {
-                            Text(localized("Переименовать", "Rename", lang),
-                                color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp)
-                        }
-                        TextButton(onClick = { deleteTarget = "folder" to folder.id }) {
-                            Text(localized("Удалить", "Delete", lang),
-                                color = p.systemRed, fontSize = 12.sp)
-                        }
+                    ReferenceCenteredDelete(localized("Удалить папку", "Delete folder", lang), p) {
+                        deleteTarget = "folder" to folder.id
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
@@ -459,14 +425,14 @@ internal fun ReferenceEquipmentScreen(
                     }
                     items(folders, key = { "folder-" + it.id }) { item ->
                         ReferenceBrowseRow(item.title, localized("Папка", "Folder", lang),
-                            p, query, onClick = {
+                            p, query, isFolder = true, onClick = {
                                 folderId = item.id
                                 searchText = ""; searchOpen = false
                             }, onEdit = { folderEditor = item })
                     }
                     items(matches, key = { "equipment-" + it.id }) { item ->
                         val preview = referenceEquipmentSearchPreview(item, query)
-                        ReferenceBrowseRow(item.title, preview, p, query,
+                        ReferenceBrowseRow(item.title, preview, p, query, isFolder = false,
                             onClick = { equipmentId = item.id; searchOpen = false },
                             onEdit = { equipmentEditor = item })
                     }
@@ -662,19 +628,23 @@ internal fun ReferenceEquipmentScreen(
 @Composable
 private fun ReferenceBrowseRow(
     title: String, subtitle: String,
-    p: NavPalette, query: String, onClick: () -> Unit, onEdit: () -> Unit,
+    p: NavPalette, query: String, isFolder: Boolean, onClick: () -> Unit, onEdit: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
         .padding(horizontal = 13.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Row(Modifier.weight(1f).glassClickable(onClick).padding(vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            NavGlassGlyph("reference", p.text, Modifier.size(25.dp))
+            Box(Modifier.size(42.dp).personalNoteCard(p, 12.dp, nested = true),
+                contentAlignment = Alignment.Center) {
+                NavGlassGlyph(if (isFolder) "equipment-folder" else "work-order",
+                    if (isFolder) NavTodayVisualTokens.accentInk(p.dark) else p.text, Modifier.size(25.dp))
+            }
             Spacer(Modifier.width(13.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 NavSearchMarkedText(title, query, p, fontSize = 15.sp,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
-                NavSearchMarkedText(subtitle, query, p, color = p.muted,
+                NavSearchMarkedText(subtitle, query, p, color = if (isFolder) NavTodayVisualTokens.accentInk(p.dark) else p.muted,
                     fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
@@ -690,8 +660,8 @@ private fun ReferenceBrowseRow(
 @Composable
 private fun ReferenceEquipmentDetails(
     equipment: ReferenceEquipment, p: NavPalette, lang: UiLanguage,
-    onOpenProcedure: (String) -> Unit, onEdit: () -> Unit,
-    onDelete: () -> Unit, onExport: () -> Unit, onAddProcedure: () -> Unit,
+    onOpenProcedure: (String) -> Unit,
+    onDelete: () -> Unit, onExport: () -> Unit,
 ) {
     LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
         .let { PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 125.dp) },
@@ -714,26 +684,28 @@ private fun ReferenceEquipmentDetails(
             }
         }
         item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ReferenceCompactAction(localized("Изменить", "Edit", lang), p, Modifier.weight(1f), onClick = onEdit)
-                ReferenceCompactAction(localized("Экспорт", "Export", lang), p, Modifier.weight(1f), accent = true, onClick = onExport)
-                ReferenceCompactAction(localized("Удалить", "Delete", lang), p, Modifier.weight(1f), destructive = true, onClick = onDelete)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                TextButton(onClick = onExport) {
+                    Text(localized("Экспорт", "Export", lang), color = NavTodayVisualTokens.accentInk(p.dark))
+                }
             }
         }
         item {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(localized("Процедуры и выдержки", "Procedures and excerpts", lang),
-                    color = p.text, fontSize = 17.sp, fontWeight = FontWeight.Medium,
-                    modifier = Modifier.weight(1f))
-                TextButton(onClick = onAddProcedure) {
-                    Text(localized("+ Добавить", "+ Add", lang), color = NavTodayVisualTokens.accentInk(p.dark))
+            Column {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(localized("Процедуры и выдержки", "Procedures and excerpts", lang),
+                        color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(1f))
+                    Text(equipment.procedures.size.toString(), color = p.muted, fontSize = 13.sp)
                 }
+                Spacer(Modifier.height(8.dp))
+                NavEventDivider(p)
             }
         }
         if (equipment.procedures.isEmpty()) item {
             ReferenceEquipmentPanel(p) {
-                Text(localized("Добавь выдержку из мануала, чтобы сохранить порядок работ.",
-                    "Add a cited manual excerpt to describe the procedure.", lang),
+                Text(localized("Нажми «+», чтобы добавить процедуру из мануала.",
+                    "Tap + to add a procedure from a manual.", lang),
                     color = p.muted, fontSize = 13.sp)
             }
         }
@@ -754,6 +726,9 @@ private fun ReferenceEquipmentDetails(
                     color = p.muted, fontSize = 12.sp, maxLines = 2)
             }
         }
+        item {
+            ReferenceCenteredDelete(localized("Удалить оборудование", "Delete equipment", lang), p, onDelete)
+        }
     }
 }
 
@@ -761,7 +736,7 @@ private fun ReferenceEquipmentDetails(
 private fun ReferenceProcedureReader(
     procedure: ReferenceProcedure, p: NavPalette, lang: UiLanguage,
     attaching: Boolean,
-    onEdit: () -> Unit, onDelete: () -> Unit,
+    onDelete: () -> Unit,
     onAttach: () -> Unit, onOpenAttachment: () -> Unit, onDetach: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -824,14 +799,7 @@ private fun ReferenceProcedureReader(
                 }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            TextButton(onClick = onEdit) {
-                Text(localized("Редактировать", "Edit", lang), color = NavTodayVisualTokens.accentInk(p.dark))
-            }
-            TextButton(onClick = onDelete) {
-                Text(localized("Удалить", "Delete", lang), color = p.systemRed)
-            }
-        }
+        ReferenceCenteredDelete(localized("Удалить процедуру", "Delete procedure", lang), p, onDelete)
     }
 }
 
@@ -847,11 +815,10 @@ private fun ReferenceEquipmentPanel(p: NavPalette, content: @Composable ColumnSc
         verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
 }
 @Composable
-private fun ReferenceCompactAction(label: String, p: NavPalette, modifier: Modifier,
-    accent: Boolean = false, destructive: Boolean = false, onClick: () -> Unit) {
-    TextButton(onClick = onClick, modifier = modifier.heightIn(min = 44.dp)
-        .personalNoteCard(p, 13.dp), contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)) {
-        Text(label, color = if (destructive) p.systemRed else if (accent)
-            NavTodayVisualTokens.accentInk(p.dark) else p.text, fontSize = 13.sp, maxLines = 1)
+private fun ReferenceCenteredDelete(label: String, p: NavPalette, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+        TextButton(onClick = onClick, modifier = Modifier.heightIn(min = 44.dp)) {
+            Text(label, color = p.systemRed, fontSize = 14.sp)
+        }
     }
 }
