@@ -1,7 +1,7 @@
 # NavTasks — следующие действия
 
 ## Beta49
-- Recovery327 SUCCESS и APK опубликован. Beta49 attempt 1 passed JVM/build/signer but release publication HTTP 403; same run 45640816693 attempt 2 started without changing code or token. Проверить attempt 2 и фактическую публикацию; не запускать дубль.
+- Beta49 и Recovery327: CI SUCCESS, оба APK опубликованы и проверены (см. CURRENT_STATE).
 - На HONOR проверить обе темы Services: поиск и фильтры, работы/заявки/закрытые, карточки, историю, номер заявки, попапы, bottom sheet (Back/drag/keyboard), planned/unplanned, даты, собственный интервал, предупреждение, rich comments, сохранение и выполнение.
 - Проверить, что внеплановые заявки не приобрели срок/уведомления, а плановые сохраняют ручные даты и пересчёт от фактического выполнения.
 
