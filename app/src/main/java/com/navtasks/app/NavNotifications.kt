@@ -161,7 +161,8 @@ object NavNotifications {
 
     private fun reminderTime(
         task: TaskTemplate, run: TaskRun, settings: NavSettings,
-    ): LocalDateTime = SmartReminderTiming.trigger(task, run, referenceTime(settings))
+        minutes: Int = task.remindMinutesBefore,
+    ): LocalDateTime = SmartReminderTiming.trigger(task, run, referenceTime(settings), minutes)
 
     private fun cancelAlarm(context: Context, kind: String, key: String) {
         context.getSystemService(AlarmManager::class.java).cancel(pending(context, kind, key))
@@ -192,17 +193,18 @@ object NavNotifications {
             // Replace the old midnight-based PendingIntent when the global
             // reference clock or the task's reminder interval changes.
             cancelAlarm(context, REMINDER, run.key)
-            val reminderAt = reminderTime(task, run, settings)
-                .atZone(ZoneId.systemDefault()).toInstant()
-            if (SmartReminderTiming.isAtOrBeforeDeadline(task, run, referenceTime(settings)) &&
-                reminderAt.isAfter(Instant.now())) {
-                // "At time" (0 minutes) must schedule a real alarm.
-                schedule(context, REMINDER, run.key, reminderAt.toEpochMilli())
+            for (minutes in SmartReminderTiming.offsets(task)) {
+                val alarmKey = SmartReminderTiming.alarmKey(task, run, minutes)
+                val reminderAt = reminderTime(task, run, settings, minutes)
+                    .atZone(ZoneId.systemDefault()).toInstant()
+                if (!reminderAt.isAfter(deadline) && reminderAt.isAfter(Instant.now())) {
+                    schedule(context, REMINDER, alarmKey, reminderAt.toEpochMilli())
+                }
             }
             // A timed task with "At time" would otherwise produce BOTH due
             // and missed alerts at the exact same second. Let the due alert
             // arrive first, and warn as missed an hour later if still open.
-            val missedAlertAt = if (task.deadlineTime != null && task.remindMinutesBefore == 0)
+            val missedAlertAt = if (SmartReminderTiming.atDeadline(task))
                 deadline.plusSeconds(3600) else deadline
             if (missedAlertAt.isAfter(Instant.now()))
                 schedule(context, MISSED, run.key, missedAlertAt.toEpochMilli())
@@ -319,9 +321,11 @@ object NavNotifications {
         val clock = referenceTime(settings)
         val active = ProfileStore(context)
         val target = if (kind == REMINDER) {
-            val run = store.runs[key] ?: return false
+            val run = store.runs[key.substringBefore("|")] ?: return false
             val task = store.templates.firstOrNull { it.id == run.taskId } ?: return false
-            reminderTime(task, run, settings)
+            if (run.completed || run.skipped || !task.enabled) return false
+            val minutes = SmartReminderTiming.alarmOffset(task, key) ?: return false
+            reminderTime(task, run, settings, minutes)
         } else {
             LocalDate.now().atTime(clock)
         }
@@ -335,11 +339,14 @@ object NavNotifications {
         for (run in store.runs.values) {
             val task = tasksById[run.taskId] ?: continue
             if (run.completed || run.skipped || !task.enabled || !task.notificationsEnabled) continue
-            if (!SmartReminderTiming.isAtOrBeforeDeadline(task, run, clock)) continue
-            if (reminderTime(task, run, settings).atZone(zone).toInstant() != targetInstant) continue
-            val eventKey = active.activeId + ":" + REMINDER + ":" + run.key + ":" + run.displayDate
-            if (!previouslyDelivered(context, eventKey)) {
-                events += DueReminder(eventKey, task.title, taskRunKey = run.key)
+            for (minutes in SmartReminderTiming.offsets(task)) {
+                if (reminderTime(task, run, settings, minutes).atZone(zone).toInstant() != targetInstant) continue
+                if (target.isAfter(dueTime(task, run))) continue
+                val alarmKey = SmartReminderTiming.alarmKey(task, run, minutes)
+                val eventKey = active.activeId + ":" + REMINDER + ":" + alarmKey + ":" + run.displayDate
+                if (!previouslyDelivered(context, eventKey)) {
+                    events += DueReminder(eventKey, task.title, taskRunKey = run.key)
+                }
             }
         }
         // The existing maintenance warnings have dates, not exact task hours.
@@ -493,23 +500,27 @@ object NavNotifications {
                 notification)
             return
         }
-        val run = store.runs[runKey] ?: return
+        val taskKey = if (kind == REMINDER) runKey.substringBefore("|") else runKey
+        val run = store.runs[taskKey] ?: return
         val task = store.templates.firstOrNull { it.id == run.taskId } ?: return
         if (run.completed || run.skipped || !task.enabled || !task.notificationsEnabled) return
+        val minutes = if (kind == REMINDER) SmartReminderTiming.alarmOffset(task, runKey) ?: return
+            else task.remindMinutesBefore
         val deadline = dueTime(task, run).atZone(ZoneId.systemDefault()).toInstant()
-        val reminder = reminderTime(task, run, settings)
+        val reminder = reminderTime(task, run, settings, minutes)
             .atZone(ZoneId.systemDefault()).toInstant()
         val now = Instant.now()
         // Ignore an obsolete alarm for a rescheduled occurrence or changed time zone.
         val originalDeadline = (if (task.deadlineTime == null) run.dueDate.plusDays(1).atStartOfDay()
             else run.dueDate.atTime(task.deadlineTime)).atZone(ZoneId.systemDefault()).toInstant()
         val autoMoved = kind == MISSED && run.autoTransferred && !now.isBefore(originalDeadline)
-        val missedAlertAt = if (task.deadlineTime != null && task.remindMinutesBefore == 0)
+        val missedAlertAt = if (SmartReminderTiming.atDeadline(task))
             deadline.plusSeconds(3600) else deadline
         if (kind == MISSED && now.isBefore(missedAlertAt) && !autoMoved) return
-        if (kind == REMINDER && now.isBefore(reminder)) return
+        if (kind == REMINDER && (now.isBefore(reminder) ||
+            now.isAfter(reminder.plusSeconds(4L * 3600)))) return
         if (kind == REMINDER && now.isAfter(deadline) &&
-            task.remindMinutesBefore > 0) return
+            (minutes > 0 || task.windowStartTime != null)) return
         if (kind == MISSED && !store.isOverdue(task, run) && !autoMoved) return
         if (!mayNotify(context)) return
         if (alreadyNotified(context, ProfileStore(context).activeId + ":" + kind + ":" + runKey + ":" + run.displayDate)) return
@@ -523,18 +534,18 @@ object NavNotifications {
         else localized("Скоро срок выполнения", "Due soon", settings.language)
         val builder = notificationBuilder(context, if (isMissed) CHANNEL_MISSED else CHANNEL_TASKS)
             .setContentTitle(task.title).setContentText(message)
-            .setContentIntent(openTask(context, runKey)).setAutoCancel(true)
+            .setContentIntent(openTask(context, taskKey)).setAutoCancel(true)
         if (task.checklist.isEmpty()) {
             builder.addAction(Notification.Action.Builder(null,
                 localized("Выполнить", "Complete", settings.language),
-                actionPending(context, runKey, "complete")).build())
+                actionPending(context, taskKey, "complete")).build())
         } else {
             builder.addAction(Notification.Action.Builder(null,
-                localized("Чек-лист", "Checklist", settings.language), openTask(context, runKey)).build())
+                localized("Чек-лист", "Checklist", settings.language), openTask(context, taskKey)).build())
         }
         builder.addAction(Notification.Action.Builder(null,
             localized("На завтра", "Tomorrow", settings.language),
-            actionPending(context, runKey, "postpone")).build())
+            actionPending(context, taskKey, "postpone")).build())
         manager(context).notify(("$kind:$runKey").hashCode(), builder.build())
     }
 
@@ -548,6 +559,10 @@ object NavNotifications {
         reschedule(context, store, NavSettings(context))
         manager(context).cancel(("$MISSED:$runKey").hashCode())
         manager(context).cancel(("$REMINDER:$runKey").hashCode())
+        val task = store.runs[runKey]?.let { run -> store.templates.firstOrNull { it.id == run.taskId } }
+        task?.additionalReminderMinutes?.forEach { minutes ->
+            manager(context).cancel(("$REMINDER:$runKey|$minutes").hashCode())
+        }
     }
 
     fun handleBroadcast(context: Context, intent: Intent) {

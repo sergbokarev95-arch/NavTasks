@@ -11,9 +11,29 @@ import java.time.LocalTime
  * the work becomes overdue. Explicit task hours always override that clock.
  */
 internal object SmartReminderTiming {
-    fun trigger(task: TaskTemplate, run: TaskRun, reference: LocalTime): LocalDateTime =
-        run.displayDate.atTime(task.deadlineTime ?: reference)
-            .minusMinutes(task.remindMinutesBefore.toLong().coerceAtLeast(0))
+    fun trigger(task: TaskTemplate, run: TaskRun, reference: LocalTime,
+        minutes: Int = task.remindMinutesBefore): LocalDateTime =
+        run.displayDate.atTime(task.windowStartTime ?: task.deadlineTime ?: reference)
+            .minusMinutes(minutes.toLong().coerceAtLeast(0))
+
+    fun offsets(task: TaskTemplate): List<Int> =
+        if (!task.notificationsEnabled) emptyList()
+        else (listOf(task.remindMinutesBefore) + task.additionalReminderMinutes)
+            .filter { it >= 0 }.distinct()
+
+    fun alarmKey(task: TaskTemplate, run: TaskRun, minutes: Int): String =
+        if (minutes == task.remindMinutesBefore) run.key else "${run.key}|$minutes"
+
+    fun alarmOffset(task: TaskTemplate, key: String): Int? {
+        val offset = if ('|' in key) key.substringAfterLast('|').toIntOrNull()
+            else task.remindMinutesBefore
+        return offset?.takeIf { it in offsets(task) &&
+            (('|' in key) == (it != task.remindMinutesBefore)) }
+    }
+
+    fun atDeadline(task: TaskTemplate): Boolean =
+        task.deadlineTime != null && task.windowStartTime == null && 0 in offsets(task)
+
 
     fun isAtOrBeforeDeadline(
         task: TaskTemplate, run: TaskRun, reference: LocalTime,
