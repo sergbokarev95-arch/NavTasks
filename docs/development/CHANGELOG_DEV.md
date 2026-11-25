@@ -392,3 +392,5 @@ Do not infer version numbers from old README.md or past chats. Check app/build.g
 - 2026-11-26 — Beta52 CI 45653015395 and Recovery333 CI 45653086318: JVM/build/package/version/non-debuggable/original signer/archive success. Both release publications failed HTTP 403 Resource not accessible by integration. Verified beta ZIP artifact 15042405562, APK SHA256 f60932388188aba3b534a239a3f8cc1d7dd721ab61a635f4302fd887cbed1066; verified recovery ZIP artifact 15041583532, APK SHA256 64c96a6333733d3ad8cccc9854d6382e1ba769b692e8ba56d05fe21e86bbb6fd. Stable OTA unchanged; device QA pending.
 
 - 2026-11-26 — Beta53 source 5cf2f77fa1dc2a89946c57f961c06b686818a944, CI 45656282445 started; Recovery335 95ecdfaf67b1cbb915cc2dfd89ef36d2a4b510b7, CI 45656346039 started. Equipment redesign and safe folder deletion tests; backup created. CI/release verification pending.
+
+- 2026-11-26 — Recovery335 CI 45656346039 passed JVM/build/verification/archive, release HTTP403 Resource not accessible by integration. ZIP artifact 15043651676 (13754573 bytes), APK SHA256 a084e8f8c6f17a6282e60752ad98683df18cbdf3fdeb95ce392878b96f1445f8. Beta53 JVM success; build pending.

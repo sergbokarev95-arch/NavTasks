@@ -6,8 +6,8 @@
 | Канал | Версия / code | Состояние |
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
-| Кандидат Beta53 | 1.2.0-beta.53 / 334 | CI 45656282445 in progress |
-| Кандидат Recovery335 | 1.1.0 / 335 | CI 45656346039 in progress |
+| Кандидат Beta53 | 1.2.0-beta.53 / 334 | JVM tests success; signed build in progress |
+| Recovery335 | 1.1.0 / 335 | JVM/build/signer/archive success; Releases HTTP403 |
 | Beta52 | 1.2.0-beta.52 / 332 | JVM/build/signer/artifact success; Releases HTTP 403 |
 | Recovery333 | 1.1.0 / 333 | JVM/build/signer/artifact success; Releases HTTP 403 |
 | Beta51 | 1.2.0-beta.51 / 330 | JVM/build/signer/artifact success; release draft only, HTTP 500 |
@@ -37,6 +37,7 @@
 - Beta53 — equipment redesign, neutral cards/search/dialogs, compact action row, bottom-sheet editors and safe folder removal preserving contents. [Beta CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656282445), [Recovery CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656346039) in progress.
 
 ## Подтверждённые артефакты
+- Recovery335 [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656346039), [verified APK ZIP](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45656346039/artifacts/15043651676), APK SHA256 a084e8f8c6f17a6282e60752ad98683df18cbdf3fdeb95ce392878b96f1445f8; verified signed APK, publication HTTP403.
 - Beta52 [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653015395), [verified ZIP](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653015395/artifacts/15042405562), APK SHA256 f60932388188aba3b534a239a3f8cc1d7dd721ab61a635f4302fd887cbed1066. JVM/build/package/version/non-debuggable/original signer/archive success; publication HTTP 403.
 - Recovery333 [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653086318), [verified ZIP](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653086318/artifacts/15041583532), APK SHA256 64c96a6333733d3ad8cccc9854d6382e1ba769b692e8ba56d05fe21e86bbb6fd. JVM/build/package/version/non-debuggable/original signer/archive success; publication HTTP 403.
 - Beta51: [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650863007) failed only publication HTTP 500 after tests/build/signer/archive success; [ZIP artifact](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650863007/artifacts/15041465730), verified APK 37314382 bytes SHA256 74fca855ccb101d857e2d852d352db2c8ac438377ace6cc3a84fdcd8437b64bc. Draft release 458337636 contains same uploaded APK, not public. Recovery331 unavailable: [CI](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650510826) publication failure, connector retries failed. Recovery329 is lower than beta51 and cannot be installed over it.
