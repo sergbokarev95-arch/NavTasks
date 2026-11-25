@@ -1,9 +1,10 @@
 # NavTasks — следующие действия
 
-## Beta51
-- Beta51 JVM/build/original signer/ZIP artifact success; publication HTTP 500. Draft 458337636 contains uploaded verified APK. Publish existing draft, do not duplicate. Recovery331 publication HTTP 500, retries/ref updates failed; check ref and run before further retry. Recovery329 cannot roll back over code330. Verified ZIP: https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45650863007/artifacts/15041465730
-- На устройстве проверить обе темы Handover: заголовок/счётчик/разделитель, экспорт сверху независимо от списка и поиска, разделы и записи, поиск и scroll-to-match, создание/редактирование/удаление, rich formatting, фото, dirty save, Word/PDF. Проверить Personal regression и предыдущие правки Beta50.
+## Beta52
+- Проверить [Beta52 CI 45653015395](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653015395) и [Recovery333 CI 45653086318](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45653086318), JVM, release, original signer/package/version, APK assets/archives. Не запускать дубль.
+- Device QA: главный справочник и инспекции в обеих темах, поиск, SIRE/VIQ7 no click and no restored navigation, «В разработке», back, оборудование, личные материалы, обмен. Сохранённые документы не удалять.
+- Beta51 draft 458337636 remains unpublished, do not duplicate. Recovery333 supersedes unpublished Recovery331.
 
 ## Защитные ограничения
-- Экспорт профиля перед установкой. Recovery331 только аварийно; старый код может потерять новые поля при перезаписи. Следующий versionCode >331 после публикации.
+- Экспорт профиля перед установкой. Recovery333 only emergency; old version may drop newer fields on write. Следующий versionCode >333 после публикации.
 - Stable OTA не менять. CI не заменяет device QA.
