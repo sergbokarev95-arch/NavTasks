@@ -28,6 +28,26 @@ class ReferenceEquipmentInteractionTest {
         assertTrue(catalog.folders.isEmpty())
     }
 
+    @Test fun deletingFolderMovesContentsWithoutDeletingProceduresOrAttachments() {
+        val attached = procedure().copy(attachmentSha256 = "a".repeat(64),
+            attachmentMimeType = ReferenceManualMime.PDF, attachmentFilename = "manual.pdf")
+        val owner = ReferenceEquipment(id = "device", title = "Device", folderId = "target",
+            procedures = listOf(attached))
+        val initial = ReferenceEquipmentCatalog(
+            folders = listOf(ReferenceFolder("root", "Root"), ReferenceFolder("target", "Target", "root"),
+                ReferenceFolder("child", "Child", "target"), ReferenceFolder("grandchild", "Grandchild", "child")),
+            equipment = listOf(owner))
+        val moved = referenceDeleteFolderPreservingContents(initial, "target")
+        assertEquals(listOf("root", "child", "grandchild"), moved.folders.map { it.id })
+        assertEquals("root", moved.folders.first { it.id == "child" }.parentId)
+        assertEquals("child", moved.folders.first { it.id == "grandchild" }.parentId)
+        assertEquals(owner.copy(folderId = "root"), moved.equipment.single())
+        assertEquals(initial, ReferenceEquipmentCatalog.fromJson(initial.toJson()))
+        val rootRemoved = referenceDeleteFolderPreservingContents(moved, "root")
+        assertEquals(null, rootRemoved.equipment.single().folderId)
+        assertEquals(null, rootRemoved.folders.first { it.id == "child" }.parentId)
+    }
+
     @Test fun equipmentAndProcedureEditsRetainStableIdentifiers() {
         var catalog = ReferenceEquipmentCatalog()
         val equipment = ReferenceEquipment(id = "detector-1", title = "Gas detector")

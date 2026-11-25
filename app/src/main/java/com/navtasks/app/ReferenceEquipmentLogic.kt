@@ -146,3 +146,18 @@ internal fun referenceImportEquipment(
         )
     return referenceSaveEquipment(catalog, local)
 }
+
+/** Remove the folder only; retain child IDs, procedures and original files. */
+internal fun referenceDeleteFolderPreservingContents(
+    catalog: ReferenceEquipmentCatalog, folderId: String,
+): ReferenceEquipmentCatalog {
+    val target = catalog.folders.firstOrNull { it.id == folderId } ?: error("Folder is missing")
+    return catalog.copy(
+        folders = catalog.folders.filterNot { it.id == folderId }.map {
+            if (it.parentId == folderId) it.copy(parentId = target.parentId) else it
+        },
+        equipment = catalog.equipment.map {
+            if (it.folderId == folderId) it.copy(folderId = target.parentId) else it
+        },
+    ).also { it.validate() }
+}
