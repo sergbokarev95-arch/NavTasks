@@ -49,8 +49,10 @@ internal fun ReferenceFolderEditor(
                         }
                     })
                 if (onDelete != null) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    TextButton(onClick = onDelete) {
-                        Text(localized("Удалить папку", "Delete folder", lang), color = p.systemRed)
+                    Box(Modifier.personalNoteCard(p, 14.dp, nested = true)) {
+                        TextButton(onClick = onDelete, modifier = Modifier.heightIn(min = 44.dp)) {
+                            Text(localized("Удалить папку", "Delete folder", lang), color = p.systemRed)
+                        }
                     }
                 }
             }

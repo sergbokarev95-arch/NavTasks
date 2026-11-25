@@ -262,14 +262,11 @@ internal fun ReferenceEquipmentScreen(
             ReferenceEquipmentHeaderAction(p, "back", localized("Назад", "Back", lang)) { navigateBack() }
             Spacer(Modifier.width(12.dp))
             Text(sectionTitle, color = p.text, fontSize = 20.sp, modifier = Modifier.weight(1f),
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                maxLines = if (equipment != null && procedure == null) 3 else 1,
+                overflow = TextOverflow.Ellipsis)
             if (procedure != null) {
                 ReferenceEquipmentHeaderAction(p, "edit", localized("Изменить", "Edit", lang)) { procedureEditor = procedure }
-            } else if (equipment != null) {
-                ReferenceEquipmentHeaderAction(p, "edit", localized("Изменить", "Edit", lang)) { equipmentEditor = equipment }
-                Spacer(Modifier.width(6.dp))
-                ReferenceEquipmentHeaderAction(p, "plus", localized("Добавить процедуру", "Add procedure", lang)) { newProcedure = true }
-            } else {
+            } else if (equipment == null) {
                 Box {
                     ReferenceEquipmentHeaderAction(p, "plus", localized("Добавить", "Add", lang)) { addMenu = true }
                     NavPopoverMenu(p, expanded = addMenu, onDismissRequest = { addMenu = false }, neutralStyle = true) {
@@ -352,6 +349,8 @@ internal fun ReferenceEquipmentScreen(
                 ReferenceEquipmentDetails(
                     equipment, p, lang,
                     onOpenProcedure = { procedureId = it },
+                    onEdit = { equipmentEditor = equipment },
+                    onAdd = { newProcedure = true },
                     onDelete = { deleteTarget = "equipment" to equipment.id },
                     onExport = {
                         exportingId = equipment.id
@@ -362,11 +361,6 @@ internal fun ReferenceEquipmentScreen(
                 )
             }
             else -> {
-                if (folder != null) {
-                    ReferenceCenteredDelete(localized("Удалить папку", "Delete folder", lang), p) {
-                        deleteTarget = "folder" to folder.id
-                    }
-                }
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -661,11 +655,25 @@ private fun ReferenceBrowseRow(
 private fun ReferenceEquipmentDetails(
     equipment: ReferenceEquipment, p: NavPalette, lang: UiLanguage,
     onOpenProcedure: (String) -> Unit,
+    onEdit: () -> Unit, onAdd: () -> Unit,
     onDelete: () -> Unit, onExport: () -> Unit,
 ) {
     LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
         .let { PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 125.dp) },
         verticalArrangement = Arrangement.spacedBy(11.dp)) {
+        item {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.personalNoteCard(p, 22.dp)) {
+                    TextButton(onClick = onExport, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Text(localized("Экспорт", "Export", lang), color = p.text, fontSize = 14.sp)
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                ReferenceEquipmentHeaderAction(p, "edit", localized("Изменить", "Edit", lang), onEdit)
+                ReferenceEquipmentHeaderAction(p, "plus", localized("Добавить процедуру", "Add procedure", lang), onAdd)
+            }
+        }
         if (listOf(equipment.manufacturer, equipment.model, equipment.location,
                 equipment.serialNumber, equipment.notes).any { it.isNotBlank() }) item {
             ReferenceEquipmentPanel(p) {
@@ -681,13 +689,6 @@ private fun ReferenceEquipmentDetails(
                         color = p.muted, fontSize = 12.sp)
                 if (equipment.notes.isNotBlank())
                     Text(equipment.notes, color = p.text, fontSize = 13.sp)
-            }
-        }
-        item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onExport) {
-                    Text(localized("Экспорт", "Export", lang), color = NavTodayVisualTokens.accentInk(p.dark))
-                }
             }
         }
         item {
