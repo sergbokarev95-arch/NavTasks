@@ -6,9 +6,8 @@
 | Канал | Версия / code | Состояние |
 |---|---|---|
 | Stable OTA | 1.1.0 / 230 | Не изменять без согласия |
-| Последняя проверенная beta | 1.2.0-beta.43 / 314 | CI success, подписанный APK опубликован |
-| Beta в работе | 1.2.0-beta.44 / 316 | CI in_progress |
-| Recovery для beta44 | 1.1.0 / 317 | CI in_progress |
+| Последняя проверенная beta | 1.2.0-beta.44 / 316 | CI success, подписанный APK опубликован |
+| Recovery для beta44 | 1.1.0 / 317 | CI success, подписанный APK опубликован |
 | Recovery для beta43 | 1.1.0 / 315 | CI success, подписанный APK опубликован |
 | Recovery для beta42 | 1.1.0 / 313 | CI success, подписанный APK опубликован |
 | Recovery для beta41 | 1.1.0 / 311 | CI success, подписанный APK опубликован |
@@ -17,9 +16,11 @@
 Рабочий исходник Beta44: `feature/navtasks-1.2.0-beta44-routines-style`, `f85ac5eefe07f18d540d7e567a9bf72687567993`. Main не база beta; docs-ветка не исходник сборки.
 
 ## Активный этап
-- Сегодня завершён. Beta44 — список рутинных задач, UI-only; общий календарный selector и matte карточки. CI 45572098541, Recovery317 CI 45572145523, оба in_progress. AMOS и сервис без изменений.
+- Сегодня завершён. Beta44 — рутинные задачи в новом стиле, CI success, device QA pending. AMOS и сервис не изменены.
 
 ## Подтверждённые артефакты
+- Beta44: [CI 45572098541](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45572098541) SUCCESS, source f85ac5eefe07f18d540d7e567a9bf72687567993, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.44/NavTasks_1.2.0-beta.44.apk), 37248846 bytes, SHA256 c012f717b6f67625d3a9fc10765a7b3c7ad650f7a852c51b2ac043e5f75615cd. JVM tests, release build, original signer/package/version/non-debuggable verified. Device QA pending.
+- Recovery317: [CI 45572145523](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45572145523) SUCCESS, source 0f7100eee77b27a9e88ec559af9340af2913bcbc, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.1.0-recovery-code317/NavTasks_1.1.0-recovery-code317.apk), 37068614 bytes, SHA256 34d696f7f9c22c5dfc95aaf8ca7632c1b21cb82423bb8f29692402c680613597. Stable OTA unchanged.
 - Beta43: [CI 45569665465](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45569665465) SUCCESS, source 99e6297a72d738511d0d5525d902c104a56c8869, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.43/NavTasks_1.2.0-beta.43.apk), 37248846 bytes, SHA256 8ae1006f72929a0b4648fca736b7226f8e19d037d1f7d8be1a82e0e2a7f8e243. JVM tests 1m24s, release 2m31s. Original signer/package/version/non-debuggable verified. Works hub only; device QA pending.
 - Recovery315: [CI 45569708596](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45569708596) SUCCESS, source ae0e75e70e10911919e3830a811a5d7d20f19a44, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.1.0-recovery-code315/NavTasks_1.1.0-recovery-code315.apk), 37068614 bytes, SHA256 f8548ef5ed55b4f2176e28d69623090b53e7cb0f9c2ec0982f291ef7f6009169. Stable OTA unchanged.
 - Beta42: [CI 45567527725](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45567527725) SUCCESS, source 396c87bb4b23d2a97cb7d7aceb1532ade1064f6e, [APK](https://github.com/sergbokarev95-arch/NavTasks/releases/download/v1.2.0-beta.42/NavTasks_1.2.0-beta.42.apk), 37248846 bytes, SHA256 7a8e0af0066448697862a6ffadc8671a643f8b9872d8d3256c0cefebcf5f0450. JVM tests 1m20s, release 2m23s. Original signer/package/version/non-debuggable verified. Shared compact editor metrics, missed-policy grid, active switch and scoped checklist; device QA pending.
