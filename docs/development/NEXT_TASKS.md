@@ -1,7 +1,7 @@
 # NavTasks — следующие действия
 
 ## Beta48
-- Проверить уже запущенные [Beta48 CI 45637913492](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45637913492) и [Recovery325 CI 45637636371](https://github.com/sergbokarev95-arch/NavTasks/actions/runs/45637636371), JVM, release, оригинальный signer/package/version, фактические assets. Не запускать дубль.
+- Beta48 и Recovery325: CI SUCCESS, оба APK опубликованы и проверены (см. CURRENT_STATE).
 - На HONOR проверить новый AMOS editor в дневной/ночной теме, коралловую валидную галочку, активные и пустые значения повторения/предупреждения, вложенный фон комментария, placeholder, отсутствие подчёркивания, активные инструменты и сохранение форматирования/графика.
 - Services — только по отдельному согласованию.
 
