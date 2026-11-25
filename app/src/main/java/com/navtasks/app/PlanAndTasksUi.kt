@@ -890,13 +890,10 @@ private fun TaskEditorState.EditorHeader(p: NavPalette, lang: UiLanguage, store:
 
 @Composable
 private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
-    NavEditorPanel(p) {
-        Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(localized("Весь день", "All day", lang), color = p.text, modifier = Modifier.weight(1f))
-            Switch(time == null, onCheckedChange = { allDay ->
-                if (allDay) { time = null; windowStart = null }
-                else time = LocalTime.of(18, 0)
-            }, colors = navEditorSwitchColors(p))
+    NavEventSchedulePanel(p) {
+        NavEventSwitchRow(localized("Весь день", "All day", lang), time == null, p) { allDay ->
+            if (allDay) { time = null; windowStart = null }
+            else time = LocalTime.of(18, 0)
         }
         NavEventDivider(p)
         NavEventValueRow(
@@ -905,17 +902,15 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
         ) { showDateWheel = true }
         if (time != null) {
             NavEventDivider(p)
-            Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(localized("Временной интервал", "Time window", lang), color = p.text, modifier = Modifier.weight(1f))
-                Switch(windowStart != null, onCheckedChange = { useWindow ->
-                    if (useWindow) {
-                        if (time == LocalTime.MIDNIGHT) time = LocalTime.of(1, 0)
-                        val end = time ?: LocalTime.of(18, 0)
-                        windowStart = end.minusHours(1).takeIf { it.isBefore(end) } ?: LocalTime.MIDNIGHT
-                    } else windowStart = null
-                }, colors = navEditorSwitchColors(p))
+            NavEventSwitchRow(localized("Временной интервал", "Time window", lang), windowStart != null, p) { useWindow ->
+                if (useWindow) {
+                    if (time == LocalTime.MIDNIGHT) time = LocalTime.of(1, 0)
+                    val end = time ?: LocalTime.of(18, 0)
+                    windowStart = end.minusHours(1).takeIf { it.isBefore(end) } ?: LocalTime.MIDNIGHT
+                } else windowStart = null
             }
             if (windowStart != null) {
+                NavEventDivider(p)
                 NavEventValueRow(localized("Начало", "Start", lang), windowStart.toString(), p) {
                     pickingStart = true; showTimeWheel = true
                 }
@@ -936,7 +931,8 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
         }
         if (customRepeat && frequency != Frequency.EXTRA) {
             NavEventDivider(p)
-            NavEditorOptionLine(navEventRepeatChoices(lang).filter { it.first != "custom" },
+            Spacer(Modifier.height(12.dp))
+            NavEventOptionGrid(navEventRepeatChoices(lang).filter { it.first != "custom" },
                 frequency.name, p) { key ->
                 val chosen = Frequency.valueOf(key)
                 if (frequency != chosen) {
@@ -946,17 +942,21 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
                 frequency = chosen
                 if (chosen == Frequency.EXTRA) { mode = ScheduleMode.CALENDAR; customRepeat = false }
             }
-            Spacer(Modifier.height(8.dp))
-            NavEditorOptionLine(navTaskRepeatChoices(lang), mode.name, p) { mode = ScheduleMode.valueOf(it) }
+            Spacer(Modifier.height(12.dp))
+            NavEventOptionGrid(navTaskRepeatChoices(lang), mode.name, p) { mode = ScheduleMode.valueOf(it) }
             if (frequency == Frequency.WEEKLY && mode == ScheduleMode.CALENDAR) {
+                Spacer(Modifier.height(12.dp))
                 FormLabel("День недели", "Weekday", lang, p)
+                Spacer(Modifier.height(6.dp))
                 val loc = if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
-                NavEditorOptionLine((1..7).map { n -> "$n" to DayOfWeek.of(n).getDisplayName(TextStyle.SHORT, loc) },
-                    "$weekDay", p) { weekDay = it.toInt() }
+                NavEventOptionGrid((1..7).map { n -> "$n" to DayOfWeek.of(n).getDisplayName(TextStyle.SHORT, loc) },
+                    "$weekDay", p, columns = 4) { weekDay = it.toInt() }
             }
             if (frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR) {
+                Spacer(Modifier.height(12.dp))
                 FormLabel("Когда выполнять каждый месяц", "Monthly execution date", lang, p)
-                NavEditorOptionLine(listOf("fixed" to localized("В конкретное число", "Specific day", lang),
+                Spacer(Modifier.height(6.dp))
+                NavEventOptionGrid(listOf("fixed" to localized("В конкретное число", "Specific day", lang),
                     "end" to localized("В последний день", "Last day", lang)),
                     if (monthDay == "31") "end" else "fixed", p) { choice ->
                     if (choice == "end") {
@@ -964,6 +964,7 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
                         monthDay = "31"
                     } else monthDay = fixedMonthDay.takeIf { (it.toIntOrNull() ?: 0) in 1..30 } ?: "1"
                 }
+                Spacer(Modifier.height(8.dp))
                 if (monthDay != "31") NavGlassInput(monthDay, { monthDay = it.take(2); fixedMonthDay = monthDay }, p,
                     modifier = Modifier.fillMaxWidth(), neutralStyle = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
@@ -972,6 +973,7 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
                     color = p.muted, fontSize = 12.sp)
             }
             if (frequency != Frequency.EXTRA && mode == ScheduleMode.AFTER_COMPLETION) {
+                Spacer(Modifier.height(12.dp))
                 val unit = when (frequency) {
                     Frequency.DAILY -> localized("дней", "days", lang)
                     Frequency.WEEKLY -> localized("недель", "weeks", lang)
@@ -981,6 +983,7 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
                 NavGlassInput(interval, { interval = it }, p, modifier = Modifier.fillMaxWidth(),
                     neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
             }
+            Spacer(Modifier.height(8.dp))
         }
     }
 }

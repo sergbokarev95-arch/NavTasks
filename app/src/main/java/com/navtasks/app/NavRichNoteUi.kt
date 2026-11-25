@@ -6,6 +6,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.material3.ProvideTextStyle
@@ -67,6 +68,7 @@ internal fun NavRichNoteEditor(
     maxCharacters: Int, onChange: (String, String) -> Unit,
     fullPage: Boolean = false,
     neutralStyle: Boolean = false,
+    checklistField: Boolean = false,
 ) {
     val state = rememberRichTextState()
     var ready by remember(entryKey) { mutableStateOf(false) }
@@ -124,25 +126,27 @@ internal fun NavRichNoteEditor(
         }
         }
         // Notes-style editor uses full height and toolbar above keyboard.
-        if (!fullPage) formattingTools()
+        if (!fullPage && !checklistField) formattingTools()
         val editorModifier = if (fullPage) Modifier.fillMaxWidth().weight(1f)
             else Modifier.fillMaxWidth().heightIn(min = 115.dp, max = 200.dp)
-        Box(editorModifier.then(if (neutralStyle) Modifier.personalNoteCard(p, 12.dp)
+        Box(editorModifier.then(if (checklistField) Modifier.personalNoteCard(p, 12.dp, nested = true)
+                .border(1.dp, NavTodayVisualTokens.checklistInsetRim(p.dark), RoundedCornerShape(12.dp))
+                else if (neutralStyle) Modifier.personalNoteCard(p, 12.dp)
                 else Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL))
-                .padding(10.dp)) {
-            if (ready && state.annotatedString.text.isEmpty())
+                .padding(if (checklistField) 4.dp else 10.dp)) {
+            if (!checklistField && ready && state.annotatedString.text.isEmpty())
                 Text(placeholder, color = p.muted, fontSize = 12.sp)
             if (ready) {
                 val scheme = androidx.compose.material3.MaterialTheme.colorScheme
                 androidx.compose.material3.MaterialTheme(colorScheme = if (neutralStyle)
                     scheme.copy(primary = NavTodayVisualTokens.accentInk(p.dark),
-                        surface = NavPersonalVisualTokens.cardSurface(p.dark, false),
-                        surfaceVariant = NavPersonalVisualTokens.cardSurface(p.dark, false),
+                        surface = NavPersonalVisualTokens.cardSurface(p.dark, checklistField),
+                        surfaceVariant = NavPersonalVisualTokens.cardSurface(p.dark, checklistField),
                         onSurface = p.text, onSurfaceVariant = p.muted) else scheme) {
                 RichTextEditor(
                 state = state,
                 modifier = if (fullPage) Modifier.fillMaxSize()
-                    else Modifier.fillMaxWidth().heightIn(min = 95.dp),
+                    else Modifier.fillMaxWidth().heightIn(min = if (checklistField) 128.dp else 95.dp),
                 textStyle = TextStyle(
                     color = p.text,
                     fontSize = (if (fullPage) NavRichNoteTypography.fullPageBodySp
@@ -154,8 +158,11 @@ internal fun NavRichNoteEditor(
             )
                 }
             }
+            if (checklistField && ready && state.annotatedString.text.isBlank())
+                Text(placeholder, color = p.muted, fontSize = 14.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp))
         }
-        if (fullPage) formattingTools()
+        if (fullPage || checklistField) formattingTools()
         val size = state.annotatedString.text.length
         Text(
             if (navRichNoteAllowed(state.annotatedString.text, state.toHtml(), maxCharacters))

@@ -71,6 +71,7 @@ fun ChecklistReferenceDialog(
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(26.dp))
                 .background(NavTodayVisualTokens.cardSurface(p.dark))
+                .then(if (editable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
                 .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -79,14 +80,17 @@ fun ChecklistReferenceDialog(
                     if (editable) "Комментарий к проверке" else "Памятка к проверке",
                     if (editable) "Edit checklist note" else "Checklist reference", lang,
                 ),
-                color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp,
+                color = if (editable) p.text else NavTodayVisualTokens.accentInk(p.dark),
+                fontSize = if (editable) 20.sp else 12.sp,
+                fontWeight = if (editable) FontWeight.Medium else FontWeight.Normal,
             )
-            Text(title, color = p.text, fontSize = 20.sp, maxLines = 3)
+            if (title.isNotBlank()) Text(title, color = if (editable) p.muted else p.text,
+                fontSize = if (editable) 14.sp else 20.sp, maxLines = 3)
             if (editable) {
                 Text(
                     localized(
-                        "Например, готовая запись для журнала ГМССБ. Текст сохранится для следующих проверок.",
-                        "For example, journal wording. This note is reused for future checks.", lang,
+                        "Текст сохранится для следующих проверок.",
+                        "This note is reused for future checks.", lang,
                     ),
                     color = p.muted, fontSize = 12.sp,
                 )
@@ -94,7 +98,8 @@ fun ChecklistReferenceDialog(
                     initialPlain = note, initialHtml = noteHtml,
                     entryKey = title + ":" + note.hashCode(),
                     p = p, lang = lang, maxCharacters = 6000, neutralStyle = true,
-                    placeholder = localized("Текст подсказки…", "Reference note…", lang),
+                    checklistField = true,
+                    placeholder = localized("Введите комментарий…", "Enter a comment…", lang),
                     onChange = { text, html -> draft = text; draftHtml = html },
                 )
             } else {

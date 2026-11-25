@@ -1,6 +1,8 @@
 package com.navtasks.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -75,14 +77,57 @@ internal fun NavEventDivider(p: NavPalette) {
     HorizontalDivider(thickness = .6.dp, color = NavTodayVisualTokens.checklistInsetRim(p.dark))
 }
 
+internal val NavEventRowHeight = 48.dp
+
+@Composable
+internal fun NavEventSchedulePanel(p: NavPalette, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth().personalNoteCard(p, 20.dp)
+        .padding(horizontal = 14.dp, vertical = 6.dp), content = content)
+}
+
+@Composable
+internal fun NavEventSwitchRow(label: String, checked: Boolean, p: NavPalette, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = NavEventRowHeight),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, color = p.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
+        Switch(checked, onCheckedChange = onChange, colors = navEditorSwitchColors(p))
+    }
+}
+
+/** Equal columns, including an empty final slot for an incomplete row. */
+@Composable
+internal fun NavEventOptionGrid(options: List<Pair<String, String>>, selected: String,
+    p: NavPalette, columns: Int = 2, onSelect: (String) -> Unit) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        options.chunked(columns).forEach { cells ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                cells.forEach { (key, label) ->
+                    val active = key == selected
+                    Box(Modifier.weight(1f).height(44.dp)
+                        .personalNoteCard(p, 13.dp, nested = true)
+                        .then(if (active) Modifier.border(1.5.dp, NavTodayVisualTokens.accentInk(p.dark),
+                            RoundedCornerShape(13.dp)) else Modifier)
+                        .glassClickable { onSelect(key) }.padding(horizontal = 4.dp),
+                        contentAlignment = Alignment.Center) {
+                        Text(label, color = if (active) NavTodayVisualTokens.accentInk(p.dark) else p.text,
+                            fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 2)
+                    }
+                }
+                repeat(columns - cells.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
 @Composable
 internal fun NavEventValueRow(label: String, value: String, p: NavPalette, chevron: Boolean = false, expanded: Boolean? = null, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).glassClickable(onClick = onClick),
+    Row(Modifier.fillMaxWidth().heightIn(min = NavEventRowHeight).glassClickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(label, color = p.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
         if (value.isNotEmpty()) {
             if (chevron) Text(value, color = p.muted, fontSize = 13.sp)
-            else Box(Modifier.personalNoteCard(p, 20.dp, nested = true).padding(horizontal = 14.dp, vertical = 8.dp)) {
+            else Box(Modifier.personalNoteCard(p, 18.dp, nested = true).heightIn(min = 34.dp).padding(horizontal = 12.dp, vertical = 6.dp)) {
                 Text(value, color = p.text, fontSize = 13.sp)
             }
         }
