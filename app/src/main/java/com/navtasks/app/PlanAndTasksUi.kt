@@ -729,7 +729,7 @@ fun TaskEditorScreen(
     var frequency by remember(initial?.id) {
         mutableStateOf(initial?.let {
             TaskSchedule.effectiveFrequency(it, LocalDate.now())
-        } ?: defaultFrequency)
+        } ?: Frequency.EXTRA)
     }
     var mode by remember(initial?.id) { mutableStateOf(initial?.scheduleMode ?: ScheduleMode.CALENDAR) }
     var date by remember(initial?.id) { mutableStateOf(initial?.startDate ?: LocalDate.now()) }
@@ -754,10 +754,26 @@ fun TaskEditorScreen(
     var interval by remember(initial?.id) { mutableStateOf((initial?.intervalCount ?: 1).toString()) }
     var missedPolicy by remember(initial?.id) { mutableStateOf(initial?.missedPolicy ?: MissedPolicy.HISTORY) }
     var time by remember(initial?.id) { mutableStateOf(initial?.deadlineTime) }
+    var windowStart by remember(initial?.id) { mutableStateOf(initial?.windowStartTime) }
+    var pickingStart by remember(initial?.id) { mutableStateOf(false) }
+    var showRepeat by remember(initial?.id) { mutableStateOf(false) }
+    var customRepeat by remember(initial?.id) { mutableStateOf(initial?.scheduleMode == ScheduleMode.AFTER_COMPLETION ||
+        initial?.let { TaskSchedule.effectiveFrequency(it, LocalDate.now()) in listOf(Frequency.WEEKLY, Frequency.MONTHLY) } == true) }
+    var otherSettings by remember(initial?.id) { mutableStateOf(false) }
+    var showReminder by remember(initial?.id) { mutableStateOf(false) }
+    var showCustomReminder by remember(initial?.id) { mutableStateOf(false) }
+    var customMinutes by remember(initial?.id) { mutableStateOf("60") }
     var showDateWheel by remember(initial?.id) { mutableStateOf(false) }
     var showTimeWheel by remember(initial?.id) { mutableStateOf(false) }
-    var notified by remember(initial?.id) { mutableStateOf(initial?.notificationsEnabled ?: true) }
-    var reminder by remember(initial?.id) { mutableIntStateOf(initial?.remindMinutesBefore ?: 60) }
+    var reminders by remember(initial?.id) { mutableStateOf(
+        initial?.let { SmartReminderTiming.offsets(it) } ?: listOf(60)
+    ) }
+    val notified = reminders.isNotEmpty()
+    val reminder = reminders.firstOrNull() ?: initial?.remindMinutesBefore ?: 60
+    fun addReminder(minutes: Int) {
+        if (minutes in 0..10080 && minutes !in reminders && reminders.size < 9)
+            reminders = reminders + minutes
+    }
     // A single popup-active token controls blur/shade of this sheet's CONTENT,
     // never the choice popup itself. Avoid duplicate overlapping window blurs.
     var activeChoice by remember(initial?.id) { mutableStateOf<String?>(null) }
@@ -774,7 +790,9 @@ fun TaskEditorScreen(
         mutableStateOf<Pair<TaskTemplate, FrequencyChangePreview>?>(null)
     }
     var unsupportedFrequencyEdit by remember(initial?.id) { mutableStateOf(false) }
-    val valid = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 && (interval.toIntOrNull() ?: 0) > 0
+    val validWindow = windowStart == null || time?.let { end -> windowStart?.isBefore(end) } == true
+    val valid = title.isNotBlank() && (monthDay.toIntOrNull() ?: 0) in 1..31 &&
+        (interval.toIntOrNull() ?: 0) > 0 && validWindow
 
     val editorBackdrop = if (!sheetMode && android.os.Build.VERSION.SDK_INT >= 33)
         com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
@@ -799,20 +817,14 @@ fun TaskEditorScreen(
                 else NavGlassCircleButton(p, "back", onClick = onBack)
                 Spacer(Modifier.width(12.dp))
             }
+            if (sheetMode) {
+                NavEventHeaderAction("x", localized("Отмена", "Cancel", lang), p, true, onBack)
+            }
             Text(localized(if (initial == null) "Новая задача" else "Редактировать задачу",
                 if (initial == null) "New task" else "Edit task", lang),
-                modifier = Modifier.weight(1f), color = p.text, fontSize = 21.sp)
-            Button(
-                enabled = valid,
-                modifier = Modifier.height(42.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = NavTodayVisualTokens.cardSurface(p.dark),
-                    contentColor = NavTodayVisualTokens.accentInk(p.dark),
-                    disabledContainerColor = NavTodayVisualTokens.checklistInsetSurface(p.dark),
-                    disabledContentColor = p.muted,
-                ),
-                contentPadding = PaddingValues(horizontal = 15.dp),
+                modifier = Modifier.weight(1f), color = p.text, fontSize = 20.sp, textAlign = TextAlign.Center)
+            NavEventHeaderAction(
+                "check", localized("Сохранить", "Save", lang), p, valid,
                 onClick = {
                 val edited = (initial ?: TaskTemplate(title = title.trim(), frequency = frequency)).copy(
                     title = title.trim(), frequency = frequency,
@@ -822,6 +834,8 @@ fun TaskEditorScreen(
                     completionMode = CompletionMode.AUTOMATIC,
                     deadlineTime = time, notificationsEnabled = notified,
                     remindMinutesBefore = reminder,
+                    windowStartTime = if (time != null) windowStart else null,
+                    additionalReminderMinutes = reminders.drop(1),
                     checklist = checklist.filter { it.title.isNotBlank() }.map { it.copy(required = true) },
                     enabled = enabled,
                 )
@@ -849,168 +863,115 @@ fun TaskEditorScreen(
                     }
                 }
                 },
-            ) {
-                Text(localized("Сохранить", "Save", lang), fontSize = 14.sp)
-            }
+            )
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp)) {
-            // Frequency is page-level navigation (like the Calendar modes), not
-            // a field in the same card as the task title. No persistence changes.
-            Column(Modifier.fillMaxWidth().padding(top = 5.dp, bottom = 2.dp)) {
-                FormLabel("Периодичность", "Frequency", lang, p)
-                Spacer(Modifier.height(7.dp))
-                NavTaskFrequencyControl(frequency, p, lang) { frequency = it }
-            }
+            NavEventTitle(title, { title = it }, p, lang)
             NavEditorPanel(p) {
-                FormLabel("Название задачи", "Task name", lang, p)
-                Spacer(Modifier.height(5.dp))
-                NavGlassInput(title, { title = it }, p,
-                    placeholder = localized("Название", "Title", lang), modifier = Modifier.fillMaxWidth(), neutralStyle = true)
-            }
-            NavEditorPanel(p) {
-                if (frequency != Frequency.EXTRA) {
-                    FormLabel("Повторение", "Recurrence", lang, p)
-                    NavTaskChoiceField(
-                        title = localized("Повторение", "Recurrence", lang),
-                        selected = mode.name, options = navTaskRepeatChoices(lang),
-                        p = p, lang = lang,
-                        onExpandedChange = { open ->
-                            if (open) activeChoice = "repeat"
-                            else if (activeChoice == "repeat") activeChoice = null
-                        },
-                    ) { key -> mode = ScheduleMode.valueOf(key) }
-                    Spacer(Modifier.height(10.dp))
+                Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(localized("Весь день", "All day", lang), color = p.text, modifier = Modifier.weight(1f))
+                    Switch(time == null, onCheckedChange = { allDay ->
+                        if (allDay) { time = null; windowStart = null }
+                        else time = LocalTime.of(18, 0)
+                    }, colors = navEditorSwitchColors(p))
                 }
-                if (frequency == Frequency.WEEKLY && mode == ScheduleMode.CALENDAR) {
-                    FormLabel("День недели", "Weekday", lang, p)
-                    val loc = if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
-                    NavEditorOptionLine((1..7).map { n -> "$n" to DayOfWeek.of(n).getDisplayName(TextStyle.SHORT, loc) },
-                        "$weekDay", p) { weekDay = it.toInt() }
-                }
-                if (frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR) {
-                    FormLabel("Когда выполнять каждый месяц", "Monthly execution date", lang, p)
-                    Spacer(Modifier.height(5.dp))
-                    NavEditorOptionLine(
-                        listOf(
-                            "fixed" to localized("В конкретное число", "Specific day", lang),
-                            "end" to localized("В последний день", "Last day", lang),
-                        ),
-                        if (monthDay == "31") "end" else "fixed", p,
-                    ) { choice ->
-                        if (choice == "end") {
-                            if (monthDay.toIntOrNull() in 1..30) fixedMonthDay = monthDay
-                            monthDay = "31"
-                        } else {
-                            monthDay = fixedMonthDay.takeIf {
-                                it.toIntOrNull() in 1..30
-                            } ?: "1"
+                NavEventDivider(p)
+                NavEventValueRow(
+                    localized("Дата начала", "Start date", lang),
+                    navDate(date, lang, true), p,
+                ) { showDateWheel = true }
+                if (time != null) {
+                    NavEventDivider(p)
+                    NavEventValueRow(
+                        if (windowStart == null) localized("Выполнить к", "Due by", lang)
+                        else localized("Конец", "End", lang),
+                        time.toString(), p,
+                    ) { pickingStart = false; showTimeWheel = true }
+                    NavEventDivider(p)
+                    Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(localized("Временной интервал", "Time window", lang), color = p.text, modifier = Modifier.weight(1f))
+                        Switch(windowStart != null, onCheckedChange = { useWindow ->
+                            if (useWindow) {
+                                if (time == LocalTime.MIDNIGHT) time = LocalTime.of(1, 0)
+                                windowStart = time?.minusHours(1)?.takeIf { time?.let { end -> it.isBefore(end) } == true } ?: LocalTime.MIDNIGHT
+                            } else windowStart = null
+                        }, colors = navEditorSwitchColors(p))
+                    }
+                    if (windowStart != null) {
+                        NavEventValueRow(localized("Начало", "Start", lang), windowStart.toString(), p) {
+                            pickingStart = true; showTimeWheel = true
                         }
                     }
-                    if (monthDay != "31") {
-                        Spacer(Modifier.height(10.dp))
-                        FormLabel("Число месяца (1–30)", "Day of month (1–30)", lang, p)
-                        NavGlassInput(
-                            monthDay, {
-                                monthDay = it.take(2)
-                                fixedMonthDay = monthDay
-                            }, p,
+                    if (!validWindow) Text(localized("Начало должно быть раньше окончания в тот же день.",
+                        "Start must precede the end on the same day.", lang), color = p.dangerText, fontSize = 12.sp)
+                }
+                NavEventDivider(p)
+                NavEventValueRow(localized("Повторять", "Repeat", lang),
+                    navEventRepeatLabel(frequency, mode, customRepeat, lang), p, chevron = true) {
+                    showRepeat = true
+                }
+                if (customRepeat && frequency != Frequency.EXTRA) {
+                    NavEventDivider(p)
+                    NavTaskFrequencyControl(frequency, p, lang) { chosen ->
+                        frequency = chosen
+                        if (chosen == Frequency.EXTRA) { mode = ScheduleMode.CALENDAR; customRepeat = false }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    NavEditorOptionLine(navTaskRepeatChoices(lang), mode.name, p) { mode = ScheduleMode.valueOf(it) }
+                    if (frequency == Frequency.WEEKLY && mode == ScheduleMode.CALENDAR) {
+                        FormLabel("День недели", "Weekday", lang, p)
+                        val loc = if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
+                        NavEditorOptionLine((1..7).map { n -> "$n" to DayOfWeek.of(n).getDisplayName(TextStyle.SHORT, loc) },
+                            "$weekDay", p) { weekDay = it.toInt() }
+                    }
+                    if (frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR) {
+                        FormLabel("Когда выполнять каждый месяц", "Monthly execution date", lang, p)
+                        NavEditorOptionLine(listOf("fixed" to localized("В конкретное число", "Specific day", lang),
+                            "end" to localized("В последний день", "Last day", lang)),
+                            if (monthDay == "31") "end" else "fixed", p) { choice ->
+                            if (choice == "end") {
+                                if (monthDay.toIntOrNull() in 1..30) fixedMonthDay = monthDay
+                                monthDay = "31"
+                            } else monthDay = fixedMonthDay.takeIf { it.toIntOrNull() in 1..30 } ?: "1"
+                        }
+                        if (monthDay != "31") NavGlassInput(monthDay, { monthDay = it.take(2); fixedMonthDay = monthDay }, p,
                             modifier = Modifier.fillMaxWidth(), neutralStyle = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        )
-                        Text(
-                            localized(
-                                "Если такого числа нет (например, 30 февраля), работа назначается на последний день месяца.",
-                                "If the date does not exist (e.g. February 30), the work is due on the last day.",
-                                lang,
-                            ),
-                            color = p.muted, fontSize = 11.sp,
-                        )
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        val upcoming = monthlySchedulePreview(date, monthDay.toIntOrNull() ?: 0)
+                        if (upcoming.isNotEmpty()) Text(upcoming.joinToString("  ·  ") { navDate(it, lang, true) },
+                            color = p.muted, fontSize = 12.sp)
                     }
-                }
-                if (frequency != Frequency.EXTRA && mode == ScheduleMode.AFTER_COMPLETION) {
-                    FormLabel("Интервал между выполнениями", "Interval between completions", lang, p)
-                    NavGlassInput(interval, { interval = it }, p, modifier = Modifier.fillMaxWidth(),
-                        neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                }
-                FormLabel(
-                    when {
-                        frequency == Frequency.EXTRA -> "Дата выполнения"
-                        frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR ->
-                            "Расписание действует с"
-                        mode == ScheduleMode.AFTER_COMPLETION -> "Первое выполнение"
-                        else -> "Дата начала"
-                    },
-                    when {
-                        frequency == Frequency.EXTRA -> "Due date"
-                        frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR ->
-                            "Schedule active from"
-                        mode == ScheduleMode.AFTER_COMPLETION -> "First execution"
-                        else -> "Start date"
-                    }, lang, p,
-                )
-                NavEditorValueButton(navDate(date, lang, true), p) { showDateWheel = true }
-                if (frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR) {
-                    Text(
-                        localized(
-                            "Это не обязательно день выполнения: первая работа появится на ближайшую расчётную дату не раньше указанной.",
-                            "This is not necessarily the due date: the first occurrence is the next matching day on or after it.",
-                            lang,
-                        ),
-                        color = p.muted, fontSize = 11.sp,
-                    )
-                    val upcoming = monthlySchedulePreview(date, monthDay.toIntOrNull() ?: 0)
-                    if (upcoming.isNotEmpty()) {
-                        Spacer(Modifier.height(7.dp))
-                        FormLabel("Ближайшие выполнения", "Upcoming executions", lang, p)
-                        Text(
-                            upcoming.joinToString("  ·  ") { navDate(it, lang, true) },
-                            color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 12.sp,
-                        )
+                    if (frequency != Frequency.EXTRA && mode == ScheduleMode.AFTER_COMPLETION) {
+                        val unit = when (frequency) {
+                            Frequency.DAILY -> localized("дней", "days", lang)
+                            Frequency.WEEKLY -> localized("недель", "weeks", lang)
+                            else -> localized("месяцев", "months", lang)
+                        }
+                        Text(localized("Интервал от выполнения", "Interval after completion", lang) + " ($unit)", color = p.muted, fontSize = 12.sp)
+                        NavGlassInput(interval, { interval = it }, p, modifier = Modifier.fillMaxWidth(),
+                            neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                     }
-                }
-                Spacer(Modifier.height(10.dp))
-                FormLabel("Срок выполнения", "Deadline", lang, p)
-                NavEditorOptionLine(listOf("day" to localized("До конца дня", "End of day", lang),
-                    "time" to localized("Конкретное время", "Specific time", lang)),
-                    if (time == null) "day" else "time", p) {
-                    time = if (it == "day") null else time ?: LocalTime.of(18, 0)
-                }
-                if (time != null) {
-                    NavEditorValueButton(time.toString(), p) { showTimeWheel = true }
                 }
             }
             NavEditorPanel(p) {
-                FormLabel("Если пропущена", "When overdue", lang, p)
-                NavEditorOptionLine(listOf(
-                    MissedPolicy.HISTORY.name to localized("В пропущенные", "Keep in Missed", lang),
-                    MissedPolicy.CARRY.name to localized("Автоперенос", "Auto move", lang),
-                    MissedPolicy.ASK.name to localized("Спросить", "Ask me", lang),
-                    MissedPolicy.ARCHIVE.name to localized("В историю", "Archive", lang),
-                ), missedPolicy.name, p) { missedPolicy = MissedPolicy.valueOf(it) }
-                Spacer(Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(localized("Уведомления", "Notifications", lang), color = p.text, modifier = Modifier.weight(1f))
-                    Switch(notified, onCheckedChange = { notified = it }, colors = navEditorSwitchColors(p))
+                reminders.forEach { minutes ->
+                    Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(navEventReminderLabel(minutes, lang), color = p.text, modifier = Modifier.weight(1f))
+                        NavEventHeaderAction("x", localized("Удалить напоминание", "Remove reminder", lang), p, true) {
+                            reminders = reminders.filterNot { it == minutes }
+                        }
+                    }
+                    NavEventDivider(p)
                 }
-                if (notified) {
-                    FormLabel("Напомнить", "Remind me", lang, p)
-                    NavTaskChoiceField(
-                        title = localized("Напомнить", "Remind me", lang),
-                        selected = "$reminder", options = navTaskReminderChoices(lang),
-                        p = p, lang = lang,
-                        onExpandedChange = { open ->
-                            if (open) activeChoice = "reminder"
-                            else if (activeChoice == "reminder") activeChoice = null
-                        },
-                    ) { key -> reminder = key.toInt() }
-                    Text(localized(
-                        "Без указанного времени напоминания считаются от основного времени в настройках. " +
-                            "Срок выполнения при этом остаётся до конца дня.",
-                        "Without a specific hour, reminders use the default time in Settings; " +
-                            "the task itself remains due by end of day.",
-                        lang), color = p.muted, fontSize = 12.sp)
+                if (reminders.size < 9) Box(Modifier.fillMaxWidth().glassClickable { showReminder = true }.padding(vertical = 13.dp)) {
+                    Text(localized("Добавить напоминание", "Add reminder", lang), color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 15.sp)
                 }
+                if (time == null && reminders.isNotEmpty()) Text(
+                    localized("От основного времени в настройках", "Relative to the default time in Settings", lang),
+                    color = p.muted, fontSize = 11.sp)
+                if (windowStart != null && reminders.isNotEmpty()) Text(
+                    localized("От времени начала", "Relative to the start time", lang), color = p.muted, fontSize = 11.sp)
             }
             NavEditorPanel(p) {
                 ChecklistEditorPanel(
@@ -1027,6 +988,17 @@ fun TaskEditorScreen(
                     lang = lang,
                     neutralStyle = true,
                 )
+            }
+            NavEventValueRow(localized("Другие настройки", "Other settings", lang),
+                "", p, chevron = true) { otherSettings = !otherSettings }
+            if (otherSettings) NavEditorPanel(p) {
+                FormLabel("Если пропущена", "When overdue", lang, p)
+                NavEditorOptionLine(listOf(
+                    MissedPolicy.HISTORY.name to localized("В пропущенные", "Keep in Missed", lang),
+                    MissedPolicy.CARRY.name to localized("Автоперенос", "Auto move", lang),
+                    MissedPolicy.ASK.name to localized("Спросить", "Ask me", lang),
+                    MissedPolicy.ARCHIVE.name to localized("В историю", "Archive", lang),
+                ), missedPolicy.name, p) { missedPolicy = MissedPolicy.valueOf(it) }
             }
             NavEditorPanel(p) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1245,16 +1217,73 @@ fun TaskEditorScreen(
         NavDateWheelDialog(
             initial = date, p = p, lang = lang,
             onDismiss = { showDateWheel = false },
-            onSelected = { date = it; showDateWheel = false },
+            onSelected = {
+                date = it
+                if (initial == null && !customRepeat) {
+                    weekDay = it.dayOfWeek.value
+                    monthDay = it.dayOfMonth.toString()
+                }
+                showDateWheel = false
+            },
         )
     }
     if (showTimeWheel) {
         NavTimeWheelDialog(
-            initial = time ?: LocalTime.of(18, 0), p = p, lang = lang,
+            initial = (if (pickingStart) windowStart else time) ?: LocalTime.of(18, 0), p = p, lang = lang,
             onDismiss = { showTimeWheel = false },
-            onSelected = { time = it; showTimeWheel = false },
+            onSelected = { if (pickingStart) windowStart = it else time = it; showTimeWheel = false },
         )
     }
+    if (showRepeat) NavEventChoiceDialog(
+        localized("Повторять", "Repeat", lang), navEventRepeatChoices(lang),
+        if (customRepeat) "custom" else frequency.name, p, lang,
+        onDismiss = { showRepeat = false },
+        onSelect = { key ->
+            showRepeat = false
+            if (key == "custom") {
+                if (frequency == Frequency.EXTRA) frequency = Frequency.DAILY
+                customRepeat = true
+            } else {
+                val chosen = Frequency.valueOf(key)
+                if (chosen != frequency || mode != ScheduleMode.CALENDAR) {
+                    weekDay = date.dayOfWeek.value
+                    monthDay = date.dayOfMonth.toString()
+                }
+                frequency = chosen
+                mode = ScheduleMode.CALENDAR
+                customRepeat = false
+            }
+        },
+    )
+    if (showReminder) NavEventChoiceDialog(
+        localized("Добавить напоминание", "Add reminder", lang),
+        navEventReminderChoices(lang), null, p, lang,
+        onDismiss = { showReminder = false },
+        onSelect = { key ->
+            showReminder = false
+            when (key) {
+                "none" -> reminders = emptyList()
+                "custom" -> showCustomReminder = true
+                else -> key.toIntOrNull()?.let { addReminder(it) }
+            }
+        },
+    )
+    if (showCustomReminder) NavGlassAlertDialog(
+        p = p, neutralActions = true, neutralSurface = true,
+        onDismissRequest = { showCustomReminder = false },
+        title = { Text(localized("За сколько минут", "Minutes before", lang)) },
+        text = {
+            Column {
+                NavGlassInput(customMinutes, { customMinutes = it.filter(Char::isDigit).take(5) }, p,
+                    neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                Text(localized("От 0 до 10080 минут (7 дней)", "0–10080 minutes (7 days)", lang), color = p.muted, fontSize = 12.sp)
+            }
+        },
+        confirmButton = { TextButton(enabled = (customMinutes.toIntOrNull() ?: -1) in 0..10080, onClick = {
+            customMinutes.toIntOrNull()?.let { addReminder(it) }; showCustomReminder = false
+        }) { Text(localized("OK", "OK", lang), color = NavTodayVisualTokens.accentInk(p.dark)) } },
+        dismissButton = { TextButton(onClick = { showCustomReminder = false }) { Text(localized("Отмена", "Cancel", lang), color = p.text) } },
+    )
     editingChecklistNote?.let { itemId ->
         checklist.firstOrNull { it.id == itemId }?.let { item ->
             ChecklistReferenceDialog(
