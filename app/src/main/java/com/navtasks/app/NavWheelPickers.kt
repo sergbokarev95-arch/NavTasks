@@ -72,10 +72,10 @@ private fun Wheel(
             Box(
                 Modifier.fillMaxWidth().height(48.dp)
                     .background(
-                        if (p.dark) Color(0x374E88B1) else Color(0x2676B7EC),
+                        NavTodayVisualTokens.checklistInsetSurface(p.dark),
                         indicator,
                     )
-                    .border(1.dp, p.blue.copy(alpha = 0.43f), indicator),
+                    .border(1.dp, NavTodayVisualTokens.checklistInsetRim(p.dark), indicator),
             )
             LazyColumn(
                 state = state,
@@ -118,7 +118,7 @@ private fun WheelDialogShell(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Column(
-            Modifier.fillMaxWidth().navDialogSurface(p)
+            Modifier.fillMaxWidth().personalNoteCard(p, 26.dp)
                 .padding(15.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -126,19 +126,19 @@ private fun WheelDialogShell(
             content()
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Box(
-                    Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
+                    Modifier.personalNoteCard(p, 12.dp, nested = true)
                         .glassClickable(onClick = onDismiss)
                         .padding(horizontal = 14.dp, vertical = 11.dp),
                 ) {
-                    Text(localized("Отмена", "Cancel", lang), color = p.muted, fontSize = 13.sp)
+                    Text(localized("Отмена", "Cancel", lang), color = p.text, fontSize = 13.sp)
                 }
                 Spacer(Modifier.width(9.dp))
                 Box(
-                    Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL)
+                    Modifier.personalNoteCard(p, 12.dp, nested = true)
                         .glassClickable(onClick = onConfirm)
                         .padding(horizontal = 14.dp, vertical = 11.dp),
                 ) {
-                    Text(localized("Выбрать", "Select", lang), color = p.blue, fontSize = 13.sp)
+                    Text(localized("Выбрать", "Select", lang), color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 13.sp)
                 }
             }
         }

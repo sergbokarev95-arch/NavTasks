@@ -33,6 +33,7 @@ internal fun ChecklistEditorPanel(
     p: NavPalette,
     lang: UiLanguage,
     completionHint: String? = null,
+    neutralStyle: Boolean = false,
 ) {
     var focusItemId by remember { mutableStateOf<String?>(null) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -52,7 +53,7 @@ internal fun ChecklistEditorPanel(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(localized("Вложенный чек-лист", "Nested checklist", lang),
             color = p.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
-        Text(items.count { it.title.isNotBlank() }.toString(), color = p.blue)
+        Text(items.count { it.title.isNotBlank() }.toString(), color = if (neutralStyle) NavTodayVisualTokens.accentInk(p.dark) else p.blue)
     }
     Spacer(Modifier.height(9.dp))
 
@@ -90,6 +91,7 @@ internal fun ChecklistEditorPanel(
                     modifier = Modifier.weight(1f).focusRequester(focusRequester),
                     keyboardOptions = NavTitleKeyboard.copy(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { appendItem() }),
+                    neutralStyle = neutralStyle,
                 )
                 ChecklistReferenceButton(p, item.comment.isNotBlank()) {
                     onEditNote(item.id)
@@ -103,6 +105,7 @@ internal fun ChecklistEditorPanel(
                         p = p,
                         expanded = menuOpen,
                         onDismissRequest = { menuOpen = false },
+                        neutralStyle = neutralStyle,
                     ) {
                         NavPopoverAction(
                             localized("Переместить выше", "Move up", lang), p,
@@ -137,13 +140,14 @@ internal fun ChecklistEditorPanel(
 
     Box(
         Modifier.fillMaxWidth()
-            .navGlass(p, radius = 13.dp, role = GlassRole.CONTROL, elevation = 0.dp)
+            .then(if (neutralStyle) Modifier.personalNoteCard(p, 13.dp, nested = true)
+                else Modifier.navGlass(p, radius = 13.dp, role = GlassRole.CONTROL, elevation = 0.dp))
             .glassClickable { appendItem() }
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         Text(
             localized("+ Добавить пункт", "+ Add item", lang),
-            color = p.blue, fontSize = 14.sp,
+            color = if (neutralStyle) NavTodayVisualTokens.accentInk(p.dark) else p.blue, fontSize = 14.sp,
         )
     }
     Spacer(Modifier.height(8.dp))

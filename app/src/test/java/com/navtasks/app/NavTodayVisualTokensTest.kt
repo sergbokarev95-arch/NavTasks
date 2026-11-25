@@ -81,6 +81,16 @@ class NavTodayVisualTokensTest {
         assertTrue(memo.contains("onSave(draft.trim(), draftHtml)"))
     }
 
+    @Test fun missedCardsAlwaysShowDueDateWithoutDuplicateHeader() {
+        val ui = File("src/main/java/com/navtasks/app/NavTasksUi.kt").readText()
+        val missed = ui.substringAfter("missed.groupBy { it.second.dueDate }").substringBefore("if (hasWork)")
+        assertTrue(!missed.contains("missed-date-"))
+        assertTrue(missed.contains("overdue = true"))
+        val row = ui.substringAfter("fun RunTileV2(")
+        assertTrue(row.contains("if (overdue) Text(navDate(run.dueDate, lang)"))
+        assertTrue(row.contains("if (task.deadlineTime != null) Text(task.deadlineTime.toString()"))
+    }
+
     @Test fun todayKeepsTapTargetsGreenConfirmationAndScopedDateWarning() {
         val ui = File("src/main/java/com/navtasks/app/NavTasksUi.kt").readText()
         val check = ui.substringAfter("fun RoundCheck(").substringBefore("private fun TodayScreenV2(")

@@ -85,7 +85,7 @@ internal fun NavTaskChoiceField(
         val fieldWidth = maxWidth
         Row(
             Modifier.fillMaxWidth()
-                .navGlass(p, radius = 15.dp, role = GlassRole.CONTROL, elevation = 0.dp)
+                .personalNoteCard(p, 15.dp, nested = true)
                 .glassClickable {
                     if (!expanded) {
                         expanded = true
@@ -188,8 +188,8 @@ internal fun NavTaskChoiceDialog(
             motion.animateTo(1f, spring(dampingRatio = .92f, stiffness = 780f))
         }
     }
-    val surface = if (p.dark) Color(0xFF23272C) else Color.White
-    val control = if (p.dark) Color(0xFF32373D) else Color(0xFFF2F3F7)
+    val surface = NavTodayVisualTokens.cardSurface(p.dark)
+    val control = NavTodayVisualTokens.checklistInsetSurface(p.dark)
     val shape = RoundedCornerShape(24.dp)
 
     Popup(
@@ -213,7 +213,7 @@ internal fun NavTaskChoiceDialog(
                 .shadow(12.dp, shape)
                 .clip(shape)
                 .background(surface, shape)
-                .border(1.dp, p.border, shape)
+                .border(1.dp, NavTodayVisualTokens.checklistInsetRim(p.dark), shape)
                 .padding(horizontal = 16.dp, vertical = 15.dp),
         ) {
             Text(title, color = p.text, fontSize = 19.sp,
@@ -242,13 +242,13 @@ internal fun NavTaskChoiceDialog(
                             selected = draft == key,
                             onClick = null,
                             colors = RadioButtonDefaults.colors(
-                                selectedColor = p.blueText,
+                                selectedColor = NavTodayVisualTokens.accentInk(p.dark),
                                 unselectedColor = p.muted,
                             ),
                         )
                     }
                     if (index < options.lastIndex) {
-                        HorizontalDivider(thickness = .6.dp, color = p.border,
+                        HorizontalDivider(thickness = .6.dp, color = NavTodayVisualTokens.checklistInsetRim(p.dark),
                             modifier = Modifier.padding(horizontal = 8.dp))
                     }
                 }
@@ -262,7 +262,7 @@ internal fun NavTaskChoiceDialog(
                         .clickable(enabled = !closing) { close(false) },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(localized("Отмена", "Cancel", lang), color = p.muted, fontSize = 14.sp)
+                    Text(localized("Отмена", "Cancel", lang), color = p.text, fontSize = 14.sp)
                 }
                 Box(
                     Modifier.weight(1f).heightIn(min = 46.dp)
@@ -272,7 +272,7 @@ internal fun NavTaskChoiceDialog(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(localized("Выбрать", "Select", lang),
-                        color = p.blueText, fontSize = 14.sp)
+                        color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 14.sp)
                 }
             }
         }

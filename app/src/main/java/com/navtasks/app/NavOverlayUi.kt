@@ -27,6 +27,7 @@ fun NavPopoverMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    neutralStyle: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(22.dp)
@@ -43,8 +44,11 @@ fun NavPopoverMenu(
         onDismissRequest = onDismissRequest,
         modifier = modifier.widthIn(min = 215.dp, max = 310.dp)
             .clip(shape)
-            .navPopoverFrost(capture, p.dark)
-            .border(NavPopupFrostTokens.rimWidthDp.dp, NavPopupFrostTokens.menuRim(p.dark), shape),
+            .then(if (neutralStyle) Modifier.background(NavTodayVisualTokens.cardSurface(p.dark), shape)
+                else Modifier.navPopoverFrost(capture, p.dark))
+            .border(NavPopupFrostTokens.rimWidthDp.dp,
+                if (neutralStyle) NavTodayVisualTokens.checklistInsetRim(p.dark)
+                else NavPopupFrostTokens.menuRim(p.dark), shape),
         shape = shape,
         // The captured source is painted before the crisp menu content.
         containerColor = Color.Transparent,
@@ -113,16 +117,18 @@ fun NavGlassAlertDialog(
     dismissButton: @Composable () -> Unit = {},
     solidSurface: Boolean = false,
     neutralActions: Boolean = false,
+    neutralSurface: Boolean = false,
 ) {
     // Some dialogs contain long text and controls: the Android window blur
     // is not sufficient to guarantee readable contrast over busy list cards.
     // Default behavior for all other callers remains unchanged.
-    val frost = !solidSurface && navPopupFrostAvailable()
+    val frost = !solidSurface && !neutralSurface && navPopupFrostAvailable()
     Dialog(onDismissRequest = onDismissRequest) {
         NavApplyDialogFrost(frost)
         Column(
             Modifier.fillMaxWidth().widthIn(max = 420.dp)
-                .then(if (solidSurface) Modifier.navDialogSurface(p)
+                .then(if (neutralSurface) Modifier.personalNoteCard(p, 26.dp)
+                    else if (solidSurface) Modifier.navDialogSurface(p)
                     else Modifier.navPopupGlassSurface(p, frosted = frost))
                 .padding(horizontal = 20.dp, vertical = 19.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),

@@ -95,6 +95,20 @@ internal fun NavCalendarModeControl(
         localized("День", "Day", lang),
     )
     val activeIndex = navCalendarAvailableLevels.indexOf(level).coerceAtLeast(0)
+    NavCalendarSegmentedControl(
+        labels, activeIndex, p, Modifier.padding(horizontal = 16.dp, vertical = 3.dp),
+    ) { index -> onSelect(navCalendarAvailableLevels[index]) }
+}
+
+/** Single renderer shared by calendar and task editor. */
+@Composable
+internal fun NavCalendarSegmentedControl(
+    labels: List<String>,
+    activeIndex: Int,
+    p: NavPalette,
+    modifier: Modifier = Modifier,
+    onSelect: (Int) -> Unit,
+) {
     val view = LocalView.current
     val dark = p.dark
     val activeInk = NavLiquidDockTabs.activeInk(dark)
@@ -102,9 +116,7 @@ internal fun NavCalendarModeControl(
     val shape = RoundedCornerShape(30.dp)
 
     BoxWithConstraints(
-        Modifier.fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 3.dp)
-            .height(navCalendarModeHeight),
+        modifier.fillMaxWidth().height(navCalendarModeHeight),
     ) {
         // No clip on the parent: the moving lens rises a few pixels while flying.
         Box(
@@ -113,7 +125,7 @@ internal fun NavCalendarModeControl(
                 .border(.75.dp, navLiquidGlassRim(dark), shape),
         )
 
-        val cellWidth = maxWidth / navCalendarAvailableLevels.size
+        val cellWidth = maxWidth / labels.size
         val target = activeIndex.toFloat()
         val slide by animateFloatAsState(
             targetValue = target,
@@ -222,7 +234,7 @@ internal fun NavCalendarModeControl(
                             onClick = {
                                 view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                                 if (selected) repeatedTapSerial++
-                                else onSelect(navCalendarAvailableLevels[index])
+                                else onSelect(index)
                             },
                         ),
                     contentAlignment = Alignment.Center,

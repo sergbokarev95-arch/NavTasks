@@ -21,23 +21,26 @@ internal fun MoveScopeDialog(
     onThisAndFuture: () -> Unit,
     onDismiss: () -> Unit,
     summary: String? = null,
+    neutralStyle: Boolean = false,
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Column(
-            Modifier.fillMaxWidth().navDialogSurface(p).padding(18.dp),
+            Modifier.fillMaxWidth().then(if (neutralStyle) Modifier.personalNoteCard(p, 26.dp)
+                else Modifier.navDialogSurface(p)).padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(localized("Изменить расписание?", "Change schedule?", lang),
                 color = p.text, fontSize = 20.sp)
             Text(title, color = p.text, fontSize = 15.sp)
             if (summary != null) {
-                Text(summary, color = p.blue, fontSize = 14.sp)
+                Text(summary, color = if (neutralStyle) NavTodayVisualTokens.accentInk(p.dark) else p.blue, fontSize = 14.sp)
             }
             Text(navDate(oldDate, lang, true) + "  →  " + navDate(newDate, lang, true),
                 color = p.muted, fontSize = 13.sp)
             Spacer(Modifier.height(2.dp))
             Box(Modifier.fillMaxWidth()
-                .navGlass(p, radius = 14.dp, role = GlassRole.CONTROL)
+                .then(if (neutralStyle) Modifier.personalNoteCard(p, 14.dp, nested = true)
+                    else Modifier.navGlass(p, radius = 14.dp, role = GlassRole.CONTROL))
                 .glassClickable(onClick = onOnlyThis)
                 .padding(horizontal = 15.dp, vertical = 15.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -49,12 +52,13 @@ internal fun MoveScopeDialog(
                 }
             }
             Box(Modifier.fillMaxWidth()
-                .navGlass(p, radius = 14.dp, role = GlassRole.CONTROL)
+                .then(if (neutralStyle) Modifier.personalNoteCard(p, 14.dp, nested = true)
+                    else Modifier.navGlass(p, radius = 14.dp, role = GlassRole.CONTROL))
                 .glassClickable(onClick = onThisAndFuture)
                 .padding(horizontal = 15.dp, vertical = 15.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(localized("Это и все последующие", "This and future occurrences", lang),
-                        color = p.blue, fontSize = 15.sp)
+                        color = if (neutralStyle) NavTodayVisualTokens.accentInk(p.dark) else p.blue, fontSize = 15.sp)
                     Text(localized("Новое повторение действует с выбранной даты",
                         "The new recurrence starts at the chosen occurrence", lang),
                         color = p.muted, fontSize = 12.sp)

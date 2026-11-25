@@ -1244,10 +1244,6 @@ private fun TodayScreenV2(
                     color = p.muted, fontSize = 13.sp, modifier = Modifier.padding(vertical = 6.dp)) }
                 if (missed.isEmpty()) item { NavPanel(p) { Text(localized("Пропущенных задач нет", "No missed tasks", lang), color = p.successText) } }
                 missed.groupBy { it.second.dueDate }.forEach { (originalDate, group) ->
-                    item(key = "missed-date-$originalDate") {
-                        Text(navDate(originalDate, lang, true), color = p.blueText, fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 7.dp, bottom = 2.dp))
-                    }
                     groupTodayByFrequency(group).forEach { (frequency, duties) ->
                         item(key = "missed-type-" + originalDate + "-" + frequency.name) {
                             TodayFrequencyHeader(frequency, duties.size, p, lang)

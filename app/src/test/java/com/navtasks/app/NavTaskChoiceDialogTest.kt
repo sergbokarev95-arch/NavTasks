@@ -49,8 +49,8 @@ class NavTaskChoiceDialogTest {
         assertTrue(ui.contains("TransformOrigin(.5f, if (above) 1f else 0f)"))
         assertFalse(ui.contains("NavApplyDialogFrost("))
         assertFalse(ui.contains("navPopupGlassSurface("))
-        assertTrue(ui.contains("Color(0xFF23272C)"))
-        assertTrue(ui.contains("else Color.White"))
+        assertTrue(ui.contains("NavTodayVisualTokens.cardSurface(p.dark)"))
+        assertTrue(ui.contains("NavTodayVisualTokens.checklistInsetSurface(p.dark)"))
         assertTrue(editor.contains("NavTaskFrequencyControl(frequency, p, lang)"))
         assertTrue(editor.contains("frequency = it"))
         assertTrue(editor.contains("mode = ScheduleMode.valueOf(key)"))
@@ -65,10 +65,13 @@ class NavTaskChoiceDialogTest {
     @Test fun fourFrequencySegmentsReuseAcceptedCalendarVisualTokensWithoutChangingModel() {
         val segmented = File("src/main/java/com/navtasks/app/NavTaskFrequencyControl.kt").readText()
         assertTrue(segmented.contains("val frequencies = Frequency.entries"))
-        assertTrue(segmented.contains("navCalendarModeHeight"))
-        assertTrue(segmented.contains("navCalendarModeSurface(p)"))
-        assertTrue(segmented.contains("navCalendarLensResting(p.dark)"))
-        assertTrue(segmented.contains("navCalendarRim(p.dark)"))
+        assertTrue(segmented.contains("NavCalendarSegmentedControl(labels, selectedIndex, p"))
+        val calendar = File("src/main/java/com/navtasks/app/NavCalendarModeControl.kt").readText()
+        assertTrue(calendar.contains("navCalendarModeHeight"))
+        assertTrue(calendar.contains("navCalendarModeLensHeight"))
+        assertTrue(calendar.contains("NavLiquidDockMotion.peakScaleForTap"))
+        assertTrue(calendar.contains("NavLiquidDockTabs.activeInk(dark)"))
+        assertTrue(calendar.contains("navLiquidGlassRim(dark)"))
         assertTrue(segmented.contains("onSelect(frequencies[i])"))
         assertFalse(segmented.contains("TaskStore("))
     }
@@ -81,7 +84,7 @@ class NavTaskChoiceDialogTest {
             "Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)"
         )
         val period = section.indexOf("NavTaskFrequencyControl(frequency, p, lang)")
-        val firstPanel = section.indexOf("NavPanel(p) {")
+        val firstPanel = section.indexOf("NavEditorPanel(p) {")
         val taskName = section.indexOf("FormLabel(\"Название задачи\"")
         assertTrue(period >= 0 && firstPanel > period && taskName > firstPanel)
         assertTrue(editor.contains("sheetMode: Boolean = false"))
@@ -126,13 +129,13 @@ class NavTaskChoiceDialogTest {
         assertTrue(choice.contains("Popup("))
     }
 
-    @Test fun taskEditorUsesBlueFilledSaveWithoutChangingPersistence() {
+    @Test fun taskEditorUsesCoralSaveWithoutChangingPersistence() {
         val editor = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
         assertTrue(editor.contains("Button("))
         assertTrue(editor.contains("enabled = valid"))
-        assertTrue(editor.contains("containerColor = p.selectionFill"))
-        assertTrue(editor.contains("contentColor = Color.White"))
-        assertTrue(editor.contains("disabledContainerColor = if (p.dark)"))
+        assertTrue(editor.contains("containerColor = NavTodayVisualTokens.cardSurface(p.dark)"))
+        assertTrue(editor.contains("contentColor = NavTodayVisualTokens.accentInk(p.dark)"))
+        assertTrue(editor.contains("disabledContainerColor = NavTodayVisualTokens.checklistInsetSurface(p.dark)"))
         assertTrue(editor.contains("Text(localized(\"Сохранить\", \"Save\", lang)"))
         assertTrue(editor.contains("preserveHistoricalCalendarBase(it, edited, LocalDate.now())"))
         assertTrue(editor.contains("pendingFrequencyEdit = edited to preview"))
