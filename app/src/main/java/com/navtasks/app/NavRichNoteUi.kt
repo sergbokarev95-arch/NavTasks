@@ -62,6 +62,7 @@ internal fun navEscapeNoteHtml(plain: String): String =
             .replace(">", "&gt;").replace("\"", "&quot;") + "</p>"
     }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 internal fun NavRichNoteEditor(
     initialPlain: String, initialHtml: String, entryKey: String,
