@@ -12,9 +12,23 @@ class NavEventEditorPolishTest {
         assertEquals(androidx.compose.ui.unit.Dp(48f), NavEventRowHeight)
         assertTrue(ui.contains("heightIn(min = NavEventRowHeight)"))
         assertTrue(ui.contains("options.chunked(columns)"))
-        assertTrue(ui.contains("Modifier.weight(1f).height(44.dp)"))
+        assertTrue(ui.contains("Modifier.weight(1f).heightIn(min = NavEventLayout.choiceHeight)"))
         assertTrue(screen.contains("NavEventSchedulePanel(p)"))
         assertTrue(screen.contains("NavEventOptionGrid(navTaskRepeatChoices(lang)"))
+    }
+    @Test fun compactCardsShareSpacingAndMissedGrid() {
+        val screen = File("src/main/java/com/navtasks/app/PlanAndTasksUi.kt").readText()
+        assertEquals(androidx.compose.ui.unit.Dp(4f), NavEventLayout.cardVertical)
+        assertEquals(androidx.compose.ui.unit.Dp(10f), NavEventLayout.sectionGap)
+        val reminders = screen.substringAfter("private fun TaskEditorState.EditorReminders(")
+            .substringBefore("private fun TaskEditorState.EditorChecklist(")
+        val other = screen.substringAfter("private fun TaskEditorState.EditorOther(")
+            .substringBefore("private fun TaskEditorState.EditorDeletionDialogs(")
+        assertTrue(reminders.contains("NavEventSchedulePanel(p)"))
+        assertTrue(reminders.contains("NavEventActionRow("))
+        assertTrue(other.contains("NavEventOptionGrid(listOf("))
+        assertTrue(other.contains("NavEventLayout.innerGap"))
+        assertTrue(other.contains("NavEventSwitchRow("))
     }
     @Test fun checklistEditorHasVisibleFieldWithoutChangingSave() {
         val memo = File("src/main/java/com/navtasks/app/ChecklistNotesUi.kt").readText()

@@ -34,6 +34,7 @@ internal fun ChecklistEditorPanel(
     lang: UiLanguage,
     completionHint: String? = null,
     neutralStyle: Boolean = false,
+    compactEventLayout: Boolean = false,
 ) {
     var focusItemId by remember { mutableStateOf<String?>(null) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -50,12 +51,13 @@ internal fun ChecklistEditorPanel(
         }
     }
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.then(if (compactEventLayout) Modifier.heightIn(min = NavEventRowHeight) else Modifier),
+        verticalAlignment = Alignment.CenterVertically) {
         Text(localized("Вложенный чек-лист", "Nested checklist", lang),
-            color = p.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
+            color = p.text, fontSize = if (compactEventLayout) 15.sp else 16.sp, modifier = Modifier.weight(1f))
         Text(items.count { it.title.isNotBlank() }.toString(), color = if (neutralStyle) NavTodayVisualTokens.accentInk(p.dark) else p.blue)
     }
-    Spacer(Modifier.height(9.dp))
+    Spacer(Modifier.height(if (compactEventLayout) NavEventLayout.cardVertical else 9.dp))
 
     items.forEachIndexed { index, item ->
         key(item.id) {
@@ -143,7 +145,9 @@ internal fun ChecklistEditorPanel(
             .then(if (neutralStyle) Modifier.personalNoteCard(p, 13.dp, nested = true)
                 else Modifier.navGlass(p, radius = 13.dp, role = GlassRole.CONTROL, elevation = 0.dp))
             .glassClickable { appendItem() }
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .then(if (compactEventLayout) Modifier.heightIn(min = NavEventLayout.choiceHeight)
+                .padding(horizontal = NavEventLayout.cardInset) else Modifier.padding(horizontal = 14.dp, vertical = 12.dp)),
+        contentAlignment = Alignment.CenterStart,
     ) {
         Text(
             localized("+ Добавить пункт", "+ Add item", lang),
@@ -161,10 +165,11 @@ internal fun ChecklistEditorPanel(
         ),
         color = p.muted, fontSize = 11.sp,
     )
-    Spacer(Modifier.height(3.dp))
+    Spacer(Modifier.height(if (compactEventLayout) NavEventLayout.cardVertical else 3.dp))
     Text(
         completionHint ?: localized("Когда все пункты отмечены, задача завершается автоматически.",
             "All checked items automatically complete the parent task.", lang),
         color = p.muted, fontSize = 11.sp,
     )
+    if (compactEventLayout) Spacer(Modifier.height(NavEventLayout.innerGap))
 }

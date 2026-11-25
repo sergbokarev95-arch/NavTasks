@@ -734,14 +734,15 @@ fun TaskEditorScreen(
             .navigationBarsPadding()) {
             state.EditorHeader(p, lang, store, sheetMode, sheetDragState, onSheetDragStopped,
                 editorBackdrop != null, onBack, onSave)
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(11.dp)) {
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .padding(horizontal = NavEventLayout.screenInset),
+                verticalArrangement = Arrangement.spacedBy(NavEventLayout.sectionGap)) {
                 NavEventTitle(state.title, { state.title = it }, p, lang)
                 state.EditorSchedule(p, lang)
                 state.EditorReminders(p, lang)
                 state.EditorChecklist(p, lang)
                 state.EditorOther(p, lang)
-                Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(NavEventLayout.innerGap))
             }
         }
         if (!sheetMode && editorBackdrop != null) {
@@ -931,7 +932,7 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
         }
         if (customRepeat && frequency != Frequency.EXTRA) {
             NavEventDivider(p)
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(NavEventLayout.groupGap))
             NavEventOptionGrid(navEventRepeatChoices(lang).filter { it.first != "custom" },
                 frequency.name, p) { key ->
                 val chosen = Frequency.valueOf(key)
@@ -942,20 +943,20 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
                 frequency = chosen
                 if (chosen == Frequency.EXTRA) { mode = ScheduleMode.CALENDAR; customRepeat = false }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(NavEventLayout.groupGap))
             NavEventOptionGrid(navTaskRepeatChoices(lang), mode.name, p) { mode = ScheduleMode.valueOf(it) }
             if (frequency == Frequency.WEEKLY && mode == ScheduleMode.CALENDAR) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(NavEventLayout.groupGap))
                 FormLabel("День недели", "Weekday", lang, p)
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(NavEventLayout.innerGap))
                 val loc = if (lang == UiLanguage.RU) Locale("ru") else Locale.ENGLISH
                 NavEventOptionGrid((1..7).map { n -> "$n" to DayOfWeek.of(n).getDisplayName(TextStyle.SHORT, loc) },
                     "$weekDay", p, columns = 4) { weekDay = it.toInt() }
             }
             if (frequency == Frequency.MONTHLY && mode == ScheduleMode.CALENDAR) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(NavEventLayout.groupGap))
                 FormLabel("Когда выполнять каждый месяц", "Monthly execution date", lang, p)
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(NavEventLayout.innerGap))
                 NavEventOptionGrid(listOf("fixed" to localized("В конкретное число", "Specific day", lang),
                     "end" to localized("В последний день", "Last day", lang)),
                     if (monthDay == "31") "end" else "fixed", p) { choice ->
@@ -964,7 +965,7 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
                         monthDay = "31"
                     } else monthDay = fixedMonthDay.takeIf { (it.toIntOrNull() ?: 0) in 1..30 } ?: "1"
                 }
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(NavEventLayout.innerGap))
                 if (monthDay != "31") NavGlassInput(monthDay, { monthDay = it.take(2); fixedMonthDay = monthDay }, p,
                     modifier = Modifier.fillMaxWidth(), neutralStyle = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
@@ -973,7 +974,7 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
                     color = p.muted, fontSize = 12.sp)
             }
             if (frequency != Frequency.EXTRA && mode == ScheduleMode.AFTER_COMPLETION) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(NavEventLayout.groupGap))
                 val unit = when (frequency) {
                     Frequency.DAILY -> localized("дней", "days", lang)
                     Frequency.WEEKLY -> localized("недель", "weeks", lang)
@@ -983,37 +984,38 @@ private fun TaskEditorState.EditorSchedule(p: NavPalette, lang: UiLanguage) {
                 NavGlassInput(interval, { interval = it }, p, modifier = Modifier.fillMaxWidth(),
                     neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(NavEventLayout.innerGap))
         }
     }
 }
 
 @Composable
 private fun TaskEditorState.EditorReminders(p: NavPalette, lang: UiLanguage) {
-    NavEditorPanel(p) {
+    NavEventSchedulePanel(p) {
         reminders.forEach { minutes ->
-            Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(navEventReminderLabel(minutes, lang), color = p.text, modifier = Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth().heightIn(min = NavEventRowHeight), verticalAlignment = Alignment.CenterVertically) {
+                Text(navEventReminderLabel(minutes, lang), color = p.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
                 NavEventHeaderAction("x", localized("Удалить напоминание", "Remove reminder", lang), p, true) {
                     reminders = reminders.filterNot { it == minutes }
                 }
             }
             NavEventDivider(p)
         }
-        if (reminders.size < 9) Box(Modifier.fillMaxWidth().glassClickable { showReminder = true }.padding(vertical = 13.dp)) {
-            Text(localized("Добавить напоминание", "Add reminder", lang), color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 15.sp)
+        if (reminders.size < 9) NavEventActionRow(
+            localized("Добавить напоминание", "Add reminder", lang), p) { showReminder = true }
+        if (reminders.isNotEmpty() && (time == null || windowStart != null)) {
+            Text(if (time == null)
+                localized("От основного времени в настройках", "Relative to the default time in Settings", lang)
+                else localized("От времени начала", "Relative to the start time", lang),
+                color = p.muted, fontSize = 11.sp,
+                modifier = Modifier.padding(bottom = NavEventLayout.innerGap))
         }
-        if (time == null && reminders.isNotEmpty()) Text(
-            localized("От основного времени в настройках", "Relative to the default time in Settings", lang),
-            color = p.muted, fontSize = 11.sp)
-        if (windowStart != null && reminders.isNotEmpty()) Text(
-            localized("От времени начала", "Relative to the start time", lang), color = p.muted, fontSize = 11.sp)
     }
 }
 
 @Composable
 private fun TaskEditorState.EditorChecklist(p: NavPalette, lang: UiLanguage) {
-    NavEditorPanel(p) {
+    NavEventSchedulePanel(p) {
         ChecklistEditorPanel(
             items = checklist,
             onItemsChange = { updated ->
@@ -1027,6 +1029,7 @@ private fun TaskEditorState.EditorChecklist(p: NavPalette, lang: UiLanguage) {
             p = p,
             lang = lang,
             neutralStyle = true,
+            compactEventLayout = true,
         )
     }
 }
@@ -1034,22 +1037,25 @@ private fun TaskEditorState.EditorChecklist(p: NavPalette, lang: UiLanguage) {
 @Composable
 private fun TaskEditorState.EditorOther(p: NavPalette, lang: UiLanguage) {
     val initial = this.initial
-    NavEventValueRow(localized("Другие настройки", "Other settings", lang),
-        "", p, chevron = true, expanded = otherSettings) { otherSettings = !otherSettings }
-    if (otherSettings) NavEditorPanel(p) {
-        FormLabel("Если пропущена", "When overdue", lang, p)
-        NavEditorOptionLine(listOf(
+    NavEventSchedulePanel(p) {
+        NavEventValueRow(localized("Другие настройки", "Other settings", lang),
+            "", p, chevron = true, expanded = otherSettings) { otherSettings = !otherSettings }
+        if (otherSettings) {
+            NavEventDivider(p)
+            Spacer(Modifier.height(NavEventLayout.groupGap))
+            Text(localized("Если пропущена", "When overdue", lang), color = p.text, fontSize = 15.sp)
+            Spacer(Modifier.height(NavEventLayout.innerGap))
+            NavEventOptionGrid(listOf(
             MissedPolicy.HISTORY.name to localized("В пропущенные", "Keep in Missed", lang),
             MissedPolicy.CARRY.name to localized("Автоперенос", "Auto move", lang),
             MissedPolicy.ASK.name to localized("Спросить", "Ask me", lang),
             MissedPolicy.ARCHIVE.name to localized("В историю", "Archive", lang),
-        ), missedPolicy.name, p) { missedPolicy = MissedPolicy.valueOf(it) }
-    }
-    NavEditorPanel(p) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(localized("Задача активна", "Task enabled", lang), color = p.text, modifier = Modifier.weight(1f))
-            Switch(enabled, onCheckedChange = { enabled = it }, colors = navEditorSwitchColors(p))
+            ), missedPolicy.name, p) { missedPolicy = MissedPolicy.valueOf(it) }
+            Spacer(Modifier.height(NavEventLayout.innerGap))
         }
+    }
+    NavEventSchedulePanel(p) {
+        NavEventSwitchRow(localized("Задача активна", "Task enabled", lang), enabled, p) { enabled = it }
     }
     if (initial != null) {
         TextButton(

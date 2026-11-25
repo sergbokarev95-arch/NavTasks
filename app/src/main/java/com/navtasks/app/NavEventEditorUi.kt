@@ -59,12 +59,12 @@ internal fun NavEventHeaderAction(kind: String, label: String, p: NavPalette, en
 @Composable
 internal fun NavEventTitle(title: String, onChange: (String) -> Unit, p: NavPalette, lang: UiLanguage) {
     BasicTextField(value = title, onValueChange = onChange, singleLine = true,
-        modifier = Modifier.fillMaxWidth().personalNoteCard(p, 20.dp).heightIn(min = 52.dp),
+        modifier = Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius).heightIn(min = NavEventRowHeight + NavEventLayout.cardVertical * 2),
         textStyle = TextStyle(color = p.text, fontSize = 16.sp),
         cursorBrush = SolidColor(NavTodayVisualTokens.accentInk(p.dark)),
         keyboardOptions = NavTitleKeyboard,
         decorationBox = { input ->
-            Box(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 16.dp),
+            Box(Modifier.fillMaxWidth().heightIn(min = NavEventRowHeight + NavEventLayout.cardVertical * 2).padding(horizontal = NavEventLayout.cardInset),
                 contentAlignment = Alignment.CenterStart) {
                 if (title.isEmpty()) Text(localized("Название задачи", "Task name", lang), color = p.muted, fontSize = 16.sp)
                 input()
@@ -77,19 +77,39 @@ internal fun NavEventDivider(p: NavPalette) {
     HorizontalDivider(thickness = .6.dp, color = NavTodayVisualTokens.checklistInsetRim(p.dark))
 }
 
-internal val NavEventRowHeight = 48.dp
+/** Shared editor metrics: one rhythm in light and dark; keep 48dp touch rows. */
+internal object NavEventLayout {
+    val screenInset = 16.dp
+    val cardInset = 14.dp
+    val cardVertical = 4.dp
+    val cardRadius = 20.dp
+    val sectionGap = 10.dp
+    val rowHeight = 48.dp
+    val choiceHeight = 44.dp
+    val innerGap = 8.dp
+    val groupGap = 12.dp
+}
+internal val NavEventRowHeight = NavEventLayout.rowHeight
 
 @Composable
 internal fun NavEventSchedulePanel(p: NavPalette, content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxWidth().personalNoteCard(p, 20.dp)
-        .padding(horizontal = 14.dp, vertical = 6.dp), content = content)
+    Column(Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
+        .padding(horizontal = NavEventLayout.cardInset, vertical = NavEventLayout.cardVertical), content = content)
+}
+
+@Composable
+internal fun NavEventActionRow(label: String, p: NavPalette, onClick: () -> Unit) {
+    Box(Modifier.fillMaxWidth().heightIn(min = NavEventRowHeight)
+        .glassClickable(onClick = onClick), contentAlignment = Alignment.CenterStart) {
+        Text(label, color = NavTodayVisualTokens.accentInk(p.dark), fontSize = 15.sp)
+    }
 }
 
 @Composable
 internal fun NavEventSwitchRow(label: String, checked: Boolean, p: NavPalette, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = NavEventRowHeight),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
         Text(label, color = p.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
         Switch(checked, onCheckedChange = onChange, colors = navEditorSwitchColors(p))
     }
@@ -99,12 +119,12 @@ internal fun NavEventSwitchRow(label: String, checked: Boolean, p: NavPalette, o
 @Composable
 internal fun NavEventOptionGrid(options: List<Pair<String, String>>, selected: String,
     p: NavPalette, columns: Int = 2, onSelect: (String) -> Unit) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
         options.chunked(columns).forEach { cells ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
                 cells.forEach { (key, label) ->
                     val active = key == selected
-                    Box(Modifier.weight(1f).height(44.dp)
+                    Box(Modifier.weight(1f).heightIn(min = NavEventLayout.choiceHeight)
                         .personalNoteCard(p, 13.dp, nested = true)
                         .then(if (active) Modifier.border(1.5.dp, NavTodayVisualTokens.accentInk(p.dark),
                             RoundedCornerShape(13.dp)) else Modifier)
@@ -123,7 +143,7 @@ internal fun NavEventOptionGrid(options: List<Pair<String, String>>, selected: S
 @Composable
 internal fun NavEventValueRow(label: String, value: String, p: NavPalette, chevron: Boolean = false, expanded: Boolean? = null, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = NavEventRowHeight).glassClickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
         Text(label, color = p.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
         if (value.isNotEmpty()) {
             if (chevron) Text(value, color = p.muted, fontSize = 13.sp)
@@ -159,7 +179,7 @@ internal fun NavEventChoiceDialog(
                     if (index < options.lastIndex) NavEventDivider(p)
                 }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap)) {
                 Box(Modifier.weight(1f).personalNoteCard(p, 24.dp, nested = true)
                     .glassClickable(onClick = onDismiss).padding(13.dp), contentAlignment = Alignment.Center) {
                     Text(localized("Отмена", "Cancel", lang), color = p.text)

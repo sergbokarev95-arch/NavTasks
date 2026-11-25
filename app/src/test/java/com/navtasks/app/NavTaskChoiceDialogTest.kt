@@ -81,7 +81,7 @@ class NavTaskChoiceDialogTest {
         val root = File("src/main/java/com/navtasks/app/NavTasksUi.kt").readText()
         val choice = File("src/main/java/com/navtasks/app/NavTaskChoiceDialog.kt").readText()
         val section = editor.substringAfter(
-            "Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)"
+            "Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())"
         )
         val taskName = section.indexOf("NavEventTitle(state.title")
         val repeat = section.indexOf("state.EditorSchedule(p, lang)")
