@@ -5,6 +5,31 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontWeight
@@ -29,7 +54,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import java.time.LocalDate
 import java.util.UUID
 
@@ -154,6 +178,7 @@ fun WorkOrdersScreen(
     // Dialogs are separate windows: blur only the page beneath them.
     val modalOpen = editorOpen || completeTarget != null || chooseShiftAfterCompletion ||
         reopenTarget != null || deleteTarget != null || purgeTarget != null || viewingHistory != null
+    Box(Modifier.fillMaxSize()) {
     Box(Modifier.fillMaxSize().blur(if (modalOpen) 4.dp else 0.dp)) {
     // Edge-to-edge scroll content, matching Today; keep only the Add FAB inset.
     Column(Modifier.fillMaxSize().statusBarsPadding()
@@ -330,16 +355,16 @@ fun WorkOrdersScreen(
     }
     } // End work screen; floating Add retains its separate glass overlay.
 
-    if (editorOpen) {
-        WorkOrderEditorDialog(
-            existing = editing, p = p, lang = lang,
-            onDismiss = { editorOpen = false },
-            onSave = { candidate ->
-                runCatching { workOrders.upsert(candidate); reschedule() }
-                    .exceptionOrNull()?.localizedMessage
-            },
-        )
-    }
+    WorkOrderEditorOverlay(
+        visible = editorOpen, existing = editing, p = p, lang = lang,
+        onDismiss = { editorOpen = false },
+        onSave = { candidate ->
+            runCatching { workOrders.upsert(candidate); reschedule() }
+                .exceptionOrNull()?.localizedMessage
+        },
+    )
+    } // The sheet is a sibling of the blurred page, not inside it.
+    BackHandler(enabled = editorOpen) { editorOpen = false }
 
     completeTarget?.takeUnless { chooseShiftAfterCompletion }?.let { order ->
         NavGlassAlertDialog(
@@ -362,9 +387,19 @@ fun WorkOrdersScreen(
                     }
                     Text(localized("Дата выполнения", "Completion date", lang),
                         color = p.muted, fontSize = 12.sp)
-                    WorkOrderChip(navDate(completionDate, lang, true), false, p,
-                        modifier = Modifier.fillMaxWidth(), outlined = true) {
-                        completionDatePicker = true
+                    Row(
+                        Modifier.fillMaxWidth().personalNoteCard(p, 12.dp, nested = true)
+                            .border(1.dp, NavTodayVisualTokens.checklistInsetRim(p.dark), RoundedCornerShape(12.dp))
+                            .glassClickable { completionDatePicker = true }
+                            .heightIn(min = NavEventRowHeight)
+                            .padding(horizontal = NavEventLayout.cardInset),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap),
+                    ) {
+                        NavGlassGlyph("calendar", NavTodayVisualTokens.accentInk(p.dark), Modifier.size(20.dp))
+                        Text(navDate(completionDate, lang, true), color = p.text,
+                            fontSize = 14.sp, modifier = Modifier.weight(1f))
+                        NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
                     }
                 }
             },
@@ -510,8 +545,8 @@ fun WorkOrdersScreen(
                     Text(current.title, color = p.text, fontSize = 15.sp)
                     if (history.isEmpty()) {
                         Text(localized(
-                            "Выполнений пока нет. После «Готово» здесь появится дата и история.",
-                            "No completions yet. Dates and history appear here after Done.",
+                            "Выполнений пока нет. После «Выполнено» здесь появится дата и история.",
+                            "No completions yet. Dates and history appear here after marking completed.",
                             lang,
                         ), color = p.muted, fontSize = 13.sp)
                     } else {
@@ -677,7 +712,7 @@ private fun WorkOrderCard(
                 modifier = Modifier.weight(1f), onClick = onEdit)
             WorkOrderChip(
                 if (order.completed) localized("Вернуть", "Reopen", lang)
-                else localized("Готово", "Done", lang),
+                else localized("Выполнено", "Completed", lang),
                 false, p, modifier = Modifier.weight(1f),
                 onClick = if (order.completed) onReopen else onComplete,
             )
@@ -716,13 +751,102 @@ private fun WorkOrderChip(
     }
 }
 
+/** Same bottom-up presentation and handle behavior as the routine event editor. */
 @Composable
-private fun WorkOrderEditorDialog(
-    existing: WorkOrderEntry?,
-    p: NavPalette,
-    lang: UiLanguage,
-    onDismiss: () -> Unit,
-    onSave: (WorkOrderEntry) -> String?,
+private fun BoxScope.WorkOrderEditorOverlay(
+    visible: Boolean, existing: WorkOrderEntry?, p: NavPalette, lang: UiLanguage,
+    onDismiss: () -> Unit, onSave: (WorkOrderEntry) -> String?,
+) {
+    var dragPx by remember { mutableFloatStateOf(0f) }
+    val scope = rememberCoroutineScope()
+    val returnJob = remember { mutableStateOf<Job?>(null) }
+    val dragState = rememberDraggableState { delta ->
+        returnJob.value?.cancel()
+        returnJob.value = null
+        dragPx = (dragPx + delta).coerceIn(0f, 1600f)
+    }
+    val dismissDistance = with(LocalDensity.current) { 110.dp.toPx() }
+    val dragStopped: (Float) -> Unit = { velocity ->
+        if (dragPx >= dismissDistance || velocity > 1150f) onDismiss()
+        else {
+            val offset = dragPx
+            returnJob.value = scope.launch {
+                Animatable(offset).animateTo(0f, spring(dampingRatio = .96f, stiffness = 680f)) {
+                    dragPx = value
+                }
+                returnJob.value = null
+            }
+        }
+    }
+    LaunchedEffect(visible) {
+        if (!visible) delay(250)
+        returnJob.value?.cancel()
+        returnJob.value = null
+        dragPx = 0f
+    }
+    AnimatedVisibility(
+        visible = visible, modifier = Modifier.fillMaxSize(),
+        enter = fadeIn(tween(150)), exit = fadeOut(tween(175)),
+        label = "amosEditorScrim",
+    ) {
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .36f))
+            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                /* Preserve draft; dismiss via header, handle or Back. */
+            })
+    }
+    AnimatedVisibility(
+        visible = visible, modifier = Modifier.align(Alignment.BottomCenter),
+        enter = slideInVertically(initialOffsetY = { it },
+            animationSpec = spring(dampingRatio = .92f, stiffness = 620f)) + fadeIn(tween(115)),
+        exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220)) + fadeOut(tween(140)),
+        label = "amosEditorBottomSheet",
+    ) {
+        val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        Box(Modifier.fillMaxWidth().fillMaxHeight(.94f)
+            .offset { IntOffset(0, dragPx.roundToInt()) }
+            .shadow(16.dp, shape).clip(shape)
+            .background(navEditorSheetSurface(p), shape)
+            .border(1.dp, p.border.copy(alpha = .65f), shape)) {
+            WorkOrderEditorSheet(existing, p, lang, onDismiss, onSave)
+            Box(Modifier.align(Alignment.TopCenter).size(width = 112.dp, height = 30.dp)
+                .draggable(state = dragState, orientation = Orientation.Vertical,
+                    onDragStopped = { velocity -> dragStopped(velocity) }),
+                contentAlignment = Alignment.TopCenter) {
+                Box(Modifier.padding(top = 8.dp).size(width = 42.dp, height = 4.dp)
+                    .background(p.muted.copy(alpha = .58f), CircleShape))
+            }
+        }
+    }
+}
+
+internal fun navAmosRepeatOptions(lang: UiLanguage): List<Pair<String, String>> =
+    listOf(
+        "0:0" to localized("Никогда (разовая)", "Never (one-off)", lang),
+        "7:0" to localized("Еженедельно", "Weekly", lang),
+        "0:1" to localized("Каждый месяц", "Every month", lang),
+        "0:3" to localized("Каждые 3 месяца", "Every 3 months", lang),
+        "0:6" to localized("Каждые 6 месяцев", "Every 6 months", lang),
+        "0:12" to localized("Каждые 12 месяцев", "Every 12 months", lang),
+        "0:18" to localized("Каждые 18 месяцев", "Every 18 months", lang),
+        "0:36" to localized("Каждые 36 месяцев", "Every 36 months", lang),
+        "0:60" to localized("Каждые 60 месяцев", "Every 60 months", lang),
+        "custom" to localized("Настроить", "Customize", lang),
+    )
+
+internal fun navAmosReminderOptions(lang: UiLanguage): List<Pair<String, String>> =
+    listOf(0, 1, 3, 7, 14, 30, 90).map { days ->
+        days.toString() to when (days) {
+            0 -> localized("Нет", "None", lang)
+            1 -> localized("За 1 день", "1 day before", lang)
+            3 -> localized("За 3 дня", "3 days before", lang)
+            else -> localized("За $days дней", "$days days before", lang)
+        }
+    }
+
+@Composable
+private fun WorkOrderEditorSheet(
+    existing: WorkOrderEntry?, p: NavPalette, lang: UiLanguage,
+    onDismiss: () -> Unit, onSave: (WorkOrderEntry) -> String?,
 ) {
     var title by remember(existing?.id) { mutableStateOf(existing?.title.orEmpty()) }
     var dueDate by remember(existing?.id) {
@@ -741,189 +865,170 @@ private fun WorkOrderEditorDialog(
     var customMonths by remember(existing?.id) {
         mutableStateOf((if (repeatMonths > 0) repeatMonths else 9).toString())
     }
-    var noteItemId by remember(existing?.id) { mutableStateOf<String?>(null) }
     var pickingDate by remember(existing?.id) { mutableStateOf(false) }
     var error by remember(existing?.id) { mutableStateOf<String?>(null) }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            Modifier.fillMaxWidth().personalNoteCard(p, 26.dp)
-                .padding(NavEventLayout.cardInset),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                if (existing == null) localized("Новая работа", "New work item", lang)
+
+    var showRepeat by remember(existing?.id) { mutableStateOf(false) }
+    var showReminder by remember(existing?.id) { mutableStateOf(false) }
+    val repeatOptions = navAmosRepeatOptions(lang)
+    val reminderOptions = navAmosReminderOptions(lang)
+    val repeatKey = if (customInterval) "custom" else "$repeatDays:$repeatMonths"
+    val repeatLabel = if (customInterval) localized("Свой срок", "Custom", lang)
+        else repeatOptions.firstOrNull { it.first == repeatKey }?.second
+            ?: localized("$repeatDays дн. / $repeatMonths мес.", "$repeatDays days / $repeatMonths months", lang)
+    val reminderLabel = reminderOptions.firstOrNull { it.first == remindDays.toString() }?.second
+        ?: localized("За $remindDays дней", "$remindDays days before", lang)
+    val valid = title.isNotBlank() && (!customInterval || (customMonths.toIntOrNull() ?: 0) in 1..1200)
+
+    Column(Modifier.fillMaxSize().padding(top = 13.dp).navigationBarsPadding().imePadding()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            NavEventHeaderAction("x", localized("Отмена", "Cancel", lang), p, true, onDismiss)
+            Text(if (existing == null) localized("Новая работа", "New work item", lang)
                 else localized("Редактировать работу", "Edit work item", lang),
-                color = p.text, fontSize = 20.sp,
-            )
-            Column(
-                Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 420.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(localized("Название работы", "Job title", lang),
-                    color = p.muted, fontSize = 12.sp)
-                NavGlassInput(title, { title = it.take(200) }, p,
-                    placeholder = localized("Описание задания", "Work description", lang),
-                    modifier = Modifier.fillMaxWidth(), neutralStyle = true)
-                Text(localized("Дата начала работы", "Work start date", lang),
-                    color = p.muted, fontSize = 12.sp)
-                WorkOrderChip(navDate(dueDate, lang, true), false, p,
-                    Modifier.fillMaxWidth(), outlined = true) { pickingDate = true }
-                Text(localized("Повторение", "Recurrence", lang),
-                    color = p.muted, fontSize = 12.sp)
-                val presets = listOf(
-                    Triple(0, 0, localized("Разовая", "One-off", lang)),
-                    Triple(7, 0, localized("Неделя", "Weekly", lang)),
-                    Triple(0, 1, localized("1 мес.", "1 month", lang)),
-                    Triple(0, 3, localized("3 мес.", "3 months", lang)),
-                    Triple(0, 6, localized("6 мес.", "6 months", lang)),
-                    Triple(0, 12, localized("12 мес.", "12 months", lang)),
-                    Triple(0, 18, localized("18 мес.", "18 months", lang)),
-                    Triple(0, 36, localized("36 мес.", "36 months", lang)),
-                    Triple(0, 60, localized("60 мес.", "60 months", lang)),
-                )
-                NavEventOptionGrid(
-                    options = presets.map { (days, months, label) -> "$days:$months" to label } +
-                        ("custom" to localized("Свой срок", "Custom months", lang)),
-                    selected = if (customInterval) "custom" else "$repeatDays:$repeatMonths",
-                    p = p, columns = 3,
-                ) { key ->
-                    if (key == "custom") {
-                        customInterval = true
-                        repeatDays = 0
-                        repeatMonths = customMonths.toIntOrNull()?.takeIf { it in 1..1200 } ?: 9
-                    } else {
-                        presets.firstOrNull { (days, months, _) -> "$days:$months" == key }?.let { (days, months, _) ->
-                            customInterval = false
-                            repeatDays = days
-                            repeatMonths = months
+                modifier = Modifier.weight(1f), color = p.text, fontSize = 20.sp,
+                textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            NavEventHeaderAction("check", localized("Сохранить", "Save", lang), p, valid) {
+                val candidate = runCatching {
+                    require(navRichNoteAllowed(comment, commentHtml, 6000))
+                    if (customInterval) {
+                        require(customMonths.toIntOrNull()?.let { it in 1..1200 } == true) {
+                            "Choose 1 to 1200 months"
                         }
                     }
-                }
-                if (customInterval) {
-                    Text(localized("Месяцев (1–1200)", "Months (1–1200)", lang),
-                        color = p.muted, fontSize = 11.sp)
-                    NavGlassInput(
-                        value = customMonths,
-                        onValueChange = { value ->
-                            if (value.length <= 4 && value.all(Char::isDigit)) {
-                                customMonths = value
-                                value.toIntOrNull()?.takeIf { it in 1..1200 }?.let {
-                                    repeatMonths = it
-                                }
-                            }
-                        },
-                        p = p, modifier = Modifier.fillMaxWidth(),
-                        placeholder = "9", neutralStyle = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    WorkOrderEntry(
+                        id = existing?.id ?: UUID.randomUUID().toString(),
+                        reference = existing?.reference.orEmpty(),
+                        title = title.trim(),
+                        dueDate = if (existing != null &&
+                                dueDate == (existing.startDate ?: existing.dueDate) &&
+                                existing.repeatDays == repeatDays &&
+                                existing.repeatMonths == repeatMonths) existing.dueDate
+                            else dueDate,
+                        startDate = dueDate,
+                        createdAt = existing?.createdAt ?: LocalDate.now(),
+                        completedAt = existing?.completedAt,
+                        comment = comment.trim(),
+                        commentHtml = commentHtml,
+                        checklist = checklist.filter { it.title.isNotBlank() },
+                        checkedItemIds = existing?.checkedItemIds.orEmpty().intersect(
+                            checklist.filter { it.title.isNotBlank() }.map { it.id }.toSet()),
+                        remindDaysBefore = remindDays,
+                        repeatDays = if (customInterval) 0 else repeatDays,
+                        repeatMonths = if (customInterval)
+                            customMonths.toInt() else repeatMonths,
+                        executionHistory = existing?.executionHistory.orEmpty(),
                     )
+                }.getOrElse {
+                    error = localized(
+                        "Проверь название работы, дату начала и периодичность.",
+                        "Check work title, start date and recurrence.", lang)
+                    return@NavEventHeaderAction
+                }
+                val issue = onSave(candidate)
+                if (issue == null) onDismiss() else error = issue
+            }
+        }
+        Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())
+            .padding(horizontal = NavEventLayout.screenInset),
+            verticalArrangement = Arrangement.spacedBy(NavEventLayout.sectionGap)) {
+            WorkOrderTitleField(title, { title = it.take(200) }, p, lang)
+            NavEventSchedulePanel(p) {
+                NavEventValueRow(localized("Дата начала", "Start date", lang),
+                    navDate(dueDate, lang, true), p) { pickingDate = true }
+                NavEventDivider(p)
+                NavEventValueRow(localized("Повторять", "Repeat", lang), repeatLabel,
+                    p, chevron = true) { showRepeat = true }
+                if (customInterval) {
+                    NavEventDivider(p)
+                    Text(localized("Месяцев (1–1200)", "Months (1–1200)", lang),
+                        color = p.muted, fontSize = 12.sp,
+                        modifier = Modifier.padding(top = NavEventLayout.innerGap))
+                    NavGlassInput(customMonths, { value ->
+                        if (value.length <= 4 && value.all(Char::isDigit)) {
+                            customMonths = value
+                            value.toIntOrNull()?.takeIf { it in 1..1200 }?.let { repeatMonths = it }
+                        }
+                    }, p, placeholder = "9", modifier = Modifier.fillMaxWidth(),
+                        neutralStyle = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 }
                 Text(localized(
                     "Повторения отсчитываются от выбранной даты начала, независимо от даты выполнения.",
-                    "Repeats follow the selected start date, not the completion date.",
-                    lang,
-                ), color = p.muted, fontSize = 11.sp)
-                Text(localized("Предупредить заранее", "Remind before due", lang),
-                    color = p.muted, fontSize = 12.sp)
-                NavEventOptionGrid(
-                    options = listOf(0, 1, 3, 7, 14, 30, 90).map { days ->
-                        days.toString() to if (days == 0) localized("Нет", "Off", lang)
-                            else localized("$days дн.", "$days days", lang)
-                    },
-                    selected = remindDays.toString(), p = p, columns = 4,
-                ) { key -> remindDays = key.toInt() }
-                Text(localized("Комментарий", "Notes", lang),
-                    color = p.muted, fontSize = 12.sp)
-                Column(Modifier.fillMaxWidth().personalNoteCard(p, 14.dp, nested = true)
-                    .padding(NavEventLayout.innerGap)) {
-                    NavRichNoteEditor(
-                        initialPlain = existing?.comment.orEmpty(),
-                        initialHtml = existing?.commentHtml.orEmpty(),
-                        entryKey = existing?.id ?: "new-amos",
-                        p = p, lang = lang, maxCharacters = 6000, neutralStyle = true,
-                        placeholder = localized("Детали, замечания…", "Details and remarks…", lang),
-                        onChange = { text, html -> comment = text; commentHtml = html },
-                    )
-                }
-                if (existing?.completedAt != null) {
-                    Text(
-                        localized("Завершено: ", "Completed: ", lang) +
-                            navDate(existing.completedAt, lang, true),
-                        color = p.successText, fontSize = 12.sp)
-                }
-                error?.let { Text(it, color = p.dangerText, fontSize = 12.sp) }
+                    "Repeats follow the selected start date, not the completion date.", lang),
+                    color = p.muted, fontSize = 12.sp,
+                    modifier = Modifier.padding(vertical = NavEventLayout.innerGap))
             }
-            NavEventDivider(p)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap),
-                verticalAlignment = Alignment.CenterVertically) {
-                WorkOrderChip(localized("Отмена", "Cancel", lang), false, p,
-                    modifier = Modifier.weight(1f), outlined = true, onClick = onDismiss)
-                WorkOrderChip(localized("Сохранить", "Save", lang), true, p,
-                    modifier = Modifier.weight(1f)) {
-                    val candidate = runCatching {
-                        require(navRichNoteAllowed(comment, commentHtml, 6000))
-                        if (customInterval) {
-                            require(customMonths.toIntOrNull()?.let { it in 1..1200 } == true) {
-                                "Choose 1 to 1200 months"
-                            }
-                        }
-                        WorkOrderEntry(
-                            id = existing?.id ?: UUID.randomUUID().toString(),
-                            reference = existing?.reference.orEmpty(),
-                            title = title.trim(),
-                            dueDate = if (existing != null &&
-                                    dueDate == (existing.startDate ?: existing.dueDate) &&
-                                    existing.repeatDays == repeatDays &&
-                                    existing.repeatMonths == repeatMonths) existing.dueDate
-                                else dueDate,
-                            startDate = dueDate,
-                            createdAt = existing?.createdAt ?: LocalDate.now(),
-                            completedAt = existing?.completedAt,
-                            comment = comment.trim(),
-                            commentHtml = commentHtml,
-                            checklist = checklist.filter { it.title.isNotBlank() },
-                            checkedItemIds = existing?.checkedItemIds.orEmpty().intersect(
-                                checklist.filter { it.title.isNotBlank() }.map { it.id }.toSet()),
-                            remindDaysBefore = remindDays,
-                            repeatDays = if (customInterval) 0 else repeatDays,
-                            repeatMonths = if (customInterval)
-                                customMonths.toInt() else repeatMonths,
-                            executionHistory = existing?.executionHistory.orEmpty(),
-                        )
-                    }.getOrElse {
-                        error = localized(
-                            "Проверь название работы, дату начала и периодичность.",
-                            "Check work title, start date and recurrence.", lang)
-                        return@WorkOrderChip
-                    }
-                    val issue = onSave(candidate)
-                    if (issue == null) onDismiss() else error = issue
-                }
+            NavEventSchedulePanel(p) {
+                NavEventValueRow(localized("Предупредить заранее", "Remind before due", lang),
+                    reminderLabel, p, chevron = true) { showReminder = true }
             }
+            NavEventSchedulePanel(p) {
+                Text(localized("Комментарий", "Notes", lang), color = p.text, fontSize = 15.sp,
+                    modifier = Modifier.padding(vertical = NavEventLayout.groupGap))
+                NavRichNoteEditor(
+                    initialPlain = existing?.comment.orEmpty(), initialHtml = existing?.commentHtml.orEmpty(),
+                    entryKey = existing?.id ?: "new-amos", p = p, lang = lang,
+                    maxCharacters = 6000, neutralStyle = true,
+                    placeholder = localized("Детали, замечания…", "Details and remarks…", lang),
+                    onChange = { text, html -> comment = text; commentHtml = html },
+                )
+                Spacer(Modifier.height(NavEventLayout.innerGap))
+            }
+            if (existing?.completedAt != null) {
+                Text(localized("Завершено: ", "Completed: ", lang) +
+                    navDate(existing.completedAt, lang, true), color = p.successText, fontSize = 12.sp)
+            }
+            error?.let { Text(it, color = p.dangerText, fontSize = 12.sp) }
+            Spacer(Modifier.height(NavEventLayout.innerGap))
         }
     }
-    if (pickingDate) {
-        NavDateWheelDialog(
-            initial = dueDate, p = p, lang = lang,
-            onDismiss = { pickingDate = false },
-            onSelected = { dueDate = it; pickingDate = false },
-        )
-    }
-    noteItemId?.let { id ->
-        val item = checklist.firstOrNull { it.id == id }
-        if (item != null) {
-            ChecklistReferenceDialog(
-                p = p, lang = lang, title = item.title, note = item.comment,
-                noteHtml = item.commentHtml, editable = true,
-                onDismiss = { noteItemId = null },
-                onSave = { note, html ->
-                    checklist = checklist.map { if (it.id == id) it.copy(comment = note, commentHtml = html) else it }
-                    noteItemId = null
-                },
-            )
-        }
-    }
+    if (pickingDate) NavDateWheelDialog(
+        initial = dueDate, p = p, lang = lang,
+        onDismiss = { pickingDate = false },
+        onSelected = { dueDate = it; pickingDate = false },
+    )
+    if (showRepeat) NavEventChoiceDialog(
+        localized("Повторять", "Repeat", lang), repeatOptions, repeatKey, p, lang,
+        confirmRequired = false, onDismiss = { showRepeat = false },
+        onSelect = { key ->
+            showRepeat = false
+            if (key == "custom") {
+                customInterval = true
+                repeatDays = 0
+                repeatMonths = customMonths.toIntOrNull()?.takeIf { it in 1..1200 } ?: 9
+            } else {
+                val parts = key.split(":")
+                customInterval = false
+                repeatDays = parts[0].toInt()
+                repeatMonths = parts[1].toInt()
+            }
+        },
+    )
+    if (showReminder) NavEventChoiceDialog(
+        localized("Предупредить заранее", "Remind before due", lang),
+        reminderOptions, remindDays.toString(), p, lang,
+        confirmRequired = false, onDismiss = { showReminder = false },
+        onSelect = { key -> remindDays = key.toInt(); showReminder = false },
+    )
+}
+
+@Composable
+private fun WorkOrderTitleField(title: String, onChange: (String) -> Unit, p: NavPalette, lang: UiLanguage) {
+    BasicTextField(value = title, onValueChange = onChange, singleLine = true,
+        modifier = Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
+            .heightIn(min = NavEventRowHeight + NavEventLayout.cardVertical * 2),
+        textStyle = TextStyle(color = p.text, fontSize = 16.sp),
+        cursorBrush = SolidColor(NavTodayVisualTokens.accentInk(p.dark)),
+        keyboardOptions = NavTitleKeyboard,
+        decorationBox = { input ->
+            Box(Modifier.fillMaxWidth().heightIn(min = NavEventRowHeight + NavEventLayout.cardVertical * 2)
+                .padding(horizontal = NavEventLayout.cardInset), contentAlignment = Alignment.CenterStart) {
+                if (title.isEmpty()) Text(localized("Название работы", "Work title", lang),
+                    color = p.muted, fontSize = 16.sp)
+                input()
+            }
+        })
 }
 
 @Composable

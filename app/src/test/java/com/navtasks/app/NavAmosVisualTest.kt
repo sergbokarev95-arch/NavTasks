@@ -31,9 +31,26 @@ class NavAmosVisualTest {
         assertTrue(animated.contains("highContrastField = highContrastField"))
         assertTrue(ui.contains("neutralActions = true, neutralSurface = true"))
         assertTrue(ui.contains("blur(if (modalOpen) 4.dp else 0.dp)"))
-        assertTrue(ui.contains("NavEventOptionGrid("))
+        assertTrue(ui.contains("NavEventChoiceDialog("))
         assertTrue(ui.contains("maxCharacters = 6000, neutralStyle = true"))
         assertTrue(ui.contains("workOrders.upsert(candidate)"))
         assertTrue(ui.contains("workOrders.deletePermanently(order.id)"))
+    }
+    @Test fun amosEditorUsesRoutineSheetAndPreservesSingleReminderAndRecurrence() {
+        val ui = File("src/main/java/com/navtasks/app/WorkOrdersUi.kt").readText()
+        assertTrue(ui.contains("amosEditorBottomSheet"))
+        assertTrue(ui.contains("navEditorSheetSurface(p)"))
+        assertTrue(ui.contains("BackHandler(enabled = editorOpen)"))
+        assertTrue(ui.contains("NavEventHeaderAction"))
+        assertTrue(ui.contains("NavEventSchedulePanel(p)"))
+        assertTrue(ui.contains("localized(\"Выполнено\", \"Completed\", lang)"))
+        assertTrue(ui.contains("NavGlassGlyph(\"calendar\""))
+        assertTrue(ui.contains("remindDaysBefore = remindDays"))
+        assertTrue(ui.contains("executionHistory = existing?.executionHistory.orEmpty()"))
+        assertTrue(ui.contains("existing.repeatMonths == repeatMonths) existing.dueDate"))
+        assertTrue(navAmosRepeatOptions(UiLanguage.RU).map { it.first } ==
+            listOf("0:0", "7:0", "0:1", "0:3", "0:6", "0:12", "0:18", "0:36", "0:60", "custom"))
+        assertTrue(navAmosReminderOptions(UiLanguage.RU).map { it.first } ==
+            listOf("0", "1", "3", "7", "14", "30", "90"))
     }
 }
