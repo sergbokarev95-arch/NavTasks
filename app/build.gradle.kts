@@ -16,7 +16,7 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 321
+        versionCode = 323
         versionName = "1.1.0"
     }
 
