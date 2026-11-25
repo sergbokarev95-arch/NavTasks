@@ -3,10 +3,13 @@ package com.navtasks.app
 import com.kyant.backdrop.backdrops.layerBackdrop
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -76,32 +79,21 @@ fun WorksHubScreen(
         }
         LazyColumn(
             Modifier.fillMaxSize(), state = listState,
-            contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp, bottom = if (embeddedInTab) 125.dp else 40.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(start = NavEventLayout.screenInset, top = 6.dp, end = NavEventLayout.screenInset, bottom = if (embeddedInTab) 125.dp else 40.dp),
+            verticalArrangement = Arrangement.spacedBy(NavEventLayout.sectionGap),
         ) {
-            item {
-                NavInfoSectionBanner(
-                    p = p,
-                    title = localized("Судовые работы", "Vessel work", lang),
-                    description = localized(
-                        "Рутинные задачи, работы AMOS и обслуживание оборудования — в одном разделе.",
-                        "Routine tasks, AMOS work orders and equipment maintenance in one place.",
-                        lang,
-                    ),
-                )
-            }
             item {
                 WorkHubTile(
                     p = p,
                     title = localized("Рутинные задачи", "Routine tasks", lang),
                     description = localized(
-                        "Ежедневные, еженедельные, ежемесячные и разовые задачи.",
+                        "Ежедневные, еженедельные, ежемесячные и разовые.",
                         "Daily, weekly, monthly and one-off tasks.",
                         lang,
                     ),
-                    secondary = localized(
+                    stats = listOf(WorkHubStat(localized(
                         "$taskCount задач", "$taskCount tasks", lang,
-                    ),
+                    ))),
                     icon = "tasks",
                     onClick = onTasks,
                 )
@@ -111,13 +103,15 @@ fun WorksHubScreen(
                     p = p,
                     title = "AMOS / By Crew",
                     description = localized(
-                        "Работы AMOS и проверки силами экипажа: даты, повторения и история.",
-                        "AMOS work orders and crew-performed checks: dates, recurrence and history.",
+                        "Работы AMOS и проверки экипажем.",
+                        "AMOS work orders and crew checks.",
                         lang,
                     ),
-                    secondary = localized(
-                        "${activeAmos.size} открыто · ${overdueAmos} просрочено",
-                        "${activeAmos.size} open · ${overdueAmos} overdue", lang),
+                    stats = listOf(
+                        WorkHubStat(localized("${activeAmos.size} открыто", "${activeAmos.size} open", lang)),
+                        WorkHubStat(localized("$overdueAmos просрочено", "$overdueAmos overdue", lang),
+                            if (overdueAmos > 0) WorkHubTone.OVERDUE else WorkHubTone.NORMAL),
+                    ),
                     icon = "work-order",
                     onClick = onAmos,
                 )
@@ -127,14 +121,16 @@ fun WorksHubScreen(
                     p = p,
                     title = localized("Сервис оборудования", "Equipment maintenance", lang),
                     description = localized(
-                        "Сроки обслуживания, интервалы, предупреждения и комментарии.",
-                        "Due dates, intervals, reminders and service notes.",
+                        "Сроки, интервалы и обслуживание.",
+                        "Due dates, intervals and maintenance.",
                         lang,
                     ),
-                    secondary = localized(
-                        "${activeServices.size} записей · ${overdue} просрочено · ${approaching} скоро",
-                        "${activeServices.size} records · ${overdue} overdue · ${approaching} soon",
-                        lang,
+                    stats = listOf(
+                        WorkHubStat(localized("${activeServices.size} записей", "${activeServices.size} records", lang)),
+                        WorkHubStat(localized("$overdue просрочено", "$overdue overdue", lang),
+                            if (overdue > 0) WorkHubTone.OVERDUE else WorkHubTone.NORMAL),
+                        WorkHubStat(localized("$approaching скоро", "$approaching soon", lang),
+                            if (approaching > 0) WorkHubTone.SOON else WorkHubTone.NORMAL),
                     ),
                     icon = "settings",
                     onClick = onServices,
@@ -151,37 +147,51 @@ fun WorksHubScreen(
     }
 }
 
+internal enum class WorkHubTone { NORMAL, OVERDUE, SOON }
+internal data class WorkHubStat(val label: String, val tone: WorkHubTone = WorkHubTone.NORMAL)
+
+/** The three destinations share the matte Today/Personal surfaces and spacing.
+ * Counts are presentation only; a zero overdue/soon count is never a warning.
+ */
 @Composable
 private fun WorkHubTile(
     p: NavPalette,
     title: String,
     description: String,
-    secondary: String,
+    stats: List<WorkHubStat>,
     icon: String,
     onClick: (() -> Unit)?,
 ) {
-    val surface = Modifier.fillMaxWidth().navGlass(p, radius = 19.dp, role = GlassRole.TASK)
+    val surface = Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
     val touch = if (onClick != null) surface.glassClickable(onClick = onClick) else surface
     Row(
-        touch.padding(horizontal = 16.dp, vertical = 17.dp),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        touch.heightIn(min = 96.dp)
+            .padding(horizontal = NavEventLayout.cardInset, vertical = NavEventLayout.groupGap),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(NavEventLayout.groupGap),
     ) {
         Box(
-            Modifier.size(39.dp).navGlass(p, radius = 13.dp, role = GlassRole.CONTROL),
+            Modifier.size(42.dp).personalNoteCard(p, 13.dp, nested = true),
             contentAlignment = Alignment.Center,
         ) {
-            NavGlassGlyph(icon, if (onClick != null) p.blue else p.muted,
-                Modifier.size(22.dp))
+            NavGlassGlyph(icon, if (onClick != null) NavTodayVisualTokens.accentInk(p.dark) else p.muted,
+                Modifier.size(23.dp))
         }
-        Column(Modifier.weight(1f)) {
-            Text(title, color = p.text, fontSize = 16.sp,
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, color = p.text, fontSize = 16.sp, fontWeight = FontWeight.Medium,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(5.dp))
-            Text(description, color = p.muted, fontSize = 12.sp)
-            Spacer(Modifier.height(11.dp))
-            Text(secondary, color = if (onClick != null) p.blue else p.muted,
-                fontSize = 11.sp)
+            Text(description, color = p.muted, fontSize = 12.sp, lineHeight = 17.sp)
+            Text(buildAnnotatedString {
+                stats.forEachIndexed { index, stat ->
+                    if (index > 0) withStyle(SpanStyle(color = p.muted)) { append(" · ") }
+                    val ink = when (stat.tone) {
+                        WorkHubTone.NORMAL -> p.muted
+                        WorkHubTone.OVERDUE -> p.dangerText
+                        WorkHubTone.SOON -> p.systemOrange
+                    }
+                    withStyle(SpanStyle(color = ink)) { append(stat.label) }
+                }
+            }, fontSize = 12.sp, lineHeight = 17.sp)
         }
         if (onClick != null) {
             NavGlassGlyph("chevron-right", p.muted, Modifier.size(17.dp))
