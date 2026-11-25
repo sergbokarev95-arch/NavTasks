@@ -5,6 +5,7 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.border
+import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -150,7 +151,10 @@ fun WorkOrdersScreen(
         }
     }
 
-    Box(Modifier.fillMaxSize()) {
+    // Dialogs are separate windows: blur only the page beneath them.
+    val modalOpen = editorOpen || completeTarget != null || chooseShiftAfterCompletion ||
+        reopenTarget != null || deleteTarget != null || purgeTarget != null || viewingHistory != null
+    Box(Modifier.fillMaxSize().blur(if (modalOpen) 4.dp else 0.dp)) {
     // Edge-to-edge scroll content, matching Today; keep only the Add FAB inset.
     Column(Modifier.fillMaxSize().statusBarsPadding()
         .hazeSource(hazeState)
@@ -178,6 +182,7 @@ fun WorkOrdersScreen(
             p = p, lang = lang,
             placeholder = localized("Поиск по работам", "Search work names", lang),
             neutralStyle = true,
+            highContrastField = true,
             resultCount = searchResults.size,
             currentResult = searchResultIndex,
             onPreviousResult = {
@@ -338,7 +343,7 @@ fun WorkOrdersScreen(
 
     completeTarget?.takeUnless { chooseShiftAfterCompletion }?.let { order ->
         NavGlassAlertDialog(
-            p = p,
+            p = p, neutralActions = true, neutralSurface = true,
             onDismissRequest = {
                 completeTarget = null
                 completionDatePicker = false
@@ -357,7 +362,8 @@ fun WorkOrdersScreen(
                     }
                     Text(localized("Дата выполнения", "Completion date", lang),
                         color = p.muted, fontSize = 12.sp)
-                    WorkOrderChip(navDate(completionDate, lang, true), false, p) {
+                    WorkOrderChip(navDate(completionDate, lang, true), false, p,
+                        modifier = Modifier.fillMaxWidth(), outlined = true) {
                         completionDatePicker = true
                     }
                 }
@@ -371,12 +377,12 @@ fun WorkOrdersScreen(
                         finalizeCompletion(false)
                     }
                 }) {
-                    Text(localized("Завершить", "Complete", lang))
+                    Text(localized("Завершить", "Complete", lang), color = NavTodayVisualTokens.accentInk(p.dark))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { completeTarget = null }) {
-                    Text(localized("Отмена", "Cancel", lang))
+                    Text(localized("Отмена", "Cancel", lang), color = p.text)
                 }
             },
         )
@@ -392,7 +398,7 @@ fun WorkOrdersScreen(
     if (chooseShiftAfterCompletion) {
         completeTarget?.let { order ->
             NavGlassAlertDialog(
-                p = p,
+                p = p, neutralActions = true, neutralSurface = true,
                 onDismissRequest = { chooseShiftAfterCompletion = false },
                 title = {
                     Text(localized("Сместить график работы?", "Shift work schedule?", lang))
@@ -425,16 +431,16 @@ fun WorkOrdersScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = { finalizeCompletion(true) }) {
-                        Text(localized("Сместить график", "Shift schedule", lang))
+                        Text(localized("Сместить график", "Shift schedule", lang), color = NavTodayVisualTokens.accentInk(p.dark))
                     }
                 },
                 dismissButton = {
                     Column(horizontalAlignment = Alignment.End) {
                         TextButton(onClick = { finalizeCompletion(false) }) {
-                            Text(localized("Оставить график", "Keep schedule", lang))
+                            Text(localized("Оставить график", "Keep schedule", lang), color = p.text)
                         }
                         TextButton(onClick = { chooseShiftAfterCompletion = false }) {
-                            Text(localized("Назад", "Back", lang))
+                            Text(localized("Назад", "Back", lang), color = p.text)
                         }
                     }
                 },
@@ -481,6 +487,7 @@ fun WorkOrdersScreen(
                 "The work order, schedule and ALL completion history will be erased permanently.",
                 lang,
             ),
+            destructive = true,
             onCancel = { purgeTarget = null },
             onConfirm = {
                 runCatching { workOrders.deletePermanently(order.id); reschedule() }
@@ -493,7 +500,7 @@ fun WorkOrdersScreen(
         val current = workOrders.entries.firstOrNull { it.id == entry.id } ?: entry
         val history = workOrderHistoryRecords(listOf(current))
         NavGlassAlertDialog(
-            p = p, onDismissRequest = { viewingHistory = null },
+            p = p, neutralActions = true, neutralSurface = true, onDismissRequest = { viewingHistory = null },
             title = { Text(localized("История работы", "Work history", lang)) },
             text = {
                 Column(
@@ -521,7 +528,7 @@ fun WorkOrdersScreen(
             },
             confirmButton = {
                 TextButton(onClick = { viewingHistory = null }) {
-                    Text(localized("Закрыть", "Close", lang))
+                    Text(localized("Закрыть", "Close", lang), color = NavTodayVisualTokens.accentInk(p.dark))
                 }
             },
         )
@@ -689,12 +696,14 @@ private fun WorkOrderCard(
 private fun WorkOrderChip(
     label: String, selected: Boolean, p: NavPalette,
     modifier: Modifier = Modifier, destructive: Boolean = false,
+    outlined: Boolean = false,
     onClick: () -> Unit,
 ) {
     Box(
         modifier.personalNoteCard(p, 12.dp, nested = true)
             .then(if (selected) Modifier.border(1.5.dp,
                 NavTodayVisualTokens.accentInk(p.dark), RoundedCornerShape(12.dp))
+                else if (outlined) Modifier.border(1.dp, NavTodayVisualTokens.checklistInsetRim(p.dark), RoundedCornerShape(12.dp))
                 else Modifier)
             .glassClickable(onClick = onClick)
             .heightIn(min = NavEventLayout.choiceHeight)
@@ -738,7 +747,8 @@ private fun WorkOrderEditorDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Column(
-            Modifier.fillMaxWidth().navDialogSurface(p).padding(16.dp),
+            Modifier.fillMaxWidth().personalNoteCard(p, 26.dp)
+                .padding(NavEventLayout.cardInset),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
@@ -747,7 +757,7 @@ private fun WorkOrderEditorDialog(
                 color = p.text, fontSize = 20.sp,
             )
             Column(
-                Modifier.fillMaxWidth().heightIn(max = 420.dp)
+                Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 420.dp)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -759,36 +769,36 @@ private fun WorkOrderEditorDialog(
                 Text(localized("Дата начала работы", "Work start date", lang),
                     color = p.muted, fontSize = 12.sp)
                 WorkOrderChip(navDate(dueDate, lang, true), false, p,
-                    Modifier.fillMaxWidth()) { pickingDate = true }
+                    Modifier.fillMaxWidth(), outlined = true) { pickingDate = true }
                 Text(localized("Повторение", "Recurrence", lang),
                     color = p.muted, fontSize = 12.sp)
-                androidx.compose.foundation.layout.FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    val presets = listOf(
-                        Triple(0, 0, localized("Разовая", "One-off", lang)),
-                        Triple(7, 0, localized("Неделя", "Weekly", lang)),
-                        Triple(0, 1, localized("1 мес.", "1 month", lang)),
-                        Triple(0, 3, localized("3 мес.", "3 months", lang)),
-                        Triple(0, 6, localized("6 мес.", "6 months", lang)),
-                        Triple(0, 12, localized("12 мес.", "12 months", lang)),
-                        Triple(0, 18, localized("18 мес.", "18 months", lang)),
-                        Triple(0, 36, localized("36 мес.", "36 months", lang)),
-                        Triple(0, 60, localized("60 мес.", "60 months", lang)),
-                    )
-                    presets.forEach { (days, months, label) ->
-                        WorkOrderChip(label,
-                            !customInterval && repeatDays == days && repeatMonths == months, p,
-                        ) {
+                val presets = listOf(
+                    Triple(0, 0, localized("Разовая", "One-off", lang)),
+                    Triple(7, 0, localized("Неделя", "Weekly", lang)),
+                    Triple(0, 1, localized("1 мес.", "1 month", lang)),
+                    Triple(0, 3, localized("3 мес.", "3 months", lang)),
+                    Triple(0, 6, localized("6 мес.", "6 months", lang)),
+                    Triple(0, 12, localized("12 мес.", "12 months", lang)),
+                    Triple(0, 18, localized("18 мес.", "18 months", lang)),
+                    Triple(0, 36, localized("36 мес.", "36 months", lang)),
+                    Triple(0, 60, localized("60 мес.", "60 months", lang)),
+                )
+                NavEventOptionGrid(
+                    options = presets.map { (days, months, label) -> "$days:$months" to label } +
+                        ("custom" to localized("Свой срок", "Custom months", lang)),
+                    selected = if (customInterval) "custom" else "$repeatDays:$repeatMonths",
+                    p = p, columns = 3,
+                ) { key ->
+                    if (key == "custom") {
+                        customInterval = true
+                        repeatDays = 0
+                        repeatMonths = customMonths.toIntOrNull()?.takeIf { it in 1..1200 } ?: 9
+                    } else {
+                        presets.firstOrNull { (days, months, _) -> "$days:$months" == key }?.let { (days, months, _) ->
                             customInterval = false
                             repeatDays = days
                             repeatMonths = months
                         }
-                    }
-                    WorkOrderChip(localized("Свой срок", "Custom months", lang), customInterval, p) {
-                        customInterval = true
-                        repeatDays = 0
-                        repeatMonths = customMonths.toIntOrNull()?.takeIf { it in 1..1200 } ?: 9
                     }
                 }
                 if (customInterval) {
@@ -816,27 +826,26 @@ private fun WorkOrderEditorDialog(
                 ), color = p.muted, fontSize = 11.sp)
                 Text(localized("Предупредить заранее", "Remind before due", lang),
                     color = p.muted, fontSize = 12.sp)
-                androidx.compose.foundation.layout.FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(0, 1, 3, 7, 14, 30, 90).forEach { days ->
-                        WorkOrderChip(
-                            if (days == 0) localized("Нет", "Off", lang)
-                            else localized("$days дн.", "$days days", lang),
-                            remindDays == days, p,
-                        ) { remindDays = days }
-                    }
-                }
+                NavEventOptionGrid(
+                    options = listOf(0, 1, 3, 7, 14, 30, 90).map { days ->
+                        days.toString() to if (days == 0) localized("Нет", "Off", lang)
+                            else localized("$days дн.", "$days days", lang)
+                    },
+                    selected = remindDays.toString(), p = p, columns = 4,
+                ) { key -> remindDays = key.toInt() }
                 Text(localized("Комментарий", "Notes", lang),
                     color = p.muted, fontSize = 12.sp)
-                NavRichNoteEditor(
-                    initialPlain = existing?.comment.orEmpty(),
-                    initialHtml = existing?.commentHtml.orEmpty(),
-                    entryKey = existing?.id ?: "new-amos",
-                    p = p, lang = lang, maxCharacters = 6000,
-                    placeholder = localized("Детали, замечания…", "Details and remarks…", lang),
-                    onChange = { text, html -> comment = text; commentHtml = html },
-                )
+                Column(Modifier.fillMaxWidth().personalNoteCard(p, 14.dp, nested = true)
+                    .padding(NavEventLayout.innerGap)) {
+                    NavRichNoteEditor(
+                        initialPlain = existing?.comment.orEmpty(),
+                        initialHtml = existing?.commentHtml.orEmpty(),
+                        entryKey = existing?.id ?: "new-amos",
+                        p = p, lang = lang, maxCharacters = 6000, neutralStyle = true,
+                        placeholder = localized("Детали, замечания…", "Details and remarks…", lang),
+                        onChange = { text, html -> comment = text; commentHtml = html },
+                    )
+                }
                 if (existing?.completedAt != null) {
                     Text(
                         localized("Завершено: ", "Completed: ", lang) +
@@ -845,11 +854,13 @@ private fun WorkOrderEditorDialog(
                 }
                 error?.let { Text(it, color = p.dangerText, fontSize = 12.sp) }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End,
+            NavEventDivider(p)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(NavEventLayout.innerGap),
                 verticalAlignment = Alignment.CenterVertically) {
-                WorkOrderChip(localized("Отмена", "Cancel", lang), false, p, onClick = onDismiss)
-                Spacer(Modifier.width(8.dp))
-                WorkOrderChip(localized("Сохранить", "Save", lang), true, p) {
+                WorkOrderChip(localized("Отмена", "Cancel", lang), false, p,
+                    modifier = Modifier.weight(1f), outlined = true, onClick = onDismiss)
+                WorkOrderChip(localized("Сохранить", "Save", lang), true, p,
+                    modifier = Modifier.weight(1f)) {
                     val candidate = runCatching {
                         require(navRichNoteAllowed(comment, commentHtml, 6000))
                         if (customInterval) {
@@ -920,19 +931,20 @@ private fun WorkOrderConfirm(
     p: NavPalette, lang: UiLanguage,
     title: String, description: String,
     onCancel: () -> Unit, onConfirm: () -> Unit,
+    destructive: Boolean = false,
 ) {
     NavGlassAlertDialog(
-        p = p, onDismissRequest = onCancel,
+        p = p, neutralActions = true, neutralSurface = true, onDismissRequest = onCancel,
         title = { Text(title) },
         text = { Text(description, color = p.muted, fontSize = 14.sp) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(localized("Подтвердить", "Confirm", lang))
+                Text(localized("Подтвердить", "Confirm", lang), color = if (destructive) p.systemRed else NavTodayVisualTokens.accentInk(p.dark))
             }
         },
         dismissButton = {
             TextButton(onClick = onCancel) {
-                Text(localized("Отмена", "Cancel", lang))
+                Text(localized("Отмена", "Cancel", lang), color = p.text)
             }
         },
     )
@@ -948,8 +960,8 @@ private fun WorkOrderHistoryCard(
 ) {
     val completion = archive.completion
     Column(
-        Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius)
-            .padding(14.dp),
+        Modifier.fillMaxWidth().personalNoteCard(p, NavEventLayout.cardRadius, nested = true)
+            .padding(NavEventLayout.cardInset),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(localized("Работа", "Work", lang), color = p.muted, fontSize = 12.sp)

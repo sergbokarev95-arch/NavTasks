@@ -21,4 +21,19 @@ class NavAmosVisualTest {
         assertTrue(ui.contains("workOrders.complete(order.id, completionDate, shiftFuture)"))
         assertTrue(ui.contains("workOrders.restore(order.id)"))
     }
+    @Test fun amosPopupsAndSearchUseScopedNeutralTreatment() {
+        val root = "src/main/java/com/navtasks/app/"
+        val ui = File(root + "WorkOrdersUi.kt").readText()
+        val glass = File(root + "NavGlass.kt").readText()
+        val animated = File(root + "NavAnimatedSearchField.kt").readText()
+        assertTrue(ui.contains("highContrastField = true"))
+        assertTrue(glass.contains("neutralStyle && highContrastField && !p.dark"))
+        assertTrue(animated.contains("highContrastField = highContrastField"))
+        assertTrue(ui.contains("neutralActions = true, neutralSurface = true"))
+        assertTrue(ui.contains("blur(if (modalOpen) 4.dp else 0.dp)"))
+        assertTrue(ui.contains("NavEventOptionGrid("))
+        assertTrue(ui.contains("maxCharacters = 6000, neutralStyle = true"))
+        assertTrue(ui.contains("workOrders.upsert(candidate)"))
+        assertTrue(ui.contains("workOrders.deletePermanently(order.id)"))
+    }
 }

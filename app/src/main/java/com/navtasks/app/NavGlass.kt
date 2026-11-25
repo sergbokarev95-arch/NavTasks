@@ -752,12 +752,16 @@ fun NavGlassInput(
     keyboardOptions: KeyboardOptions = NavTitleKeyboard,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     neutralStyle: Boolean = false,
+    highContrastField: Boolean = false,
 ) {
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.height(44.dp)
-            .then(if (neutralStyle) Modifier.personalNoteCard(p, 12.dp, nested = true)
+            .then(if (neutralStyle && highContrastField && !p.dark)
+                Modifier.personalNoteCard(p, 12.dp)
+                    .border(1.dp, NavTodayVisualTokens.checklistInsetRim(false), RoundedCornerShape(12.dp))
+                else if (neutralStyle) Modifier.personalNoteCard(p, 12.dp, nested = true)
                 else Modifier.navGlass(p, radius = 12.dp, role = GlassRole.CONTROL, elevation = 0.dp)),
         singleLine = true,
         keyboardOptions = keyboardOptions,
@@ -805,6 +809,7 @@ fun NavGlassSearchField(
     onPreviousResult: () -> Unit = {},
     onNextResult: () -> Unit = {},
     neutralStyle: Boolean = false,
+    highContrastField: Boolean = false,
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -823,6 +828,7 @@ fun NavGlassSearchField(
         NavGlassInput(
             value = value, onValueChange = { onValueChange(it.take(120)) }, p = p,
             placeholder = placeholder, neutralStyle = neutralStyle,
+            highContrastField = highContrastField,
             modifier = Modifier.weight(1f).focusRequester(focusRequester),
         )
         if (resultCount != null) {

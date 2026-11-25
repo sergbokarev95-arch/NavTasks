@@ -45,6 +45,7 @@ internal fun NavAnimatedSearchField(
     onPreviousResult: () -> Unit = {},
     onNextResult: () -> Unit = {},
     neutralStyle: Boolean = false,
+    highContrastField: Boolean = false,
 ) {
     // Read actual Compose IME insets. Never intercept the first Back that
     // belongs to the keyboard; our handler is armed only after it closes.
@@ -90,6 +91,7 @@ internal fun NavAnimatedSearchField(
             onPreviousResult = onPreviousResult,
             onNextResult = onNextResult,
             neutralStyle = neutralStyle,
+            highContrastField = highContrastField,
         )
     }
 }
