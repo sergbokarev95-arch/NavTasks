@@ -1,6 +1,6 @@
 # NavTasks — текущее состояние
 
-Снимок на 2026-11-25; всегда сверять с GitHub. Репозиторий sergbokarev95-arch/NavTasks (private); public OTA sergbokarev95-arch/NavTasks-Updates. Пакет com.navtasks.app.glass. Android Kotlin/Jetpack Compose, JDK17, SDK36, Gradle8.13. Виджеты RemoteViews. Исходники app/src/main/java/com/navtasks/app/, тесты app/src/test/java/com/navtasks/app/, ресурсы app/src/main/res/.
+Снимок на 2026-11-25; всегда сверять с GitHub. Репозиторий sergbokarev95-arch/NavTasks (фактическая видимость по GitHub API на 2026-11-25: public; ранее в документации указан private, решение о видимости не изменялось); public OTA sergbokarev95-arch/NavTasks-Updates. Пакет com.navtasks.app.glass. Android Kotlin/Jetpack Compose, JDK17, SDK36, Gradle8.13. Виджеты RemoteViews. Исходники app/src/main/java/com/navtasks/app/, тесты app/src/test/java/com/navtasks/app/, ресурсы app/src/main/res/.
 
 ## Каналы и версия
 | Канал | Версия / code | Состояние |
