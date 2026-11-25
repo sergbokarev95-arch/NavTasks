@@ -20,3 +20,5 @@
 - Виджеты RemoteViews: только поддерживаемые XML views; отдельный tap на заголовок открывает задачу, не завершает; чек-лист открывается. Иконка notification small monochrome, large оригинальная цветная.
 - Handover — текст/история/форматирование, без чеков; вложенные изображения сохранять при обмене и Word/PDF export. Reference самостоятельный модуль, Inspections (SIRE 2.0/VIQ7), Equipment и My Materials; собственный обмен справочника, не смешивать с рутинными задачами. Settings: полный профиль и выборочный обмен. Личные заметки отдельны от судовых.
 - Полный и выборочный обмен: сохранение идентификаторов/совместимости, вложений, добавление нового профиля; замена по совпадению имени только в соответствующем сценарии. Не заменять данные незаметно.
+
+- Beta40: editor state refactor and ten composable sections resolved Kotlin compilation blocker. Full CI passed; retain bounded components and explicit typed state in further edits. No stable OTA change. Physical QA remains pending.
