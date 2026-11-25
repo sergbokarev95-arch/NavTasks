@@ -40,3 +40,5 @@
 - Beta44/recovery317 verified CI and release publication; device visual QA pending.
 
 - Beta45: по замечаниям пользователя убрать плашку заголовка рутин, использовать текст/число/линию в стиле Today. AMOS list: neutral header and search, matte cards, compact status filters with coral selection rim and semantic status ink, common calendar segmented control for active/closed. Preserve callbacks, filtering, recurrence, history and stable keys; Services unchanged. Shared AMOS chips and editor text inputs also neutral; no editor behavior changes.
+
+- Beta46: пользователь запросил контрастный поиск AMOS в дневной теме и единый новый стиль попапов. Scoped highContrastField opt-in; opaque neutral alert surfaces, neutral/coral action ink (permanent deletion red), 4dp blur of underlying AMOS page. Editor: visual-only matte styling, equal choice grid, neutral rich note editor, scrollable content and separate aligned footer; retain existing fields, validation, save and scheduling. Full editor structural redesign like routine events deferred to subsequent agreement. No Services/global palette changes.
