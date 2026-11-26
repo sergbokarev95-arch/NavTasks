@@ -647,9 +647,7 @@ private fun ReferenceManualListRow(
 
 @Composable
 private fun ReferenceManualHeaderAction(p: NavPalette, kind: String, label: String, onClick: () -> Unit) {
-    Box(Modifier.personalNoteCard(p, 22.dp)) {
-        NavEventHeaderAction(kind, label, p, true, onClick)
-    }
+    ReferenceLiquidGlassAction(p, kind, label, onClick)
 }
 
 @Composable

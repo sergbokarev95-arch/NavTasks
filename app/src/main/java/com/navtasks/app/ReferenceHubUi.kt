@@ -179,7 +179,7 @@ internal fun ReferenceHubScreen(
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                NavGlassCircleButton(p, "back") { leaveExchange() }
+                ReferenceHubAction(p, "back", localized("Назад", "Back", lang)) { leaveExchange() }
                 Spacer(Modifier.width(12.dp))
                 Text(localized("Импорт и экспорт", "Import and export", lang),
                     color = p.text, fontSize = 21.sp)
@@ -431,7 +431,5 @@ private fun ReferencePlaceholderTile(
 
 @Composable
 private fun ReferenceHubAction(p: NavPalette, kind: String, label: String, onClick: () -> Unit) {
-    Box(Modifier.personalNoteCard(p, 22.dp)) {
-        NavEventHeaderAction(kind, label, p, true, onClick)
-    }
+    ReferenceLiquidGlassAction(p, kind, label, onClick)
 }

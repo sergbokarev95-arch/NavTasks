@@ -16,7 +16,7 @@ android {
         applicationId = "com.navtasks.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 342
+        versionCode = 344
         versionName = "1.2.0"
     }
 
@@ -43,7 +43,7 @@ android {
         release {
             isMinifyEnabled = false
             // Opt-in UI Refresh beta only; stable OTA stays at 1.1.0.
-            versionNameSuffix = "-beta.57"
+            versionNameSuffix = "-beta.58"
             // Same package ID and original signature; in-place install preserves data.
             // Same package as the installed, long-lived signed Beta. Android
             // does not migrate private app data across different package IDs.

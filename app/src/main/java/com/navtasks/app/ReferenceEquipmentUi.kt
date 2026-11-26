@@ -467,7 +467,7 @@ internal fun ReferenceEquipmentScreen(
             Column(Modifier.fillMaxSize().background(p.background).safeDrawingPadding()) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    NavGlassCircleButton(p, "back") { attachmentPreview = null }
+                    ReferenceEquipmentHeaderAction(p, "back", localized("Назад", "Back", lang)) { attachmentPreview = null }
                     Spacer(Modifier.width(12.dp))
                     Text(manual.originalFilename, color = p.text,
                         fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -806,9 +806,7 @@ private fun ReferenceProcedureReader(
 
 @Composable
 private fun ReferenceEquipmentHeaderAction(p: NavPalette, kind: String, label: String, onClick: () -> Unit) {
-    Box(Modifier.personalNoteCard(p, 22.dp)) {
-        NavEventHeaderAction(kind, label, p, true, onClick)
-    }
+    ReferenceLiquidGlassAction(p, kind, label, onClick)
 }
 @Composable
 private fun ReferenceEquipmentPanel(p: NavPalette, content: @Composable ColumnScope.() -> Unit) {
